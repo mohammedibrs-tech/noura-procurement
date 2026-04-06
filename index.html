@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة إدارة المشتريات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0F1923;--bg2:#141F2E;--card:#1A2840;--card2:#1E2F47;
+  --border:rgba(255,255,255,0.07);--accent:#1DA9BD;--accent2:#0D7A8A;
+  --gold:#F4C430;--green:#27AE60;--red:#E74C3C;--amber:#F39C12;
+  --purple:#8E44AD;--blue:#2E86C1;--text:#F0F4F8;
+  --text2:rgba(240,244,248,0.65);--text3:rgba(240,244,248,0.35);
+}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Login ── */
+#loginScreen{display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 30%,#0D2E3A,#061520 60%,#030D14);align-items:center;justify-content:center;}
+.login-box{background:rgba(255,255,255,0.04);border:1px solid rgba(29,169,189,0.2);border-radius:24px;padding:44px 40px;width:100%;max-width:420px;backdrop-filter:blur(20px);}
+.login-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;}
+.login-title{text-align:center;font-size:22px;font-weight:900;margin-bottom:4px;}
+.login-sub{text-align:center;font-size:11px;color:rgba(0,200,180,0.7);letter-spacing:1px;margin-bottom:28px;}
+.login-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:7px;}
+.login-inp{width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(29,169,189,0.2);background:rgba(255,255,255,0.06);color:#fff;font-family:Cairo,sans-serif;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:14px;transition:border-color .2s;}
+.login-inp:focus{border-color:rgba(29,169,189,0.6);}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);color:#fff;border:none;border-radius:12px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-top:4px;}
+.login-err{display:none;color:#FF6B6B;font-size:12px;text-align:center;background:rgba(255,107,107,0.1);padding:8px;border-radius:8px;margin-bottom:12px;}
+
+/* ── App ── */
+#app{display:none;}
+.topbar{background:linear-gradient(135deg,#0A1520,#0D1F2D);border-bottom:2px solid var(--accent);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.topbar-brand .ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.topbar-brand .name{font-size:15px;font-weight:900;}
+.topbar-brand .sub{font-size:9px;color:var(--accent);letter-spacing:1px;}
+.logout-btn{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--red);padding:6px 14px;border-radius:8px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* ── Nav ── */
+.nav{display:flex;gap:4px;padding:14px 20px 0;overflow-x:auto;background:var(--bg2);border-bottom:1px solid var(--border);}
+.nav-btn{padding:10px 18px;border:none;border-radius:10px 10px 0 0;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;}
+.nav-btn.active{background:rgba(29,169,189,0.1);color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── Pages ── */
+.page{display:none;padding:20px;max-width:1400px;margin:0 auto;}
+.page.active{display:block;}
+
+/* ── Cards Grid ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;border-right:4px solid var(--accent);}
+.kpi-icon{font-size:22px;margin-bottom:10px;}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:700;}
+.kpi-value{font-size:26px;font-weight:900;color:var(--accent);}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:4px;}
+
+/* ── Section Cards ── */
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px;}
+.sec-title{font-size:15px;font-weight:900;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.sec-title .badge{font-size:10px;background:rgba(29,169,189,0.1);color:var(--accent);padding:3px 10px;border-radius:20px;font-weight:700;}
+
+/* ── Form ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+.field label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;}
+.inp,.sel,.ta{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--card2);color:var(--text);font-family:Cairo,sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.inp:focus,.sel:focus,.ta:focus{border-color:var(--accent);}
+.sel option{background:var(--card2);}
+.ta{resize:vertical;min-height:80px;}
+.btn{padding:11px 22px;border:none;border-radius:10px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.btn:hover{opacity:.85;}
+.btn-primary{background:linear-gradient(135deg,#1DA9BD,#0D7A8A);color:#fff;}
+.btn-danger{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:var(--red);}
+.btn-sm{padding:6px 14px;font-size:11px;}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{background:var(--card2);padding:10px 12px;text-align:right;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,0.02);}
+.badge-status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+.s-new{background:rgba(29,169,189,0.1);color:var(--accent);}
+.s-done{background:rgba(39,174,96,0.1);color:var(--green);}
+.s-reject{background:rgba(231,76,60,0.1);color:var(--red);}
+.s-pending{background:rgba(243,156,18,0.1);color:var(--amber);}
+
+/* ── Alerts ── */
+.alert{background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.2);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:12px;}
+.alert-icon{font-size:18px;}
+
+/* ── Stars ── */
+.stars{color:var(--gold);font-size:14px;letter-spacing:2px;}
+
+/* ── Savings Hero ── */
+.savings-hero{background:linear-gradient(135deg,rgba(39,174,96,0.15),rgba(39,174,96,0.05));border:1px solid rgba(39,174,96,0.2);border-radius:18px;padding:28px;text-align:center;margin-bottom:20px;}
+.savings-num{font-size:48px;font-weight:900;color:var(--green);}
+.savings-label{font-size:14px;color:var(--text2);margin-top:6px;}
+
+/* ── Toast ── */
+.toast-msg{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast-msg.show{opacity:1;}
+
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--card);border-radius:20px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:900;margin-bottom:20px;color:var(--accent);}
+
+/* ── Chart bar ── */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;}
+.bar-label{width:120px;text-align:right;color:var(--text2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s;}
+.bar-val{width:70px;text-align:left;color:var(--text);font-weight:700;flex-shrink:0;}
+
+@media(max-width:600px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .savings-num{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Login ══ -->
+<div id="loginScreen" style="display:flex;">
+  <div class="login-box">
+    <div class="login-icon">🛒</div>
+    <div class="login-title">منصة إدارة المشتريات</div>
+    <div class="login-sub">PROCUREMENT MANAGEMENT</div>
+    <div class="login-err" id="loginErr">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+    <label class="login-label">اسم المستخدم</label>
+    <input class="login-inp" id="loginUser" type="text" placeholder="admin" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    <label class="login-label">كلمة المرور</label>
+    <input class="login-inp" id="loginPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <div style="text-align:center;margin-top:18px;font-size:10px;color:var(--text3);">محمي بكلمة مرور — للاستخدام الشخصي فقط</div>
+  </div>
+</div>
+
+<!-- ══ App ══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="ico">🛒</div>
+      <div><div class="name">إدارة المشتريات</div><div class="sub">PROCUREMENT</div></div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">خروج</button>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">📊 الداشبورد</button>
+    <button class="nav-btn" onclick="showPage('orders',this)">📋 الطلبات</button>
+    <button class="nav-btn" onclick="showPage('suppliers',this)">🏢 الموردون</button>
+    <button class="nav-btn" onclick="showPage('reports',this)">📈 التقارير</button>
+    <button class="nav-btn" onclick="showPage('performance',this)">🎯 الأداء</button>
+    <button class="nav-btn" onclick="showPage('savings',this)">💰 التوفير</button>
+  </div>
+
+  <!-- ══ داشبورد ══ -->
+  <div class="page active" id="pg-dashboard">
+    <div id="alerts-container" style="margin-bottom:16px;"></div>
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card"><div class="kpi-icon">💸</div><div class="kpi-label">إجمالي المصروفات (هذا الشهر)</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub">ريال سعودي</div></div>
+      <div class="kpi-card" style="border-color:var(--amber)"><div class="kpi-icon">📦</div><div class="kpi-label">عدد الطلبات</div><div class="kpi-value" id="kpi-orders" style="color:var(--amber)">—</div><div class="kpi-sub">هذا الشهر</div></div>
+      <div class="kpi-card" style="border-color:var(--purple)"><div class="kpi-icon">🏢</div><div class="kpi-label">أعلى مورد صرفاً</div><div class="kpi-value" id="kpi-top-supplier" style="color:var(--purple);font-size:16px">—</div><div class="kpi-sub" id="kpi-top-supplier-amt"></div></div>
+      <div class="kpi-card" style="border-color:var(--green)"><div class="kpi-icon">🏷️</div><div class="kpi-label">أكثر صنف مطلوب</div><div class="kpi-value" id="kpi-top-item" style="color:var(--green);font-size:16px">—</div><div class="kpi-sub" id="kpi-top-item-cnt"></div></div>
+      <div class="kpi-card" style="border-color:var(--green)"><div class="kpi-icon">💡</div><div class="kpi-label">التوفير هذا الشهر</div><div class="kpi-value" id="kpi-savings" style="color:var(--green)">—</div><div class="kpi-sub">ريال</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="sec-card">
+        <div class="sec-title">📊 المصروفات حسب القسم <span class="badge">هذا الشهر</span></div>
+        <div id="dept-chart"></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🕐 آخر الطلبات</div>
+        <div id="recent-orders"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ الطلبات ══ -->
+  <div class="page" id="pg-orders">
+    <div class="sec-card">
+      <div class="sec-title">➕ طلب جديد</div>
+      <div class="form-grid">
+        <div class="field"><label>اسم الصنف *</label><input class="inp" id="o-item" placeholder="مثال: طابعة ليزر"></div>
+        <div class="field"><label>الكمية *</label><input class="inp" id="o-qty" type="number" min="1" placeholder="1"></div>
+        <div class="field"><label>القسم *</label>
+          <select class="sel" id="o-dept">
+            <option value="">اختر القسم</option>
+            <option>الجودة</option><option>العمليات</option><option>الإدارة</option>
+            <option>المبيعات</option><option>التدريب</option><option>الصيانة</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="field"><label>السعر المتوقع (ريال)</label><input class="inp" id="o-price" type="number" min="0" placeholder="0"></div>
+        <div class="field"><label>المورد المقترح</label>
+          <select class="sel" id="o-supplier">
+            <option value="">— اختر أو اتركه فارغاً —</option>
+          </select>
+        </div>
+        <div class="field"><label>الحالة</label>
+          <select class="sel" id="o-status">
+            <option value="new">جديد</option>
+            <option value="pending">قيد المعالجة</option>
+            <option value="done">تم</option>
+            <option value="reject">مرفوض</option>
+          </select>
+        </div>
+        <div class="field"><label>السعر الفعلي (ريال) — بعد الشراء</label><input class="inp" id="o-actual" type="number" min="0" placeholder="0"></div>
+        <div class="field"><label>تاريخ الطلب</label><input class="inp" id="o-date" type="date"></div>
+      </div>
+      <div class="field" style="margin-top:12px;"><label>ملاحظات</label><textarea class="ta" id="o-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+      <div style="margin-top:14px;display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="saveOrder()">💾 حفظ الطلب</button>
+        <button class="btn" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);" onclick="clearOrderForm()">مسح</button>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">📋 جميع الطلبات <span class="badge" id="orders-count">0</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <select class="sel" id="filter-status" style="width:auto;" onchange="loadOrders()">
+          <option value="">كل الحالات</option>
+          <option value="new">جديد</option>
+          <option value="pending">قيد المعالجة</option>
+          <option value="done">تم</option>
+          <option value="reject">مرفوض</option>
+        </select>
+        <select class="sel" id="filter-dept" style="width:auto;" onchange="loadOrders()">
+          <option value="">كل الأقسام</option>
+          <option>الجودة</option><option>العمليات</option><option>الإدارة</option>
+          <option>المبيعات</option><option>التدريب</option><option>الصيانة</option>
+        </select>
+        <input class="inp" id="filter-search" style="width:auto;flex:1;min-width:150px;" placeholder="بحث..." oninput="loadOrders()">
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr>
+            <th>الصنف</th><th>الكمية</th><th>القسم</th><th>السعر المتوقع</th>
+            <th>السعر الفعلي</th><th>المورد</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th>
+          </tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ الموردون ══ -->
+  <div class="page" id="pg-suppliers">
+    <div class="sec-card">
+      <div class="sec-title">➕ إضافة مورد</div>
+      <div class="form-grid">
+        <div class="field"><label>اسم المورد *</label><input class="inp" id="s-name" placeholder="اسم الشركة أو الفرد"></div>
+        <div class="field"><label>رقم التواصل</label><input class="inp" id="s-phone" placeholder="05xxxxxxxx"></div>
+        <div class="field"><label>مجال التوريد</label><input class="inp" id="s-category" placeholder="مثال: مستلزمات مكتبية"></div>
+        <div class="field"><label>سرعة التوريد</label>
+          <select class="sel" id="s-speed">
+            <option value="fast">سريع — أقل من 3 أيام</option>
+            <option value="medium">متوسط — 3-7 أيام</option>
+            <option value="slow">بطيء — أكثر من أسبوع</option>
+          </select>
+        </div>
+        <div class="field"><label>التقييم (1-5)</label>
+          <select class="sel" id="s-rating">
+            <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
+            <option value="4">⭐⭐⭐⭐ جيد جداً</option>
+            <option value="3" selected>⭐⭐⭐ جيد</option>
+            <option value="2">⭐⭐ مقبول</option>
+            <option value="1">⭐ ضعيف</option>
+          </select>
+        </div>
+        <div class="field"><label>الأسعار المعتادة</label><input class="inp" id="s-prices" placeholder="مثال: ورق A4 = 25 ريال"></div>
+      </div>
+      <div class="field" style="margin-top:12px;"><label>مشاكل سابقة / ملاحظات</label><textarea class="ta" id="s-issues" placeholder="سجّل أي مشاكل أو تأخيرات سابقة..."></textarea></div>
+      <div style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveSupplier()">💾 حفظ المورد</button>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">🏢 قاعدة بيانات الموردين</div>
+      <div id="suppliers-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ التقارير ══ -->
+  <div class="page" id="pg-reports">
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <select class="sel" id="rpt-period" style="width:auto;" onchange="loadReports()">
+        <option value="month">هذا الشهر</option>
+        <option value="quarter">هذا الربع</option>
+        <option value="year">هذه السنة</option>
+        <option value="all">الكل</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadReports()">تحديث</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="sec-card">
+        <div class="sec-title">💸 المصروفات حسب القسم</div>
+        <div id="rpt-dept"></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🏢 المصروفات حسب المورد</div>
+        <div id="rpt-supplier"></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🏷️ الأصناف الأكثر طلباً</div>
+        <div id="rpt-items"></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🔍 كشف الهدر والتكرار</div>
+        <div id="rpt-waste"></div>
+      </div>
+    </div>
+    <div class="sec-card" style="margin-top:0;">
+      <div class="sec-title">📉 تحليل التضخم السعري</div>
+      <div id="rpt-inflation"></div>
+    </div>
+  </div>
+
+  <!-- ══ الأداء ══ -->
+  <div class="page" id="pg-performance">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-color:var(--green)"><div class="kpi-icon">✅</div><div class="kpi-label">صفقات ناجحة</div><div class="kpi-value" id="perf-success" style="color:var(--green)">—</div></div>
+      <div class="kpi-card" style="border-color:var(--blue)"><div class="kpi-icon">🔄</div><div class="kpi-label">تغيير مورد لسعر أفضل</div><div class="kpi-value" id="perf-switch" style="color:var(--blue)">—</div></div>
+      <div class="kpi-card" style="border-color:var(--amber)"><div class="kpi-icon">⏱️</div><div class="kpi-label">متوسط وقت التنفيذ</div><div class="kpi-value" id="perf-time" style="color:var(--amber)">—</div><div class="kpi-sub">يوم</div></div>
+      <div class="kpi-card" style="border-color:var(--red)"><div class="kpi-icon">❌</div><div class="kpi-label">طلبات مرفوضة</div><div class="kpi-value" id="perf-reject" style="color:var(--red)">—</div></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">📝 سجل تغيير الموردين</div>
+      <div id="supplier-switches"></div>
+    </div>
+    <div class="sec-card" style="margin-top:16px;">
+      <div class="sec-title">➕ تسجيل تغيير مورد</div>
+      <div class="form-grid">
+        <div class="field"><label>الصنف</label><input class="inp" id="sw-item" placeholder="اسم الصنف"></div>
+        <div class="field"><label>المورد القديم</label><input class="inp" id="sw-old" placeholder="المورد السابق"></div>
+        <div class="field"><label>المورد الجديد</label><input class="inp" id="sw-new" placeholder="المورد الجديد"></div>
+        <div class="field"><label>السعر القديم</label><input class="inp" id="sw-old-price" type="number" placeholder="0"></div>
+        <div class="field"><label>السعر الجديد</label><input class="inp" id="sw-new-price" type="number" placeholder="0"></div>
+        <div class="field"><label>التاريخ</label><input class="inp" id="sw-date" type="date"></div>
+      </div>
+      <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSwitch()">💾 حفظ</button></div>
+    </div>
+  </div>
+
+  <!-- ══ التوفير ══ -->
+  <div class="page" id="pg-savings">
+    <div class="savings-hero">
+      <div style="font-size:14px;color:var(--text2);margin-bottom:8px;">💰 إجمالي التوفير هذا الشهر</div>
+      <div class="savings-num" id="savings-total">0</div>
+      <div class="savings-label">ريال سعودي</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-color:var(--green)"><div class="kpi-icon">📉</div><div class="kpi-label">توفير من تغيير موردين</div><div class="kpi-value" id="sav-switch" style="color:var(--green)">0</div><div class="kpi-sub">ريال</div></div>
+      <div class="kpi-card" style="border-color:var(--blue)"><div class="kpi-icon">🤝</div><div class="kpi-label">توفير من التفاوض</div><div class="kpi-value" id="sav-nego" style="color:var(--blue)">0</div><div class="kpi-sub">ريال</div></div>
+      <div class="kpi-card" style="border-color:var(--amber)"><div class="kpi-icon">🔄</div><div class="kpi-label">تفادي طلبات مكررة</div><div class="kpi-value" id="sav-dup" style="color:var(--amber)">0</div><div class="kpi-sub">ريال</div></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">➕ تسجيل توفير جديد</div>
+      <div class="form-grid">
+        <div class="field"><label>المبلغ الموفَّر (ريال) *</label><input class="inp" id="sav-amount" type="number" min="0" placeholder="0"></div>
+        <div class="field"><label>نوع التوفير</label>
+          <select class="sel" id="sav-type">
+            <option value="switch">تغيير مورد</option>
+            <option value="nego">تفاوض على السعر</option>
+            <option value="dup">تفادي تكرار</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div class="field"><label>التاريخ</label><input class="inp" id="sav-date" type="date"></div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>الوصف</label><textarea class="ta" id="sav-desc" placeholder="وصف مختصر للتوفير..."></textarea></div>
+      <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSaving()">💾 حفظ</button></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">📋 سجل التوفير</div>
+      <div id="savings-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal تعديل طلب ══ -->
+<div class="modal-bg" id="editOrderModal">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل الطلب</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-grid">
+      <div class="field"><label>اسم الصنف</label><input class="inp" id="edit-item"></div>
+      <div class="field"><label>الكمية</label><input class="inp" id="edit-qty" type="number"></div>
+      <div class="field"><label>القسم</label>
+        <select class="sel" id="edit-dept">
+          <option>الجودة</option><option>العمليات</option><option>الإدارة</option>
+          <option>المبيعات</option><option>التدريب</option><option>الصيانة</option><option>أخرى</option>
+        </select>
+      </div>
+      <div class="field"><label>السعر المتوقع</label><input class="inp" id="edit-price" type="number"></div>
+      <div class="field"><label>السعر الفعلي</label><input class="inp" id="edit-actual" type="number"></div>
+      <div class="field"><label>الحالة</label>
+        <select class="sel" id="edit-status">
+          <option value="new">جديد</option><option value="pending">قيد المعالجة</option>
+          <option value="done">تم</option><option value="reject">مرفوض</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-primary" onclick="updateOrder()">حفظ</button>
+      <button class="btn" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);" onclick="closeModal('editOrderModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-msg" id="toast"></div>
+
+<script>
+const SB_URL='https://jvqzvfdmvudhelbhojue.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2cXp2ZmRtdnVkaGVsYmhvanVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mzk4NDIsImV4cCI6MjA5MTAxNTg0Mn0.7lAmAUjtE0EW3kODRTuHmNtOY_Z9bUS_3hePjhhy93M';
+const {createClient}=supabase;
+const db=createClient(SB_URL,SB_KEY);
+
+// ── Auth ──
+const PASS_HASH='00eef6545e71068cf7874ff31a08ccab21e3dcb0da1685bc131317f9504ad357';
+async function hashPass(p){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim().toLowerCase();
+  const p=document.getElementById('loginPass').value;
+  const h=await hashPass(p);
+  if(u==='admin'&&h===PASS_HASH){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginErr').style.display='none';
+}
+
+// ── Init ──
+async function initApp(){
+  await initDB();
+  setDefaultDates();
+  loadDashboard();
+  loadSupplierOptions();
+}
+
+async function initDB(){
+  await db.rpc('exec_sql',{sql:`
+    CREATE TABLE IF NOT EXISTS orders (
+      id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      item_name text NOT NULL,
+      qty integer DEFAULT 1,
+      department text,
+      expected_price numeric DEFAULT 0,
+      actual_price numeric DEFAULT 0,
+      supplier text,
+      status text DEFAULT 'new',
+      notes text,
+      order_date date DEFAULT CURRENT_DATE,
+      created_at timestamptz DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      name text NOT NULL,
+      phone text,
+      category text,
+      speed text DEFAULT 'medium',
+      rating integer DEFAULT 3,
+      prices text,
+      issues text,
+      created_at timestamptz DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS supplier_switches (
+      id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      item_name text,
+      old_supplier text,
+      new_supplier text,
+      old_price numeric,
+      new_price numeric,
+      switch_date date DEFAULT CURRENT_DATE,
+      created_at timestamptz DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS savings_log (
+      id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      amount numeric NOT NULL,
+      saving_type text DEFAULT 'other',
+      description text,
+      saving_date date DEFAULT CURRENT_DATE,
+      created_at timestamptz DEFAULT now()
+    );
+  `}).catch(()=>{});
+
+  // fallback: create tables individually
+  await Promise.all([
+    db.from('orders').select('id').limit(1),
+    db.from('suppliers').select('id').limit(1),
+    db.from('supplier_switches').select('id').limit(1),
+    db.from('savings_log').select('id').limit(1),
+  ]).catch(()=>{});
+}
+
+function setDefaultDates(){
+  const today=new Date().toISOString().split('T')[0];
+  ['o-date','sw-date','sav-date'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value=today;
+  });
+}
+
+// ── Navigation ──
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('active');
+  btn.classList.add('active');
+  const loaders={orders:loadOrders,suppliers:loadSuppliers,reports:loadReports,performance:loadPerformance,savings:loadSavings};
+  if(loaders[name]) loaders[name]();
+}
+
+// ── Toast ──
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.borderColor=type==='err'?'var(--red)':'var(--accent)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── Dashboard ──
+async function loadDashboard(){
+  const now=new Date();
+  const mStart=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  const mEnd=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+
+  const {data:orders}=await db.from('orders').select('*').gte('order_date',mStart).lte('order_date',mEnd);
+  const {data:savings}=await db.from('savings_log').select('*').gte('saving_date',mStart).lte('saving_date',mEnd);
+
+  const ords=orders||[];
+  const savs=savings||[];
+  const doneOrds=ords.filter(o=>o.status==='done');
+  const total=doneOrds.reduce((s,o)=>s+(parseFloat(o.actual_price)||parseFloat(o.expected_price)||0),0);
+  const totalSav=savs.reduce((s,v)=>s+(parseFloat(v.amount)||0),0);
+
+  document.getElementById('kpi-total').textContent=total.toLocaleString('ar-SA');
+  document.getElementById('kpi-orders').textContent=ords.length;
+  document.getElementById('kpi-savings').textContent=totalSav.toLocaleString('ar-SA');
+
+  // أعلى مورد
+  const supMap={};
+  doneOrds.filter(o=>o.supplier).forEach(o=>{
+    supMap[o.supplier]=(supMap[o.supplier]||0)+(parseFloat(o.actual_price)||parseFloat(o.expected_price)||0);
+  });
+  const topSup=Object.entries(supMap).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('kpi-top-supplier').textContent=topSup?topSup[0]:'—';
+  document.getElementById('kpi-top-supplier-amt').textContent=topSup?topSup[1].toLocaleString('ar-SA')+' ريال':'';
+
+  // أكثر صنف
+  const itemMap={};
+  ords.forEach(o=>{itemMap[o.item_name]=(itemMap[o.item_name]||0)+1;});
+  const topItem=Object.entries(itemMap).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('kpi-top-item').textContent=topItem?topItem[0]:'—';
+  document.getElementById('kpi-top-item-cnt').textContent=topItem?topItem[1]+' طلب':'';
+
+  // تنبيهات
+  const alerts=document.getElementById('alerts-container');
+  let alertsHTML='';
+  const pending=ords.filter(o=>o.status==='pending');
+  if(pending.length>0) alertsHTML+=`<div class="alert"><div class="alert-icon">⏳</div><div>${pending.length} طلب قيد المعالجة منذ فترة — تابع الموردين</div></div>`;
+
+  // كشف تكرار
+  const itemDates={};
+  ords.forEach(o=>{if(!itemDates[o.item_name])itemDates[o.item_name]=[];itemDates[o.item_name].push(new Date(o.order_date));});
+  Object.entries(itemDates).forEach(([item,dates])=>{
+    if(dates.length>1){
+      dates.sort((a,b)=>a-b);
+      const diff=(dates[dates.length-1]-dates[0])/(1000*60*60*24);
+      if(diff<30) alertsHTML+=`<div class="alert"><div class="alert-icon">⚠️</div><div>تكرار طلب "<b>${item}</b>" ${dates.length} مرات خلال ${Math.round(diff)} يوم — تحقق من الهدر</div></div>`;
+    }
+  });
+  alerts.innerHTML=alertsHTML||'<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">✅ لا توجد تنبيهات</div>';
+
+  // مخطط الأقسام
+  const deptMap={};
+  doneOrds.forEach(o=>{if(o.department)deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||parseFloat(o.expected_price)||0);});
+  const maxDept=Math.max(...Object.values(deptMap),1);
+  document.getElementById('dept-chart').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([d,v])=>
+    `<div class="bar-row"><div class="bar-label">${d}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxDept*100}%"></div></div><div class="bar-val">${v.toLocaleString('ar-SA')}</div></div>`
+  ).join('')||'<div style="color:var(--text3);font-size:12px;">لا توجد بيانات</div>';
+
+  // آخر الطلبات
+  const {data:recent}=await db.from('orders').select('*').order('created_at',{ascending:false}).limit(5);
+  document.getElementById('recent-orders').innerHTML=(recent||[]).map(o=>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <div><div style="font-weight:700;">${o.item_name}</div><div style="color:var(--text2);">${o.department||'—'}</div></div>
+      <div style="text-align:left;"><span class="badge-status s-${o.status}">${statusLabel(o.status)}</span></div>
+    </div>`
+  ).join('')||'<div style="color:var(--text3);font-size:12px;">لا توجد طلبات</div>';
+}
+
+function statusLabel(s){return {new:'جديد',pending:'قيد المعالجة',done:'تم',reject:'مرفوض'}[s]||s;}
+
+// ── Orders ──
+async function saveOrder(){
+  const item=document.getElementById('o-item').value.trim();
+  const dept=document.getElementById('o-dept').value;
+  if(!item){toast('أدخل اسم الصنف','err');return;}
+  if(!dept){toast('اختر القسم','err');return;}
+  const {error}=await db.from('orders').insert({
+    item_name:item, qty:parseInt(document.getElementById('o-qty').value)||1,
+    department:dept, expected_price:parseFloat(document.getElementById('o-price').value)||0,
+    actual_price:parseFloat(document.getElementById('o-actual').value)||0,
+    supplier:document.getElementById('o-supplier').value||null,
+    status:document.getElementById('o-status').value,
+    notes:document.getElementById('o-notes').value||null,
+    order_date:document.getElementById('o-date').value||new Date().toISOString().split('T')[0]
+  });
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  toast('✅ تم حفظ الطلب');
+  clearOrderForm(); loadOrders(); loadDashboard();
+}
+
+function clearOrderForm(){
+  ['o-item','o-qty','o-price','o-actual','o-notes'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('o-dept').value='';
+  document.getElementById('o-status').value='new';
+  document.getElementById('o-supplier').value='';
+  document.getElementById('o-date').value=new Date().toISOString().split('T')[0];
+}
+
+async function loadOrders(){
+  const status=document.getElementById('filter-status').value;
+  const dept=document.getElementById('filter-dept').value;
+  const search=document.getElementById('filter-search').value.trim().toLowerCase();
+  let q=db.from('orders').select('*').order('created_at',{ascending:false});
+  if(status) q=q.eq('status',status);
+  if(dept) q=q.eq('department',dept);
+  const {data}=await q;
+  let rows=(data||[]);
+  if(search) rows=rows.filter(r=>r.item_name.toLowerCase().includes(search)||(r.department||'').toLowerCase().includes(search));
+  document.getElementById('orders-count').textContent=rows.length;
+  document.getElementById('orders-tbody').innerHTML=rows.map(o=>`
+    <tr>
+      <td style="font-weight:700;">${o.item_name}</td>
+      <td>${o.qty}</td>
+      <td>${o.department||'—'}</td>
+      <td>${(parseFloat(o.expected_price)||0).toLocaleString('ar-SA')}</td>
+      <td style="color:${o.actual_price>o.expected_price?'var(--red)':'var(--green)'};">${(parseFloat(o.actual_price)||0).toLocaleString('ar-SA')}</td>
+      <td>${o.supplier||'—'}</td>
+      <td><span class="badge-status s-${o.status}">${statusLabel(o.status)}</span></td>
+      <td style="color:var(--text2);">${o.order_date||''}</td>
+      <td>
+        <button class="btn btn-sm" style="background:rgba(29,169,189,0.1);color:var(--accent);border:1px solid rgba(29,169,189,0.2);margin-left:4px;" onclick="editOrder('${o.id}','${encodeURIComponent(JSON.stringify(o))}')">تعديل</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.id}')">حذف</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px;">لا توجد طلبات</td></tr>';
+}
+
+function editOrder(id,dataEnc){
+  const o=JSON.parse(decodeURIComponent(dataEnc));
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-item').value=o.item_name||'';
+  document.getElementById('edit-qty').value=o.qty||1;
+  document.getElementById('edit-dept').value=o.department||'الجودة';
+  document.getElementById('edit-price').value=o.expected_price||0;
+  document.getElementById('edit-actual').value=o.actual_price||0;
+  document.getElementById('edit-status').value=o.status||'new';
+  document.getElementById('editOrderModal').classList.add('open');
+}
+
+async function updateOrder(){
+  const id=document.getElementById('edit-id').value;
+  const {error}=await db.from('orders').update({
+    item_name:document.getElementById('edit-item').value,
+    qty:parseInt(document.getElementById('edit-qty').value)||1,
+    department:document.getElementById('edit-dept').value,
+    expected_price:parseFloat(document.getElementById('edit-price').value)||0,
+    actual_price:parseFloat(document.getElementById('edit-actual').value)||0,
+    status:document.getElementById('edit-status').value,
+  }).eq('id',id);
+  if(error){toast('خطأ','err');return;}
+  toast('✅ تم التعديل');
+  closeModal('editOrderModal'); loadOrders(); loadDashboard();
+}
+
+async function deleteOrder(id){
+  if(!confirm('حذف هذا الطلب؟'))return;
+  await db.from('orders').delete().eq('id',id);
+  toast('تم الحذف'); loadOrders(); loadDashboard();
+}
+
+// ── Suppliers ──
+async function saveSupplier(){
+  const name=document.getElementById('s-name').value.trim();
+  if(!name){toast('أدخل اسم المورد','err');return;}
+  const {error}=await db.from('suppliers').insert({
+    name, phone:document.getElementById('s-phone').value||null,
+    category:document.getElementById('s-category').value||null,
+    speed:document.getElementById('s-speed').value,
+    rating:parseInt(document.getElementById('s-rating').value)||3,
+    prices:document.getElementById('s-prices').value||null,
+    issues:document.getElementById('s-issues').value||null,
+  });
+  if(error){toast('خطأ: '+error.message,'err');return;}
+  toast('✅ تم حفظ المورد');
+  ['s-name','s-phone','s-category','s-prices','s-issues'].forEach(id=>{document.getElementById(id).value='';});
+  loadSuppliers(); loadSupplierOptions();
+}
+
+async function loadSuppliers(){
+  const {data}=await db.from('suppliers').select('*').order('rating',{ascending:false});
+  const speedLabel={fast:'سريع',medium:'متوسط',slow:'بطيء'};
+  document.getElementById('suppliers-list').innerHTML=(data||[]).map(s=>`
+    <div style="background:var(--card2);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:14px;font-weight:900;margin-bottom:4px;">${s.name}</div>
+        <div style="font-size:11px;color:var(--text2);">${s.category||'—'} | ${s.phone||'—'}</div>
+        <div class="stars" style="margin-top:6px;">${'⭐'.repeat(s.rating||3)}</div>
+        ${s.prices?`<div style="font-size:11px;color:var(--text2);margin-top:4px;">💰 ${s.prices}</div>`:''}
+        ${s.issues?`<div style="font-size:11px;color:var(--red);margin-top:4px;">⚠️ ${s.issues}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span style="font-size:10px;background:rgba(29,169,189,0.1);color:var(--accent);padding:3px 10px;border-radius:20px;">${speedLabel[s.speed]||s.speed}</span>
+        <button class="btn btn-sm btn-danger" onclick="deleteSupplier('${s.id}')">حذف</button>
+      </div>
+    </div>`).join('')||'<div style="color:var(--text3);font-size:12px;">لا يوجد موردون</div>';
+}
+
+async function deleteSupplier(id){
+  if(!confirm('حذف هذا المورد؟'))return;
+  await db.from('suppliers').delete().eq('id',id);
+  toast('تم الحذف'); loadSuppliers(); loadSupplierOptions();
+}
+
+async function loadSupplierOptions(){
+  const {data}=await db.from('suppliers').select('name').order('name');
+  const sel=document.getElementById('o-supplier');
+  const current=sel.value;
+  sel.innerHTML='<option value="">— اختر أو اتركه فارغاً —</option>';
+  (data||[]).forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.name; opt.textContent=s.name;
+    sel.appendChild(opt);
+  });
+  sel.value=current;
+}
+
+// ── Reports ──
+async function loadReports(){
+  const period=document.getElementById('rpt-period').value;
+  const now=new Date();
+  let from,to=now.toISOString().split('T')[0];
+  if(period==='month') from=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  else if(period==='quarter'){const q=Math.floor(now.getMonth()/3);from=new Date(now.getFullYear(),q*3,1).toISOString().split('T')[0];}
+  else if(period==='year') from=new Date(now.getFullYear(),0,1).toISOString().split('T')[0];
+  else from='2020-01-01';
+
+  let q=db.from('orders').select('*');
+  if(period!=='all') q=q.gte('order_date',from).lte('order_date',to);
+  const {data}=await q;
+  const ords=(data||[]).filter(o=>o.status==='done');
+
+  // حسب القسم
+  const deptMap={};
+  ords.forEach(o=>{if(o.department)deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||parseFloat(o.expected_price)||0);});
+  const maxD=Math.max(...Object.values(deptMap),1);
+  document.getElementById('rpt-dept').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([d,v])=>
+    `<div class="bar-row"><div class="bar-label">${d}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxD*100}%"></div></div><div class="bar-val">${v.toLocaleString('ar-SA')}</div></div>`
+  ).join('')||noData();
+
+  // حسب المورد
+  const supMap={};
+  ords.filter(o=>o.supplier).forEach(o=>{supMap[o.supplier]=(supMap[o.supplier]||0)+(parseFloat(o.actual_price)||parseFloat(o.expected_price)||0);});
+  const maxS=Math.max(...Object.values(supMap),1);
+  document.getElementById('rpt-supplier').innerHTML=Object.entries(supMap).sort((a,b)=>b[1]-a[1]).map(([s,v])=>
+    `<div class="bar-row"><div class="bar-label">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxS*100}%;background:linear-gradient(90deg,var(--purple),#6c3483);"></div></div><div class="bar-val">${v.toLocaleString('ar-SA')}</div></div>`
+  ).join('')||noData();
+
+  // أكثر الأصناف
+  const itemMap={};
+  data.forEach(o=>{itemMap[o.item_name]=(itemMap[o.item_name]||0)+1;});
+  const maxI=Math.max(...Object.values(itemMap),1);
+  document.getElementById('rpt-items').innerHTML=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>
+    `<div class="bar-row"><div class="bar-label">${i}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxI*100}%;background:linear-gradient(90deg,var(--amber),var(--gold));"></div></div><div class="bar-val">${v} طلب</div></div>`
+  ).join('')||noData();
+
+  // كشف الهدر
+  const itemDates={};
+  data.forEach(o=>{if(!itemDates[o.item_name])itemDates[o.item_name]=[];itemDates[o.item_name].push({date:new Date(o.order_date),price:parseFloat(o.actual_price)||0});});
+  let wasteHTML='';
+  Object.entries(itemDates).forEach(([item,entries])=>{
+    if(entries.length>1){
+      entries.sort((a,b)=>a.date-b.date);
+      const diff=(entries[entries.length-1].date-entries[0].date)/(1000*60*60*24);
+      if(diff<60) wasteHTML+=`<div class="alert"><div class="alert-icon">🔄</div><div><b>${item}</b> — طُلب ${entries.length} مرات خلال ${Math.round(diff)} يوم — يحتمل تكرار غير مبرر</div></div>`;
+    }
+  });
+  document.getElementById('rpt-waste').innerHTML=wasteHTML||'<div style="color:var(--green);font-size:12px;">✅ لا يوجد هدر واضح في هذه الفترة</div>';
+
+  // تضخم الأسعار
+  let inflHTML='';
+  Object.entries(itemDates).forEach(([item,entries])=>{
+    if(entries.length>1&&entries[0].price>0&&entries[entries.length-1].price>0){
+      const change=((entries[entries.length-1].price-entries[0].price)/entries[0].price)*100;
+      if(Math.abs(change)>10) inflHTML+=`<div class="bar-row">
+        <div class="bar-label">${item}</div>
+        <div style="flex:1;font-size:12px;color:${change>0?'var(--red)':'var(--green)'};">${change>0?'↑':'↓'} ${Math.abs(change).toFixed(1)}%</div>
+        <div class="bar-val" style="color:${change>0?'var(--red)':'var(--green)'};">${change>0?'ارتفاع':'انخفاض'}</div>
+      </div>`;
+    }
+  });
+  document.getElementById('rpt-inflation').innerHTML=inflHTML||'<div style="color:var(--text3);font-size:12px;">لا توجد بيانات كافية لتحليل التضخم — سجّل نفس الصنف أكثر من مرة</div>';
+}
+
+function noData(){return '<div style="color:var(--text3);font-size:12px;">لا توجد بيانات</div>';}
+
+// ── Performance ──
+async function loadPerformance(){
+  const {data}=await db.from('orders').select('*');
+  const {data:switches}=await db.from('supplier_switches').select('*').order('created_at',{ascending:false});
+  const ords=data||[];
+  document.getElementById('perf-success').textContent=ords.filter(o=>o.status==='done').length;
+  document.getElementById('perf-reject').textContent=ords.filter(o=>o.status==='reject').length;
+  document.getElementById('perf-switch').textContent=(switches||[]).length;
+
+  const done=ords.filter(o=>o.status==='done'&&o.order_date&&o.created_at);
+  const avgTime=done.length?done.reduce((s,o)=>{
+    const d=(new Date(o.order_date)-new Date(o.created_at.split('T')[0]))/(1000*60*60*24);
+    return s+Math.abs(d);
+  },0)/done.length:0;
+  document.getElementById('perf-time').textContent=Math.round(avgTime)||'—';
+
+  const sw=switches||[];
+  document.getElementById('supplier-switches').innerHTML=sw.length?`
+    <table class="tbl"><thead><tr><th>الصنف</th><th>المورد القديم</th><th>المورد الجديد</th><th>السعر القديم</th><th>السعر الجديد</th><th>التوفير</th><th>التاريخ</th></tr></thead>
+    <tbody>${sw.map(s=>`<tr>
+      <td>${s.item_name}</td><td>${s.old_supplier}</td><td style="color:var(--green);">${s.new_supplier}</td>
+      <td>${(s.old_price||0).toLocaleString('ar-SA')}</td><td>${(s.new_price||0).toLocaleString('ar-SA')}</td>
+      <td style="color:var(--green);font-weight:700;">${((s.old_price||0)-(s.new_price||0)).toLocaleString('ar-SA')}</td>
+      <td>${s.switch_date}</td>
+    </tr>`).join('')}</tbody></table>`:noData();
+}
+
+async function saveSwitch(){
+  const item=document.getElementById('sw-item').value.trim();
+  if(!item){toast('أدخل اسم الصنف','err');return;}
+  await db.from('supplier_switches').insert({
+    item_name:item,old_supplier:document.getElementById('sw-old').value,
+    new_supplier:document.getElementById('sw-new').value,
+    old_price:parseFloat(document.getElementById('sw-old-price').value)||0,
+    new_price:parseFloat(document.getElementById('sw-new-price').value)||0,
+    switch_date:document.getElementById('sw-date').value,
+  });
+  toast('✅ تم الحفظ');
+  ['sw-item','sw-old','sw-new','sw-old-price','sw-new-price'].forEach(id=>{document.getElementById(id).value='';});
+  loadPerformance();
+}
+
+// ── Savings ──
+async function loadSavings(){
+  const now=new Date();
+  const mStart=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  const {data:month}=await db.from('savings_log').select('*').gte('saving_date',mStart);
+  const {data:all}=await db.from('savings_log').select('*').order('created_at',{ascending:false});
+
+  const ms=month||[];
+  const total=ms.reduce((s,v)=>s+(parseFloat(v.amount)||0),0);
+  const byType={switch:0,nego:0,dup:0,other:0};
+  ms.forEach(v=>{byType[v.saving_type]=(byType[v.saving_type]||0)+(parseFloat(v.amount)||0);});
+
+  document.getElementById('savings-total').textContent=total.toLocaleString('ar-SA');
+  document.getElementById('sav-switch').textContent=(byType.switch||0).toLocaleString('ar-SA');
+  document.getElementById('sav-nego').textContent=(byType.nego||0).toLocaleString('ar-SA');
+  document.getElementById('sav-dup').textContent=(byType.dup||0).toLocaleString('ar-SA');
+
+  const typeLabel={switch:'تغيير مورد',nego:'تفاوض',dup:'تفادي تكرار',other:'أخرى'};
+  document.getElementById('savings-list').innerHTML=(all||[]).length?`
+    <table class="tbl"><thead><tr><th>المبلغ</th><th>النوع</th><th>الوصف</th><th>التاريخ</th><th>حذف</th></tr></thead>
+    <tbody>${(all||[]).map(v=>`<tr>
+      <td style="color:var(--green);font-weight:900;">${(parseFloat(v.amount)||0).toLocaleString('ar-SA')} ريال</td>
+      <td><span class="badge-status s-done">${typeLabel[v.saving_type]||v.saving_type}</span></td>
+      <td>${v.description||'—'}</td><td>${v.saving_date}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteSaving('${v.id}')">حذف</button></td>
+    </tr>`).join('')}</tbody></table>`:noData();
+}
+
+async function saveSaving(){
+  const amount=parseFloat(document.getElementById('sav-amount').value);
+  if(!amount||amount<=0){toast('أدخل المبلغ','err');return;}
+  await db.from('savings_log').insert({
+    amount,saving_type:document.getElementById('sav-type').value,
+    description:document.getElementById('sav-desc').value||null,
+    saving_date:document.getElementById('sav-date').value,
+  });
+  toast('✅ تم الحفظ');
+  document.getElementById('sav-amount').value='';
+  document.getElementById('sav-desc').value='';
+  loadSavings(); loadDashboard();
+}
+
+async function deleteSaving(id){
+  if(!confirm('حذف هذا السجل؟'))return;
+  await db.from('savings_log').delete().eq('id',id);
+  toast('تم الحذف'); loadSavings(); loadDashboard();
+}
+</script>
+</body>
+</html>
