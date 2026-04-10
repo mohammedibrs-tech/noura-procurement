@@ -3,776 +3,885 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>منصة إدارة المشتريات | نورة</title>
+<title>نظام إدارة المشتريات والعهدة | نورة</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{font-family:'Cairo',sans-serif;min-height:100vh;}
-body.dark{--bg:#07111C;--bg2:#0D1B2A;--card:#102030;--card2:#162840;--border:rgba(255,255,255,0.07);--text:#EEF2F7;--text2:rgba(238,242,247,0.6);--text3:rgba(238,242,247,0.3);--accent:#1DA9BD;--accent2:#0D7A8A;--green:#27AE60;--red:#E74C3C;--amber:#F39C12;--gold:#F4C430;--purple:#8E44AD;--inp-bg:rgba(255,255,255,0.05);--inp-border:rgba(29,169,189,0.25);}
-body.light{--bg:#F0F4F8;--bg2:#E2EAF2;--card:#FFFFFF;--card2:#EDF2F7;--border:rgba(0,0,0,0.08);--text:#1A202C;--text2:rgba(26,32,44,0.6);--text3:rgba(26,32,44,0.3);--accent:#1DA9BD;--accent2:#0D7A8A;--green:#1E8449;--red:#C0392B;--amber:#D68910;--gold:#B7950B;--purple:#6C3483;--inp-bg:rgba(0,0,0,0.04);--inp-border:rgba(29,169,189,0.3);}
-body{background:var(--bg);color:var(--text);transition:background .4s,color .4s;}
+html,body{font-family:'Cairo',sans-serif;height:100%;background:#F8FAFB;color:#1A202C;}
 
-/* LOGIN */
-#ls{display:flex;position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 30%,#0D2E3A,#040D14 70%);align-items:center;justify-content:center;}
-.lbox{background:rgba(255,255,255,0.04);border:1px solid rgba(29,169,189,0.2);border-radius:24px;padding:44px 40px;width:100%;max-width:400px;backdrop-filter:blur(20px);}
-.l-ico{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:11px;font-weight:900;color:#fff;letter-spacing:.5px;}
-.l-title{text-align:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:3px;}
-.l-sub{text-align:center;font-size:10px;color:rgba(29,169,189,0.8);letter-spacing:1px;margin-bottom:26px;}
-.l-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:6px;}
-.l-inp{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(29,169,189,0.2);background:rgba(255,255,255,0.06);color:#fff;font-family:Cairo,sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border .2s;}
-.l-inp:focus{border-color:rgba(29,169,189,0.6);}
-.l-btn{width:100%;padding:13px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);color:#fff;border:none;border-radius:12px;font-family:Cairo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;}
-.l-err{display:none;color:#E74C3C;font-size:12px;text-align:center;background:rgba(231,76,60,0.1);padding:7px;border-radius:8px;margin-bottom:11px;}
+/* ══ LOGIN ══ */
+#ls{display:flex;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0D2E3A 0%,#1DA9BD 100%);align-items:center;justify-content:center;}
+.lbox{background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.15);}
+.l-logo{text-align:center;margin-bottom:8px;}
+.l-logo span{font-size:22px;font-weight:900;color:#1DA9BD;}
+.l-logo small{display:block;font-size:11px;color:#94A3B8;letter-spacing:1px;margin-top:2px;}
+.l-divider{height:1px;background:#F1F5F9;margin:20px 0;}
+.l-lbl{font-size:12px;font-weight:700;color:#64748B;display:block;margin-bottom:6px;}
+.l-inp{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #E2E8F0;background:#F8FAFB;color:#1A202C;font-family:Cairo,sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border .2s;}
+.l-inp:focus{border-color:#1DA9BD;background:#fff;}
+.l-btn{width:100%;padding:13px;background:#1DA9BD;color:#fff;border:none;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;}
+.l-btn:hover{background:#0D7A8A;}
+.l-err{display:none;color:#E53E3E;font-size:12px;text-align:center;background:#FFF5F5;border:1px solid #FED7D7;padding:8px;border-radius:8px;margin-bottom:12px;}
 
-/* TOPBAR */
-.topbar{background:var(--bg2);border-bottom:2px solid var(--accent);padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.tb-brand{display:flex;align-items:center;gap:10px;}
-.tb-ico{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#1DA9BD,#0D7A8A);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;}
-.tb-nm{font-size:14px;font-weight:900;color:var(--text);}
-.tb-sb{font-size:9px;color:var(--text3);letter-spacing:1px;}
-.nav{display:flex;gap:3px;}
-.nav-btn{padding:7px 14px;border:none;border-radius:9px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;}
-.nav-btn.active{background:rgba(29,169,189,0.12);color:var(--accent);}
-.tb-actions{display:flex;align-items:center;gap:10px;}
-.theme-toggle{background:var(--card);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:9px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
-.out-btn{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--red);padding:6px 12px;border-radius:9px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+/* ══ LAYOUT ══ */
+#app{display:none;height:100vh;flex-direction:row;}
 
-/* PAGES */
-.page{display:none;padding:20px;max-width:1400px;margin:0 auto;}
-.page.active{display:block;}
+/* SIDEBAR */
+.sidebar{width:240px;background:#fff;border-left:1px solid #E2E8F0;display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;overflow-y:auto;}
+.sb-header{padding:20px 16px 16px;border-bottom:1px solid #F1F5F9;}
+.sb-brand{font-size:15px;font-weight:900;color:#1DA9BD;}
+.sb-sub{font-size:10px;color:#94A3B8;letter-spacing:.5px;margin-top:2px;}
+.sb-nav{padding:10px 8px;flex:1;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:#64748B;font-size:13px;font-weight:600;transition:all .2s;margin-bottom:2px;border:none;background:none;width:100%;text-align:right;font-family:Cairo,sans-serif;}
+.sb-item:hover{background:#F1F5F9;color:#1A202C;}
+.sb-item.active{background:#EBF8FA;color:#1DA9BD;font-weight:700;}
+.sb-item svg{flex-shrink:0;opacity:.7;}
+.sb-item.active svg{opacity:1;}
+.sb-section-lbl{font-size:10px;font-weight:700;color:#CBD5E0;letter-spacing:1px;padding:12px 12px 4px;text-transform:uppercase;}
+.sb-footer{padding:12px 16px;border-top:1px solid #F1F5F9;display:flex;justify-content:space-between;align-items:center;}
+.sb-user{font-size:12px;font-weight:700;color:#64748B;}
+.sb-logout{font-size:11px;color:#E53E3E;cursor:pointer;background:none;border:none;font-family:Cairo,sans-serif;font-weight:700;}
 
-/* KPI GRID */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;border-right:3px solid var(--accent);position:relative;overflow:hidden;}
-.kpi-lbl{font-size:10px;color:var(--text2);font-weight:700;margin-bottom:6px;}
-.kpi-val{font-size:24px;font-weight:900;color:var(--accent);}
-.kpi-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:#F8FAFB;}
+.main-header{background:#fff;border-bottom:1px solid #E2E8F0;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-size:22px;font-weight:900;color:#1A202C;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn-primary{display:flex;align-items:center;gap:6px;padding:9px 18px;background:#1DA9BD;color:#fff;border:none;border-radius:9px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;}
+.btn-primary:hover{background:#0D7A8A;}
+.btn-secondary{padding:9px 16px;background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;border-radius:9px;font-family:Cairo,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-secondary:hover{background:#E2E8F0;}
+.btn-danger-sm{padding:6px 12px;background:#FFF5F5;color:#E53E3E;border:1px solid #FED7D7;border-radius:8px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-edit-sm{padding:6px 12px;background:#EBF8FA;color:#1DA9BD;border:1px solid #BEE3F8;border-radius:8px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
 
-/* SECTION CARD */
-.sec{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;}
-.sec-title{font-size:14px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.sec-title-text{display:flex;align-items:center;gap:8px;}
-.badge{font-size:9px;background:rgba(29,169,189,0.1);color:var(--accent);padding:3px 10px;border-radius:20px;font-weight:700;}
+/* CONTENT */
+.content{padding:24px 28px;}
 
-/* FORM */
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px;}
-.field label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;}
-.inp,.sel,.ta{width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid var(--inp-border);background:var(--inp-bg);color:var(--text);font-family:Cairo,sans-serif;font-size:13px;outline:none;transition:border .2s;}
-.inp:focus,.sel:focus,.ta:focus{border-color:var(--accent);}
-.sel option{background:var(--card);}
-.ta{resize:vertical;min-height:72px;}
-.btn{padding:10px 20px;border:none;border-radius:10px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;}
-.btn:hover{opacity:.85;}
-.btn-p{background:linear-gradient(135deg,#1DA9BD,#0D7A8A);color:#fff;}
-.btn-g{background:rgba(29,169,189,0.1);border:1px solid rgba(29,169,189,0.2);color:var(--accent);}
-.btn-danger{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--red);}
-.btn-sm{padding:5px 12px;font-size:11px;}
-.btn-amber{background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.2);color:var(--amber);}
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;display:flex;align-items:flex-start;gap:14px;}
+.kpi-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.kpi-icon.blue{background:#EBF8FA;}
+.kpi-icon.green{background:#F0FFF4;}
+.kpi-icon.amber{background:#FFFBEB;}
+.kpi-icon.purple{background:#FAF5FF;}
+.kpi-info{flex:1;}
+.kpi-lbl{font-size:12px;color:#94A3B8;font-weight:600;margin-bottom:5px;}
+.kpi-val{font-size:26px;font-weight:900;color:#1A202C;line-height:1;}
+.kpi-sub{font-size:11px;color:#94A3B8;margin-top:4px;}
+
+/* CHART CARD */
+.chart-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;}
+.chart-title{font-size:14px;font-weight:700;color:#1A202C;margin-bottom:16px;}
+.chart-bars{display:flex;flex-direction:column;gap:10px;}
+.cbar-row{display:flex;align-items:center;gap:12px;}
+.cbar-lbl{width:120px;font-size:12px;color:#64748B;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+.cbar-track{flex:1;height:10px;background:#F1F5F9;border-radius:5px;overflow:hidden;}
+.cbar-fill{height:100%;border-radius:5px;background:#1DA9BD;transition:width .6s;}
+.cbar-val{width:70px;font-size:12px;font-weight:700;color:#1A202C;flex-shrink:0;}
+
+/* CONTENT GRID */
+.content-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.content-grid.full{grid-template-columns:1fr;}
+
+/* SECTION */
+.section{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;margin-bottom:18px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:14px;font-weight:700;color:#1A202C;}
+.section-badge{font-size:11px;background:#EBF8FA;color:#1DA9BD;padding:3px 10px;border-radius:20px;font-weight:700;}
 
 /* TABLE */
 .tbl-wrap{overflow-x:auto;}
-.tbl{width:100%;border-collapse:collapse;font-size:12px;}
-.tbl th{background:var(--card2);padding:10px 12px;text-align:right;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;}
-.tbl td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.tbl tr:hover td{background:rgba(255,255,255,0.02);}
-.status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
-.s-new{background:rgba(29,169,189,0.1);color:var(--accent);}
-.s-done{background:rgba(39,174,96,0.1);color:var(--green);}
-.s-reject{background:rgba(231,76,60,0.1);color:var(--red);}
-.s-pending{background:rgba(243,156,18,0.1);color:var(--amber);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{background:#F8FAFB;padding:11px 14px;text-align:right;font-size:12px;font-weight:700;color:#64748B;border-bottom:2px solid #E2E8F0;white-space:nowrap;}
+.tbl td{padding:12px 14px;font-size:13px;color:#374151;border-bottom:1px solid #F1F5F9;vertical-align:middle;}
+.tbl tr:hover td{background:#F8FAFB;}
+.tbl .order-num{color:#1DA9BD;font-weight:700;cursor:pointer;}
+.tbl .order-num:hover{text-decoration:underline;}
 
-/* ALERT */
-.alert{background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.2);border-right:3px solid var(--amber);border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12px;display:flex;gap:10px;align-items:flex-start;}
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-approved{background:#F0FFF4;color:#276749;border:1px solid #C6F6D5;}
+.badge-new{background:#EBF8FA;color:#1DA9BD;border:1px solid #BEE3F8;}
+.badge-pending{background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;}
+.badge-done{background:#F0FFF4;color:#276749;border:1px solid #C6F6D5;}
+.badge-reject{background:#FFF5F5;color:#E53E3E;border:1px solid #FED7D7;}
 
-/* BAR CHART */
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;}
-.bar-lbl{width:130px;text-align:right;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
-.bar-track{flex:1;height:9px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;}
-body.light .bar-track{background:rgba(0,0,0,0.06);}
-.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s;}
-.bar-val{width:80px;text-align:left;color:var(--text);font-weight:700;flex-shrink:0;}
+/* FORM */
+.form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.form-row.two{grid-template-columns:1fr 1fr;}
+.form-row.full{grid-template-columns:1fr;}
+.field-group label{font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;}
+.fi{width:100%;padding:10px 13px;border-radius:9px;border:1.5px solid #E2E8F0;background:#F8FAFB;color:#1A202C;font-family:Cairo,sans-serif;font-size:13px;outline:none;transition:border .2s;box-sizing:border-box;}
+.fi:focus{border-color:#1DA9BD;background:#fff;}
+.fi-ta{width:100%;padding:10px 13px;border-radius:9px;border:1.5px solid #E2E8F0;background:#F8FAFB;color:#1A202C;font-family:Cairo,sans-serif;font-size:13px;outline:none;resize:vertical;min-height:72px;box-sizing:border-box;}
+.fi-ta:focus{border-color:#1DA9BD;background:#fff;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.filter-bar .fi{width:auto;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{padding-right:36px;}
+.search-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:#94A3B8;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
 
 /* SAVINGS HERO */
-.savings-hero{background:linear-gradient(135deg,rgba(39,174,96,0.12),rgba(39,174,96,0.04));border:1px solid rgba(39,174,96,0.2);border-radius:18px;padding:24px;text-align:center;margin-bottom:16px;}
-.sav-num{font-size:46px;font-weight:900;color:var(--green);}
-.sav-lbl{font-size:13px;color:var(--text2);margin-top:5px;}
+.sav-hero{background:linear-gradient(135deg,#1DA9BD,#0D7A8A);border-radius:16px;padding:28px;text-align:center;color:#fff;margin-bottom:20px;}
+.sav-num{font-size:48px;font-weight:900;margin:6px 0;}
+.sav-lbl{font-size:13px;opacity:.85;}
+.sav-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.sav-kpi{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;}
+.sav-kpi-val{font-size:22px;font-weight:900;color:#1DA9BD;margin-bottom:4px;}
+.sav-kpi-lbl{font-size:11px;color:#94A3B8;font-weight:600;}
 
 /* BUDGET BAR */
-.budget-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
-.budget-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:8px;}
-.budget-track{height:14px;background:rgba(255,255,255,0.06);border-radius:7px;overflow:hidden;}
-body.light .budget-track{background:rgba(0,0,0,0.06);}
-.budget-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .5s;}
-.budget-fill.danger{background:linear-gradient(90deg,var(--amber),var(--red));}
-
-/* TABS inside page */
-.page-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--card2);border-radius:12px;padding:4px;width:fit-content;}
-.ptab{padding:7px 16px;border:none;border-radius:9px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;}
-.ptab.active{background:var(--card);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.budget-wrap{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:18px;margin-bottom:20px;}
+.budget-header{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;}
+.budget-track{height:12px;background:#F1F5F9;border-radius:6px;overflow:hidden;}
+.budget-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#1DA9BD,#27AE60);transition:width .5s;}
+.budget-fill.warn{background:linear-gradient(90deg,#F59E0B,#EF4444);}
+.budget-footer{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#64748B;}
 
 /* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:center;justify-content:center;padding:16px;}
 .modal-bg.open{display:flex;}
-.modal{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;}
-.modal-title{font-size:15px;font-weight:900;margin-bottom:18px;color:var(--accent);}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:11px 20px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;color:var(--text);}
-.toast.show{opacity:1;}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.15);}
+.modal-title{font-size:16px;font-weight:900;color:#1A202C;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #F1F5F9;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
 
-/* FILE UPLOAD ZONE */
-.upload-zone{border:2px dashed var(--inp-border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border .2s;color:var(--text2);}
-.upload-zone:hover{border-color:var(--accent);color:var(--accent);}
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed #CBD5E0;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:all .2s;color:#64748B;}
+.upload-zone:hover{border-color:#1DA9BD;color:#1DA9BD;background:#EBF8FA;}
 .upload-zone input{display:none;}
-.upload-lbl{font-size:13px;font-weight:700;margin-bottom:4px;}
-.upload-sub{font-size:11px;}
 
-/* DEPT TAGS */
-.dept-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(29,169,189,0.1);border:1px solid rgba(29,169,189,0.2);color:var(--accent);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;margin:3px;}
-.dept-tag button{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;}
+/* SUPPLIER CARD */
+.sup-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.sup-name{font-size:14px;font-weight:700;color:#1A202C;margin-bottom:3px;}
+.sup-meta{font-size:12px;color:#94A3B8;}
+.sup-rating{color:#F59E0B;font-size:13px;margin-top:5px;}
+.sup-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.sup-speed{font-size:11px;background:#EBF8FA;color:#1DA9BD;padding:3px 10px;border-radius:20px;font-weight:700;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A202C;color:#fff;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.toast.show{opacity:1;}
+.toast.err{background:#E53E3E;}
 </style>
 </head>
-<body class="dark">
+<body>
 
 <!-- LOGIN -->
 <div id="ls">
   <div class="lbox">
-    <div class="l-ico">MQ</div>
-    <div class="l-title">إدارة المشتريات</div>
-    <div class="l-sub">PROCUREMENT MANAGEMENT</div>
+    <div class="l-logo">
+      <span>نظام المشتريات والعهدة</span>
+      <small>NOURA PROCUREMENT SYSTEM</small>
+    </div>
+    <div class="l-divider"></div>
     <div class="l-err" id="lerr">اسم المستخدم أو كلمة المرور غير صحيحة</div>
     <label class="l-lbl">اسم المستخدم</label>
     <input class="l-inp" id="lu" type="text" placeholder="admin" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
     <label class="l-lbl">كلمة المرور</label>
     <input class="l-inp" id="lp" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="l-btn" onclick="doLogin()">دخول</button>
-    <div style="text-align:center;margin-top:14px;font-size:10px;color:rgba(255,255,255,0.3);">للاستخدام الشخصي فقط</div>
+    <button class="l-btn" onclick="doLogin()">دخول إلى النظام</button>
   </div>
 </div>
 
-<div id="app" style="display:none;">
-<div class="topbar">
-  <div class="tb-brand">
-    <div class="tb-ico">MQ</div>
-    <div><div class="tb-nm">إدارة المشتريات</div><div class="tb-sb">PROCUREMENT</div></div>
-  </div>
-  <div class="nav">
-    <button class="nav-btn active" onclick="showPage('dashboard',this)">الداشبورد</button>
-    <button class="nav-btn" onclick="showPage('orders',this)">الطلبات</button>
-    <button class="nav-btn" onclick="showPage('suppliers',this)">الموردون</button>
-    <button class="nav-btn" onclick="showPage('reports',this)">التقارير</button>
-    <button class="nav-btn" onclick="showPage('savings',this)">التوفير</button>
-    <button class="nav-btn" onclick="showPage('settings',this)">الاعدادات</button>
-  </div>
-  <div class="tb-actions">
-    <button class="theme-toggle" onclick="toggleTheme()">داكن / فاتح</button>
-    <button class="out-btn" onclick="doLogout()">خروج</button>
-  </div>
-</div>
+<!-- APP -->
+<div id="app" style="display:none;height:100vh;flex-direction:row;">
 
-<!-- DASHBOARD -->
-<div class="page active" id="pg-dashboard">
-  <div id="alerts-box" style="margin-bottom:14px;"></div>
-
-  <!-- ميزانية العهدة -->
-  <div class="budget-bar-wrap" id="budget-section" style="display:none;">
-    <div class="budget-labels">
-      <span id="budget-title">العهدة الشهرية</span>
-      <span id="budget-pct">0%</span>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-header">
+      <div class="sb-brand">نورة للمشتريات</div>
+      <div class="sb-sub">PROCUREMENT SYSTEM</div>
     </div>
-    <div class="budget-track"><div class="budget-fill" id="budget-fill" style="width:0%"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:7px;">
-      <span style="color:var(--green);" id="budget-remain">المتبقي: —</span>
-      <span style="color:var(--text2);" id="budget-spent">المصروف: —</span>
-      <span style="color:var(--text3);" id="budget-total">الإجمالي: —</span>
+    <div class="sb-nav">
+      <div class="sb-section-lbl">الرئيسية</div>
+      <button class="sb-item active" id="nav-dashboard" onclick="showPage('dashboard',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        لوحة القيادة
+      </button>
+      <div class="sb-section-lbl">المشتريات</div>
+      <button class="sb-item" id="nav-orders" onclick="showPage('orders',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        طلبات الشراء
+      </button>
+      <button class="sb-item" id="nav-custody" onclick="showPage('custody',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        العهد والأصول
+      </button>
+      <button class="sb-item" id="nav-suppliers" onclick="showPage('suppliers',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        الموردون
+      </button>
+      <div class="sb-section-lbl">التحليل</div>
+      <button class="sb-item" id="nav-reports" onclick="showPage('reports',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        التقارير
+      </button>
+      <button class="sb-item" id="nav-savings" onclick="showPage('savings',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg>
+        التوفير
+      </button>
+      <div class="sb-section-lbl">الإعدادات</div>
+      <button class="sb-item" id="nav-departments" onclick="showPage('departments',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        الإدارات والأقسام
+      </button>
+      <button class="sb-item" id="nav-import" onclick="showPage('import',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        استيراد البيانات
+      </button>
+      <button class="sb-item" id="nav-settings" onclick="showPage('settings',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        الإعدادات
+      </button>
     </div>
-  </div>
-
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="kpi"><div class="kpi-lbl">إجمالي المصروفات (هذا الشهر)</div><div class="kpi-val" id="k-total">—</div><div class="kpi-sub">ريال</div></div>
-    <div class="kpi" style="border-color:var(--amber)"><div class="kpi-lbl">عدد الطلبات</div><div class="kpi-val" id="k-orders" style="color:var(--amber)">—</div><div class="kpi-sub">هذا الشهر</div></div>
-    <div class="kpi" style="border-color:var(--green)"><div class="kpi-lbl">التوفير الكلي</div><div class="kpi-val" id="k-savings" style="color:var(--green)">—</div><div class="kpi-sub">ريال</div></div>
-    <div class="kpi" style="border-color:var(--purple)"><div class="kpi-lbl">أعلى مورد صرفاً</div><div class="kpi-val" id="k-supplier" style="color:var(--purple);font-size:15px;">—</div><div class="kpi-sub" id="k-supplier-amt"></div></div>
-    <div class="kpi" style="border-color:var(--gold)"><div class="kpi-lbl">أكثر صنف مطلوب</div><div class="kpi-val" id="k-item" style="color:var(--gold);font-size:15px;">—</div><div class="kpi-sub" id="k-item-cnt"></div></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">المصروفات حسب القسم <span class="badge">هذا الشهر</span></div></div>
-      <div id="dept-chart">—</div>
-    </div>
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">آخر الطلبات</div></div>
-      <div id="recent-orders">—</div>
-    </div>
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">التوفير حسب المصدر</div></div>
-      <div id="sav-chart">—</div>
-    </div>
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">تنبيهات</div></div>
-      <div id="alerts-dash">—</div>
-    </div>
-  </div>
-</div>
-
-<!-- ORDERS -->
-<div class="page" id="pg-orders">
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">طلب جديد</div></div>
-    <div class="form-grid">
-      <div class="field"><label>اسم الصنف *</label><input class="inp" id="o-item" placeholder="مثال: طابعة"></div>
-      <div class="field"><label>الكمية</label><input class="inp" id="o-qty" type="number" min="1" value="1"></div>
-      <div class="field"><label>القسم / الإدارة</label><select class="sel" id="o-dept"><option value="">اختر</option></select></div>
-      <div class="field"><label>السعر المتوقع (ريال)</label><input class="inp" id="o-price" type="number" min="0" placeholder="0"></div>
-      <div class="field"><label>السعر الفعلي (بعد الشراء)</label><input class="inp" id="o-actual" type="number" min="0" placeholder="0"></div>
-      <div class="field"><label>المورد</label><select class="sel" id="o-sup"><option value="">اختر أو اتركه</option></select></div>
-      <div class="field"><label>الحالة</label><select class="sel" id="o-status"><option value="new">جديد</option><option value="pending">قيد المعالجة</option><option value="done">تم</option><option value="reject">مرفوض</option></select></div>
-      <div class="field"><label>التاريخ</label><input class="inp" id="o-date" type="date"></div>
-    </div>
-    <div class="field" style="margin-bottom:12px;"><label>ملاحظات</label><textarea class="ta" id="o-notes" placeholder="أي تفاصيل..."></textarea></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-p" onclick="saveOrder()">حفظ الطلب</button>
-      <button class="btn btn-g" onclick="clearOrder()">مسح</button>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sec-title">
-      <div class="sec-title-text">جميع الطلبات <span class="badge" id="ord-count">0</span></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <select class="sel" id="f-status" style="width:auto;" onchange="loadOrders()"><option value="">كل الحالات</option><option value="new">جديد</option><option value="pending">قيد المعالجة</option><option value="done">تم</option><option value="reject">مرفوض</option></select>
-        <select class="sel" id="f-dept" style="width:auto;" onchange="loadOrders()"><option value="">كل الأقسام</option></select>
-        <input class="inp" id="f-search" style="width:160px;" placeholder="بحث..." oninput="loadOrders()">
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>الصنف</th><th>الكمية</th><th>القسم</th><th>المتوقع</th><th>الفعلي</th><th>التوفير</th><th>المورد</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
-        <tbody id="ord-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- SUPPLIERS -->
-<div class="page" id="pg-suppliers">
-  <!-- رفع ملف موردين سابق -->
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">استيراد بيانات موردين من ملف Excel</div></div>
-    <div class="upload-zone" onclick="document.getElementById('sup-file').click()">
-      <input type="file" id="sup-file" accept=".xlsx,.xls,.csv" onchange="importSuppliers(this)">
-      <div class="upload-lbl">اضغط لرفع ملف Excel أو CSV</div>
-      <div class="upload-sub">يجب أن يحتوي الملف على أعمدة: اسم المورد، رقم التواصل، المجال، التقييم</div>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">إضافة مورد</div></div>
-    <div class="form-grid">
-      <div class="field"><label>اسم المورد *</label><input class="inp" id="s-name" placeholder="الشركة أو الفرد"></div>
-      <div class="field"><label>رقم التواصل</label><input class="inp" id="s-phone" placeholder="05xxxxxxxx"></div>
-      <div class="field"><label>مجال التوريد</label><input class="inp" id="s-cat" placeholder="مثال: مستلزمات مكتبية"></div>
-      <div class="field"><label>سرعة التوريد</label><select class="sel" id="s-speed"><option value="fast">سريع — أقل من 3 أيام</option><option value="medium" selected>متوسط — 3-7 أيام</option><option value="slow">بطيء — أكثر من أسبوع</option></select></div>
-      <div class="field"><label>التقييم (1-5)</label><select class="sel" id="s-rating"><option value="5">ممتاز (5)</option><option value="4">جيد جداً (4)</option><option value="3" selected>جيد (3)</option><option value="2">مقبول (2)</option><option value="1">ضعيف (1)</option></select></div>
-      <div class="field"><label>الأسعار المعتادة</label><input class="inp" id="s-prices" placeholder="مثال: ورق A4 = 25 ريال"></div>
-    </div>
-    <div class="field" style="margin-bottom:12px;"><label>مشاكل سابقة / ملاحظات</label><textarea class="ta" id="s-issues" placeholder="سجّل أي مشاكل..."></textarea></div>
-    <button class="btn btn-p" onclick="saveSupplier()">حفظ المورد</button>
-  </div>
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">قاعدة بيانات الموردين</div></div>
-    <div id="sup-list">—</div>
-  </div>
-</div>
-
-<!-- REPORTS -->
-<div class="page" id="pg-reports">
-  <!-- رفع تقارير سابقة -->
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">استيراد بيانات تقارير سابقة</div></div>
-    <div class="upload-zone" onclick="document.getElementById('rpt-file').click()">
-      <input type="file" id="rpt-file" accept=".xlsx,.xls,.csv" onchange="importOrders(this)">
-      <div class="upload-lbl">ارفع ملف Excel أو CSV لإدراجه في قاعدة بيانات الطلبات</div>
-      <div class="upload-sub">الأعمدة المطلوبة: اسم الصنف، الكمية، القسم، السعر الفعلي، التاريخ</div>
+    <div class="sb-footer">
+      <div class="sb-user">المدير العام</div>
+      <button class="sb-logout" onclick="doLogout()">خروج</button>
     </div>
   </div>
 
-  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-    <select class="sel" id="rpt-period" style="width:auto;" onchange="loadReports()">
-      <option value="month">هذا الشهر</option>
-      <option value="quarter">هذا الربع</option>
-      <option value="year">هذه السنة</option>
-      <option value="all">الكل</option>
-    </select>
-    <button class="btn btn-p" onclick="loadReports()">تحديث</button>
-    <button class="btn btn-amber" onclick="exportExcel()">تصدير Excel (KPIs)</button>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <div class="sec"><div class="sec-title"><div class="sec-title-text">المصروفات حسب القسم</div></div><div id="rpt-dept">—</div></div>
-    <div class="sec"><div class="sec-title"><div class="sec-title-text">المصروفات حسب المورد</div></div><div id="rpt-sup">—</div></div>
-    <div class="sec"><div class="sec-title"><div class="sec-title-text">الأصناف الأكثر طلباً</div></div><div id="rpt-items">—</div></div>
-    <div class="sec"><div class="sec-title"><div class="sec-title-text">كشف الهدر والتكرار</div></div><div id="rpt-waste">—</div></div>
-  </div>
-
-  <div class="sec"><div class="sec-title"><div class="sec-title-text">تحليل التضخم السعري</div></div><div id="rpt-infl">—</div></div>
-
-  <!-- تقرير شهري وربع سنوي -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">التقرير الشهري</div></div>
-      <div id="rpt-monthly">—</div>
-    </div>
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">التقرير الربع سنوي</div></div>
-      <div id="rpt-quarterly">—</div>
-    </div>
-  </div>
-</div>
-
-<!-- SAVINGS -->
-<div class="page" id="pg-savings">
-  <div class="savings-hero">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">إجمالي التوفير الكلي</div>
-    <div class="sav-num" id="sav-total">0</div>
-    <div class="sav-lbl">ريال سعودي — من جميع المصادر</div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi" style="border-color:var(--green)"><div class="kpi-lbl">توفير من فرق الأسعار</div><div class="kpi-val" id="sav-price" style="color:var(--green)">0</div><div class="kpi-sub">السعر المتوقع مقابل الفعلي</div></div>
-    <div class="kpi" style="border-color:var(--accent)"><div class="kpi-lbl">توفير من تغيير موردين</div><div class="kpi-val" id="sav-switch" style="color:var(--accent)">0</div><div class="kpi-sub">ريال</div></div>
-    <div class="kpi" style="border-color:var(--amber)"><div class="kpi-lbl">توفير مسجل يدوياً</div><div class="kpi-val" id="sav-manual" style="color:var(--amber)">0</div><div class="kpi-sub">ريال</div></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">تسجيل توفير يدوي</div></div>
-      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="field"><label>المبلغ (ريال) *</label><input class="inp" id="sv-amount" type="number" min="0" placeholder="0"></div>
-        <div class="field"><label>النوع</label><select class="sel" id="sv-type"><option value="nego">تفاوض على السعر</option><option value="switch">تغيير مورد</option><option value="dup">تفادي تكرار</option><option value="other">أخرى</option></select></div>
-        <div class="field"><label>التاريخ</label><input class="inp" id="sv-date" type="date"></div>
-        <div class="field"><label>الصنف المرتبط</label><input class="inp" id="sv-item" placeholder="اختياري"></div>
-      </div>
-      <div class="field" style="margin-bottom:12px;"><label>الوصف</label><textarea class="ta" id="sv-desc" placeholder="وصف التوفير..." style="min-height:55px;"></textarea></div>
-      <button class="btn btn-p" onclick="saveSaving()">حفظ</button>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="main-header">
+      <div class="page-title" id="page-title">لوحة القيادة</div>
+      <div class="header-actions" id="header-actions"></div>
     </div>
 
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">تغيير مورد لسعر أفضل</div></div>
-      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="field"><label>الصنف</label><input class="inp" id="sw-item" placeholder="اسم الصنف"></div>
-        <div class="field"><label>المورد القديم</label><input class="inp" id="sw-old-sup"></div>
-        <div class="field"><label>المورد الجديد</label><input class="inp" id="sw-new-sup"></div>
-        <div class="field"><label>السعر القديم</label><input class="inp" id="sw-old-p" type="number" placeholder="0"></div>
-        <div class="field"><label>السعر الجديد</label><input class="inp" id="sw-new-p" type="number" placeholder="0"></div>
-        <div class="field"><label>التاريخ</label><input class="inp" id="sw-date" type="date"></div>
-      </div>
-      <button class="btn btn-p" onclick="saveSwitch()">حفظ التغيير</button>
-    </div>
-  </div>
+    <div class="content">
 
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">سجل التوفير الكامل</div></div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>المبلغ</th><th>النوع</th><th>الصنف</th><th>الوصف</th><th>التاريخ</th><th>حذف</th></tr></thead>
-        <tbody id="sav-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-title"><div class="sec-title-text">سجل تغيير الموردين</div></div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>الصنف</th><th>المورد القديم</th><th>المورد الجديد</th><th>السعر القديم</th><th>السعر الجديد</th><th>التوفير</th><th>التاريخ</th></tr></thead>
-        <tbody id="sw-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- SETTINGS -->
-<div class="page" id="pg-settings">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-
-    <!-- الأقسام والإدارات -->
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">الأقسام والإدارات</div></div>
-      <div id="dept-tags" style="margin-bottom:14px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input class="inp" id="new-dept" placeholder="اسم القسم أو الإدارة..." style="flex:1;">
-        <button class="btn btn-p" onclick="addDept()">إضافة</button>
-      </div>
-    </div>
-
-    <!-- العهدة المالية -->
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">العهدة المالية</div></div>
-      <div class="field"><label>اسم العهدة</label><input class="inp" id="budget-name" placeholder="مثال: ميزانية الربع الأول 2026"></div>
-      <div class="field" style="margin-top:10px;"><label>المبلغ الإجمالي (ريال)</label><input class="inp" id="budget-amount" type="number" min="0" placeholder="0"></div>
-      <div class="field" style="margin-top:10px;"><label>الفترة</label>
-        <select class="sel" id="budget-period">
-          <option value="month">شهري</option>
-          <option value="quarter">ربع سنوي</option>
-          <option value="year">سنوي</option>
-          <option value="custom">مخصص</option>
-        </select>
-      </div>
-      <button class="btn btn-p" style="margin-top:14px;" onclick="saveBudget()">حفظ العهدة</button>
-      <span id="budget-suc" style="display:none;color:var(--green);font-size:11px;font-weight:700;margin-right:8px;">تم الحفظ</span>
-    </div>
-
-    <!-- إعدادات عامة -->
-    <div class="sec">
-      <div class="sec-title"><div class="sec-title-text">الاعدادات العامة</div></div>
-      <div class="field"><label>الثيم</label>
-        <div style="display:flex;gap:8px;margin-top:5px;">
-          <button class="btn btn-p" onclick="setTheme('dark')">داكن</button>
-          <button class="btn btn-g" onclick="setTheme('light')">فاتح</button>
+      <!-- ══ DASHBOARD ══ -->
+      <div class="page active" id="pg-dashboard">
+        <div id="budget-section" style="display:none;"></div>
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1DA9BD" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg></div><div class="kpi-info"><div class="kpi-lbl">إجمالي الطلبات</div><div class="kpi-val" id="k-orders">—</div><div class="kpi-sub">هذا الشهر</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div class="kpi-info"><div class="kpi-lbl">قيمة المشتريات</div><div class="kpi-val" id="k-total">—</div><div class="kpi-sub">ريال سعودي</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div><div class="kpi-info"><div class="kpi-lbl">العهد النشطة</div><div class="kpi-val" id="k-custody">—</div><div class="kpi-sub">عهدة</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="kpi-info"><div class="kpi-lbl">إجمالي الموردين</div><div class="kpi-val" id="k-suppliers">—</div><div class="kpi-sub">مورد نشط</div></div></div>
+        </div>
+        <div class="content-grid">
+          <div class="section"><div class="section-header"><div class="section-title">أحدث الطلبات</div></div><div id="recent-orders">—</div></div>
+          <div class="chart-card"><div class="chart-title">المصروفات حسب القسم</div><div class="chart-bars" id="dept-chart">—</div></div>
+        </div>
+        <div class="content-grid">
+          <div class="chart-card"><div class="chart-title">التوفير حسب المصدر</div><div class="chart-bars" id="sav-chart">—</div></div>
+          <div class="section"><div class="section-header"><div class="section-title">تنبيهات</div></div><div id="dash-alerts">—</div></div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
-</div>
+      <!-- ══ ORDERS ══ -->
+      <div class="page" id="pg-orders">
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <input class="fi" id="f-search" placeholder="بحث برقم الطلب أو العنوان..." oninput="loadOrders()">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <select class="fi" id="f-status" style="width:160px;" onchange="loadOrders()">
+            <option value="">جميع الحالات</option>
+            <option value="new">جديد</option>
+            <option value="approved">موافق عليه</option>
+            <option value="pending">قيد المعالجة</option>
+            <option value="done">تم</option>
+            <option value="reject">مرفوض</option>
+          </select>
+          <select class="fi" id="f-dept" style="width:160px;" onchange="loadOrders()">
+            <option value="">جميع الأقسام</option>
+          </select>
+          <button class="btn-secondary" onclick="exportExcel()">تصدير Excel</button>
+        </div>
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">طلبات الشراء <span class="section-badge" id="ord-count">0</span></div>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr>
+                <th>رقم الطلب</th><th>العنوان</th><th>القسم</th><th>المورد</th>
+                <th>المبلغ الإجمالي</th><th>التاريخ</th><th>الحالة</th><th>إجراءات</th>
+              </tr></thead>
+              <tbody id="ord-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-<!-- Modal تعديل طلب -->
-<div class="modal-bg" id="edit-modal">
+      <!-- ══ CUSTODY ══ -->
+      <div class="page" id="pg-custody">
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <input class="fi" id="cus-search" placeholder="بحث في العهد..." oninput="loadCustody()">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <select class="fi" id="cus-status" style="width:160px;" onchange="loadCustody()">
+            <option value="">جميع الحالات</option>
+            <option value="active">نشطة</option>
+            <option value="returned">مُعادة</option>
+            <option value="lost">مفقودة</option>
+          </select>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">سجل العهد والأصول <span class="section-badge" id="cus-count">0</span></div></div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>رقم العهدة</th><th>الأصل / البند</th><th>المستلم</th><th>القسم</th><th>القيمة</th><th>تاريخ الاستلام</th><th>تاريخ الإعادة</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <tbody id="cus-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SUPPLIERS ══ -->
+      <div class="page" id="pg-suppliers">
+        <div class="section" style="margin-bottom:16px;">
+          <div class="section-header"><div class="section-title">إضافة مورد جديد</div></div>
+          <div class="form-row">
+            <div class="field-group"><label>اسم المورد *</label><input class="fi" id="s-name" placeholder="اسم الشركة أو الفرد"></div>
+            <div class="field-group"><label>رقم التواصل</label><input class="fi" id="s-phone" placeholder="05xxxxxxxx"></div>
+            <div class="field-group"><label>مجال التوريد</label><input class="fi" id="s-cat" placeholder="مثال: مستلزمات مكتبية"></div>
+          </div>
+          <div class="form-row">
+            <div class="field-group"><label>سرعة التوريد</label><select class="fi" id="s-speed"><option value="fast">سريع — أقل من 3 أيام</option><option value="medium" selected>متوسط — 3-7 أيام</option><option value="slow">بطيء — أكثر من أسبوع</option></select></div>
+            <div class="field-group"><label>التقييم</label><select class="fi" id="s-rating"><option value="5">ممتاز ★★★★★</option><option value="4">جيد جداً ★★★★</option><option value="3" selected>جيد ★★★</option><option value="2">مقبول ★★</option><option value="1">ضعيف ★</option></select></div>
+            <div class="field-group"><label>الأسعار المعتادة</label><input class="fi" id="s-prices" placeholder="مثال: ورق A4 = 25 ريال"></div>
+          </div>
+          <div class="form-row full"><div class="field-group"><label>مشاكل سابقة / ملاحظات</label><textarea class="fi-ta" id="s-issues" placeholder="سجّل أي مشاكل..."></textarea></div></div>
+          <button class="btn-primary" onclick="saveSupplier()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            إضافة مورد
+          </button>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">قاعدة بيانات الموردين <span class="section-badge" id="sup-count">0</span></div></div>
+          <div id="sup-list">—</div>
+        </div>
+      </div>
+
+      <!-- ══ REPORTS ══ -->
+      <div class="page" id="pg-reports">
+        <div class="filter-bar">
+          <select class="fi" id="rpt-period" style="width:180px;" onchange="loadReports()">
+            <option value="month">هذا الشهر</option>
+            <option value="quarter">هذا الربع</option>
+            <option value="year">هذه السنة</option>
+            <option value="all">الكل</option>
+          </select>
+          <button class="btn-primary" onclick="exportExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            تصدير KPIs
+          </button>
+        </div>
+        <div class="content-grid">
+          <div class="chart-card"><div class="chart-title">المصروفات حسب القسم</div><div class="chart-bars" id="rpt-dept">—</div></div>
+          <div class="chart-card"><div class="chart-title">المصروفات حسب المورد</div><div class="chart-bars" id="rpt-sup">—</div></div>
+          <div class="chart-card"><div class="chart-title">الأصناف الأكثر طلباً</div><div class="chart-bars" id="rpt-items">—</div></div>
+          <div class="section"><div class="section-header"><div class="section-title">كشف الهدر والتكرار</div></div><div id="rpt-waste">—</div></div>
+        </div>
+        <div class="content-grid">
+          <div class="section"><div class="section-header"><div class="section-title">التقرير الشهري</div></div><div id="rpt-monthly">—</div></div>
+          <div class="section"><div class="section-header"><div class="section-title">التقرير الربع سنوي</div></div><div id="rpt-quarterly">—</div></div>
+        </div>
+      </div>
+
+      <!-- ══ SAVINGS ══ -->
+      <div class="page" id="pg-savings">
+        <div class="sav-hero">
+          <div class="sav-lbl">إجمالي التوفير الكلي</div>
+          <div class="sav-num" id="sav-total">0 ر.س</div>
+          <div class="sav-lbl">من جميع المصادر</div>
+        </div>
+        <div class="sav-kpis">
+          <div class="sav-kpi"><div class="sav-kpi-val" id="sav-price">0</div><div class="sav-kpi-lbl">توفير فرق الأسعار (ريال)</div></div>
+          <div class="sav-kpi"><div class="sav-kpi-val" id="sav-switch">0</div><div class="sav-kpi-lbl">توفير تغيير موردين (ريال)</div></div>
+          <div class="sav-kpi"><div class="sav-kpi-val" id="sav-manual">0</div><div class="sav-kpi-lbl">توفير يدوي مسجل (ريال)</div></div>
+        </div>
+        <div class="content-grid">
+          <div class="section">
+            <div class="section-header"><div class="section-title">تسجيل توفير</div></div>
+            <div class="form-row two">
+              <div class="field-group"><label>المبلغ (ريال) *</label><input class="fi" id="sv-amount" type="number" placeholder="0"></div>
+              <div class="field-group"><label>النوع</label><select class="fi" id="sv-type"><option value="nego">تفاوض على السعر</option><option value="switch">تغيير مورد</option><option value="dup">تفادي تكرار</option><option value="other">أخرى</option></select></div>
+              <div class="field-group"><label>التاريخ</label><input class="fi" id="sv-date" type="date"></div>
+              <div class="field-group"><label>الصنف</label><input class="fi" id="sv-item" placeholder="اختياري"></div>
+            </div>
+            <div class="form-row full"><div class="field-group"><label>الوصف</label><textarea class="fi-ta" id="sv-desc" placeholder="وصف التوفير..."></textarea></div></div>
+            <button class="btn-primary" onclick="saveSaving()">حفظ التوفير</button>
+          </div>
+          <div class="section">
+            <div class="section-header"><div class="section-title">تسجيل تغيير مورد</div></div>
+            <div class="form-row two">
+              <div class="field-group"><label>الصنف</label><input class="fi" id="sw-item" placeholder="اسم الصنف"></div>
+              <div class="field-group"><label>المورد القديم</label><input class="fi" id="sw-old-sup"></div>
+              <div class="field-group"><label>المورد الجديد</label><input class="fi" id="sw-new-sup"></div>
+              <div class="field-group"><label>السعر القديم</label><input class="fi" id="sw-old-p" type="number" placeholder="0"></div>
+              <div class="field-group"><label>السعر الجديد</label><input class="fi" id="sw-new-p" type="number" placeholder="0"></div>
+              <div class="field-group"><label>التاريخ</label><input class="fi" id="sw-date" type="date"></div>
+            </div>
+            <button class="btn-primary" onclick="saveSwitch()">حفظ التغيير</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">سجل التوفير</div></div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>المبلغ</th><th>النوع</th><th>الصنف</th><th>الوصف</th><th>التاريخ</th><th>حذف</th></tr></thead>
+              <tbody id="sav-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DEPARTMENTS ══ -->
+      <div class="page" id="pg-departments">
+        <div class="section">
+          <div class="section-header"><div class="section-title">الإدارات والأقسام</div></div>
+          <div style="display:flex;gap:10px;margin-bottom:16px;">
+            <input class="fi" id="new-dept" placeholder="اسم القسم أو الإدارة..." style="flex:1;">
+            <button class="btn-primary" onclick="addDept()">إضافة</button>
+          </div>
+          <div id="dept-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+      </div>
+
+      <!-- ══ IMPORT ══ -->
+      <div class="page" id="pg-import">
+        <div class="content-grid">
+          <div class="section">
+            <div class="section-header"><div class="section-title">استيراد طلبات من Excel</div></div>
+            <div class="upload-zone" onclick="document.getElementById('rpt-file').click()">
+              <input type="file" id="rpt-file" accept=".xlsx,.xls,.csv" onchange="importOrders(this)">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 10px;display:block;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px;">ارفع ملف Excel أو CSV</div>
+              <div style="font-size:11px;">أعمدة: اسم الصنف، الكمية، القسم، السعر الفعلي، التاريخ</div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-header"><div class="section-title">استيراد موردين من Excel</div></div>
+            <div class="upload-zone" onclick="document.getElementById('sup-file').click()">
+              <input type="file" id="sup-file" accept=".xlsx,.xls,.csv" onchange="importSuppliers(this)">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 10px;display:block;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px;">ارفع ملف بيانات الموردين</div>
+              <div style="font-size:11px;">أعمدة: اسم المورد، رقم التواصل، المجال، التقييم</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="page" id="pg-settings">
+        <div class="content-grid">
+          <div class="section">
+            <div class="section-header"><div class="section-title">العهدة المالية</div></div>
+            <div class="form-row full">
+              <div class="field-group"><label>اسم العهدة</label><input class="fi" id="budget-name" placeholder="مثال: ميزانية الربع الأول 2026"></div>
+              <div class="field-group"><label>المبلغ الإجمالي (ريال)</label><input class="fi" id="budget-amount" type="number" placeholder="0"></div>
+              <div class="field-group"><label>الفترة</label><select class="fi" id="budget-period"><option value="month">شهري</option><option value="quarter">ربع سنوي</option><option value="year">سنوي</option></select></div>
+            </div>
+            <button class="btn-primary" onclick="saveBudget()">حفظ العهدة</button>
+            <span id="budget-suc" style="display:none;color:#276749;font-size:12px;font-weight:700;margin-right:10px;">تم الحفظ</span>
+          </div>
+          <div class="section">
+            <div class="section-header"><div class="section-title">الثيم</div></div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn-primary" onclick="document.body.style.background='#F8FAFB'">فاتح</button>
+              <button class="btn-secondary" onclick="document.body.style.background='#0F172A';document.body.style.color='#F8FAFC'">داكن</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Modal طلب جديد -->
+<div class="modal-bg" id="order-modal">
   <div class="modal">
-    <div class="modal-title">تعديل الطلب</div>
+    <div class="modal-title" id="order-modal-title">طلب شراء جديد</div>
     <input type="hidden" id="edit-id">
-    <div class="form-grid">
-      <div class="field"><label>اسم الصنف</label><input class="inp" id="edit-item"></div>
-      <div class="field"><label>الكمية</label><input class="inp" id="edit-qty" type="number"></div>
-      <div class="field"><label>القسم</label><select class="sel" id="edit-dept"></select></div>
-      <div class="field"><label>السعر المتوقع</label><input class="inp" id="edit-price" type="number"></div>
-      <div class="field"><label>السعر الفعلي</label><input class="inp" id="edit-actual" type="number"></div>
-      <div class="field"><label>الحالة</label><select class="sel" id="edit-status"><option value="new">جديد</option><option value="pending">قيد المعالجة</option><option value="done">تم</option><option value="reject">مرفوض</option></select></div>
+    <div class="form-row">
+      <div class="field-group"><label>عنوان الطلب / الصنف *</label><input class="fi" id="o-item" placeholder="مثال: طابعة ليزر"></div>
+      <div class="field-group"><label>الكمية</label><input class="fi" id="o-qty" type="number" min="1" value="1"></div>
+      <div class="field-group"><label>القسم</label><select class="fi" id="o-dept"><option value="">اختر القسم</option></select></div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn btn-p" onclick="updateOrder()">حفظ</button>
-      <button class="btn btn-g" onclick="document.getElementById('edit-modal').classList.remove('open')">إلغاء</button>
+    <div class="form-row">
+      <div class="field-group"><label>السعر المتوقع (ريال)</label><input class="fi" id="o-price" type="number" placeholder="0"></div>
+      <div class="field-group"><label>السعر الفعلي (بعد الشراء)</label><input class="fi" id="o-actual" type="number" placeholder="0"></div>
+      <div class="field-group"><label>المورد</label><select class="fi" id="o-sup"><option value="">اختر أو اتركه</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>الحالة</label>
+        <select class="fi" id="o-status">
+          <option value="new">جديد</option>
+          <option value="approved">موافق عليه</option>
+          <option value="pending">قيد المعالجة</option>
+          <option value="done">تم</option>
+          <option value="reject">مرفوض</option>
+        </select>
+      </div>
+      <div class="field-group"><label>التاريخ</label><input class="fi" id="o-date" type="date"></div>
+    </div>
+    <div class="form-row full"><div class="field-group"><label>ملاحظات</label><textarea class="fi-ta" id="o-notes" placeholder="أي تفاصيل..."></textarea></div></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="saveOrder()">حفظ الطلب</button>
+      <button class="btn-secondary" onclick="closeModal('order-modal')">إلغاء</button>
     </div>
   </div>
 </div>
+
+<!-- Modal عهدة جديدة -->
+<div class="modal-bg" id="custody-modal">
+  <div class="modal">
+    <div class="modal-title">عهدة / أصل جديد</div>
+    <input type="hidden" id="cus-edit-id">
+    <div class="form-row">
+      <div class="field-group"><label>اسم الأصل / البند *</label><input class="fi" id="cus-item" placeholder="مثال: لابتوب Dell"></div>
+      <div class="field-group"><label>المستلم</label><input class="fi" id="cus-recipient" placeholder="اسم الموظف"></div>
+      <div class="field-group"><label>القسم</label><select class="fi" id="cus-dept"><option value="">اختر القسم</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>القيمة (ريال)</label><input class="fi" id="cus-value" type="number" placeholder="0"></div>
+      <div class="field-group"><label>تاريخ الاستلام</label><input class="fi" id="cus-date" type="date"></div>
+      <div class="field-group"><label>تاريخ الإعادة المتوقع</label><input class="fi" id="cus-return" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>الحالة</label>
+        <select class="fi" id="cus-status">
+          <option value="active">نشطة</option>
+          <option value="returned">مُعادة</option>
+          <option value="lost">مفقودة</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full"><div class="field-group"><label>ملاحظات</label><textarea class="fi-ta" id="cus-notes" placeholder="تفاصيل العهدة..."></textarea></div></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="saveCustody()">حفظ</button>
+      <button class="btn-secondary" onclick="closeModal('custody-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const SB_URL='https://jvqzvfdmvudhelbhojue.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2cXp2ZmRtdnVkaGVsYmhvanVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mzk4NDIsImV4cCI6MjA5MTAxNTg0Mn0.7lAmAUjtE0EW3kODRTuHmNtOY_Z9bUS_3hePjhhy93M';
 const{createClient}=supabase;
 const db=createClient(SB_URL,SB_KEY);
 const HASH='00eef6545e71068cf7874ff31a08ccab21e3dcb0da1685bc131317f9504ad357';
+let DEPTS=[];
+let orderCounter=0;
 
-let DEPTS=[]; // الأقسام
-
-// ── Auth ──
+/* ── Auth ── */
 async function hp(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function doLogin(){
   const u=document.getElementById('lu').value.trim().toLowerCase();
   const p=document.getElementById('lp').value;
   if(u==='admin'&&await hp(p)===HASH){
     document.getElementById('ls').style.display='none';
-    document.getElementById('app').style.display='block';
-    const saved=localStorage.getItem('pq_theme')||'dark';
-    document.body.className=saved;
+    document.getElementById('app').style.display='flex';
     initApp();
   }else{document.getElementById('lerr').style.display='block';}
 }
 function doLogout(){document.getElementById('app').style.display='none';document.getElementById('ls').style.display='flex';}
-function toggleTheme(){setTheme(document.body.className==='dark'?'light':'dark');}
-function setTheme(t){document.body.className=t;localStorage.setItem('pq_theme',t);}
 
-// ── Navigation ──
+/* ── Navigation ── */
+const pageTitles={dashboard:'لوحة القيادة',orders:'طلبات الشراء',custody:'العهد والأصول',suppliers:'الموردون',reports:'التقارير',savings:'التوفير',departments:'الإدارات والأقسام',import:'استيراد البيانات',settings:'الإعدادات'};
+const pageActions={
+  orders:`<button class="btn-primary" onclick="openOrderModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>طلب جديد</button>`,
+  custody:`<button class="btn-primary" onclick="openModal('custody-modal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>عهدة جديدة</button>`,
+};
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+name).classList.add('active');
   btn.classList.add('active');
-  const loaders={dashboard:loadDashboard,orders:loadOrders,suppliers:loadSuppliers,reports:loadReports,savings:loadSavings,settings:loadSettings};
+  document.getElementById('page-title').textContent=pageTitles[name]||'';
+  document.getElementById('header-actions').innerHTML=pageActions[name]||'';
+  const loaders={dashboard:loadDashboard,orders:loadOrders,custody:loadCustody,suppliers:loadSuppliers,reports:loadReports,savings:loadSavings,departments:loadDepts,settings:loadSettings};
   if(loaders[name]) loaders[name]();
 }
 
-// ── Toast ──
-function toast(msg,err=false){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.style.borderColor=err?'var(--red)':'var(--accent)';
-  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
-}
+/* ── Toast ── */
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' err':'')+' show';setTimeout(()=>t.className='toast',3000);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ── Helpers ──
-const sLbl={new:'جديد',pending:'قيد المعالجة',done:'تم',reject:'مرفوض'};
-const sClass={new:'s-new',pending:'s-pending',done:'s-done',reject:'s-reject'};
-function noData(){return '<div style="color:var(--text3);font-size:12px;padding:10px 0;">لا توجد بيانات</div>';}
-
-function getPeriodRange(period){
-  const now=new Date();
-  let from,to=now.toISOString().split('T')[0];
-  if(period==='month') from=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
-  else if(period==='quarter'){const q=Math.floor(now.getMonth()/3);from=new Date(now.getFullYear(),q*3,1).toISOString().split('T')[0];}
-  else if(period==='year') from=new Date(now.getFullYear(),0,1).toISOString().split('T')[0];
+/* ── Helpers ── */
+const statusMap={new:'جديد',approved:'موافق عليه',pending:'قيد المعالجة',done:'تم',reject:'مرفوض'};
+const statusClass={new:'badge-new',approved:'badge-approved',pending:'badge-pending',done:'badge-done',reject:'badge-reject'};
+const cusStatusMap={active:'نشطة',returned:'مُعادة',lost:'مفقودة'};
+const cusStatusClass={active:'badge-approved',returned:'badge-done',lost:'badge-reject'};
+function noData(){return '<div style="text-align:center;color:#94A3B8;padding:20px;font-size:13px;">لا توجد بيانات</div>';}
+function fmt(n){return (parseFloat(n)||0).toLocaleString('ar-SA');}
+function getPeriodRange(p){
+  const now=new Date();let from;const to=now.toISOString().split('T')[0];
+  if(p==='month') from=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  else if(p==='quarter'){const q=Math.floor(now.getMonth()/3);from=new Date(now.getFullYear(),q*3,1).toISOString().split('T')[0];}
+  else if(p==='year') from=new Date(now.getFullYear(),0,1).toISOString().split('T')[0];
   else from='2020-01-01';
   return{from,to};
 }
-
-function barChart(data,labelKey,valKey,color='var(--accent)'){
+function barChart(data,lk,vk,color='#1DA9BD'){
   if(!data.length) return noData();
-  const max=Math.max(...data.map(d=>d[valKey]),1);
-  return data.map(d=>`
-    <div class="bar-row">
-      <div class="bar-lbl">${d[labelKey]||'—'}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${d[valKey]/max*100}%;background:${color};"></div></div>
-      <div class="bar-val">${Number(d[valKey]).toLocaleString('ar-SA')}</div>
-    </div>`).join('');
+  const max=Math.max(...data.map(d=>d[vk]),1);
+  return data.map(d=>`<div class="cbar-row"><div class="cbar-lbl">${d[lk]||'—'}</div><div class="cbar-track"><div class="cbar-fill" style="width:${d[vk]/max*100}%;background:${color};"></div></div><div class="cbar-val">${fmt(d[vk])}</div></div>`).join('');
 }
+function genOrderNum(){return 'PO-'+new Date().getFullYear()+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(Math.floor(Math.random()*9000)+1000);}
 
-// ── Init ──
+/* ── Init ── */
 async function initApp(){
-  await loadDepts();
+  await loadDeptsData();
   setDefaultDates();
-  await loadDashboard();
+  loadDashboard();
 }
-
 function setDefaultDates(){
   const today=new Date().toISOString().split('T')[0];
-  ['o-date','sv-date','sw-date'].forEach(id=>{const el=document.getElementById(id);if(el) el.value=today;});
+  ['o-date','sv-date','sw-date','cus-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 }
 
-// ── Departments ──
-async function loadDepts(){
-  try{
-    const{data}=await db.from('departments').select('*').order('name');
-    DEPTS=(data||[]).map(d=>d.name);
-  }catch(e){
-    // fallback to localStorage
-    DEPTS=JSON.parse(localStorage.getItem('pq_depts')||'["الجودة","العمليات","الإدارة","المبيعات","التدريب","الصيانة"]');
-  }
+/* ── Departments ── */
+async function loadDeptsData(){
+  try{const{data}=await db.from('departments').select('*').order('name');DEPTS=(data||[]).map(d=>d.name);}
+  catch(e){DEPTS=JSON.parse(localStorage.getItem('pq_depts')||'["الجودة","العمليات","الإدارة","المبيعات","التدريب","الصيانة"]');}
   populateDeptSelects();
 }
-
 function populateDeptSelects(){
-  ['o-dept','f-dept','edit-dept'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    const first=el.options[0]?.text||'اختر';
-    el.innerHTML=`<option value="">${first}</option>`;
+  ['o-dept','f-dept','cus-dept','edit-dept'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const val=el.value;const first=el.options[0];
+    el.innerHTML='';if(first)el.appendChild(first);
     DEPTS.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;el.appendChild(o);});
+    el.value=val;
   });
 }
+async function loadDepts(){
+  await loadDeptsData();
+  const el=document.getElementById('dept-list');
+  el.innerHTML=DEPTS.map(d=>`<div style="display:inline-flex;align-items:center;gap:6px;background:#EBF8FA;border:1px solid #BEE3F8;color:#1DA9BD;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;"><span>${d}</span><button onclick="removeDept('${d}')" style="background:none;border:none;color:#E53E3E;cursor:pointer;font-size:14px;padding:0 0 0 4px;">×</button></div>`).join('');
+}
+async function addDept(){
+  const name=document.getElementById('new-dept').value.trim();if(!name)return;
+  if(DEPTS.includes(name)){toast('القسم موجود مسبقاً',true);return;}
+  try{await db.from('departments').insert({name});}catch(e){DEPTS.push(name);localStorage.setItem('pq_depts',JSON.stringify(DEPTS));}
+  document.getElementById('new-dept').value='';await loadDepts();populateDeptSelects();toast('تم إضافة القسم');
+}
+async function removeDept(name){
+  try{await db.from('departments').delete().eq('name',name);}catch(e){DEPTS=DEPTS.filter(d=>d!==name);localStorage.setItem('pq_depts',JSON.stringify(DEPTS));}
+  await loadDepts();populateDeptSelects();
+}
 
-// ── Dashboard ──
+/* ── Dashboard ── */
 async function loadDashboard(){
   const{from,to}=getPeriodRange('month');
-  const[{data:orders},{data:savs},{data:switches}]=await Promise.all([
+  const[{data:orders},{data:savs},{data:switches},{data:sups},{data:custody}]=await Promise.all([
     db.from('orders').select('*').gte('order_date',from).lte('order_date',to),
     db.from('savings_log').select('*'),
     db.from('supplier_switches').select('*'),
+    db.from('suppliers').select('id'),
+    db.from('custody').select('*').eq('status','active'),
   ]);
-
-  const ords=orders||[];
-  const doneOrds=ords.filter(o=>o.status==='done');
-
-  // KPIs
-  const total=doneOrds.reduce((s,o)=>s+(parseFloat(o.actual_price)||0),0);
-  document.getElementById('k-total').textContent=total.toLocaleString('ar-SA');
+  const ords=orders||[];const done=ords.filter(o=>o.status==='done'||o.status==='approved');
+  const total=done.reduce((s,o)=>s+(parseFloat(o.actual_price)||0),0);
   document.getElementById('k-orders').textContent=ords.length;
-
-  // التوفير الكلي = فرق الأسعار + تغيير موردين + يدوي
-  const savPrice=doneOrds.reduce((s,o)=>{const diff=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(diff>0?diff:0);},0);
-  const savSwitch=(switches||[]).reduce((s,sw)=>s+(parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0);
+  document.getElementById('k-total').textContent=fmt(total)+' ر.س';
+  document.getElementById('k-suppliers').textContent=(sups||[]).length;
+  document.getElementById('k-custody').textContent=(custody||[]).length;
+  /* التوفير */
+  const savPrice=done.reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
+  const savSwitch=Math.max((switches||[]).reduce((s,sw)=>s+(parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0),0);
   const savManual=(savs||[]).reduce((s,sv)=>s+(parseFloat(sv.amount)||0),0);
-  const totalSav=savPrice+Math.max(savSwitch,0)+savManual;
-  document.getElementById('k-savings').textContent=totalSav.toLocaleString('ar-SA');
-
-  // أعلى مورد
-  const supMap={};
-  doneOrds.filter(o=>o.supplier).forEach(o=>{supMap[o.supplier]=(supMap[o.supplier]||0)+(parseFloat(o.actual_price)||0);});
-  const topSup=Object.entries(supMap).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('k-supplier').textContent=topSup?topSup[0]:'—';
-  document.getElementById('k-supplier-amt').textContent=topSup?topSup[1].toLocaleString('ar-SA')+' ريال':'';
-
-  // أكثر صنف
-  const itemMap={};
-  ords.forEach(o=>{itemMap[o.item_name]=(itemMap[o.item_name]||0)+1;});
-  const topItem=Object.entries(itemMap).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('k-item').textContent=topItem?topItem[0]:'—';
-  document.getElementById('k-item-cnt').textContent=topItem?topItem[1]+' طلب':'';
-
-  // مخطط الأقسام
-  const deptMap={};
-  doneOrds.forEach(o=>{if(o.department) deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||0);});
-  const deptData=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({department:k,total:v}));
-  document.getElementById('dept-chart').innerHTML=deptData.length?barChart(deptData,'department','total'):noData();
-
-  // آخر الطلبات
-  const{data:recent}=await db.from('orders').select('*').order('created_at',{ascending:false}).limit(5);
+  /* آخر الطلبات */
+  const{data:recent}=await db.from('orders').select('*').order('created_at',{ascending:false}).limit(6);
   document.getElementById('recent-orders').innerHTML=(recent||[]).length?
-    (recent||[]).map(o=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;"><div><div style="font-weight:700;">${o.item_name}</div><div style="color:var(--text2);">${o.department||'—'}</div></div><span class="status ${sClass[o.status]}">${sLbl[o.status]}</span></div>`).join(''):noData();
-
-  // مخطط التوفير
-  const savData=[{type:'فرق الأسعار',val:savPrice},{type:'تغيير موردين',val:Math.max(savSwitch,0)},{type:'توفير يدوي',val:savManual}].filter(d=>d.val>0);
-  document.getElementById('sav-chart').innerHTML=savData.length?barChart(savData,'type','val','linear-gradient(90deg,var(--green),var(--accent2))'):noData();
-
-  // تنبيهات
+    (recent||[]).map(o=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F1F5F9;font-size:13px;"><div><div style="font-weight:700;color:#1A202C;">${o.item_name}</div><div style="font-size:11px;color:#94A3B8;">${o.department||'—'} · ${o.order_date||''}</div></div><span class="badge ${statusClass[o.status]||'badge-new'}">${statusMap[o.status]||o.status}</span></div>`).join(''):noData();
+  /* مخطط الأقسام */
+  const deptMap={};done.forEach(o=>{if(o.department)deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||0);});
+  document.getElementById('dept-chart').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).length?barChart(Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({l:k,v})),'l','v'):noData();
+  /* مخطط التوفير */
+  const savData=[{l:'فرق الأسعار',v:savPrice},{l:'تغيير موردين',v:savSwitch},{l:'توفير يدوي',v:savManual}].filter(d=>d.v>0);
+  document.getElementById('sav-chart').innerHTML=savData.length?barChart(savData,'l','v','#27AE60'):noData();
+  /* تنبيهات */
   let alertsHTML='';
   const pending=ords.filter(o=>o.status==='pending');
-  if(pending.length) alertsHTML+=`<div class="alert"><b>${pending.length} طلب</b> قيد المعالجة — تابع الموردين</div>`;
-  const itemDates={};
-  ords.forEach(o=>{if(!itemDates[o.item_name])itemDates[o.item_name]=[];itemDates[o.item_name].push(new Date(o.order_date));});
-  Object.entries(itemDates).forEach(([item,dates])=>{
-    if(dates.length>1){dates.sort((a,b)=>a-b);const diff=(dates[dates.length-1]-dates[0])/(1000*60*60*24);if(diff<30) alertsHTML+=`<div class="alert">تكرار طلب <b>${item}</b> خلال ${Math.round(diff)} يوم — تحقق</div>`;}
-  });
-  document.getElementById('alerts-dash').innerHTML=alertsHTML||'<div style="color:var(--text3);font-size:12px;">لا توجد تنبيهات</div>';
-
-  // العهدة
+  if(pending.length) alertsHTML+=`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-right:3px solid #F59E0B;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12px;"><strong>${pending.length} طلب</strong> قيد المعالجة — تابع الموردين</div>`;
+  document.getElementById('dash-alerts').innerHTML=alertsHTML||'<div style="color:#94A3B8;font-size:13px;">لا توجد تنبيهات</div>';
+  /* العهدة */
   loadBudgetBar(total);
 }
 
 async function loadBudgetBar(spent){
-  const raw=localStorage.getItem('pq_budget');
-  if(!raw) return;
-  const b=JSON.parse(raw);
-  const total=parseFloat(b.amount)||0;
-  if(!total) return;
-  document.getElementById('budget-section').style.display='block';
-  document.getElementById('budget-title').textContent=b.name||'العهدة';
+  const raw=localStorage.getItem('pq_budget');if(!raw)return;
+  const b=JSON.parse(raw);const total=parseFloat(b.amount)||0;if(!total)return;
   const pct=Math.min(spent/total*100,100);
-  document.getElementById('budget-pct').textContent=pct.toFixed(1)+'%';
-  document.getElementById('budget-fill').style.width=pct+'%';
-  document.getElementById('budget-fill').className='budget-fill'+(pct>80?' danger':'');
-  document.getElementById('budget-remain').textContent='المتبقي: '+(total-spent).toLocaleString('ar-SA')+' ريال';
-  document.getElementById('budget-spent').textContent='المصروف: '+spent.toLocaleString('ar-SA')+' ريال';
-  document.getElementById('budget-total').textContent='الإجمالي: '+total.toLocaleString('ar-SA')+' ريال';
+  document.getElementById('budget-section').style.display='block';
+  document.getElementById('budget-section').innerHTML=`<div class="budget-wrap"><div class="budget-header"><span>${b.name||'العهدة'}</span><span>${pct.toFixed(1)}%</span></div><div class="budget-track"><div class="budget-fill${pct>80?' warn':''}" style="width:${pct}%"></div></div><div class="budget-footer"><span style="color:#276749;">المتبقي: ${fmt(total-spent)} ر.س</span><span>المصروف: ${fmt(spent)} ر.س</span><span>الإجمالي: ${fmt(total)} ر.س</span></div></div>`;
 }
 
-// ── Orders ──
+/* ── Orders ── */
+function openOrderModal(o=null){
+  document.getElementById('edit-id').value=o?.id||'';
+  document.getElementById('order-modal-title').textContent=o?'تعديل الطلب':'طلب شراء جديد';
+  document.getElementById('o-item').value=o?.item_name||'';
+  document.getElementById('o-qty').value=o?.qty||1;
+  document.getElementById('o-price').value=o?.expected_price||'';
+  document.getElementById('o-actual').value=o?.actual_price||'';
+  document.getElementById('o-notes').value=o?.notes||'';
+  document.getElementById('o-status').value=o?.status||'new';
+  document.getElementById('o-date').value=o?.order_date||new Date().toISOString().split('T')[0];
+  populateDeptSelects();
+  if(o?.department) document.getElementById('o-dept').value=o.department;
+  loadSupplierOpts(o?.supplier);
+  openModal('order-modal');
+}
 async function saveOrder(){
-  const item=document.getElementById('o-item').value.trim();
-  const dept=document.getElementById('o-dept').value;
-  if(!item){toast('أدخل اسم الصنف',true);return;}
-  const{error}=await db.from('orders').insert({
-    item_name:item,qty:parseInt(document.getElementById('o-qty').value)||1,
-    department:dept||null,expected_price:parseFloat(document.getElementById('o-price').value)||0,
-    actual_price:parseFloat(document.getElementById('o-actual').value)||0,
-    supplier:document.getElementById('o-sup').value||null,
-    status:document.getElementById('o-status').value,
-    notes:document.getElementById('o-notes').value||null,
-    order_date:document.getElementById('o-date').value,
-  });
-  if(error){toast('خطأ: '+error.message,true);return;}
-  toast('تم حفظ الطلب');clearOrder();loadOrders();
+  const item=document.getElementById('o-item').value.trim();if(!item){toast('أدخل عنوان الطلب',true);return;}
+  const id=document.getElementById('edit-id').value;
+  const data={item_name:item,qty:parseInt(document.getElementById('o-qty').value)||1,department:document.getElementById('o-dept').value||null,expected_price:parseFloat(document.getElementById('o-price').value)||0,actual_price:parseFloat(document.getElementById('o-actual').value)||0,supplier:document.getElementById('o-sup').value||null,status:document.getElementById('o-status').value,notes:document.getElementById('o-notes').value||null,order_date:document.getElementById('o-date').value,order_num:id?undefined:genOrderNum()};
+  if(id){await db.from('orders').update(data).eq('id',id);}else{await db.from('orders').insert(data);}
+  toast(id?'تم التعديل':'تم حفظ الطلب');closeModal('order-modal');loadOrders();loadDashboard();
 }
-function clearOrder(){['o-item','o-notes','o-price','o-actual'].forEach(id=>document.getElementById(id).value='');document.getElementById('o-qty').value=1;document.getElementById('o-dept').value='';document.getElementById('o-status').value='new';}
-
 async function loadOrders(){
   await loadSupplierOpts();
   const status=document.getElementById('f-status').value;
   const dept=document.getElementById('f-dept').value;
   const search=document.getElementById('f-search').value.trim().toLowerCase();
   let q=db.from('orders').select('*').order('created_at',{ascending:false});
-  if(status) q=q.eq('status',status);
-  if(dept) q=q.eq('department',dept);
+  if(status) q=q.eq('status',status);if(dept) q=q.eq('department',dept);
   const{data}=await q;
   let rows=(data||[]);
-  if(search) rows=rows.filter(r=>(r.item_name||'').toLowerCase().includes(search)||(r.department||'').toLowerCase().includes(search));
+  if(search) rows=rows.filter(r=>(r.item_name||'').toLowerCase().includes(search)||(r.order_num||'').toLowerCase().includes(search));
   document.getElementById('ord-count').textContent=rows.length;
-  document.getElementById('ord-tbody').innerHTML=rows.map(o=>{
-    const diff=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);
-    const savStr=diff>0?`<span style="color:var(--green);">+${diff.toLocaleString('ar-SA')}</span>`:(diff<0?`<span style="color:var(--red);">${diff.toLocaleString('ar-SA')}</span>`:'—');
-    return`<tr>
-      <td style="font-weight:700;">${o.item_name}</td><td>${o.qty||1}</td><td>${o.department||'—'}</td>
-      <td>${(parseFloat(o.expected_price)||0).toLocaleString('ar-SA')}</td>
-      <td style="color:${(parseFloat(o.actual_price)||0)>(parseFloat(o.expected_price)||0)?'var(--red)':'var(--green)'};">${(parseFloat(o.actual_price)||0).toLocaleString('ar-SA')}</td>
-      <td>${savStr}</td>
-      <td>${o.supplier||'—'}</td>
-      <td><span class="status ${sClass[o.status]}">${sLbl[o.status]}</span></td>
-      <td style="color:var(--text2);">${o.order_date||''}</td>
-      <td style="display:flex;gap:5px;">
-        <button class="btn btn-g btn-sm" onclick="openEdit('${o.id}')">تعديل</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')">حذف</button>
-      </td></tr>`;}).join('')||`<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px;">لا توجد طلبات</td></tr>`;
-}
-
-async function openEdit(id){
-  const{data:o}=await db.from('orders').select('*').eq('id',id).single();
-  if(!o) return;
-  document.getElementById('edit-id').value=id;
-  document.getElementById('edit-item').value=o.item_name||'';
-  document.getElementById('edit-qty').value=o.qty||1;
-  document.getElementById('edit-price').value=o.expected_price||0;
-  document.getElementById('edit-actual').value=o.actual_price||0;
-  document.getElementById('edit-status').value=o.status||'new';
-  populateDeptSelects();
-  document.getElementById('edit-dept').value=o.department||'';
-  document.getElementById('edit-modal').classList.add('open');
-}
-async function updateOrder(){
-  const id=document.getElementById('edit-id').value;
-  await db.from('orders').update({item_name:document.getElementById('edit-item').value,qty:parseInt(document.getElementById('edit-qty').value)||1,department:document.getElementById('edit-dept').value||null,expected_price:parseFloat(document.getElementById('edit-price').value)||0,actual_price:parseFloat(document.getElementById('edit-actual').value)||0,status:document.getElementById('edit-status').value}).eq('id',id);
-  toast('تم التعديل');document.getElementById('edit-modal').classList.remove('open');loadOrders();loadDashboard();
+  document.getElementById('ord-tbody').innerHTML=rows.map(o=>`<tr>
+    <td><span class="order-num" onclick="openOrderModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">${o.order_num||'—'}</span></td>
+    <td style="font-weight:600;">${o.item_name}</td>
+    <td>${o.department||'—'}</td><td>${o.supplier||'—'}</td>
+    <td style="font-weight:700;">${fmt(o.actual_price||o.expected_price)} ر.س</td>
+    <td style="color:#64748B;">${o.order_date||''}</td>
+    <td><span class="badge ${statusClass[o.status]||'badge-new'}">${statusMap[o.status]||o.status}</span></td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn-edit-sm" onclick="openOrderModal(${JSON.stringify(o).replace(/"/g,'&quot;')})">تعديل</button>
+      <button class="btn-danger-sm" onclick="deleteOrder('${o.id}')">حذف</button>
+    </td></tr>`).join('')||`<tr><td colspan="8" style="text-align:center;color:#94A3B8;padding:20px;">لا توجد طلبات</td></tr>`;
 }
 async function deleteOrder(id){if(!confirm('حذف؟'))return;await db.from('orders').delete().eq('id',id);toast('تم الحذف');loadOrders();loadDashboard();}
 
-// ── Suppliers ──
+/* ── Custody ── */
+async function saveCustody(){
+  const item=document.getElementById('cus-item').value.trim();if(!item){toast('أدخل اسم الأصل',true);return;}
+  const id=document.getElementById('cus-edit-id').value;
+  const data={item_name:item,recipient:document.getElementById('cus-recipient').value||null,department:document.getElementById('cus-dept').value||null,value:parseFloat(document.getElementById('cus-value').value)||0,receive_date:document.getElementById('cus-date').value,return_date:document.getElementById('cus-return').value||null,status:document.getElementById('cus-status').value,notes:document.getElementById('cus-notes').value||null,custody_num:'CUS-'+Date.now()};
+  if(id) await db.from('custody').update(data).eq('id',id);
+  else await db.from('custody').insert(data);
+  toast('تم الحفظ');closeModal('custody-modal');loadCustody();loadDashboard();
+}
+async function loadCustody(){
+  const search=document.getElementById('cus-search').value.trim().toLowerCase();
+  const status=document.getElementById('cus-status').value;
+  let q=db.from('custody').select('*').order('created_at',{ascending:false});
+  if(status) q=q.eq('status',status);
+  const{data}=await q;
+  let rows=(data||[]);
+  if(search) rows=rows.filter(r=>(r.item_name||'').toLowerCase().includes(search)||(r.recipient||'').toLowerCase().includes(search));
+  document.getElementById('cus-count').textContent=rows.length;
+  document.getElementById('cus-tbody').innerHTML=rows.map(c=>`<tr>
+    <td style="color:#1DA9BD;font-weight:700;">${c.custody_num||'—'}</td>
+    <td style="font-weight:600;">${c.item_name}</td>
+    <td>${c.recipient||'—'}</td><td>${c.department||'—'}</td>
+    <td>${fmt(c.value)} ر.س</td>
+    <td style="color:#64748B;">${c.receive_date||''}</td>
+    <td style="color:#64748B;">${c.return_date||'—'}</td>
+    <td><span class="badge ${cusStatusClass[c.status]||'badge-new'}">${cusStatusMap[c.status]||c.status}</span></td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn-danger-sm" onclick="deleteCustody('${c.id}')">حذف</button>
+    </td></tr>`).join('')||`<tr><td colspan="9" style="text-align:center;color:#94A3B8;padding:20px;">لا توجد عهد</td></tr>`;
+}
+async function deleteCustody(id){if(!confirm('حذف؟'))return;await db.from('custody').delete().eq('id',id);toast('تم الحذف');loadCustody();loadDashboard();}
+
+/* ── Suppliers ── */
 async function saveSupplier(){
-  const name=document.getElementById('s-name').value.trim();
-  if(!name){toast('أدخل اسم المورد',true);return;}
-  const{error}=await db.from('suppliers').insert({name,phone:document.getElementById('s-phone').value||null,category:document.getElementById('s-cat').value||null,speed:document.getElementById('s-speed').value,rating:parseInt(document.getElementById('s-rating').value)||3,prices:document.getElementById('s-prices').value||null,issues:document.getElementById('s-issues').value||null});
-  if(error){toast('خطأ: '+error.message,true);return;}
+  const name=document.getElementById('s-name').value.trim();if(!name){toast('أدخل اسم المورد',true);return;}
+  await db.from('suppliers').insert({name,phone:document.getElementById('s-phone').value||null,category:document.getElementById('s-cat').value||null,speed:document.getElementById('s-speed').value,rating:parseInt(document.getElementById('s-rating').value)||3,prices:document.getElementById('s-prices').value||null,issues:document.getElementById('s-issues').value||null});
   toast('تم حفظ المورد');['s-name','s-phone','s-cat','s-prices','s-issues'].forEach(id=>document.getElementById(id).value='');loadSuppliers();loadSupplierOpts();
 }
-
 async function loadSuppliers(){
   const{data}=await db.from('suppliers').select('*').order('rating',{ascending:false});
   const spd={fast:'سريع',medium:'متوسط',slow:'بطيء'};
+  document.getElementById('sup-count').textContent=(data||[]).length;
   document.getElementById('sup-list').innerHTML=(data||[]).length?
-    (data||[]).map(s=>`<div style="background:var(--card2);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:13px;font-weight:900;">${s.name}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px;">${s.category||'—'} | ${s.phone||'—'}</div>
-        <div style="font-size:12px;color:var(--gold);margin-top:5px;">${'★'.repeat(s.rating||3)}</div>
-        ${s.prices?`<div style="font-size:11px;color:var(--text2);margin-top:4px;">${s.prices}</div>`:''}
-        ${s.issues?`<div style="font-size:11px;color:var(--red);margin-top:4px;">${s.issues}</div>`:''}
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        <span class="badge">${spd[s.speed]||s.speed}</span>
-        <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${s.id}')">حذف</button>
-      </div>
+    (data||[]).map(s=>`<div class="sup-card">
+      <div><div class="sup-name">${s.name}</div><div class="sup-meta">${s.category||'—'} · ${s.phone||'—'}</div><div class="sup-rating">${'★'.repeat(s.rating||3)}${'☆'.repeat(5-(s.rating||3))}</div>${s.prices?`<div style="font-size:11px;color:#64748B;margin-top:5px;">${s.prices}</div>`:''}${s.issues?`<div style="font-size:11px;color:#E53E3E;margin-top:4px;">${s.issues}</div>`:''}</div>
+      <div class="sup-actions"><span class="sup-speed">${spd[s.speed]||s.speed}</span><button class="btn-danger-sm" onclick="deleteSupplier('${s.id}')">حذف</button></div>
     </div>`).join(''):noData();
 }
-
 async function deleteSupplier(id){if(!confirm('حذف؟'))return;await db.from('suppliers').delete().eq('id',id);toast('تم الحذف');loadSuppliers();loadSupplierOpts();}
-
-async function loadSupplierOpts(){
+async function loadSupplierOpts(current=''){
   const{data}=await db.from('suppliers').select('name').order('name');
-  ['o-sup'].forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;
-    el.innerHTML='<option value="">— اختر أو اتركه —</option>';
-    (data||[]).forEach(s=>{const o=document.createElement('option');o.value=s.name;o.textContent=s.name;el.appendChild(o);});
-  });
+  ['o-sup'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">اختر أو اتركه</option>';(data||[]).forEach(s=>{const o=document.createElement('option');o.value=s.name;o.textContent=s.name;if(s.name===current)o.selected=true;el.appendChild(o);});});
 }
 
-// ── Import from Excel ──
-function importSuppliers(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async(e)=>{
-    const wb=XLSX.read(e.target.result,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-    let count=0;
-    for(const row of rows){
-      const name=(row['اسم المورد']||row['name']||row['Name']||'').toString().trim();
-      if(!name) continue;
-      await db.from('suppliers').insert({name,phone:(row['رقم التواصل']||row['phone']||'').toString()||null,category:(row['المجال']||row['category']||'').toString()||null,rating:parseInt(row['التقييم']||row['rating']||3)||3,speed:'medium',active:true}).catch(()=>{});
-      count++;
-    }
-    toast(`تم استيراد ${count} مورد`);loadSuppliers();input.value='';
-  };
-  reader.readAsArrayBuffer(file);
+/* ── Reports ── */
+async function loadReports(){
+  const p=document.getElementById('rpt-period').value;const{from,to}=getPeriodRange(p);
+  let q=db.from('orders').select('*');if(p!=='all') q=q.gte('order_date',from).lte('order_date',to);
+  const{data}=await q;const ords=data||[];const done=ords.filter(o=>o.status==='done'||o.status==='approved');
+  const deptMap={};done.forEach(o=>{if(o.department)deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||0);});
+  document.getElementById('rpt-dept').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).length?barChart(Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({l:k,v})),'l','v'):noData();
+  const supMap={};done.filter(o=>o.supplier).forEach(o=>{supMap[o.supplier]=(supMap[o.supplier]||0)+(parseFloat(o.actual_price)||0);});
+  document.getElementById('rpt-sup').innerHTML=Object.entries(supMap).sort((a,b)=>b[1]-a[1]).length?barChart(Object.entries(supMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({l:k,v})),'l','v','#7C3AED'):noData();
+  const itemMap={};ords.forEach(o=>{itemMap[o.item_name]=(itemMap[o.item_name]||0)+1;});
+  document.getElementById('rpt-items').innerHTML=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).length?barChart(Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>({l:k,v})),'l','v','#D97706'):noData();
+  let wasteHTML='';const iD={};ords.forEach(o=>{if(!iD[o.item_name])iD[o.item_name]=[];iD[o.item_name].push(new Date(o.order_date));});
+  Object.entries(iD).forEach(([item,dates])=>{if(dates.length>1){dates.sort((a,b)=>a-b);const diff=(dates[dates.length-1]-dates[0])/(1000*60*60*24);if(diff<45) wasteHTML+=`<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12px;"><strong>${item}</strong> — طُلب ${dates.length} مرات خلال ${Math.round(diff)} يوم</div>`;}});
+  document.getElementById('rpt-waste').innerHTML=wasteHTML||'<div style="color:#276749;font-size:12px;">لا يوجد هدر واضح</div>';
+  buildPeriodReport('rpt-monthly','month',data||[]);
+  buildPeriodReport('rpt-quarterly','quarter',data||[]);
+}
+function buildPeriodReport(el,p,all){
+  const{from}=getPeriodRange(p);const ords=(all||[]).filter(o=>o.order_date>=from);
+  const done=ords.filter(o=>o.status==='done'||o.status==='approved');
+  const total=done.reduce((s,o)=>s+(parseFloat(o.actual_price)||0),0);
+  const sav=done.reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
+  document.getElementById(el).innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:#F8FAFB;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:#94A3B8;margin-bottom:5px;">إجمالي المصروفات</div><div style="font-size:20px;font-weight:900;color:#1DA9BD;">${fmt(total)}</div><div style="font-size:10px;color:#94A3B8;">ريال</div></div><div style="background:#F8FAFB;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:#94A3B8;margin-bottom:5px;">التوفير المحقق</div><div style="font-size:20px;font-weight:900;color:#276749;">${fmt(sav)}</div><div style="font-size:10px;color:#94A3B8;">ريال</div></div><div style="background:#F8FAFB;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:#94A3B8;margin-bottom:5px;">عدد الطلبات</div><div style="font-size:20px;font-weight:900;color:#D97706;">${ords.length}</div></div><div style="background:#F8FAFB;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:#94A3B8;margin-bottom:5px;">مكتملة</div><div style="font-size:20px;font-weight:900;color:#276749;">${done.length}</div></div></div>`;
 }
 
+/* ── Savings ── */
+async function loadSavings(){
+  const[{data:savs},{data:orders},{data:switches}]=await Promise.all([
+    db.from('savings_log').select('*').order('created_at',{ascending:false}),
+    db.from('orders').select('*').in('status',['done','approved']),
+    db.from('supplier_switches').select('*').order('created_at',{ascending:false}),
+  ]);
+  const savPrice=(orders||[]).reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
+  const savSwitch=Math.max((switches||[]).reduce((s,sw)=>s+(parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0),0);
+  const savManual=(savs||[]).reduce((s,sv)=>s+(parseFloat(sv.amount)||0),0);
+  const total=savPrice+savSwitch+savManual;
+  document.getElementById('sav-total').textContent=fmt(total)+' ر.س';
+  document.getElementById('sav-price').textContent=fmt(savPrice);
+  document.getElementById('sav-switch').textContent=fmt(savSwitch);
+  document.getElementById('sav-manual').textContent=fmt(savManual);
+  document.getElementById('sav-tbody').innerHTML=(savs||[]).map(sv=>`<tr><td style="font-weight:700;color:#276749;">${fmt(sv.amount)} ر.س</td><td>${{nego:'تفاوض',switch:'تغيير مورد',dup:'تفادي تكرار',other:'أخرى'}[sv.saving_type]||sv.saving_type}</td><td>${sv.item_name||'—'}</td><td>${sv.description||'—'}</td><td style="color:#64748B;">${sv.saving_date||''}</td><td><button class="btn-danger-sm" onclick="delSaving('${sv.id}')">حذف</button></td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:16px;">لا يوجد</td></tr>`;
+}
+async function saveSaving(){
+  const amount=parseFloat(document.getElementById('sv-amount').value);if(!amount||amount<=0){toast('أدخل المبلغ',true);return;}
+  await db.from('savings_log').insert({amount,saving_type:document.getElementById('sv-type').value,description:document.getElementById('sv-desc').value||null,saving_date:document.getElementById('sv-date').value,item_name:document.getElementById('sv-item').value||null});
+  toast('تم الحفظ');document.getElementById('sv-amount').value='';document.getElementById('sv-desc').value='';loadSavings();loadDashboard();
+}
+async function delSaving(id){if(!confirm('حذف؟'))return;await db.from('savings_log').delete().eq('id',id);toast('تم الحذف');loadSavings();loadDashboard();}
+async function saveSwitch(){
+  const item=document.getElementById('sw-item').value.trim();if(!item){toast('أدخل اسم الصنف',true);return;}
+  await db.from('supplier_switches').insert({item_name:item,old_supplier:document.getElementById('sw-old-sup').value,new_supplier:document.getElementById('sw-new-sup').value,old_price:parseFloat(document.getElementById('sw-old-p').value)||0,new_price:parseFloat(document.getElementById('sw-new-p').value)||0,switch_date:document.getElementById('sw-date').value});
+  toast('تم الحفظ');['sw-item','sw-old-sup','sw-new-sup','sw-old-p','sw-new-p'].forEach(id=>document.getElementById(id).value='');loadSavings();loadDashboard();
+}
+
+/* ── Import ── */
 function importOrders(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
@@ -782,192 +891,55 @@ function importOrders(input){
     const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
     let count=0;
     for(const row of rows){
-      const item=(row['اسم الصنف']||row['item_name']||row['الصنف']||'').toString().trim();
-      if(!item) continue;
-      await db.from('orders').insert({item_name:item,qty:parseInt(row['الكمية']||row['qty']||1)||1,department:(row['القسم']||row['الإدارة']||row['department']||'').toString()||null,actual_price:parseFloat(row['السعر الفعلي']||row['actual_price']||0)||0,expected_price:parseFloat(row['السعر المتوقع']||row['expected_price']||0)||0,status:'done',order_date:(row['التاريخ']||row['date']||new Date().toISOString().split('T')[0]).toString()}).catch(()=>{});
-      count++;
+      const item=(row['اسم الصنف']||row['item_name']||row['الصنف']||'').toString().trim();if(!item)continue;
+      await db.from('orders').insert({item_name:item,qty:parseInt(row['الكمية']||1)||1,department:(row['القسم']||'').toString()||null,actual_price:parseFloat(row['السعر الفعلي']||0)||0,expected_price:parseFloat(row['السعر المتوقع']||0)||0,status:'done',order_date:(row['التاريخ']||new Date().toISOString().split('T')[0]).toString(),order_num:genOrderNum()}).catch(()=>{});count++;
     }
     toast(`تم استيراد ${count} طلب`);input.value='';
-  };
-  reader.readAsArrayBuffer(file);
+  };reader.readAsArrayBuffer(file);
+}
+function importSuppliers(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    let count=0;
+    for(const row of rows){
+      const name=(row['اسم المورد']||row['name']||'').toString().trim();if(!name)continue;
+      await db.from('suppliers').insert({name,phone:(row['رقم التواصل']||'').toString()||null,category:(row['المجال']||'').toString()||null,rating:parseInt(row['التقييم']||3)||3,speed:'medium'}).catch(()=>{});count++;
+    }
+    toast(`تم استيراد ${count} مورد`);input.value='';loadSuppliers();
+  };reader.readAsArrayBuffer(file);
 }
 
-// ── Reports ──
-async function loadReports(){
-  const period=document.getElementById('rpt-period').value;
-  const{from,to}=getPeriodRange(period);
-  let q=db.from('orders').select('*');
-  if(period!=='all') q=q.gte('order_date',from).lte('order_date',to);
-  const{data}=await q;
-  const ords=(data||[]);
-  const done=ords.filter(o=>o.status==='done');
-
-  // حسب القسم
-  const deptMap={};
-  done.forEach(o=>{if(o.department) deptMap[o.department]=(deptMap[o.department]||0)+(parseFloat(o.actual_price)||0);});
-  document.getElementById('rpt-dept').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).length?
-    barChart(Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({dept:k,val:v})),'dept','val'):noData();
-
-  // حسب المورد
-  const supMap={};
-  done.filter(o=>o.supplier).forEach(o=>{supMap[o.supplier]=(supMap[o.supplier]||0)+(parseFloat(o.actual_price)||0);});
-  document.getElementById('rpt-sup').innerHTML=Object.entries(supMap).sort((a,b)=>b[1]-a[1]).length?
-    barChart(Object.entries(supMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({sup:k,val:v})),'sup','val','linear-gradient(90deg,var(--purple),#6c3483)'):noData();
-
-  // أكثر الأصناف
-  const itemMap={};
-  ords.forEach(o=>{itemMap[o.item_name]=(itemMap[o.item_name]||0)+1;});
-  document.getElementById('rpt-items').innerHTML=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).length?
-    barChart(Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>({item:k,val:v})),'item','val','linear-gradient(90deg,var(--amber),var(--gold))'):noData();
-
-  // هدر وتكرار
-  const iDates={};
-  ords.forEach(o=>{if(!iDates[o.item_name])iDates[o.item_name]=[];iDates[o.item_name].push(new Date(o.order_date));});
-  let wasteHTML='';
-  Object.entries(iDates).forEach(([item,dates])=>{if(dates.length>1){dates.sort((a,b)=>a-b);const diff=(dates[dates.length-1]-dates[0])/(1000*60*60*24);if(diff<45) wasteHTML+=`<div class="alert"><b>${item}</b> — طُلب ${dates.length} مرات خلال ${Math.round(diff)} يوم</div>`;}});
-  document.getElementById('rpt-waste').innerHTML=wasteHTML||'<div style="color:var(--green);font-size:12px;">لا يوجد هدر واضح</div>';
-
-  // تضخم الأسعار
-  const iHistory={};
-  done.forEach(o=>{if(!iHistory[o.item_name])iHistory[o.item_name]=[];iHistory[o.item_name].push({date:o.order_date,price:parseFloat(o.actual_price)||0});});
-  let inflHTML='';
-  Object.entries(iHistory).forEach(([item,h])=>{if(h.length>1&&h[0].price>0){h.sort((a,b)=>a.date.localeCompare(b.date));const ch=((h[h.length-1].price-h[0].price)/h[0].price)*100;if(Math.abs(ch)>10) inflHTML+=`<div class="bar-row"><div class="bar-lbl">${item}</div><div style="flex:1;font-size:12px;color:${ch>0?'var(--red)':'var(--green)'};">${ch>0?'↑':'↓'} ${Math.abs(ch).toFixed(1)}%</div></div>`;}});
-  document.getElementById('rpt-infl').innerHTML=inflHTML||noData();
-
-  // تقرير شهري
-  buildPeriodReport('rpt-monthly','month',data||[]);
-  buildPeriodReport('rpt-quarterly','quarter',data||[]);
-}
-
-function buildPeriodReport(elId,period,allData){
-  const{from}=getPeriodRange(period);
-  const ords=(allData||[]).filter(o=>o.order_date>=from);
-  const done=ords.filter(o=>o.status==='done');
-  const total=done.reduce((s,o)=>s+(parseFloat(o.actual_price)||0),0);
-  const sav=done.reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
-  document.getElementById(elId).innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div style="background:var(--card2);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--text2);margin-bottom:5px;">إجمالي المصروفات</div><div style="font-size:20px;font-weight:900;color:var(--accent);">${total.toLocaleString('ar-SA')}</div><div style="font-size:10px;color:var(--text3);">ريال</div></div>
-      <div style="background:var(--card2);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--text2);margin-bottom:5px;">التوفير المحقق</div><div style="font-size:20px;font-weight:900;color:var(--green);">${sav.toLocaleString('ar-SA')}</div><div style="font-size:10px;color:var(--text3);">ريال</div></div>
-      <div style="background:var(--card2);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--text2);margin-bottom:5px;">عدد الطلبات</div><div style="font-size:20px;font-weight:900;color:var(--amber);">${ords.length}</div></div>
-      <div style="background:var(--card2);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--text2);margin-bottom:5px;">طلبات مكتملة</div><div style="font-size:20px;font-weight:900;color:var(--green);">${done.length}</div></div>
-    </div>`;
-}
-
-// ── Export Excel ──
+/* ── Export ── */
 async function exportExcel(){
-  const period=document.getElementById('rpt-period').value;
-  const{from,to}=getPeriodRange(period);
-  let q=db.from('orders').select('*');
-  if(period!=='all') q=q.gte('order_date',from).lte('order_date',to);
-  const[{data:orders},{data:sups},{data:savs},{data:switches}]=await Promise.all([q,db.from('suppliers').select('*'),db.from('savings_log').select('*'),db.from('supplier_switches').select('*')]);
-  const ords=orders||[];const done=ords.filter(o=>o.status==='done');
-
-  const wb=XLSX.utils.book_new();
-
-  // شيت KPIs
+  const[{data:orders},{data:sups},{data:savs},{data:switches}]=await Promise.all([
+    db.from('orders').select('*'),db.from('suppliers').select('*'),
+    db.from('savings_log').select('*'),db.from('supplier_switches').select('*'),
+  ]);
+  const ords=orders||[];const done=ords.filter(o=>o.status==='done'||o.status==='approved');
   const total=done.reduce((s,o)=>s+(parseFloat(o.actual_price)||0),0);
   const savPrice=done.reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
-  const savSwitch=(switches||[]).reduce((s,sw)=>s+Math.max((parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0),0);
+  const savSwitch=Math.max((switches||[]).reduce((s,sw)=>s+(parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0),0);
   const savManual=(savs||[]).reduce((s,sv)=>s+(parseFloat(sv.amount)||0),0);
-  const kpiData=[['المؤشر','القيمة','الوحدة'],['إجمالي المصروفات',total,'ريال'],['عدد الطلبات الكلي',ords.length,'طلب'],['طلبات مكتملة',done.length,'طلب'],['توفير من فرق الأسعار',savPrice,'ريال'],['توفير من تغيير موردين',savSwitch,'ريال'],['توفير يدوي',savManual,'ريال'],['إجمالي التوفير',savPrice+savSwitch+savManual,'ريال'],['عدد الموردين',(sups||[]).length,'مورد']];
-  const wsKPI=XLSX.utils.aoa_to_sheet(kpiData);
-  XLSX.utils.book_append_sheet(wb,wsKPI,'KPIs');
-
-  // شيت الطلبات
-  const ordData=[['اسم الصنف','الكمية','القسم','السعر المتوقع','السعر الفعلي','التوفير','المورد','الحالة','التاريخ'],...ords.map(o=>[o.item_name,o.qty,o.department||'',o.expected_price||0,o.actual_price||0,Math.max((o.expected_price||0)-(o.actual_price||0),0),o.supplier||'',sLbl[o.status]||o.status,o.order_date])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordData),'الطلبات');
-
-  // شيت الموردين
-  const supData=[['اسم المورد','رقم التواصل','المجال','التقييم','سرعة التوريد','الأسعار','ملاحظات'],...(sups||[]).map(s=>[s.name,s.phone||'',s.category||'',s.rating||3,s.speed||'',s.prices||'',s.issues||''])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(supData),'الموردون');
-
-  // شيت التوفير
-  const savData=[['المبلغ','النوع','الصنف','الوصف','التاريخ'],...(savs||[]).map(s=>[s.amount,s.saving_type||'',s.item_name||'',s.description||'',s.saving_date])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(savData),'سجل التوفير');
-
-  XLSX.writeFile(wb,`تقرير_المشتريات_${period}_${new Date().toISOString().split('T')[0]}.xlsx`);
-  toast('تم التصدير بنجاح');
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['المؤشر','القيمة','الوحدة'],['إجمالي المصروفات',total,'ريال'],['عدد الطلبات',ords.length,'طلب'],['طلبات مكتملة',done.length,'طلب'],['توفير فرق الأسعار',savPrice,'ريال'],['توفير تغيير موردين',savSwitch,'ريال'],['توفير يدوي',savManual,'ريال'],['إجمالي التوفير',savPrice+savSwitch+savManual,'ريال'],['عدد الموردين',(sups||[]).length,'مورد']]),'KPIs');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['رقم الطلب','الصنف','الكمية','القسم','السعر المتوقع','السعر الفعلي','التوفير','المورد','الحالة','التاريخ'],...ords.map(o=>[o.order_num||'',o.item_name,o.qty,o.department||'',o.expected_price||0,o.actual_price||0,Math.max((o.expected_price||0)-(o.actual_price||0),0),o.supplier||'',statusMap[o.status]||o.status,o.order_date])]),'الطلبات');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['اسم المورد','رقم التواصل','المجال','التقييم','سرعة التوريد'],...(sups||[]).map(s=>[s.name,s.phone||'',s.category||'',s.rating||3,s.speed||''])]),'الموردون');
+  XLSX.writeFile(wb,`تقرير_المشتريات_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('تم التصدير');
 }
 
-// ── Savings ──
-async function loadSavings(){
-  const[{data:savs},{data:orders},{data:switches}]=await Promise.all([
-    db.from('savings_log').select('*').order('created_at',{ascending:false}),
-    db.from('orders').select('*').eq('status','done'),
-    db.from('supplier_switches').select('*').order('created_at',{ascending:false}),
-  ]);
-  const savPrice=(orders||[]).reduce((s,o)=>{const d=(parseFloat(o.expected_price)||0)-(parseFloat(o.actual_price)||0);return s+(d>0?d:0);},0);
-  const savSwitch=(switches||[]).reduce((s,sw)=>s+Math.max((parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0),0),0);
-  const savManual=(savs||[]).reduce((s,sv)=>s+(parseFloat(sv.amount)||0),0);
-  const total=savPrice+savSwitch+savManual;
-  document.getElementById('sav-total').textContent=total.toLocaleString('ar-SA');
-  document.getElementById('sav-price').textContent=savPrice.toLocaleString('ar-SA');
-  document.getElementById('sav-switch').textContent=savSwitch.toLocaleString('ar-SA');
-  document.getElementById('sav-manual').textContent=savManual.toLocaleString('ar-SA');
-  document.getElementById('sav-tbody').innerHTML=(savs||[]).map(sv=>`<tr>
-    <td style="font-weight:900;color:var(--green);">${(parseFloat(sv.amount)||0).toLocaleString('ar-SA')} ريال</td>
-    <td>${{nego:'تفاوض',switch:'تغيير مورد',dup:'تفادي تكرار',other:'أخرى'}[sv.saving_type]||sv.saving_type}</td>
-    <td>${sv.item_name||'—'}</td><td>${sv.description||'—'}</td><td>${sv.saving_date||''}</td>
-    <td><button class="btn btn-danger btn-sm" onclick="delSaving('${sv.id}')">حذف</button></td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:16px;">لا يوجد</td></tr>`;
-  document.getElementById('sw-tbody').innerHTML=(switches||[]).map(sw=>{
-    const diff=(parseFloat(sw.old_price)||0)-(parseFloat(sw.new_price)||0);
-    return`<tr><td>${sw.item_name||'—'}</td><td>${sw.old_supplier||'—'}</td><td style="color:var(--green);">${sw.new_supplier||'—'}</td>
-      <td>${(parseFloat(sw.old_price)||0).toLocaleString('ar-SA')}</td><td>${(parseFloat(sw.new_price)||0).toLocaleString('ar-SA')}</td>
-      <td style="color:${diff>0?'var(--green)':'var(--red)'};">${diff.toLocaleString('ar-SA')}</td><td>${sw.switch_date||''}</td></tr>`;}).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:16px;">لا يوجد</td></tr>`;
-}
-
-async function saveSaving(){
-  const amount=parseFloat(document.getElementById('sv-amount').value);
-  if(!amount||amount<=0){toast('أدخل المبلغ',true);return;}
-  await db.from('savings_log').insert({amount,saving_type:document.getElementById('sv-type').value,description:document.getElementById('sv-desc').value||null,saving_date:document.getElementById('sv-date').value,item_name:document.getElementById('sv-item').value||null});
-  toast('تم الحفظ');document.getElementById('sv-amount').value='';document.getElementById('sv-desc').value='';loadSavings();loadDashboard();
-}
-async function delSaving(id){if(!confirm('حذف؟'))return;await db.from('savings_log').delete().eq('id',id);toast('تم الحذف');loadSavings();loadDashboard();}
-async function saveSwitch(){
-  const item=document.getElementById('sw-item').value.trim();
-  if(!item){toast('أدخل اسم الصنف',true);return;}
-  await db.from('supplier_switches').insert({item_name:item,old_supplier:document.getElementById('sw-old-sup').value,new_supplier:document.getElementById('sw-new-sup').value,old_price:parseFloat(document.getElementById('sw-old-p').value)||0,new_price:parseFloat(document.getElementById('sw-new-p').value)||0,switch_date:document.getElementById('sw-date').value});
-  toast('تم الحفظ');['sw-item','sw-old-sup','sw-new-sup','sw-old-p','sw-new-p'].forEach(id=>document.getElementById(id).value='');loadSavings();loadDashboard();
-}
-
-// ── Settings ──
-async function loadSettings(){
-  // أقسام
-  await loadDepts();
-  renderDeptTags();
-  // عهدة
+/* ── Settings ── */
+function loadSettings(){
   const b=JSON.parse(localStorage.getItem('pq_budget')||'{}');
   if(b.name) document.getElementById('budget-name').value=b.name;
   if(b.amount) document.getElementById('budget-amount').value=b.amount;
   if(b.period) document.getElementById('budget-period').value=b.period;
 }
-
-function renderDeptTags(){
-  document.getElementById('dept-tags').innerHTML=DEPTS.map(d=>`<span class="dept-tag">${d}<button onclick="removeDept('${d}')">×</button></span>`).join('');
-}
-
-async function addDept(){
-  const name=document.getElementById('new-dept').value.trim();
-  if(!name) return;
-  if(DEPTS.includes(name)){toast('القسم موجود مسبقاً',true);return;}
-  try{
-    await db.from('departments').insert({name});
-  }catch(e){
-    // fallback
-    DEPTS.push(name);
-    localStorage.setItem('pq_depts',JSON.stringify(DEPTS));
-  }
-  document.getElementById('new-dept').value='';
-  await loadDepts();renderDeptTags();populateDeptSelects();toast('تم إضافة القسم');
-}
-
-async function removeDept(name){
-  try{await db.from('departments').delete().eq('name',name);}catch(e){DEPTS=DEPTS.filter(d=>d!==name);localStorage.setItem('pq_depts',JSON.stringify(DEPTS));}
-  await loadDepts();renderDeptTags();populateDeptSelects();
-}
-
-async function saveBudget(){
+function saveBudget(){
   const b={name:document.getElementById('budget-name').value.trim(),amount:parseFloat(document.getElementById('budget-amount').value)||0,period:document.getElementById('budget-period').value};
   localStorage.setItem('pq_budget',JSON.stringify(b));
   const el=document.getElementById('budget-suc');el.style.display='inline';setTimeout(()=>el.style.display='none',2500);
