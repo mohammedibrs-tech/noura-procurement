@@ -1248,7 +1248,8 @@ function saveBudget(){
 function initFolderDates(){
   const today=new Date().toISOString().split('T')[0];
   ['rfq-date','lpo-date','dn-date','pc-from','pc-to'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=today;});
-  renderRfqSaved();renderLpoSaved();renderDnSaved();renderCtList();
+  pcFilesData=JSON.parse(localStorage.getItem('pc_files')||'[]');
+  renderRfqSaved();renderLpoSaved();renderDnSaved();renderCtList();renderPCList();
 }
 
 /* ── RFQ ── */
@@ -1271,13 +1272,33 @@ function rfqDel(id){localStorage.setItem('rfq_saved',JSON.stringify(JSON.parse(l
 function rfqBuildHTML(d){
   const co=d||{company:document.getElementById('rfq-company').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()};
   const rows=co.rows.length?co.rows:[{num:1,item:'',qty:'',notes:''}];
-  return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#1DA9BD;}table{width:100%;border-collapse:collapse;margin:14px 0;}th{background:#1DA9BD;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.sig{display:flex;justify-content:space-between;margin-top:50px;}.sig-box{width:30%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
-    <div style="display:flex;justify-content:space-between;margin-bottom:20px;border-bottom:3px solid #1DA9BD;padding-bottom:14px;"><div><h2>خطاب طلب عرض سعر (RFQ)</h2><p style="color:#64748B;">شركة نورة لتعليم القيادة</p></div><div style="text-align:left;font-size:12px;"><p>التاريخ: ${co.date||''}</p></div></div>
-    <p><strong>السادة / ${co.company||'___'}</strong></p>
-    <p style="margin:12px 0;line-height:1.8;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل.</p>
-    <table><thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.num}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
-    <table style="margin-top:10px;"><thead><tr><th>مدة التنفيذ</th><th>أسبوع عمل</th></tr></thead><tbody><tr><td>طريقة الدفع</td><td>100% بعد الاستلام</td></tr><tr><td>تفاصيل أخرى</td><td>${co.notes||'—'}</td></tr></tbody></table>
-    <div class="sig"><div class="sig-box">المعد<br>محمد الجمعان</div><div class="sig-box">المراجع</div><div class="sig-box">الاعتماد</div></div>
+  const ID=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #1DA9BD;"><div><div style="font-size:18px;font-weight:900;color:#1A202C;">شركة نورة لتعليم القيادة</div><div style="font-size:11px;color:#1DA9BD;font-weight:700;margin-top:2px;">Noura Driving Company</div><div style="font-size:10px;color:#64748B;margin-top:2px;">الرياض — طريق الملك خالد الدولي، جامعة الأميرة نورة</div></div><div style="text-align:left;font-size:10px;color:#64748B;line-height:1.9;"><div>الرقم الضريبي: 310230667700003</div><div>هاتف: +966 53 854 9436</div><div>asalangari@nouradriving.sa</div></div></div>`;
+  return `<html dir="rtl"><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;margin:40px;font-size:13px;color:#1A202C;}
+    table{width:100%;border-collapse:collapse;margin:14px 0;}
+    th{background:#1DA9BD;color:#fff;padding:9px 11px;text-align:right;font-size:12px;}
+    td{padding:8px 11px;border:1px solid #E2E8F0;font-size:12px;}
+    tr:nth-child(even) td{background:#F8FAFB;}
+    .ft th{background:#F1F5F9;color:#374151;}
+    .sig{display:flex;justify-content:space-between;margin-top:50px;gap:16px;}
+    .sb{flex:1;text-align:center;border-top:2px solid #1DA9BD;padding-top:8px;font-size:11px;}
+  </style></head><body>
+    ${ID}
+    <div style="background:#1DA9BD;color:#fff;padding:9px 14px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:14px;font-weight:900;">خطاب طلب عرض سعر — Request For Quotation (RFQ)</div>
+      <div style="font-size:11px;opacity:.85;">التاريخ: ${co.date||''}</div>
+    </div>
+    <p style="margin-bottom:10px;"><strong>السادة / ${co.company||'___________'}</strong></p>
+    <p style="margin:10px 0;line-height:1.9;color:#374151;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف/الخدمات.</p>
+    <table><thead><tr><th>الرقم</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td style="text-align:center;">${r.num}</td><td>${r.item}</td><td style="text-align:center;">${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
+    <table class="ft"><thead><tr><th>مدة التنفيذ</th><th>أسبوع عمل</th></tr></thead>
+    <tbody><tr><td>طريقة الدفع</td><td>100% بعد الاستلام</td></tr><tr><td>الضمان</td><td>-</td></tr><tr><td>تفاصيل أخرى</td><td>${co.notes||'—'}</td></tr></tbody></table>
+    <div class="sig">
+      <div class="sb">المعد<br><br>محمد الجمعان</div>
+      <div class="sb">المراجع<br><br>___________</div>
+      <div class="sb">الاعتماد<br><br>___________</div>
+    </div>
   </body></html>`;
 }
 function rfqExportWord(){const html=rfqBuildHTML(null);const b=new Blob(['\ufeff'+html],{type:'application/msword'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`RFQ_${document.getElementById('rfq-company').value||'طلب'}.doc`;a.click();toast('تم تصدير Word');}
@@ -1306,12 +1327,44 @@ function renderLpoSaved(){
 }
 function lpoDel(id){localStorage.setItem('lpo_saved',JSON.stringify(JSON.parse(localStorage.getItem('lpo_saved')||'[]').filter(x=>x.id!==id)));renderLpoSaved();}
 function lpoBuildHTML(d){
-  const sub=d.rows.reduce((s,r)=>s+r.total,0);const v=sub*0.15;const tot=sub+v;
-  return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:30px;font-size:12px;}h2{color:#276749;}table{width:100%;border-collapse:collapse;margin:12px 0;}th{background:#276749;color:#fff;padding:8px 10px;text-align:right;}td{padding:7px 10px;border:1px solid #E2E8F0;}.tot{font-weight:900;color:#1DA9BD;background:#EBF8FA;}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}.ib{background:#F8FAFB;border:1px solid #E2E8F0;border-radius:8px;padding:12px;font-size:12px;}.sig{display:flex;justify-content:space-between;margin-top:40px;}.sb{width:30%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
-    <div style="display:flex;justify-content:space-between;margin-bottom:16px;border-bottom:3px solid #276749;padding-bottom:12px;"><div><h2>Local Purchase Order — طلب شراء محلي</h2><span style="background:#276749;color:#fff;padding:2px 10px;border-radius:20px;font-size:11px;">${d.num||'LPO'}</span></div><div style="text-align:left;font-size:12px;"><div>التاريخ: ${d.date||''}</div><div>شركة نورة لتعليم القيادة</div></div></div>
-    <div class="info"><div class="ib"><div style="font-weight:700;margin-bottom:8px;color:#64748B;">المورد</div><div>الشركة: ${d.company}</div><div>الرقم الضريبي: ${d.vat||'—'}</div><div>التواصل: ${d.phone||'—'}</div><div>الإيميل: ${d.email||'—'}</div></div><div class="ib"><div style="font-weight:700;margin-bottom:8px;color:#64748B;">التسليم إلى</div><div>Noura Driving Company</div><div>Riyadh, Saudi Arabia</div><div>رقم عرض السعر: ${d.quote||'—'}</div></div></div>
-    <table><thead><tr><th>م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody>${d.rows.map(r=>`<tr><td>${r.num}</td><td>${r.item}</td><td>${r.desc||''}</td><td>${r.qty}</td><td>${(r.price||0).toLocaleString('ar-SA')}</td><td>${(r.total||0).toLocaleString('ar-SA')}</td></tr>`).join('')}<tr><td colspan="5" style="text-align:left;font-weight:700;">الإجمالي قبل الضريبة</td><td>${sub.toLocaleString('ar-SA')}</td></tr><tr><td colspan="5" style="text-align:left;">الضريبة 15%</td><td>${v.toLocaleString('ar-SA')}</td></tr><tr class="tot"><td colspan="5" style="text-align:left;">الإجمالي شامل الضريبة</td><td>${tot.toLocaleString('ar-SA')} ر.س</td></tr></tbody></table>
-    <div class="sig"><div class="sb">Prepared By<br>محمد الجمعان</div><div class="sb">Reviewed By</div><div class="sb">CEO Approval</div></div>
+  const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);const v=sub*0.15;const tot=sub+v;
+  const ID=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #1DA9BD;"><div><div style="font-size:17px;font-weight:900;color:#1A202C;">شركة نورة لتعليم القيادة</div><div style="font-size:11px;color:#1DA9BD;font-weight:700;margin-top:2px;">Noura Driving Company</div><div style="font-size:10px;color:#64748B;margin-top:2px;">الرياض — طريق الملك خالد الدولي، جامعة الأميرة نورة</div></div><div style="text-align:left;font-size:10px;color:#64748B;line-height:1.9;"><div>الرقم الضريبي: 310230667700003</div><div>هاتف: +966 53 854 9436</div><div>asalangari@nouradriving.sa</div></div></div>`;
+  return `<html dir="rtl"><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;margin:32px;font-size:12px;color:#1A202C;}
+    table{width:100%;border-collapse:collapse;margin:11px 0;}
+    th{background:#276749;color:#fff;padding:8px 10px;text-align:right;font-size:11px;}
+    td{padding:7px 10px;border:1px solid #E2E8F0;font-size:11px;}
+    tr:nth-child(even) td{background:#F8FAFB;}
+    .tot{font-weight:900;color:#1DA9BD;background:#EBF8FA;}
+    .ig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
+    .ib{background:#F8FAFB;border:1px solid #E2E8F0;border-radius:8px;padding:11px;font-size:11px;line-height:1.8;}
+    .ib-t{font-weight:700;color:#64748B;margin-bottom:5px;border-bottom:1px solid #E2E8F0;padding-bottom:4px;}
+    .sig{display:flex;justify-content:space-between;margin-top:40px;gap:14px;}
+    .sb{flex:1;text-align:center;border-top:2px solid #276749;padding-top:8px;font-size:10px;}
+  </style></head><body>
+    ${ID}
+    <div style="background:#276749;color:#fff;padding:9px 14px;border-radius:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:14px;font-weight:900;">Local Purchase Order — طلب شراء محلي</div>
+      <div style="background:rgba(255,255,255,.2);padding:2px 12px;border-radius:12px;font-size:11px;">${d.num||'LPO'}</div>
+    </div>
+    <div style="font-size:11px;color:#64748B;margin-bottom:12px;">التاريخ: ${d.date||''} &nbsp;·&nbsp; رقم عرض السعر: ${d.quote||'—'}</div>
+    <div class="ig">
+      <div class="ib"><div class="ib-t">المورد / Vendor</div><div>الشركة: <strong>${d.company}</strong></div><div>الرقم الضريبي: ${d.vat||'—'}</div><div>التواصل: ${d.phone||'—'}</div><div>الإيميل: ${d.email||'—'}</div></div>
+      <div class="ib"><div class="ib-t">التسليم إلى / Delivery To</div><div>شركة نورة لتعليم القيادة</div><div>الرياض، المملكة العربية السعودية</div><div>الرقم الضريبي: 310230667700003</div><div>التواصل: +966 53 854 9436</div></div>
+    </div>
+    <table><thead><tr><th>م</th><th>الصنف / Item</th><th>الوصف / Description</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+    <tbody>${(d.rows||[]).map(r=>`<tr><td style="text-align:center;">${r.num}</td><td>${r.item}</td><td>${r.desc||''}</td><td style="text-align:center;">${r.qty}</td><td style="text-align:left;">${(r.price||0).toLocaleString('ar-SA')}</td><td style="text-align:left;font-weight:600;">${(r.total||0).toLocaleString('ar-SA')}</td></tr>`).join('')}
+    <tr><td colspan="5" style="text-align:left;font-weight:700;">الإجمالي قبل الضريبة / Net Amount</td><td style="text-align:left;font-weight:700;">${sub.toLocaleString('ar-SA')}</td></tr>
+    <tr><td colspan="5" style="text-align:left;color:#64748B;">الضريبة 15% / VAT</td><td style="text-align:left;">${v.toLocaleString('ar-SA')}</td></tr>
+    <tr class="tot"><td colspan="5" style="text-align:left;">الإجمالي شامل الضريبة / Total Amount</td><td style="text-align:left;">${tot.toLocaleString('ar-SA')} ر.س</td></tr>
+    </tbody></table>
+    <table style="margin-top:8px;"><thead><tr><th>الشروط والأحكام / Terms & Conditions</th><th></th></tr></thead>
+    <tbody><tr><td>الدفع / Payment</td><td>100% After Delivery</td></tr><tr><td>مدة التسليم / Delivery</td><td>1 Week</td></tr><tr><td>الضمان / Warranty</td><td>As per offer</td></tr><tr><td>صلاحية التعميد / Validity</td><td>PO cancelled if vendor fails to comply</td></tr></tbody></table>
+    <div class="sig">
+      <div class="sb">Prepared By / اعدت بواسطة<br><br>محمد الجمعان</div>
+      <div class="sb">Reviewed By / تم مراجعته<br><br>___________</div>
+      <div class="sb">Approved By / تم اعتماده<br><br>___________</div>
+    </div>
   </body></html>`;
 }
 function lpoExportExcel(){
@@ -1325,11 +1378,37 @@ function lpoExportPDF(){printDoc(lpoBuildHTML({num:document.getElementById('lpo-
 function lpoPDFById(id){const s=JSON.parse(localStorage.getItem('lpo_saved')||'[]').find(x=>x.id===id);if(s)printDoc(lpoBuildHTML(s));}
 
 /* ── Petty Cash ── */
-let pcFiles=[];
-function pcAddFiles(input){Array.from(input.files).forEach(f=>pcFiles.push(f));renderPCList();input.value='';}
-function renderPCList(){document.getElementById('pc-pdf-list').innerHTML=pcFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E53E3E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>${f.name}</div><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="pcRemove(${i})">×</button></div>`).join('');}
-function pcRemove(i){pcFiles.splice(i,1);renderPCList();}
-function pcExportPDF(){if(!pcFiles.length){toast('ارفع ملفات PDF أولاً',true);return;}pcFiles.forEach(f=>{const url=URL.createObjectURL(f);const a=document.createElement('a');a.href=url;a.target='_blank';a.click();});toast('تم فتح الملفات — اطبع كل نافذة كـ PDF وادمجها');}
+/* Petty Cash — الحفظ في localStorage كـ base64 حتى لا تُفقد الملفات عند إعادة الفتح */
+let pcFilesData = JSON.parse(localStorage.getItem('pc_files') || '[]');
+function pcAddFiles(input){
+  Array.from(input.files).forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      pcFilesData.push({name: f.name, b64: e.target.result});
+      localStorage.setItem('pc_files', JSON.stringify(pcFilesData));
+      renderPCList();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+function renderPCList(){
+  document.getElementById('pc-pdf-list').innerHTML = pcFilesData.map((f,i) =>
+    `<div class="pdf-item">
+      <div class="pdf-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E53E3E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>${f.name}</div>
+      <div style="display:flex;gap:5px;">
+        <button class="dc-saved-dl" style="background:#EBF8FA;color:#1DA9BD;" onclick="pcOpenFile(${i})">فتح</button>
+        <button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="pcRemove(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+function pcOpenFile(i){const f=pcFilesData[i];if(!f)return;const a=document.createElement('a');a.href=f.b64;a.target='_blank';a.click();}
+function pcRemove(i){pcFilesData.splice(i,1);localStorage.setItem('pc_files',JSON.stringify(pcFilesData));renderPCList();}
+function pcExportPDF(){
+  if(!pcFilesData.length){toast('ارفع ملفات PDF أولاً',true);return;}
+  pcFilesData.forEach(f=>{const a=document.createElement('a');a.href=f.b64;a.target='_blank';a.click();});
+  toast('تم فتح الملفات — اطبعها PDF وادمجها');
+}
 
 /* ── Delivery Note ── */
 let dnRowCount=1,dnAttachedFile=null;
@@ -1340,11 +1419,29 @@ function dnGetRows(){const rows=[];document.getElementById('dn-tbody').querySele
 function dnSave(){const co=document.getElementById('dn-company').value.trim();if(!co){toast('أدخل اسم الشركة',true);return;}const d={id:Date.now(),company:co,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows(),savedAt:new Date().toLocaleDateString('ar-SA')};const saved=JSON.parse(localStorage.getItem('dn_saved')||'[]');saved.unshift(d);if(saved.length>20)saved.pop();localStorage.setItem('dn_saved',JSON.stringify(saved));toast('تم الحفظ');renderDnSaved();}
 function renderDnSaved(){const saved=JSON.parse(localStorage.getItem('dn_saved')||'[]');const el=document.getElementById('dn-saved-list');if(!saved.length){el.innerHTML='';return;}el.innerHTML='<div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px;">السندات المحفوظة</div>'+saved.map(s=>`<div class="dc-saved-item"><div><div class="dc-saved-name">${s.company}</div><div class="dc-saved-date">${s.savedAt}</div></div><div class="dc-saved-actions"><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="dnPDFById(${s.id})">PDF</button><button class="dc-saved-dl" style="background:#F1F5F9;color:#64748B;" onclick="dnDel(${s.id})">×</button></div></div>`).join('');}
 function dnDel(id){localStorage.setItem('dn_saved',JSON.stringify(JSON.parse(localStorage.getItem('dn_saved')||'[]').filter(x=>x.id!==id)));renderDnSaved();}
-function dnBuildHTML(d){return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#7C3AED;}table{width:100%;border-collapse:collapse;margin:14px 0;}th{background:#7C3AED;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.sig{display:flex;justify-content:space-between;margin-top:50px;}.sb{width:40%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
-  <div style="display:flex;justify-content:space-between;margin-bottom:20px;border-bottom:3px solid #7C3AED;padding-bottom:14px;"><div><h2>Delivery Note — سند استلام</h2></div><div style="text-align:left;font-size:12px;"><div>الشركة: ${d.company||'—'}</div><div>التاريخ: ${d.date||''}</div><div>رقم التعميد: ${d.lpo||'—'}</div></div></div>
-  <p>تم التسليم من قبل: <strong>${d.from||'—'}</strong></p>
-  <table><thead><tr><th>م</th><th>المنتج / الخدمة</th><th>الكمية</th><th>ملاحظات</th></tr></thead><tbody>${(d.rows.length?d.rows:[{num:1,product:'',qty:'',notes:''}]).map(r=>`<tr><td>${r.num}</td><td>${r.product}</td><td>${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
-  <div class="sig"><div class="sb">Received By / تم الاستلام<br>الاسم:<br>التوقيع:<br>التاريخ:</div><div class="sb">Delivered By / تم التسليم<br>الاسم:<br>التوقيع:<br>التاريخ:</div></div>
+function dnBuildHTML(d){
+  const ID=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #1DA9BD;"><div><div style="font-size:17px;font-weight:900;color:#1A202C;">شركة نورة لتعليم القيادة</div><div style="font-size:11px;color:#1DA9BD;font-weight:700;margin-top:2px;">Noura Driving Company</div><div style="font-size:10px;color:#64748B;margin-top:2px;">الرياض — طريق الملك خالد الدولي، جامعة الأميرة نورة</div></div><div style="text-align:left;font-size:10px;color:#64748B;line-height:1.9;"><div>الرقم الضريبي: 310230667700003</div><div>هاتف: +966 53 854 9436</div><div>asalangari@nouradriving.sa</div></div></div>`;
+  return `<html dir="rtl"><head><meta charset="UTF-8"><style>
+  body{font-family:Arial,sans-serif;margin:40px;font-size:13px;color:#1A202C;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;}
+  th{background:#7C3AED;color:#fff;padding:9px 11px;text-align:right;font-size:12px;}
+  td{padding:8px 11px;border:1px solid #E2E8F0;font-size:12px;}
+  tr:nth-child(even) td{background:#F8FAFB;}
+  .sig{display:flex;justify-content:space-between;margin-top:50px;gap:20px;}
+  .sb{flex:1;text-align:center;border-top:2px solid #7C3AED;padding-top:10px;font-size:11px;}
+</style></head><body>
+  ${ID}
+  <div style="background:#7C3AED;color:#fff;padding:9px 14px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:14px;font-weight:900;">Delivery Note — سند الاستلام</div>
+    <div style="font-size:11px;opacity:.85;">التاريخ: ${d.date||''} · رقم التعميد: ${d.lpo||'—'}</div>
+  </div>
+  <div style="margin-bottom:12px;font-size:13px;">اسم الشركة المورّدة: <strong>${d.company||'—'}</strong> &nbsp;|&nbsp; تم التسليم من قبل: <strong>${d.from||'—'}</strong></div>
+  <table><thead><tr><th>م</th><th>المنتج / Product & Service Description</th><th>الكمية / Qty</th><th>ملاحظات / Notes</th></tr></thead>
+  <tbody>${(d.rows.length?d.rows:[{num:1,product:'',qty:'',notes:''}]).map(r=>`<tr><td style="text-align:center;">${r.num}</td><td>${r.product}</td><td style="text-align:center;">${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
+  <div class="sig">
+    <div class="sb">Received By / تم الاستلام من قبل<br><br>الاسم / Name:<br>التاريخ / Date:<br>التوقيع / Signature:</div>
+    <div class="sb">Delivered By / تم التسليم من قبل<br><br>الاسم / Name:<br>التاريخ / Date:<br>التوقيع / Signature:</div>
+  </div>
 </body></html>`;}
 function dnExportPDF(){printDoc(dnBuildHTML({company:document.getElementById('dn-company').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()}));}
 function dnPDFById(id){const s=JSON.parse(localStorage.getItem('dn_saved')||'[]').find(x=>x.id===id);if(s)printDoc(dnBuildHTML(s));}
@@ -1357,7 +1454,30 @@ function pc2CalcRow(inp){const tr=inp.closest('tr');const sub=parseFloat(inp.val
 function pc2Winner(){const rows=[];document.getElementById('pc2-tbody').querySelectorAll('tr').forEach(tr=>{const n=tr.querySelectorAll('input')[0]?.value||'';const t=parseFloat(tr.querySelector('.pc2-total')?.textContent?.replace(/,/g,'')||0);if(n&&t>0)rows.push({n,t});});const el=document.getElementById('pc2-winner');if(!rows.length){el.style.display='none';return;}const w=rows.reduce((a,b)=>a.t<b.t?a:b);el.style.display='block';el.textContent=`الأفضل سعراً: ${w.n} — ${w.t.toLocaleString('ar-SA')} ر.س`;}
 function pc2GetRows(){const rows=[];document.getElementById('pc2-tbody').querySelectorAll('tr').forEach((tr,i)=>{const n=tr.querySelectorAll('input')[0]?.value||'';const sub=parseFloat(tr.querySelectorAll('input')[1]?.value)||0;const v=sub*0.15;rows.push({num:i+1,name:n,sub,vat:v,total:sub+v});});return rows.filter(r=>r.name);}
 function pc2ExportExcel(){const rows=pc2GetRows();const t=document.getElementById('pc2-title').value||'مقارنة الأسعار';const wb=XLSX.utils.book_new();const d=[[t],[''],['م','اسم الشركة','الإجمالي قبل الضريبة','الضريبة 15%','الإجمالي شامل الضريبة'],...rows.map(r=>[r.num,r.name,r.sub,r.vat,r.total]),[''],['الأفضل سعراً',rows.length?rows.reduce((a,b)=>a.total<b.total?a:b).name:'—']];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'مقارنة');XLSX.writeFile(wb,`${t}.xlsx`);toast('تم تصدير Excel');}
-function pc2ExportPDF(){const rows=pc2GetRows();const t=document.getElementById('pc2-title').value||'مقارنة الأسعار';const w=rows.length?rows.reduce((a,b)=>a.total<b.total?a:b):null;const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#0D7A8A;}table{width:100%;border-collapse:collapse;margin:16px 0;}th{background:#0D7A8A;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.win{background:#F0FFF4;border:2px solid #276749;border-radius:8px;padding:12px;margin-top:14px;font-weight:700;color:#276749;}</style></head><body><h2>${t}</h2><table><thead><tr><th>م</th><th>اسم الشركة</th><th>الإجمالي قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي شامل الضريبة</th></tr></thead><tbody>${rows.map(r=>`<tr${r===w?' style="background:#F0FFF4;"':''}><td>${r.num}</td><td>${r.name}${r===w?' ★':''}</td><td>${r.sub.toLocaleString('ar-SA')}</td><td>${r.vat.toLocaleString('ar-SA')}</td><td style="font-weight:700;">${r.total.toLocaleString('ar-SA')}</td></tr>`).join('')}</tbody></table>${w?`<div class="win">الأفضل سعراً: ${w.name} — ${w.total.toLocaleString('ar-SA')} ر.س</div>`:''}</body></html>`;printDoc(html);}
+function pc2ExportPDF(){
+  const rows=pc2GetRows();const t=document.getElementById('pc2-title').value||'مقارنة الأسعار';
+  const w=rows.length?rows.reduce((a,b)=>a.total<b.total?a:b):null;
+  const ID="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #1DA9BD;'><div><div style='font-size:17px;font-weight:900;color:#1A202C;'>شركة نورة لتعليم القيادة</div><div style='font-size:11px;color:#1DA9BD;font-weight:700;margin-top:2px;'>Noura Driving Company</div><div style='font-size:10px;color:#64748B;margin-top:2px;'>الرياض — طريق الملك خالد الدولي، جامعة الأميرة نورة</div></div><div style='text-align:left;font-size:10px;color:#64748B;line-height:1.9;'><div>الرقم الضريبي: 310230667700003</div><div>هاتف: +966 53 854 9436</div><div>asalangari@nouradriving.sa</div></div></div>";
+  const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;margin:40px;font-size:13px;color:#1A202C;}
+    table{width:100%;border-collapse:collapse;margin:14px 0;}
+    th{background:#0D7A8A;color:#fff;padding:9px 11px;text-align:right;font-size:12px;}
+    td{padding:8px 11px;border:1px solid #E2E8F0;font-size:12px;}
+    tr:nth-child(even) td{background:#F8FAFB;}
+    .win{background:#F0FFF4;border:2px solid #276749;border-radius:8px;padding:12px;margin-top:14px;font-weight:700;color:#276749;font-size:14px;}
+  </style></head><body>
+    ${ID}
+    <div style="background:#0D7A8A;color:#fff;padding:9px 14px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;">
+      <div style="font-size:14px;font-weight:900;">مقارنة الأسعار — Price Comparison</div>
+      <div style="font-size:11px;opacity:.85;">${new Date().toLocaleDateString('ar-SA')}</div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;">${t}</div>
+    <table><thead><tr><th>م</th><th>اسم الشركة</th><th>الإجمالي قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي شامل الضريبة</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr${r===w?' style="background:#F0FFF4;"':''}><td style="text-align:center;">${r.num}</td><td><strong>${r.name}</strong>${r===w?' ★':''}</td><td style="text-align:left;">${r.sub.toLocaleString('ar-SA')}</td><td style="text-align:left;">${r.vat.toLocaleString('ar-SA')}</td><td style="text-align:left;font-weight:700;">${r.total.toLocaleString('ar-SA')}</td></tr>`).join('')}</tbody></table>
+    ${w?`<div class="win">الأفضل سعراً: ${w.name} — ${w.total.toLocaleString('ar-SA')} ر.س</div>`:''}
+  </body></html>`;
+  printDoc(html);
+}
 
 /* ── Contracts ── */
 let ctPdfFile=null;
@@ -1379,7 +1499,27 @@ function renderCtList(){
 }
 function ctDel(id){contracts=contracts.filter(x=>x.id!==id);localStorage.setItem('ct_saved',JSON.stringify(contracts));renderCtList();}
 function ctExportExcel(){const wb=XLSX.utils.book_new();const d=[['العقود الحالية'],[''],['اسم الشركة','نوع العقد','تاريخ البداية','تاريخ الانتهاء','القيمة (ريال)','ملف PDF'],...contracts.map(c=>[c.company,c.type,c.start,c.end,c.value,c.pdfName||''])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'العقود');XLSX.writeFile(wb,`العقود_${new Date().toISOString().split('T')[0]}.xlsx`);toast('تم التصدير');}
-function ctExportPDF(){const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#C53030;}table{width:100%;border-collapse:collapse;margin:16px 0;}th{background:#C53030;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.exp{background:#FFF5F5;}.warn{background:#FFFBEB;}</style></head><body><h2>العقود الحالية — Active Contracts</h2><p>تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</p><table><thead><tr><th>م</th><th>اسم الشركة</th><th>النوع</th><th>البداية</th><th>الانتهاء</th><th>القيمة</th><th>الحالة</th></tr></thead><tbody>${contracts.map((c,i)=>{const now=new Date();const end=c.end?new Date(c.end):null;const d=end?Math.ceil((end-now)/(1000*60*60*24)):null;const cls=d!==null&&d<0?'class="exp"':d!==null&&d<30?'class="warn"':'';return`<tr ${cls}><td>${i+1}</td><td>${c.company}</td><td>${c.type||'—'}</td><td>${c.start||''}</td><td>${c.end||''}</td><td>${c.value.toLocaleString('ar-SA')}</td><td>${d===null?'—':d<0?'منتهي':d+' يوم'}</td></tr>`;}).join('')}</tbody></table></body></html>`;printDoc(html);}
+function ctExportPDF(){
+  const ID="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #1DA9BD;'><div><div style='font-size:17px;font-weight:900;color:#1A202C;'>شركة نورة لتعليم القيادة</div><div style='font-size:11px;color:#1DA9BD;font-weight:700;margin-top:2px;'>Noura Driving Company</div><div style='font-size:10px;color:#64748B;margin-top:2px;'>الرياض — طريق الملك خالد الدولي، جامعة الأميرة نورة</div></div><div style='text-align:left;font-size:10px;color:#64748B;line-height:1.9;'><div>الرقم الضريبي: 310230667700003</div><div>هاتف: +966 53 854 9436</div><div>asalangari@nouradriving.sa</div></div></div>";
+  const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;margin:40px;font-size:13px;color:#1A202C;}
+    table{width:100%;border-collapse:collapse;margin:14px 0;}
+    th{background:#C53030;color:#fff;padding:9px 11px;text-align:right;font-size:12px;}
+    td{padding:8px 11px;border:1px solid #E2E8F0;font-size:12px;}
+    tr:nth-child(even) td{background:#F8FAFB;}
+    .exp td{background:#FFF5F5!important;} .warn td{background:#FFFBEB!important;}
+  </style></head><body>
+    ${ID}
+    <div style="background:#C53030;color:#fff;padding:9px 14px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;">
+      <div style="font-size:14px;font-weight:900;">العقود الحالية — Active Contracts</div>
+      <div style="font-size:11px;opacity:.85;">تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</div>
+    </div>
+    <table><thead><tr><th>م</th><th>اسم الشركة</th><th>النوع</th><th>البداية</th><th>الانتهاء</th><th>القيمة (ر.س)</th><th>الحالة</th></tr></thead>
+    <tbody>${contracts.map((c,i)=>{const now=new Date();const end=c.end?new Date(c.end):null;const d=end?Math.ceil((end-now)/(1000*60*60*24)):null;const rowCls=d!==null&&d<0?' class="exp"':d!==null&&d<30?' class="warn"':'';const stClr=d===null?'#64748B':d<0?'#E53E3E':d<30?'#D97706':'#276749';return`<tr${rowCls}><td style="text-align:center;">${i+1}</td><td><strong>${c.company}</strong></td><td>${c.type||'—'}</td><td>${c.start||''}</td><td>${c.end||''}</td><td style="text-align:left;">${c.value.toLocaleString('ar-SA')}</td><td style="font-weight:700;color:${stClr};">${d===null?'—':d<0?'منتهي':d+' يوم متبقي'}</td></tr>`;}).join('')}
+    </tbody></table>
+  </body></html>`;
+  printDoc(html);
+}
 
 // override showPage لتشغيل initFolderDates
 const _origSP=showPage;
