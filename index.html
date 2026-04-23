@@ -229,6 +229,11 @@ html,body{font-family:'Cairo',sans-serif;height:100%;background:#F8FAFB;color:#1
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg>
         التوفير
       </button>
+      <div class="sb-section-lbl">مجلداتي</div>
+      <button class="sb-item" id="nav-folders" onclick="showPage('folders',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        مجلدات محمد الجمعان
+      </button>
       <div class="sb-section-lbl">الإعدادات</div>
       <button class="sb-item" id="nav-departments" onclick="showPage('departments',this)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
@@ -497,6 +502,297 @@ html,body{font-family:'Cairo',sans-serif;height:100%;background:#F8FAFB;color:#1
         </div>
       </div>
 
+      <!-- ══ FOLDERS PAGE ══ -->
+      <div class="page" id="pg-folders">
+
+        <!-- ستايل المجلدات -->
+        <style>
+        .folder-section{margin-bottom:32px;}
+        .folder-header{font-size:18px;font-weight:900;color:#1A202C;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E2E8F0;display:flex;align-items:center;gap:10px;}
+        .folder-header svg{color:#1DA9BD;}
+        .cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;}
+        .doc-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+        .dc-header{background:linear-gradient(135deg,#1DA9BD,#0D7A8A);padding:14px 18px;display:flex;align-items:center;gap:10px;}
+        .dc-header-icon{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .dc-header-title{font-size:14px;font-weight:700;color:#fff;}
+        .dc-header-sub{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px;}
+        .dc-body{padding:16px 18px;}
+        .dc-field{margin-bottom:12px;}
+        .dc-field label{font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:5px;}
+        .dc-inp{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #E2E8F0;background:#F8FAFB;color:#1A202C;font-family:Cairo,sans-serif;font-size:13px;outline:none;transition:border .2s;box-sizing:border-box;}
+        .dc-inp:focus{border-color:#1DA9BD;background:#fff;}
+        .dc-ta{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #E2E8F0;background:#F8FAFB;color:#1A202C;font-family:Cairo,sans-serif;font-size:12px;outline:none;resize:vertical;min-height:72px;box-sizing:border-box;}
+        .dc-ta:focus{border-color:#1DA9BD;background:#fff;}
+        .dc-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px;}
+        .dc-table th{background:#F8FAFB;padding:8px 10px;text-align:right;font-weight:700;color:#64748B;border:1px solid #E2E8F0;}
+        .dc-table td{padding:7px 10px;border:1px solid #E2E8F0;vertical-align:middle;}
+        .dc-table input{width:100%;border:none;background:transparent;font-family:Cairo,sans-serif;font-size:12px;outline:none;padding:2px 4px;}
+        .dc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #F1F5F9;}
+        .dc-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+        .dc-btn-primary{background:#1DA9BD;color:#fff;}
+        .dc-btn-primary:hover{background:#0D7A8A;}
+        .dc-btn-green{background:#276749;color:#fff;}
+        .dc-btn-green:hover{background:#1E5238;}
+        .dc-btn-red{background:#C53030;color:#fff;}
+        .dc-btn-red:hover{background:#9B2C2C;}
+        .dc-btn-gray{background:#E2E8F0;color:#475569;}
+        .dc-btn-gray:hover{background:#CBD5E0;}
+        .dc-btn-amber{background:#D97706;color:#fff;}
+        .dc-btn-amber:hover{background:#B45309;}
+        .dc-saved-list{margin-top:14px;border-top:1px solid #F1F5F9;padding-top:12px;}
+        .dc-saved-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#F8FAFB;border-radius:8px;margin-bottom:6px;font-size:12px;}
+        .dc-saved-name{font-weight:600;color:#1A202C;}
+        .dc-saved-date{color:#94A3B8;font-size:11px;}
+        .dc-saved-actions{display:flex;gap:6px;}
+        .dc-saved-dl{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Cairo,sans-serif;}
+        .upload-zone-sm{border:2px dashed #CBD5E0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;color:#94A3B8;font-size:12px;margin-top:10px;}
+        .upload-zone-sm:hover{border-color:#1DA9BD;color:#1DA9BD;background:#EBF8FA;}
+        .upload-zone-sm input{display:none;}
+        .pdf-list{margin-top:10px;}
+        .pdf-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F8FAFB;border-radius:8px;margin-bottom:6px;}
+        .pdf-name{font-size:12px;font-weight:600;color:#1A202C;display:flex;align-items:center;gap:6px;}
+        .pdf-name svg{color:#E53E3E;}
+        </style>
+
+        <div class="folder-section">
+          <div class="folder-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            مجلدات محمد الجمعان
+          </div>
+
+          <div class="cards-grid">
+
+            <!-- ══ كارد 1: RFQ ══ -->
+            <div class="doc-card">
+              <div class="dc-header">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <div><div class="dc-header-title">طلب عرض السعر (RFQ)</div><div class="dc-header-sub">Request For Quotation</div></div>
+              </div>
+              <div class="dc-body">
+                <div class="dc-field"><label>اسم الشركة / السادة</label><input class="dc-inp" id="rfq-company" placeholder="مثال: شركة الأمانة التجارية"></div>
+                <div class="dc-field"><label>التاريخ</label><input class="dc-inp" id="rfq-date" type="date"></div>
+                <div class="dc-field"><label>الأصناف المطلوبة</label></div>
+                <table class="dc-table" id="rfq-table">
+                  <thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
+                  <tbody id="rfq-tbody">
+                    <tr><td style="text-align:center;color:#94A3B8;">1</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الصنف"></td><td><input class="dc-inp" style="border:none;background:transparent;width:60px;" placeholder="1"></td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="—"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;font-size:16px;">×</button></td></tr>
+                  </tbody>
+                </table>
+                <button class="dc-btn dc-btn-gray" onclick="rfqAddRow()" style="font-size:11px;padding:6px 12px;">+ إضافة صف</button>
+                <div class="dc-field" style="margin-top:10px;"><label>تفاصيل أخرى</label><textarea class="dc-ta" id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+                <div class="dc-actions">
+                  <button class="dc-btn dc-btn-primary" onclick="rfqSave()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
+                    حفظ
+                  </button>
+                  <button class="dc-btn dc-btn-green" onclick="rfqExportWord()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                    Word
+                  </button>
+                  <button class="dc-btn dc-btn-red" onclick="rfqExportPDF()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                    PDF
+                  </button>
+                </div>
+                <div class="dc-saved-list" id="rfq-saved-list"></div>
+              </div>
+            </div>
+
+            <!-- ══ كارد 2: LPO طلبات الشراء ══ -->
+            <div class="doc-card">
+              <div class="dc-header" style="background:linear-gradient(135deg,#276749,#1E5238);">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                <div><div class="dc-header-title">طلبات الشراء (LPO)</div><div class="dc-header-sub">Local Purchase Order</div></div>
+              </div>
+              <div class="dc-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="dc-field"><label>رقم التعميد (PO#)</label><input class="dc-inp" id="lpo-num" placeholder="NDC-26-IT-0001"></div>
+                  <div class="dc-field"><label>التاريخ</label><input class="dc-inp" id="lpo-date" type="date"></div>
+                  <div class="dc-field"><label>اسم الشركة (المورد)</label><input class="dc-inp" id="lpo-company" placeholder="اسم الشركة"></div>
+                  <div class="dc-field"><label>الرقم الضريبي</label><input class="dc-inp" id="lpo-vat" placeholder="3XXXXXXXXX"></div>
+                  <div class="dc-field"><label>البريد الإلكتروني</label><input class="dc-inp" id="lpo-email" placeholder="info@company.com" type="email"></div>
+                  <div class="dc-field"><label>رقم التواصل</label><input class="dc-inp" id="lpo-phone" placeholder="+966..."></div>
+                  <div class="dc-field"><label>رقم عرض السعر</label><input class="dc-inp" id="lpo-quote" placeholder="Q-2026-001"></div>
+                </div>
+                <div class="dc-field"><label>البنود</label></div>
+                <table class="dc-table">
+                  <thead><tr><th>م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th><th></th></tr></thead>
+                  <tbody id="lpo-tbody">
+                    <tr>
+                      <td style="text-align:center;color:#94A3B8;">1</td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;" placeholder="الصنف"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;" placeholder="الوصف"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;width:55px;" type="number" value="1" oninput="lpoCalcRow(this)"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;width:80px;" type="number" placeholder="0" oninput="lpoCalcRow(this)"></td>
+                      <td class="lpo-row-total" style="font-weight:700;">0</td>
+                      <td><button onclick="lpoDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td colspan="5" style="text-align:left;padding:8px 10px;font-weight:700;color:#64748B;">الإجمالي قبل الضريبة</td><td id="lpo-subtotal" style="font-weight:700;padding:8px 10px;">0</td><td></td></tr>
+                    <tr><td colspan="5" style="text-align:left;padding:8px 10px;color:#64748B;">الضريبة 15%</td><td id="lpo-vat-amt" style="padding:8px 10px;">0</td><td></td></tr>
+                    <tr style="background:#EBF8FA;"><td colspan="5" style="text-align:left;padding:8px 10px;font-weight:900;color:#1DA9BD;">الإجمالي شامل الضريبة</td><td id="lpo-total" style="font-weight:900;color:#1DA9BD;padding:8px 10px;">0</td><td></td></tr>
+                  </tfoot>
+                </table>
+                <button class="dc-btn dc-btn-gray" onclick="lpoAddRow()" style="font-size:11px;padding:6px 12px;">+ إضافة صف</button>
+                <div class="dc-actions">
+                  <button class="dc-btn dc-btn-primary" onclick="lpoSave()">حفظ</button>
+                  <button class="dc-btn dc-btn-green" onclick="lpoExportExcel()">Excel</button>
+                  <button class="dc-btn dc-btn-red" onclick="lpoExportPDF()">PDF</button>
+                </div>
+                <div class="dc-saved-list" id="lpo-saved-list"></div>
+              </div>
+            </div>
+
+            <!-- ══ كارد 3: Petty Cash ══ -->
+            <div class="doc-card">
+              <div class="dc-header" style="background:linear-gradient(135deg,#D97706,#B45309);">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                <div><div class="dc-header-title">Petty Cash</div><div class="dc-header-sub">المصروفات النثرية</div></div>
+              </div>
+              <div class="dc-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="dc-field"><label>التاريخ من</label><input class="dc-inp" id="pc-from" type="date"></div>
+                  <div class="dc-field"><label>التاريخ إلى</label><input class="dc-inp" id="pc-to" type="date"></div>
+                </div>
+                <div class="dc-field" style="margin-top:8px;">
+                  <label>رفع ملفات PDF (فواتير / وصولات)</label>
+                  <div class="upload-zone-sm" onclick="document.getElementById('pc-upload').click()">
+                    <input type="file" id="pc-upload" accept=".pdf" multiple onchange="pcAddFiles(this)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 6px;display:block;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    اضغط لرفع ملفات PDF — يمكن رفع أكثر من ملف
+                  </div>
+                  <div class="pdf-list" id="pc-pdf-list"></div>
+                </div>
+                <div class="dc-actions">
+                  <button class="dc-btn dc-btn-red" onclick="pcExportPDF()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                    تصدير PDF مجمّع
+                  </button>
+                </div>
+                <div style="font-size:11px;color:#94A3B8;margin-top:8px;">سيتم دمج جميع الملفات في PDF واحد مرتبة حسب الترتيب</div>
+              </div>
+            </div>
+
+            <!-- ══ كارد 4: Delivery Note ══ -->
+            <div class="doc-card">
+              <div class="dc-header" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></div>
+                <div><div class="dc-header-title">سند الاستلام (Delivery Note)</div><div class="dc-header-sub">وثيقة استلام البضاعة</div></div>
+              </div>
+              <div class="dc-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="dc-field"><label>اسم الشركة</label><input class="dc-inp" id="dn-company" placeholder="مثال: شركة بوان التجارية"></div>
+                  <div class="dc-field"><label>رقم التعميد (إن وجد)</label><input class="dc-inp" id="dn-lpo" placeholder="LPO-0001"></div>
+                  <div class="dc-field"><label>التاريخ</label><input class="dc-inp" id="dn-date" type="date"></div>
+                  <div class="dc-field"><label>تم التسليم من قبل</label><input class="dc-inp" id="dn-from" placeholder="اسم المسلّم"></div>
+                </div>
+                <div class="dc-field"><label>البنود</label></div>
+                <table class="dc-table">
+                  <thead><tr><th>م</th><th>المنتج / الخدمة</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
+                  <tbody id="dn-tbody">
+                    <tr><td style="text-align:center;color:#94A3B8;">1</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم المنتج"></td><td><input class="dc-inp" style="border:none;background:transparent;width:60px;" placeholder="1"></td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="—"></td><td><button onclick="dnDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td></tr>
+                  </tbody>
+                </table>
+                <button class="dc-btn dc-btn-gray" onclick="dnAddRow()" style="font-size:11px;padding:6px 12px;">+ إضافة صف</button>
+                <div class="dc-field" style="margin-top:10px;">
+                  <label>إرفاق ملف PDF (للحفظ والرجوع إليه)</label>
+                  <div class="upload-zone-sm" onclick="document.getElementById('dn-attach').click()">
+                    <input type="file" id="dn-attach" accept=".pdf" onchange="dnAttach(this)">
+                    رفع ملف PDF مرفق
+                  </div>
+                  <div id="dn-attach-name" style="font-size:11px;color:#1DA9BD;margin-top:5px;"></div>
+                </div>
+                <div class="dc-actions">
+                  <button class="dc-btn dc-btn-primary" onclick="dnSave()">حفظ</button>
+                  <button class="dc-btn dc-btn-red" onclick="dnExportPDF()">تصدير PDF</button>
+                </div>
+                <div class="dc-saved-list" id="dn-saved-list"></div>
+              </div>
+            </div>
+
+            <!-- ══ كارد 5: مقارنة الأسعار ══ -->
+            <div class="doc-card">
+              <div class="dc-header" style="background:linear-gradient(135deg,#0D7A8A,#065A6A);">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                <div><div class="dc-header-title">مقارنة الأسعار</div><div class="dc-header-sub">Price Comparison</div></div>
+              </div>
+              <div class="dc-body">
+                <div class="dc-field"><label>عنوان المقارنة</label><input class="dc-inp" id="pc2-title" placeholder="مثال: خدمات النظافة 2026"></div>
+                <div class="dc-field"><label>عروض الأسعار <small style="color:#94A3B8;">(يمكن إضافة أكثر من 3)</small></label></div>
+                <table class="dc-table">
+                  <thead><tr><th>م</th><th>اسم الشركة</th><th>الإجمالي قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي شامل الضريبة</th><th></th></tr></thead>
+                  <tbody id="pc2-tbody">
+                    <tr>
+                      <td style="text-align:center;color:#94A3B8;">1</td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الشركة"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;width:90px;" type="number" placeholder="0" oninput="pc2CalcRow(this)"></td>
+                      <td class="pc2-vat" style="color:#64748B;">0</td>
+                      <td class="pc2-total" style="font-weight:700;">0</td>
+                      <td><button onclick="pc2DelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:center;color:#94A3B8;">2</td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الشركة"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;width:90px;" type="number" placeholder="0" oninput="pc2CalcRow(this)"></td>
+                      <td class="pc2-vat" style="color:#64748B;">0</td>
+                      <td class="pc2-total" style="font-weight:700;">0</td>
+                      <td><button onclick="pc2DelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:center;color:#94A3B8;">3</td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الشركة"></td>
+                      <td><input class="dc-inp" style="border:none;background:transparent;width:90px;" type="number" placeholder="0" oninput="pc2CalcRow(this)"></td>
+                      <td class="pc2-vat" style="color:#64748B;">0</td>
+                      <td class="pc2-total" style="font-weight:700;">0</td>
+                      <td><button onclick="pc2DelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button class="dc-btn dc-btn-gray" onclick="pc2AddRow()" style="font-size:11px;padding:6px 12px;">+ إضافة شركة</button>
+                <div id="pc2-winner" style="margin-top:12px;padding:10px 14px;background:#F0FFF4;border:1px solid #C6F6D5;border-radius:10px;font-size:13px;font-weight:700;color:#276749;display:none;"></div>
+                <div class="dc-actions">
+                  <button class="dc-btn dc-btn-green" onclick="pc2ExportExcel()">Excel</button>
+                  <button class="dc-btn dc-btn-red" onclick="pc2ExportPDF()">PDF</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══ كارد 6: العقود الحالية ══ -->
+            <div class="doc-card">
+              <div class="dc-header" style="background:linear-gradient(135deg,#C53030,#9B2C2C);">
+                <div class="dc-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+                <div><div class="dc-header-title">العقود الحالية</div><div class="dc-header-sub">Active Contracts</div></div>
+              </div>
+              <div class="dc-body">
+                <div class="dc-field">
+                  <label>إضافة عقد جديد</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                    <input class="dc-inp" id="ct-company" placeholder="اسم الشركة">
+                    <input class="dc-inp" id="ct-type" placeholder="نوع العقد (نظافة، صيانة...)">
+                    <input class="dc-inp" id="ct-start" type="date" placeholder="تاريخ البداية">
+                    <input class="dc-inp" id="ct-end" type="date" placeholder="تاريخ الانتهاء">
+                    <input class="dc-inp" id="ct-value" type="number" placeholder="قيمة العقد (ريال)">
+                  </div>
+                  <div class="upload-zone-sm" onclick="document.getElementById('ct-pdf').click()">
+                    <input type="file" id="ct-pdf" accept=".pdf" onchange="ctAttach(this)">
+                    رفع نسخة العقد PDF
+                  </div>
+                  <div id="ct-pdf-name" style="font-size:11px;color:#1DA9BD;margin-top:5px;"></div>
+                  <button class="dc-btn dc-btn-primary" style="margin-top:10px;" onclick="ctAdd()">إضافة العقد</button>
+                </div>
+                <div class="dc-saved-list" id="ct-list"></div>
+                <div class="dc-actions" style="margin-top:10px;">
+                  <button class="dc-btn dc-btn-green" onclick="ctExportExcel()">Excel</button>
+                  <button class="dc-btn dc-btn-red" onclick="ctExportPDF()">PDF</button>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /cards-grid -->
+        </div><!-- /folder-section -->
+      </div><!-- /pg-folders -->
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -593,7 +889,7 @@ async function doLogin(){
 function doLogout(){document.getElementById('app').style.display='none';document.getElementById('ls').style.display='flex';}
 
 /* ── Navigation ── */
-const pageTitles={dashboard:'لوحة القيادة',orders:'طلبات الشراء',custody:'العهد والأصول',suppliers:'الموردون',reports:'التقارير',savings:'التوفير',departments:'الإدارات والأقسام',import:'استيراد البيانات',settings:'الإعدادات'};
+const pageTitles={dashboard:'لوحة القيادة',orders:'طلبات الشراء',custody:'العهد والأصول',suppliers:'الموردون',reports:'التقارير',savings:'التوفير',departments:'الإدارات والأقسام',import:'استيراد البيانات',settings:'الإعدادات',folders:'مجلدات محمد الجمعان'};
 const pageActions={
   orders:`<button class="btn-primary" onclick="openOrderModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>طلب جديد</button>`,
   custody:`<button class="btn-primary" onclick="openModal('custody-modal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>عهدة جديدة</button>`,
@@ -945,6 +1241,149 @@ function saveBudget(){
   const el=document.getElementById('budget-suc');el.style.display='inline';setTimeout(()=>el.style.display='none',2500);
   loadDashboard();
 }
+
+/* ════════════════════════════════════════
+   مجلدات محمد الجمعان — JavaScript
+════════════════════════════════════════ */
+function initFolderDates(){
+  const today=new Date().toISOString().split('T')[0];
+  ['rfq-date','lpo-date','dn-date','pc-from','pc-to'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=today;});
+  renderRfqSaved();renderLpoSaved();renderDnSaved();renderCtList();
+}
+
+/* ── RFQ ── */
+let rfqRowCount=1;
+function rfqAddRow(){rfqRowCount++;const tbody=document.getElementById('rfq-tbody');const tr=document.createElement('tr');tr.innerHTML=`<td style="text-align:center;color:#94A3B8;">${rfqRowCount}</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الصنف"></td><td><input class="dc-inp" style="border:none;background:transparent;width:60px;" placeholder="1"></td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="—"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>`;tbody.appendChild(tr);}
+function rfqDelRow(btn){const tr=btn.closest('tr');if(document.getElementById('rfq-tbody').rows.length>1)tr.remove();}
+function rfqGetRows(){const rows=[];document.getElementById('rfq-tbody').querySelectorAll('tr').forEach((tr,i)=>{const ins=tr.querySelectorAll('input');rows.push({num:i+1,item:ins[0]?.value||'',qty:ins[1]?.value||'',notes:ins[2]?.value||''});});return rows.filter(r=>r.item);}
+function rfqSave(){
+  const co=document.getElementById('rfq-company').value.trim();if(!co){toast('أدخل اسم الشركة',true);return;}
+  const data={id:Date.now(),company:co,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows(),savedAt:new Date().toLocaleDateString('ar-SA')};
+  const saved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');saved.unshift(data);if(saved.length>20)saved.pop();localStorage.setItem('rfq_saved',JSON.stringify(saved));toast('تم الحفظ');renderRfqSaved();
+}
+function renderRfqSaved(){
+  const saved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');const el=document.getElementById('rfq-saved-list');
+  if(!saved.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px;">الطلبات المحفوظة</div>'+saved.map(s=>`<div class="dc-saved-item"><div><div class="dc-saved-name">${s.company}</div><div class="dc-saved-date">${s.savedAt} · ${s.rows.length} أصناف</div></div><div class="dc-saved-actions"><button class="dc-saved-dl" style="background:#EBF8FA;color:#1DA9BD;" onclick="rfqLoad(${s.id})">تحميل</button><button class="dc-saved-dl" style="background:#F0FFF4;color:#276749;" onclick="rfqExportWordById(${s.id})">W</button><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="rfqExportPDFById(${s.id})">P</button><button class="dc-saved-dl" style="background:#F1F5F9;color:#64748B;" onclick="rfqDel(${s.id})">×</button></div></div>`).join('');
+}
+function rfqLoad(id){const s=JSON.parse(localStorage.getItem('rfq_saved')||'[]').find(x=>x.id===id);if(!s)return;document.getElementById('rfq-company').value=s.company;document.getElementById('rfq-date').value=s.date||'';document.getElementById('rfq-notes').value=s.notes||'';const tbody=document.getElementById('rfq-tbody');tbody.innerHTML='';rfqRowCount=0;s.rows.forEach(r=>{rfqRowCount++;const tr=document.createElement('tr');tr.innerHTML=`<td style="text-align:center;color:#94A3B8;">${rfqRowCount}</td><td><input class="dc-inp" style="border:none;background:transparent;" value="${r.item}"></td><td><input class="dc-inp" style="border:none;background:transparent;width:60px;" value="${r.qty}"></td><td><input class="dc-inp" style="border:none;background:transparent;" value="${r.notes}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>`;tbody.appendChild(tr);});toast('تم التحميل');}
+function rfqDel(id){localStorage.setItem('rfq_saved',JSON.stringify(JSON.parse(localStorage.getItem('rfq_saved')||'[]').filter(x=>x.id!==id)));renderRfqSaved();}
+function rfqBuildHTML(d){
+  const co=d||{company:document.getElementById('rfq-company').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()};
+  const rows=co.rows.length?co.rows:[{num:1,item:'',qty:'',notes:''}];
+  return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#1DA9BD;}table{width:100%;border-collapse:collapse;margin:14px 0;}th{background:#1DA9BD;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.sig{display:flex;justify-content:space-between;margin-top:50px;}.sig-box{width:30%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px;border-bottom:3px solid #1DA9BD;padding-bottom:14px;"><div><h2>خطاب طلب عرض سعر (RFQ)</h2><p style="color:#64748B;">شركة نورة لتعليم القيادة</p></div><div style="text-align:left;font-size:12px;"><p>التاريخ: ${co.date||''}</p></div></div>
+    <p><strong>السادة / ${co.company||'___'}</strong></p>
+    <p style="margin:12px 0;line-height:1.8;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل.</p>
+    <table><thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.num}</td><td>${r.item}</td><td>${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
+    <table style="margin-top:10px;"><thead><tr><th>مدة التنفيذ</th><th>أسبوع عمل</th></tr></thead><tbody><tr><td>طريقة الدفع</td><td>100% بعد الاستلام</td></tr><tr><td>تفاصيل أخرى</td><td>${co.notes||'—'}</td></tr></tbody></table>
+    <div class="sig"><div class="sig-box">المعد<br>محمد الجمعان</div><div class="sig-box">المراجع</div><div class="sig-box">الاعتماد</div></div>
+  </body></html>`;
+}
+function rfqExportWord(){const html=rfqBuildHTML(null);const b=new Blob(['\ufeff'+html],{type:'application/msword'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`RFQ_${document.getElementById('rfq-company').value||'طلب'}.doc`;a.click();toast('تم تصدير Word');}
+function rfqExportWordById(id){const s=JSON.parse(localStorage.getItem('rfq_saved')||'[]').find(x=>x.id===id);if(!s)return;const b=new Blob(['\ufeff'+rfqBuildHTML(s)],{type:'application/msword'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`RFQ_${s.company}.doc`;a.click();}
+function rfqExportPDF(){printDoc(rfqBuildHTML(null));}
+function rfqExportPDFById(id){const s=JSON.parse(localStorage.getItem('rfq_saved')||'[]').find(x=>x.id===id);if(s)printDoc(rfqBuildHTML(s));}
+function printDoc(html){const w=window.open('','_blank');w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};}
+
+/* ── LPO ── */
+let lpoRowCount=1;
+function lpoAddRow(){lpoRowCount++;const tbody=document.getElementById('lpo-tbody');const tr=document.createElement('tr');tr.innerHTML=`<td style="text-align:center;color:#94A3B8;">${lpoRowCount}</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="الصنف"></td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="الوصف"></td><td><input class="dc-inp" style="border:none;background:transparent;width:55px;" type="number" value="1" oninput="lpoCalcRow(this)"></td><td><input class="dc-inp" style="border:none;background:transparent;width:80px;" type="number" placeholder="0" oninput="lpoCalcRow(this)"></td><td class="lpo-row-total" style="font-weight:700;">0</td><td><button onclick="lpoDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>`;tbody.appendChild(tr);lpoCalcTotal();}
+function lpoDelRow(btn){const tr=btn.closest('tr');if(document.getElementById('lpo-tbody').rows.length>1){tr.remove();lpoCalcTotal();}}
+function lpoCalcRow(inp){const tr=inp.closest('tr');const ins=tr.querySelectorAll('input[type="number"]');const t=(parseFloat(ins[0]?.value)||0)*(parseFloat(ins[1]?.value)||0);tr.querySelector('.lpo-row-total').textContent=t.toLocaleString('ar-SA');lpoCalcTotal();}
+function lpoCalcTotal(){let s=0;document.getElementById('lpo-tbody').querySelectorAll('.lpo-row-total').forEach(td=>{s+=parseFloat(td.textContent.replace(/,/g,''))||0;});const v=s*0.15;document.getElementById('lpo-subtotal').textContent=s.toLocaleString('ar-SA');document.getElementById('lpo-vat-amt').textContent=v.toLocaleString('ar-SA');document.getElementById('lpo-total').textContent=(s+v).toLocaleString('ar-SA');}
+function lpoGetRows(){const rows=[];document.getElementById('lpo-tbody').querySelectorAll('tr').forEach((tr,i)=>{const ins=tr.querySelectorAll('input');const q=parseFloat(ins[3]?.value)||0;const p=parseFloat(ins[4]?.value)||0;rows.push({num:i+1,item:ins[0]?.value||'',desc:ins[1]?.value||'',qty:q,price:p,total:q*p});});return rows.filter(r=>r.item);}
+function lpoSave(){
+  const co=document.getElementById('lpo-company').value.trim();if(!co){toast('أدخل اسم الشركة',true);return;}
+  const rows=lpoGetRows();const sub=rows.reduce((s,r)=>s+r.total,0);
+  const d={id:Date.now(),num:document.getElementById('lpo-num').value,date:document.getElementById('lpo-date').value,company:co,vat:document.getElementById('lpo-vat').value,email:document.getElementById('lpo-email').value,phone:document.getElementById('lpo-phone').value,quote:document.getElementById('lpo-quote').value,rows,subtotal:sub,vatAmt:sub*0.15,total:sub*1.15,savedAt:new Date().toLocaleDateString('ar-SA')};
+  const saved=JSON.parse(localStorage.getItem('lpo_saved')||'[]');saved.unshift(d);if(saved.length>20)saved.pop();localStorage.setItem('lpo_saved',JSON.stringify(saved));toast('تم الحفظ');renderLpoSaved();
+}
+function renderLpoSaved(){
+  const saved=JSON.parse(localStorage.getItem('lpo_saved')||'[]');const el=document.getElementById('lpo-saved-list');
+  if(!saved.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px;">الطلبات المحفوظة</div>'+saved.map(s=>`<div class="dc-saved-item"><div><div class="dc-saved-name">${s.company} — ${s.num||'—'}</div><div class="dc-saved-date">${s.savedAt} · ${(s.total||0).toLocaleString('ar-SA')} ر.س</div></div><div class="dc-saved-actions"><button class="dc-saved-dl" style="background:#F0FFF4;color:#276749;" onclick="lpoExcelById(${s.id})">X</button><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="lpoPDFById(${s.id})">P</button><button class="dc-saved-dl" style="background:#F1F5F9;color:#64748B;" onclick="lpoDel(${s.id})">×</button></div></div>`).join('');
+}
+function lpoDel(id){localStorage.setItem('lpo_saved',JSON.stringify(JSON.parse(localStorage.getItem('lpo_saved')||'[]').filter(x=>x.id!==id)));renderLpoSaved();}
+function lpoBuildHTML(d){
+  const sub=d.rows.reduce((s,r)=>s+r.total,0);const v=sub*0.15;const tot=sub+v;
+  return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:30px;font-size:12px;}h2{color:#276749;}table{width:100%;border-collapse:collapse;margin:12px 0;}th{background:#276749;color:#fff;padding:8px 10px;text-align:right;}td{padding:7px 10px;border:1px solid #E2E8F0;}.tot{font-weight:900;color:#1DA9BD;background:#EBF8FA;}.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}.ib{background:#F8FAFB;border:1px solid #E2E8F0;border-radius:8px;padding:12px;font-size:12px;}.sig{display:flex;justify-content:space-between;margin-top:40px;}.sb{width:30%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
+    <div style="display:flex;justify-content:space-between;margin-bottom:16px;border-bottom:3px solid #276749;padding-bottom:12px;"><div><h2>Local Purchase Order — طلب شراء محلي</h2><span style="background:#276749;color:#fff;padding:2px 10px;border-radius:20px;font-size:11px;">${d.num||'LPO'}</span></div><div style="text-align:left;font-size:12px;"><div>التاريخ: ${d.date||''}</div><div>شركة نورة لتعليم القيادة</div></div></div>
+    <div class="info"><div class="ib"><div style="font-weight:700;margin-bottom:8px;color:#64748B;">المورد</div><div>الشركة: ${d.company}</div><div>الرقم الضريبي: ${d.vat||'—'}</div><div>التواصل: ${d.phone||'—'}</div><div>الإيميل: ${d.email||'—'}</div></div><div class="ib"><div style="font-weight:700;margin-bottom:8px;color:#64748B;">التسليم إلى</div><div>Noura Driving Company</div><div>Riyadh, Saudi Arabia</div><div>رقم عرض السعر: ${d.quote||'—'}</div></div></div>
+    <table><thead><tr><th>م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody>${d.rows.map(r=>`<tr><td>${r.num}</td><td>${r.item}</td><td>${r.desc||''}</td><td>${r.qty}</td><td>${(r.price||0).toLocaleString('ar-SA')}</td><td>${(r.total||0).toLocaleString('ar-SA')}</td></tr>`).join('')}<tr><td colspan="5" style="text-align:left;font-weight:700;">الإجمالي قبل الضريبة</td><td>${sub.toLocaleString('ar-SA')}</td></tr><tr><td colspan="5" style="text-align:left;">الضريبة 15%</td><td>${v.toLocaleString('ar-SA')}</td></tr><tr class="tot"><td colspan="5" style="text-align:left;">الإجمالي شامل الضريبة</td><td>${tot.toLocaleString('ar-SA')} ر.س</td></tr></tbody></table>
+    <div class="sig"><div class="sb">Prepared By<br>محمد الجمعان</div><div class="sb">Reviewed By</div><div class="sb">CEO Approval</div></div>
+  </body></html>`;
+}
+function lpoExportExcel(){
+  const rows=lpoGetRows();const sub=rows.reduce((s,r)=>s+r.total,0);
+  const wb=XLSX.utils.book_new();
+  const data=[['Local Purchase Order'],[''],['رقم التعميد',document.getElementById('lpo-num').value,'التاريخ',document.getElementById('lpo-date').value],['اسم الشركة',document.getElementById('lpo-company').value,'الرقم الضريبي',document.getElementById('lpo-vat').value],['الإيميل',document.getElementById('lpo-email').value,'التواصل',document.getElementById('lpo-phone').value],[''],['م','الصنف','الوصف','الكمية','سعر الوحدة','الإجمالي'],...rows.map(r=>[r.num,r.item,r.desc,r.qty,r.price,r.total]),[''],['','','','','الإجمالي قبل الضريبة',sub],['','','','','الضريبة 15%',sub*0.15],['','','','','الإجمالي شامل الضريبة',sub*1.15]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'LPO');XLSX.writeFile(wb,`LPO_${document.getElementById('lpo-company').value||'طلب'}.xlsx`);toast('تم تصدير Excel');
+}
+function lpoExcelById(id){const s=JSON.parse(localStorage.getItem('lpo_saved')||'[]').find(x=>x.id===id);if(!s)return;const wb=XLSX.utils.book_new();const d=[['LPO'],['Company',s.company],['PO#',s.num],['Date',s.date],[''],['م','الصنف','الوصف','الكمية','سعر الوحدة','الإجمالي'],...(s.rows||[]).map(r=>[r.num,r.item,r.desc,r.qty,r.price,r.total]),[''],['Subtotal',s.subtotal],['VAT',s.vatAmt],['Total',s.total]];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'LPO');XLSX.writeFile(wb,`LPO_${s.company}.xlsx`);}
+function lpoExportPDF(){printDoc(lpoBuildHTML({num:document.getElementById('lpo-num').value,date:document.getElementById('lpo-date').value,company:document.getElementById('lpo-company').value,vat:document.getElementById('lpo-vat').value,email:document.getElementById('lpo-email').value,phone:document.getElementById('lpo-phone').value,quote:document.getElementById('lpo-quote').value,rows:lpoGetRows()}));}
+function lpoPDFById(id){const s=JSON.parse(localStorage.getItem('lpo_saved')||'[]').find(x=>x.id===id);if(s)printDoc(lpoBuildHTML(s));}
+
+/* ── Petty Cash ── */
+let pcFiles=[];
+function pcAddFiles(input){Array.from(input.files).forEach(f=>pcFiles.push(f));renderPCList();input.value='';}
+function renderPCList(){document.getElementById('pc-pdf-list').innerHTML=pcFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E53E3E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>${f.name}</div><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="pcRemove(${i})">×</button></div>`).join('');}
+function pcRemove(i){pcFiles.splice(i,1);renderPCList();}
+function pcExportPDF(){if(!pcFiles.length){toast('ارفع ملفات PDF أولاً',true);return;}pcFiles.forEach(f=>{const url=URL.createObjectURL(f);const a=document.createElement('a');a.href=url;a.target='_blank';a.click();});toast('تم فتح الملفات — اطبع كل نافذة كـ PDF وادمجها');}
+
+/* ── Delivery Note ── */
+let dnRowCount=1,dnAttachedFile=null;
+function dnAddRow(){dnRowCount++;const tbody=document.getElementById('dn-tbody');const tr=document.createElement('tr');tr.innerHTML=`<td style="text-align:center;color:#94A3B8;">${dnRowCount}</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم المنتج"></td><td><input class="dc-inp" style="border:none;background:transparent;width:60px;" placeholder="1"></td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="—"></td><td><button onclick="dnDelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>`;tbody.appendChild(tr);}
+function dnDelRow(btn){const tr=btn.closest('tr');if(document.getElementById('dn-tbody').rows.length>1)tr.remove();}
+function dnAttach(input){dnAttachedFile=input.files[0];document.getElementById('dn-attach-name').textContent=dnAttachedFile?'مرفق: '+dnAttachedFile.name:'';}
+function dnGetRows(){const rows=[];document.getElementById('dn-tbody').querySelectorAll('tr').forEach((tr,i)=>{const ins=tr.querySelectorAll('input');rows.push({num:i+1,product:ins[0]?.value||'',qty:ins[1]?.value||'',notes:ins[2]?.value||''});});return rows.filter(r=>r.product);}
+function dnSave(){const co=document.getElementById('dn-company').value.trim();if(!co){toast('أدخل اسم الشركة',true);return;}const d={id:Date.now(),company:co,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows(),savedAt:new Date().toLocaleDateString('ar-SA')};const saved=JSON.parse(localStorage.getItem('dn_saved')||'[]');saved.unshift(d);if(saved.length>20)saved.pop();localStorage.setItem('dn_saved',JSON.stringify(saved));toast('تم الحفظ');renderDnSaved();}
+function renderDnSaved(){const saved=JSON.parse(localStorage.getItem('dn_saved')||'[]');const el=document.getElementById('dn-saved-list');if(!saved.length){el.innerHTML='';return;}el.innerHTML='<div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px;">السندات المحفوظة</div>'+saved.map(s=>`<div class="dc-saved-item"><div><div class="dc-saved-name">${s.company}</div><div class="dc-saved-date">${s.savedAt}</div></div><div class="dc-saved-actions"><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="dnPDFById(${s.id})">PDF</button><button class="dc-saved-dl" style="background:#F1F5F9;color:#64748B;" onclick="dnDel(${s.id})">×</button></div></div>`).join('');}
+function dnDel(id){localStorage.setItem('dn_saved',JSON.stringify(JSON.parse(localStorage.getItem('dn_saved')||'[]').filter(x=>x.id!==id)));renderDnSaved();}
+function dnBuildHTML(d){return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#7C3AED;}table{width:100%;border-collapse:collapse;margin:14px 0;}th{background:#7C3AED;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.sig{display:flex;justify-content:space-between;margin-top:50px;}.sb{width:40%;text-align:center;border-top:1px solid #000;padding-top:8px;font-size:11px;}</style></head><body>
+  <div style="display:flex;justify-content:space-between;margin-bottom:20px;border-bottom:3px solid #7C3AED;padding-bottom:14px;"><div><h2>Delivery Note — سند استلام</h2></div><div style="text-align:left;font-size:12px;"><div>الشركة: ${d.company||'—'}</div><div>التاريخ: ${d.date||''}</div><div>رقم التعميد: ${d.lpo||'—'}</div></div></div>
+  <p>تم التسليم من قبل: <strong>${d.from||'—'}</strong></p>
+  <table><thead><tr><th>م</th><th>المنتج / الخدمة</th><th>الكمية</th><th>ملاحظات</th></tr></thead><tbody>${(d.rows.length?d.rows:[{num:1,product:'',qty:'',notes:''}]).map(r=>`<tr><td>${r.num}</td><td>${r.product}</td><td>${r.qty}</td><td>${r.notes}</td></tr>`).join('')}</tbody></table>
+  <div class="sig"><div class="sb">Received By / تم الاستلام<br>الاسم:<br>التوقيع:<br>التاريخ:</div><div class="sb">Delivered By / تم التسليم<br>الاسم:<br>التوقيع:<br>التاريخ:</div></div>
+</body></html>`;}
+function dnExportPDF(){printDoc(dnBuildHTML({company:document.getElementById('dn-company').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()}));}
+function dnPDFById(id){const s=JSON.parse(localStorage.getItem('dn_saved')||'[]').find(x=>x.id===id);if(s)printDoc(dnBuildHTML(s));}
+
+/* ── Price Comparison ── */
+let pc2RowCount=3;
+function pc2AddRow(){pc2RowCount++;const tbody=document.getElementById('pc2-tbody');const tr=document.createElement('tr');tr.innerHTML=`<td style="text-align:center;color:#94A3B8;">${pc2RowCount}</td><td><input class="dc-inp" style="border:none;background:transparent;" placeholder="اسم الشركة"></td><td><input class="dc-inp" style="border:none;background:transparent;width:90px;" type="number" placeholder="0" oninput="pc2CalcRow(this)"></td><td class="pc2-vat" style="color:#64748B;">0</td><td class="pc2-total" style="font-weight:700;">0</td><td><button onclick="pc2DelRow(this)" style="background:none;border:none;color:#E53E3E;cursor:pointer;">×</button></td>`;tbody.appendChild(tr);}
+function pc2DelRow(btn){const tr=btn.closest('tr');if(document.getElementById('pc2-tbody').rows.length>1){tr.remove();pc2Winner();}}
+function pc2CalcRow(inp){const tr=inp.closest('tr');const sub=parseFloat(inp.value)||0;const v=sub*0.15;tr.querySelector('.pc2-vat').textContent=v.toLocaleString('ar-SA');tr.querySelector('.pc2-total').textContent=(sub+v).toLocaleString('ar-SA');pc2Winner();}
+function pc2Winner(){const rows=[];document.getElementById('pc2-tbody').querySelectorAll('tr').forEach(tr=>{const n=tr.querySelectorAll('input')[0]?.value||'';const t=parseFloat(tr.querySelector('.pc2-total')?.textContent?.replace(/,/g,'')||0);if(n&&t>0)rows.push({n,t});});const el=document.getElementById('pc2-winner');if(!rows.length){el.style.display='none';return;}const w=rows.reduce((a,b)=>a.t<b.t?a:b);el.style.display='block';el.textContent=`الأفضل سعراً: ${w.n} — ${w.t.toLocaleString('ar-SA')} ر.س`;}
+function pc2GetRows(){const rows=[];document.getElementById('pc2-tbody').querySelectorAll('tr').forEach((tr,i)=>{const n=tr.querySelectorAll('input')[0]?.value||'';const sub=parseFloat(tr.querySelectorAll('input')[1]?.value)||0;const v=sub*0.15;rows.push({num:i+1,name:n,sub,vat:v,total:sub+v});});return rows.filter(r=>r.name);}
+function pc2ExportExcel(){const rows=pc2GetRows();const t=document.getElementById('pc2-title').value||'مقارنة الأسعار';const wb=XLSX.utils.book_new();const d=[[t],[''],['م','اسم الشركة','الإجمالي قبل الضريبة','الضريبة 15%','الإجمالي شامل الضريبة'],...rows.map(r=>[r.num,r.name,r.sub,r.vat,r.total]),[''],['الأفضل سعراً',rows.length?rows.reduce((a,b)=>a.total<b.total?a:b).name:'—']];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'مقارنة');XLSX.writeFile(wb,`${t}.xlsx`);toast('تم تصدير Excel');}
+function pc2ExportPDF(){const rows=pc2GetRows();const t=document.getElementById('pc2-title').value||'مقارنة الأسعار';const w=rows.length?rows.reduce((a,b)=>a.total<b.total?a:b):null;const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#0D7A8A;}table{width:100%;border-collapse:collapse;margin:16px 0;}th{background:#0D7A8A;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.win{background:#F0FFF4;border:2px solid #276749;border-radius:8px;padding:12px;margin-top:14px;font-weight:700;color:#276749;}</style></head><body><h2>${t}</h2><table><thead><tr><th>م</th><th>اسم الشركة</th><th>الإجمالي قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي شامل الضريبة</th></tr></thead><tbody>${rows.map(r=>`<tr${r===w?' style="background:#F0FFF4;"':''}><td>${r.num}</td><td>${r.name}${r===w?' ★':''}</td><td>${r.sub.toLocaleString('ar-SA')}</td><td>${r.vat.toLocaleString('ar-SA')}</td><td style="font-weight:700;">${r.total.toLocaleString('ar-SA')}</td></tr>`).join('')}</tbody></table>${w?`<div class="win">الأفضل سعراً: ${w.name} — ${w.total.toLocaleString('ar-SA')} ر.س</div>`:''}</body></html>`;printDoc(html);}
+
+/* ── Contracts ── */
+let ctPdfFile=null;
+let contracts=JSON.parse(localStorage.getItem('ct_saved')||'[]');
+function ctAttach(input){ctPdfFile=input.files[0];document.getElementById('ct-pdf-name').textContent=ctPdfFile?'مرفق: '+ctPdfFile.name:'';}
+function ctAdd(){
+  const co=document.getElementById('ct-company').value.trim();if(!co){toast('أدخل اسم الشركة',true);return;}
+  const ct={id:Date.now(),company:co,type:document.getElementById('ct-type').value,start:document.getElementById('ct-start').value,end:document.getElementById('ct-end').value,value:parseFloat(document.getElementById('ct-value').value)||0,pdfName:ctPdfFile?.name||'',savedAt:new Date().toLocaleDateString('ar-SA')};
+  contracts.unshift(ct);localStorage.setItem('ct_saved',JSON.stringify(contracts));
+  ['ct-company','ct-type','ct-start','ct-end','ct-value'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ct-pdf-name').textContent='';ctPdfFile=null;
+  toast('تم إضافة العقد');renderCtList();
+}
+function renderCtList(){
+  contracts=JSON.parse(localStorage.getItem('ct_saved')||'[]');const el=document.getElementById('ct-list');
+  if(!contracts.length){el.innerHTML='<div style="color:#94A3B8;font-size:12px;text-align:center;padding:12px;">لا توجد عقود مضافة</div>';return;}
+  const now=new Date();
+  el.innerHTML=contracts.map(c=>{const end=c.end?new Date(c.end):null;const d=end?Math.ceil((end-now)/(1000*60*60*24)):null;const clr=d===null?'#94A3B8':d<0?'#E53E3E':d<30?'#D97706':'#276749';return`<div class="dc-saved-item"><div style="flex:1;"><div class="dc-saved-name">${c.company}</div><div class="dc-saved-date">${c.type||'—'} · ${c.value.toLocaleString('ar-SA')} ر.س</div><div style="font-size:11px;color:${clr};margin-top:2px;">${c.start||''} → ${c.end||''} ${d!==null?`(${d>0?d+' يوم متبقي':'منتهي'})`:''}</div>${c.pdfName?`<div style="font-size:11px;color:#1DA9BD;">PDF: ${c.pdfName}</div>`:''}</div><div class="dc-saved-actions"><button class="dc-saved-dl" style="background:#FFF5F5;color:#E53E3E;" onclick="ctDel(${c.id})">×</button></div></div>`;}).join('');
+}
+function ctDel(id){contracts=contracts.filter(x=>x.id!==id);localStorage.setItem('ct_saved',JSON.stringify(contracts));renderCtList();}
+function ctExportExcel(){const wb=XLSX.utils.book_new();const d=[['العقود الحالية'],[''],['اسم الشركة','نوع العقد','تاريخ البداية','تاريخ الانتهاء','القيمة (ريال)','ملف PDF'],...contracts.map(c=>[c.company,c.type,c.start,c.end,c.value,c.pdfName||''])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'العقود');XLSX.writeFile(wb,`العقود_${new Date().toISOString().split('T')[0]}.xlsx`);toast('تم التصدير');}
+function ctExportPDF(){const html=`<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:40px;font-size:13px;}h2{color:#C53030;}table{width:100%;border-collapse:collapse;margin:16px 0;}th{background:#C53030;color:#fff;padding:8px 10px;text-align:right;}td{padding:8px 10px;border:1px solid #E2E8F0;}.exp{background:#FFF5F5;}.warn{background:#FFFBEB;}</style></head><body><h2>العقود الحالية — Active Contracts</h2><p>تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</p><table><thead><tr><th>م</th><th>اسم الشركة</th><th>النوع</th><th>البداية</th><th>الانتهاء</th><th>القيمة</th><th>الحالة</th></tr></thead><tbody>${contracts.map((c,i)=>{const now=new Date();const end=c.end?new Date(c.end):null;const d=end?Math.ceil((end-now)/(1000*60*60*24)):null;const cls=d!==null&&d<0?'class="exp"':d!==null&&d<30?'class="warn"':'';return`<tr ${cls}><td>${i+1}</td><td>${c.company}</td><td>${c.type||'—'}</td><td>${c.start||''}</td><td>${c.end||''}</td><td>${c.value.toLocaleString('ar-SA')}</td><td>${d===null?'—':d<0?'منتهي':d+' يوم'}</td></tr>`;}).join('')}</tbody></table></body></html>`;printDoc(html);}
+
+// override showPage لتشغيل initFolderDates
+const _origSP=showPage;
+window.showPage=function(name,btn){_origSP(name,btn);if(name==='folders')setTimeout(initFolderDates,50);};
 </script>
 </body>
 </html>
