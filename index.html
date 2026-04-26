@@ -1264,21 +1264,21 @@ function docPageHTML(contentHTML){
 @page {size:A4;margin:0;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Arial,sans-serif;font-size:12px;color:#000;direction:rtl;}
-.page{position:relative;width:210mm;min-height:297mm;}
-.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+.page{position:relative;width:210mm;height:297mm;overflow:hidden;}
+.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;}
 .content{position:absolute;top:0;left:0;right:0;z-index:1;padding:38mm 15mm 20mm 15mm;}
-.title-bar{background:#1DA9BD;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-radius:3px;}
-.title-bar .t{font-size:13px;font-weight:bold;}.title-bar .d{font-size:11px;}
-.to{margin-bottom:8px;font-size:13px;}
-.body-text{font-size:11px;line-height:1.9;margin-bottom:12px;color:#333;}
-table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+table{width:100%;border-collapse:collapse;margin-bottom:10px;}
 th{background:#1DA9BD;color:#fff;padding:7px 10px;text-align:right;font-size:11px;border:1px solid #1DA9BD;}
 td{padding:7px 10px;border:1px solid #CBD5E0;font-size:11px;}
-tr:nth-child(even) td{background:rgba(248,250,251,0.9);}
+tr:nth-child(even) td{background:rgba(248,250,251,0.85);}
 .ft th{background:#EBF8FA;color:#1A202C;}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.ib{background:rgba(235,248,250,0.85);border:1px solid #BEE3F8;border-radius:6px;padding:10px;font-size:11px;line-height:1.8;}
-.ib-t{font-weight:bold;color:#0D7A8A;margin-bottom:5px;border-bottom:1px solid #BEE3F8;padding-bottom:4px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ib{background:rgba(235,248,250,0.85);border:1px solid #BEE3F8;border-radius:5px;padding:9px;font-size:11px;line-height:1.8;}
+.ib-t{font-weight:bold;color:#0D7A8A;margin-bottom:4px;border-bottom:1px solid #BEE3F8;padding-bottom:3px;}
+.doc-title{font-size:14px;font-weight:bold;color:#1DA9BD;margin-bottom:4px;}
+.doc-date{font-size:11px;color:#555;margin-bottom:10px;}
+.to{margin-bottom:8px;font-size:13px;}
+.body-text{font-size:11px;line-height:1.9;margin-bottom:10px;color:#333;}
 .sig{display:flex;justify-content:space-between;margin-top:30px;gap:20px;}
 .sig-box{flex:1;text-align:center;border-top:2px solid #1DA9BD;padding-top:8px;font-size:11px;}
 .total-row td{font-weight:bold;color:#1DA9BD;}
