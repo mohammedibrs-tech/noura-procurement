@@ -1135,48 +1135,26 @@ function pcDeleteGroup(key){
 async function pcExport(key){
   const files = pcGroups[key];
   if(!files || !files.length){ toast('لا توجد ملفات في هذه المجموعة', true); return; }
-  toast('جاري دمج الملفات...');
-  
+  const [yr, mo] = key.split('-');
+  const fname = `PettyCash_${MONTHS[mo]||mo}_${yr}.pdf`;
+  toast('جاري الإرسال للدمج...');
   try{
-    // تحميل pdf-lib
-    if(!window.PDFLib){
-      await new Promise((res,rej)=>{
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-    
-    const {PDFDocument} = window.PDFLib;
-    const merged = await PDFDocument.create();
-    let success = 0;
-    
-    for(const f of files){
-      try{
-        const b64 = f.b64.includes(',') ? f.b64.split(',')[1] : f.b64;
-        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-        const pdf = await PDFDocument.load(bytes, {ignoreEncryption: true});
-        const pages = await merged.copyPages(pdf, pdf.getPageIndices());
-        pages.forEach(p => merged.addPage(p));
-        success++;
-      }catch(e){ console.warn('تعذّر دمج:', f.name, e); }
-    }
-    
-    if(!success){ toast('تعذّر دمج الملفات — تأكد أنها PDF صالحة', true); return; }
-    
-    const [yr, mo] = key.split('-');
-    const out  = await merged.save();
-    const blob = new Blob([out], {type:'application/pdf'});
-    const a    = document.createElement('a');
-    a.href     = URL.createObjectURL(blob);
-    a.download = `PettyCash_${MONTHS[mo]||mo}_${yr}.pdf`;
+    const pdfs = files.map(f=>f.b64.includes(',') ? f.b64.split(',')[1] : f.b64);
+    const r = await fetch('/api/merge-pdf', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({pdfs, filename: fname})
+    });
+    if(!r.ok) throw new Error('Server error: ' + r.status);
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
     a.click();
-    toast(`✅ تم تصدير ${success} ملف في PDF واحد`);
-    
+    toast(`✅ تم دمج ${files.length} ملف بنجاح`);
   }catch(e){
     console.error(e);
-    toast('خطأ: ' + e.message, true);
+    toast('خطأ في الدمج: ' + e.message, true);
   }
 }
 
