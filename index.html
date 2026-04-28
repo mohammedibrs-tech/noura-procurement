@@ -136,6 +136,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       Petty Cash
     </div>
+    <div class="sb-item" onclick="nav('cmp')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      مقارنة الأسعار
+    </div>
   </div>
 </div>
 
@@ -423,6 +427,117 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
   </div>
 </div>
 
+
+<!-- ══ مقارنة الأسعار ══ -->
+<div class="page" id="page-cmp">
+  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
+
+  <!-- عنوان المقارنة -->
+  <div class="card">
+    <div class="card-header"><h3>معلومات المقارنة</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
+        <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- جدول مقارنة الشركات -->
+  <div class="card">
+    <div class="card-header">
+      <h3>مقارنة الشركات</h3>
+      <button class="btn btn-gray btn-sm" onclick="cmpAddCompany()">+ إضافة شركة</button>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table class="tbl" id="cmp-table">
+        <thead>
+          <tr>
+            <th>م</th>
+            <th>اسم الشركة</th>
+            <th>الخدمات المقدمة</th>
+            <th>الإجمالي الشهري (ر.س)</th>
+            <th>الإجمالي السنوي (ر.س)</th>
+            <th>الفارق (ر.س)</th>
+            <th>نسبة التوفير</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cmp-tbody">
+          <tr>
+            <td>1</td>
+            <td><input class="cmp-name" placeholder="اسم الشركة" style="min-width:120px;"></td>
+            <td><input class="cmp-services" placeholder="الخدمات" style="min-width:150px;"></td>
+            <td><input class="cmp-monthly" type="number" placeholder="0" oninput="cmpCalc()" style="width:100px;"></td>
+            <td class="cmp-annual" style="font-weight:700;">0</td>
+            <td class="cmp-diff" style="color:var(--sub);">—</td>
+            <td class="cmp-pct" style="color:var(--sub);">—</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><input class="cmp-name" placeholder="اسم الشركة" style="min-width:120px;"></td>
+            <td><input class="cmp-services" placeholder="الخدمات" style="min-width:150px;"></td>
+            <td><input class="cmp-monthly" type="number" placeholder="0" oninput="cmpCalc()" style="width:100px;"></td>
+            <td class="cmp-annual" style="font-weight:700;">0</td>
+            <td class="cmp-diff" style="color:var(--sub);">—</td>
+            <td class="cmp-pct" style="color:var(--sub);">—</td>
+            <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="cmp-best" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#F0FFF4;border:1px solid #276749;display:none;font-size:13px;font-weight:700;color:#276749;"></div>
+    </div>
+  </div>
+
+  <!-- بنود العقد -->
+  <div class="card">
+    <div class="card-header">
+      <h3>بنود العقد</h3>
+      <button class="btn btn-gray btn-sm" onclick="cmpAddItem()">+ إضافة بند</button>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>م</th>
+            <th>البند</th>
+            <th>السعر الإفرادي (ر.س)</th>
+            <th>القيمة الشهرية (ر.س)</th>
+            <th>القيمة السنوية (ر.س)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cmp-items-tbody">
+          <tr>
+            <td>1</td>
+            <td><input class="ci-name" placeholder="اسم البند" style="min-width:160px;"></td>
+            <td><input class="ci-unit" type="number" placeholder="0" oninput="cmpItemCalc(this)" style="width:100px;"></td>
+            <td class="ci-monthly" style="font-weight:700;">0</td>
+            <td class="ci-annual" style="font-weight:700;color:var(--primary);">0</td>
+            <td></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#EBF8FA;">
+            <td colspan="3" style="text-align:left;font-weight:700;padding:8px 10px;">الإجمالي</td>
+            <td id="ci-total-monthly" style="font-weight:900;padding:8px 10px;">0</td>
+            <td id="ci-total-annual" style="font-weight:900;color:var(--primary);padding:8px 10px;">0</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- تصدير -->
+  <div class="actions">
+    <button class="btn btn-green" onclick="cmpExcel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+      تصدير Excel
+    </button>
+  </div>
+</div>
 </div><!-- /main -->
 
 <script>
@@ -984,6 +1099,206 @@ body{font-family:Arial,sans-serif;font-size:12px;color:#000;direction:rtl;}
   w.onload=()=>{w.focus();w.print();};
 }
 
+/* ══════════════ مقارنة الأسعار ══════════════ */
+let cmpRowCount = 2;
+
+function cmpAddCompany(){
+  cmpRowCount++;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${cmpRowCount}</td>
+    <td><input class="cmp-name" placeholder="اسم الشركة" style="min-width:120px;"></td>
+    <td><input class="cmp-services" placeholder="الخدمات" style="min-width:150px;"></td>
+    <td><input class="cmp-monthly" type="number" placeholder="0" oninput="cmpCalc()" style="width:100px;"></td>
+    <td class="cmp-annual" style="font-weight:700;">0</td>
+    <td class="cmp-diff" style="color:var(--sub);">—</td>
+    <td class="cmp-pct" style="color:var(--sub);">—</td>
+    <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+  document.getElementById('cmp-tbody').appendChild(tr);
+}
+
+function cmpDelRow(btn){ btn.closest('tr').remove(); cmpCalc(); }
+
+function cmpCalc(){
+  const rows = Array.from(document.querySelectorAll('#cmp-tbody tr'));
+  const data = rows.map(tr => {
+    const m = parseFloat(tr.querySelector('.cmp-monthly')?.value) || 0;
+    return { tr, monthly: m, annual: m * 12 };
+  });
+
+  // حدّث السنوي
+  data.forEach(d => {
+    d.tr.querySelector('.cmp-annual').textContent = d.annual.toLocaleString('ar-SA');
+  });
+
+  // أقل سعر = المرجع
+  const min = Math.min(...data.map(d => d.annual).filter(v => v > 0));
+  data.forEach((d, i) => {
+    if(d.annual <= 0){ d.tr.querySelector('.cmp-diff').textContent='—'; d.tr.querySelector('.cmp-pct').textContent='—'; return; }
+    const diff = d.annual - min;
+    const pct = min > 0 ? ((diff/d.annual)*100).toFixed(1) : 0;
+    const diffCell = d.tr.querySelector('.cmp-diff');
+    const pctCell  = d.tr.querySelector('.cmp-pct');
+    if(diff === 0){
+      diffCell.textContent = '—';
+      pctCell.textContent  = 'الأفضل ★';
+      pctCell.style.color  = 'var(--green)';
+      pctCell.style.fontWeight = '700';
+      d.tr.style.background = 'rgba(39,103,73,0.07)';
+    } else {
+      diffCell.textContent = '+' + diff.toLocaleString('ar-SA');
+      diffCell.style.color = 'var(--red)';
+      pctCell.textContent  = pct + '%';
+      pctCell.style.color  = 'var(--red)';
+      d.tr.style.background = '';
+    }
+  });
+
+  // أفضل شركة
+  const best = data.find(d => d.annual === min && min > 0);
+  const bestEl = document.getElementById('cmp-best');
+  if(best){
+    const name = best.tr.querySelector('.cmp-name')?.value || 'الشركة الأولى';
+    bestEl.style.display='block';
+    bestEl.textContent = `✅ الأفضل سعراً: ${name} — ${min.toLocaleString('ar-SA')} ر.س سنوياً`;
+  } else {
+    bestEl.style.display='none';
+  }
+}
+
+let cmpItemCount = 1;
+
+function cmpAddItem(){
+  cmpItemCount++;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${cmpItemCount}</td>
+    <td><input class="ci-name" placeholder="اسم البند" style="min-width:160px;"></td>
+    <td><input class="ci-unit" type="number" placeholder="0" oninput="cmpItemCalc(this)" style="width:100px;"></td>
+    <td class="ci-monthly" style="font-weight:700;">0</td>
+    <td class="ci-annual" style="font-weight:700;color:var(--primary);">0</td>
+    <td><button onclick="cmpDelItem(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+  document.getElementById('cmp-items-tbody').appendChild(tr);
+}
+
+function cmpDelItem(btn){ btn.closest('tr').remove(); cmpItemTotals(); }
+
+function cmpItemCalc(inp){
+  const tr = inp.closest('tr');
+  const unit = parseFloat(inp.value) || 0;
+  tr.querySelector('.ci-monthly').textContent = unit.toLocaleString('ar-SA');
+  tr.querySelector('.ci-annual').textContent  = (unit * 12).toLocaleString('ar-SA');
+  cmpItemTotals();
+}
+
+function cmpItemTotals(){
+  let tm = 0, ta = 0;
+  document.querySelectorAll('#cmp-items-tbody tr').forEach(tr => {
+    const unit = parseFloat(tr.querySelector('.ci-unit')?.value) || 0;
+    tm += unit; ta += unit * 12;
+  });
+  document.getElementById('ci-total-monthly').textContent = tm.toLocaleString('ar-SA');
+  document.getElementById('ci-total-annual').textContent  = ta.toLocaleString('ar-SA');
+}
+
+function cmpExcel(){
+  const title = document.getElementById('cmp-title').value || 'مقارنة الأسعار';
+  const date  = document.getElementById('cmp-date').value  || new Date().toISOString().split('T')[0];
+
+  const wb = XLSX.utils.book_new();
+
+  /* ── ورقة 1: مقارنة الشركات ── */
+  const cmpRows = Array.from(document.querySelectorAll('#cmp-tbody tr')).map((tr,i) => {
+    const m = parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;
+    return [
+      i+1,
+      tr.querySelector('.cmp-name')?.value||'',
+      tr.querySelector('.cmp-services')?.value||'',
+      m,
+      m*12,
+      tr.querySelector('.cmp-diff')?.textContent||'—',
+      tr.querySelector('.cmp-pct')?.textContent||'—'
+    ];
+  });
+
+  const cmpData = [
+    [title],
+    ['التاريخ:', date],
+    [''],
+    ['م','اسم الشركة','الخدمات المقدمة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الفارق (ر.س)','نسبة التوفير'],
+    ...cmpRows
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(cmpData);
+
+  // تنسيق
+  ws1['!cols'] = [{wch:5},{wch:25},{wch:35},{wch:20},{wch:20},{wch:18},{wch:15}];
+  ws1['!merges'] = [{s:{r:0,c:0},e:{r:0,c:6}}];
+
+  // ألوان الهيدر
+  const headerStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'1DA9BD'}},alignment:{horizontal:'center'}};
+  ['A4','B4','C4','D4','E4','F4','G4'].forEach(c=>{
+    if(!ws1[c]) ws1[c]={};
+    ws1[c].s = headerStyle;
+  });
+
+  // لون العنوان
+  if(ws1['A1']) ws1['A1'].s = {font:{bold:true,sz:14,color:{rgb:'1A2B4A'}},fill:{fgColor:{rgb:'EBF8FA'}}};
+
+  // تلوين الصفوف
+  cmpRows.forEach((row,i) => {
+    const r = 4 + i; // 0-indexed row
+    const pct = row[6];
+    const isB = pct && pct.includes('الأفضل');
+    ['A','B','C','D','E','F','G'].forEach((c,ci) => {
+      const cell = c+(r+1);
+      if(!ws1[cell]) ws1[cell] = {t:'s',v:''};
+      ws1[cell].s = {
+        fill: {fgColor: {rgb: isB ? 'E6F4EA' : (i%2===0?'F8FAFB':'FFFFFF')}},
+        font: isB && ci>=3 ? {bold:true,color:{rgb:'276749'}} : {},
+        border: {bottom:{style:'thin',color:{rgb:'E2E8F0'}}}
+      };
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'مقارنة الشركات');
+
+  /* ── ورقة 2: بنود العقد ── */
+  const itemRows = Array.from(document.querySelectorAll('#cmp-items-tbody tr')).map((tr,i) => {
+    const unit = parseFloat(tr.querySelector('.ci-unit')?.value)||0;
+    return [i+1, tr.querySelector('.ci-name')?.value||'', unit, unit, unit*12];
+  });
+  const totalM = itemRows.reduce((s,r)=>s+r[3],0);
+  const totalA = itemRows.reduce((s,r)=>s+r[4],0);
+
+  const itemData = [
+    [title + ' — بنود العقد'],
+    [''],
+    ['م','البند','السعر الإفرادي (ر.س)','القيمة الشهرية (ر.س)','القيمة السنوية (ر.س)'],
+    ...itemRows,
+    ['','الإجمالي','',totalM,totalA]
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(itemData);
+  ws2['!cols'] = [{wch:5},{wch:35},{wch:22},{wch:22},{wch:22}];
+  ws2['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
+
+  ['A3','B3','C3','D3','E3'].forEach(c=>{
+    if(!ws2[c]) ws2[c]={};
+    ws2[c].s = headerStyle;
+  });
+  if(ws2['A1']) ws2['A1'].s = {font:{bold:true,sz:13,color:{rgb:'1A2B4A'}},fill:{fgColor:{rgb:'EBF8FA'}}};
+
+  // صف الإجمالي
+  const totRow = itemRows.length + 4;
+  ['A','B','C','D','E'].forEach(c => {
+    const cell = c+totRow;
+    if(!ws2[cell]) ws2[cell]={t:'s',v:''};
+    ws2[cell].s = {font:{bold:true},fill:{fgColor:{rgb:'1DA9BD'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws2, 'بنود العقد');
+
+  XLSX.writeFile(wb, `مقارنة_الأسعار_${title}.xlsx`);
+  toast('تم تصدير Excel بنجاح');
+}
+
 /* ══════════════ INIT ══════════════ */
 function init(){
   const today=new Date().toISOString().split('T')[0];
@@ -993,6 +1308,7 @@ function init(){
   document.getElementById('po-del-addr').value='Saudi Arabia, Riyadh, King Khaled Intl. Road';
   document.getElementById('po-del-vat').value='314378311300003';
   initBudget();
+  document.getElementById('cmp-date').value=today;
   renderPCList();
 }
 </script>
