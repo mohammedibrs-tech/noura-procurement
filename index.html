@@ -407,24 +407,36 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ Petty Cash ══ -->
 <div class="page" id="page-pc">
-  <div class="page-header"><h1>Petty Cash</h1></div>
+  <div class="page-header"><h1>Petty Cash</h1><p>تجميع فواتير كل شهر في ملف PDF واحد</p></div>
+
+  <!-- إضافة مجموعة جديدة -->
   <div class="card">
-    <div class="card-header"><h3>رفع ملفات PDF</h3></div>
+    <div class="card-header"><h3>إضافة مجموعة فواتير</h3></div>
     <div class="card-body">
       <div class="form-grid">
-        <div class="field"><label>التاريخ من</label><input id="pc-from" type="date"></div>
-        <div class="field"><label>التاريخ إلى</label><input id="pc-to" type="date"></div>
+        <div class="field"><label>الشهر</label>
+          <select id="pc-month">
+            <option value="01">يناير</option><option value="02">فبراير</option>
+            <option value="03">مارس</option><option value="04">أبريل</option>
+            <option value="05">مايو</option><option value="06">يونيو</option>
+            <option value="07">يوليو</option><option value="08">أغسطس</option>
+            <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
+            <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div class="field"><label>السنة</label>
+          <input id="pc-year" type="number" placeholder="2026" value="2026">
+        </div>
       </div>
       <div class="field" style="margin-top:12px;">
         <label>رفع ملفات PDF</label>
-        <input type="file" id="pc-files" accept=".pdf" multiple onchange="pcAdd(this)" style="margin-top:4px;">
-      </div>
-      <div class="saved-list" id="pc-list"></div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="btn btn-green" onclick="pcExport()">تصدير PDF</button>
+        <input type="file" id="pc-upload" accept=".pdf" multiple onchange="pcAdd(this)" style="margin-top:4px;">
       </div>
     </div>
   </div>
+
+  <!-- المجموعات المحفوظة -->
+  <div id="pc-groups"></div>
 </div>
 
 
@@ -1046,34 +1058,164 @@ function dnPrintData(d){
 }
 
 /* ══════════════ PETTY CASH ══════════════ */
-let pcFiles=JSON.parse(localStorage.getItem('pc_files')||'[]');
+let pcGroups = JSON.parse(localStorage.getItem('pc_groups') || '{}');
+// {  "2026-04": [{name, b64}, ...], "2026-05": [...] }
+
+const MONTHS = {
+  '01':'يناير','02':'فبراير','03':'مارس','04':'أبريل',
+  '05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس',
+  '09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'
+};
 
 function pcAdd(inp){
+  const month = document.getElementById('pc-month').value;
+  const year  = document.getElementById('pc-year').value || '2026';
+  const key   = year + '-' + month;
+  if(!pcGroups[key]) pcGroups[key] = [];
+  
   Array.from(inp.files).forEach(f=>{
-    const reader=new FileReader();
-    reader.onload=e=>{pcFiles.push({name:f.name,b64:e.target.result});localStorage.setItem('pc_files',JSON.stringify(pcFiles));renderPCList();};
+    const reader = new FileReader();
+    reader.onload = e => {
+      pcGroups[key].push({name: f.name, b64: e.target.result});
+      localStorage.setItem('pc_groups', JSON.stringify(pcGroups));
+      renderPCGroups();
+    };
     reader.readAsDataURL(f);
   });
-  inp.value='';
+  inp.value = '';
 }
 
-function renderPCList(){
-  document.getElementById('pc-list').innerHTML=pcFiles.map((f,i)=>`
-    <div class="saved-item">
-      <span style="font-size:12px;">${f.name}</span>
-      <div style="display:flex;gap:4px;">
-        <button class="btn btn-gray btn-sm" onclick="window.open(pcFiles[${i}].b64,'_blank')">فتح</button>
-        <button class="btn btn-red btn-sm" onclick="pcRemove(${i})">×</button>
+function renderPCGroups(){
+  const el = document.getElementById('pc-groups');
+  const keys = Object.keys(pcGroups).sort().reverse();
+  if(!keys.length){ el.innerHTML=''; return; }
+  el.innerHTML = keys.map(key => {
+    const [yr, mo] = key.split('-');
+    const files = pcGroups[key];
+    return `<div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <h3>${MONTHS[mo]||mo} ${yr} <span style="font-size:11px;color:var(--sub);margin-right:8px;">(${files.length} ملف)</span></h3>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-green btn-sm" onclick="pcExport('${key}')">تصدير PDF</button>
+          <button class="btn btn-red btn-sm" onclick="pcDeleteGroup('${key}')">حذف المجموعة</button>
+        </div>
       </div>
-    </div>`).join('');
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${files.map((f,i)=>`
+            <div class="saved-item">
+              <span style="font-size:12px;">📄 ${f.name}</span>
+              <div style="display:flex;gap:4px;">
+                <button class="btn btn-gray btn-sm" onclick="pcOpen('${key}',${i})">فتح</button>
+                <button class="btn btn-red btn-sm" onclick="pcRemoveFile('${key}',${i})">×</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function pcRemove(i){pcFiles.splice(i,1);localStorage.setItem('pc_files',JSON.stringify(pcFiles));renderPCList();}
+function pcOpen(key, i){ window.open(pcGroups[key][i].b64,'_blank'); }
 
-function pcExport(){
+function pcRemoveFile(key, i){
+  pcGroups[key].splice(i,1);
+  if(!pcGroups[key].length) delete pcGroups[key];
+  localStorage.setItem('pc_groups', JSON.stringify(pcGroups));
+  renderPCGroups();
+}
+
+function pcDeleteGroup(key){
+  if(!confirm('حذف مجموعة ' + key + '؟')) return;
+  delete pcGroups[key];
+  localStorage.setItem('pc_groups', JSON.stringify(pcGroups));
+  renderPCGroups();
+}
+
+async function pcExport(key){
+  const files = pcGroups[key];
+  if(!files || !files.length){ toast('لا توجد ملفات في هذه المجموعة', true); return; }
+  toast('جاري دمج الملفات...');
+  
+  try{
+    // تحميل pdf-lib
+    if(!window.PDFLib){
+      await new Promise((res,rej)=>{
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+    
+    const {PDFDocument} = window.PDFLib;
+    const merged = await PDFDocument.create();
+    let success = 0;
+    
+    for(const f of files){
+      try{
+        const b64 = f.b64.includes(',') ? f.b64.split(',')[1] : f.b64;
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const pdf = await PDFDocument.load(bytes, {ignoreEncryption: true});
+        const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+        pages.forEach(p => merged.addPage(p));
+        success++;
+      }catch(e){ console.warn('تعذّر دمج:', f.name, e); }
+    }
+    
+    if(!success){ toast('تعذّر دمج الملفات — تأكد أنها PDF صالحة', true); return; }
+    
+    const [yr, mo] = key.split('-');
+    const out  = await merged.save();
+    const blob = new Blob([out], {type:'application/pdf'});
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `PettyCash_${MONTHS[mo]||mo}_${yr}.pdf`;
+    a.click();
+    toast(`✅ تم تصدير ${success} ملف في PDF واحد`);
+    
+  }catch(e){
+    console.error(e);
+    toast('خطأ: ' + e.message, true);
+  }
+}
+
+async function pcExport(){
   if(!pcFiles.length){toast('ارفع ملفات PDF أولاً',true);return;}
-  pcFiles.forEach(f=>{const a=document.createElement('a');a.href=f.b64;a.target='_blank';a.click();});
-  toast('تم فتح الملفات');
+  toast('جاري الدمج...');
+  try{
+    // تحميل pdf-lib
+    if(!window.PDFLib){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+        s.onload=res;s.onerror=rej;
+        document.head.appendChild(s);
+      });
+    }
+    const {PDFDocument} = window.PDFLib;
+    const merged = await PDFDocument.create();
+    for(const f of pcFiles){
+      try{
+        // استخرج base64 من data URL
+        const b64 = f.b64.split(',')[1];
+        const bytes = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+        const pdf = await PDFDocument.load(bytes, {ignoreEncryption:true});
+        const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+        pages.forEach(p=>merged.addPage(p));
+      }catch(e){console.warn('skip file:',f.name,e);}
+    }
+    const out = await merged.save();
+    const blob = new Blob([out],{type:'application/pdf'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Petty_Cash_' + (document.getElementById('pc-from').value||'') + '_' + (document.getElementById('pc-to').value||'') + '.pdf';
+    a.click();
+    toast('تم تصدير PDF مدمج بنجاح ✅');
+  }catch(e){
+    console.error(e);
+    toast('خطأ في الدمج: '+e.message,true);
+  }
 }
 
 /* ══════════════ PRINT ══════════════ */
@@ -1309,7 +1451,7 @@ function init(){
   document.getElementById('po-del-vat').value='314378311300003';
   initBudget();
   document.getElementById('cmp-date').value=today;
-  renderPCList();
+  renderPCGroups();
 }
 </script>
 </body></html>
