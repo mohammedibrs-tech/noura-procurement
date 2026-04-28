@@ -1153,30 +1153,22 @@ async function pcExport(key){
   const files = pcGroups[key];
   if(!files || !files.length){ toast('لا توجد ملفات في هذه المجموعة', true); return; }
   const [yr, mo] = key.split('-');
-  const fname = `PettyCash_${MONTHS[mo]||mo}_${yr}.pdf`;
-  toast('جاري دمج الملفات...');
+  const folderName = `PettyCash_${MONTHS[mo]||mo}_${yr}`;
+  toast('جاري تجهيز الملفات...');
   try{
-    const {PDFDocument} = PDFLib;
-    const merged = await PDFDocument.create();
-    let count = 0;
-    for(const f of files){
-      try{
-        const b64 = f.b64.includes(',') ? f.b64.split(',')[1] : f.b64;
-        const bytes = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
-        const pdf = await PDFDocument.load(bytes, {ignoreEncryption:true});
-        const pages = await merged.copyPages(pdf, pdf.getPageIndices());
-        pages.forEach(p=>merged.addPage(p));
-        count++;
-      }catch(e){ console.warn('skip:', f.name, e); }
-    }
-    if(!count){ toast('تعذّر قراءة الملفات', true); return; }
-    const out = await merged.save();
-    const blob = new Blob([out], {type:'application/pdf'});
+    const zip = new JSZip();
+    const folder = zip.folder(folderName);
+    files.forEach((f,i)=>{
+      const b64 = f.b64.includes(',') ? f.b64.split(',')[1] : f.b64;
+      const fileName = f.name || `file_${i+1}.pdf`;
+      folder.file(fileName, b64, {base64:true});
+    });
+    const blob = await zip.generateAsync({type:'blob'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = fname;
+    a.download = `${folderName}.zip`;
     a.click();
-    toast(`✅ تم دمج ${count} ملف بنجاح`);
+    toast(`✅ تم تحميل ${files.length} ملف في مجلد مضغوط`);
   }catch(e){
     console.error(e);
     toast('خطأ: ' + e.message, true);
