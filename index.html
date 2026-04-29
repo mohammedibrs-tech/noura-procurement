@@ -428,41 +428,6 @@ function numToWords(n){
   </div>
 </div>
 
-<!-- ══ Petty Cash ══ -->
-<div class="page" id="page-pc">
-  <div class="page-header"><h1>Petty Cash</h1><p>تجميع فواتير كل شهر في ملف PDF واحد</p></div>
-
-  <!-- إضافة مجموعة جديدة -->
-  <div class="card">
-    <div class="card-header"><h3>إضافة مجموعة فواتير</h3></div>
-    <div class="card-body">
-      <div class="form-grid">
-        <div class="field"><label>الشهر</label>
-          <select id="pc-month">
-            <option value="01">يناير</option><option value="02">فبراير</option>
-            <option value="03">مارس</option><option value="04">أبريل</option>
-            <option value="05">مايو</option><option value="06">يونيو</option>
-            <option value="07">يوليو</option><option value="08">أغسطس</option>
-            <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
-            <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
-          </select>
-        </div>
-        <div class="field"><label>السنة</label>
-          <input id="pc-year" type="number" placeholder="2026" value="2026">
-        </div>
-      </div>
-      <div class="field" style="margin-top:12px;">
-        <label>رفع ملفات PDF</label>
-        <input type="file" id="pc-upload" accept=".pdf" multiple onchange="pcAdd(this)" style="margin-top:4px;">
-      </div>
-    </div>
-  </div>
-
-  <!-- المجموعات المحفوظة -->
-  <div id="pc-groups"></div>
-</div>
-
-
 <!-- ══ مقارنة الأسعار ══ -->
 <div class="page" id="page-cmp">
   <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
@@ -510,11 +475,9 @@ function numToWords(n){
 
 <!-- ══ Petty Cash ══ -->
 <div class="page" id="page-pc">
-  <div class="page-header"><h1>Petty Cash</h1><p>تجميع فواتير كل شهر في ملف PDF واحد</p></div>
-
-  <!-- إضافة مجموعة جديدة -->
+  <div class="page-header"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div>
   <div class="card">
-    <div class="card-header"><h3>إضافة مجموعة فواتير</h3></div>
+    <div class="card-header"><h3>إضافة فاتورة جديدة</h3></div>
     <div class="card-body">
       <div class="form-grid">
         <div class="field"><label>الشهر</label>
@@ -527,18 +490,19 @@ function numToWords(n){
             <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
           </select>
         </div>
-        <div class="field"><label>السنة</label>
-          <input id="pc-year" type="number" placeholder="2026" value="2026">
-        </div>
+        <div class="field"><label>السنة</label><input id="pc-year" type="number" value="2026"></div>
+        <div class="field"><label>اسم الشركة / المورد</label><input id="pc-vendor" placeholder="مثال: شركة الأمانة للتجارة"></div>
+        <div class="field"><label>البيان (وصف المصروف)</label><input id="pc-desc" placeholder="مثال: صيانة أجهزة التكييف"></div>
       </div>
-      <div class="field" style="margin-top:12px;">
-        <label>رفع ملفات PDF</label>
-        <input type="file" id="pc-upload" accept=".pdf" multiple onchange="pcAdd(this)" style="margin-top:4px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px;">
+        <div class="field"><label style="color:#1DA9BD;font-weight:700;">📄 الفاتورة الضريبية</label><input type="file" id="pc-tax" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#276749;font-weight:700;">📄 سند الاستلام</label><input type="file" id="pc-receipt" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#7C3AED;font-weight:700;">📄 طلب ERP</label><input type="file" id="pc-erp" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#C53030;font-weight:700;">📄 إيصال التحويل</label><input type="file" id="pc-transfer" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
       </div>
+      <button class="btn btn-primary" onclick="pcAddInvoice()" style="margin-top:14px;">+ إضافة الفاتورة</button>
     </div>
   </div>
-
-  <!-- المجموعات المحفوظة -->
   <div id="pc-groups"></div>
 </div>
 
@@ -1754,39 +1718,132 @@ function cmpExcelFromData(title,date,companies){
   toast('تم تصدير Excel ✅');
 }
 
+function pcAddInvoice(){
+  var month  = document.getElementById('pc-month').value;
+  var year   = document.getElementById('pc-year').value||'2026';
+  var vendor = document.getElementById('pc-vendor').value.trim();
+  var desc   = document.getElementById('pc-desc').value.trim();
+  if(!vendor||!desc){toast('أدخل اسم الشركة والبيان',true);return;}
+  var taxFile      = document.getElementById('pc-tax').files[0];
+  var receiptFile  = document.getElementById('pc-receipt').files[0];
+  var erpFile      = document.getElementById('pc-erp').files[0];
+  var transferFile = document.getElementById('pc-transfer').files[0];
+  if(!taxFile&&!receiptFile&&!erpFile&&!transferFile){toast('ارفع ملفاً واحداً على الأقل',true);return;}
+  var key = year+'-'+month;
+  if(!pcGroups[key]) pcGroups[key]=[];
+  var invoice={id:Date.now(),vendor:vendor,desc:desc,files:[]};
+  var pending=0;
+  function tryFinish(){
+    pending--;
+    if(pending<=0){
+      pcGroups[key].push(invoice);
+      localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
+      renderPCGroups();
+      document.getElementById('pc-vendor').value='';
+      document.getElementById('pc-desc').value='';
+      document.getElementById('pc-tax').value='';
+      document.getElementById('pc-receipt').value='';
+      document.getElementById('pc-erp').value='';
+      document.getElementById('pc-transfer').value='';
+      toast('تمت إضافة الفاتورة ✅');
+    }
+  }
+  function readFile(file,label){
+    if(!file)return;
+    pending++;
+    var reader=new FileReader();
+    reader.onload=function(e){invoice.files.push({label:label,name:file.name,b64:e.target.result});tryFinish();};
+    reader.readAsDataURL(file);
+  }
+  pending=1;
+  readFile(taxFile,'الفاتورة الضريبية');
+  readFile(receiptFile,'سند الاستلام');
+  readFile(erpFile,'طلب ERP');
+  readFile(transferFile,'إيصال التحويل');
+  tryFinish();
+}
+
 function renderPCGroups(){
   var el=document.getElementById('pc-groups');if(!el)return;
   var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
   var keys=Object.keys(pcGroups).sort().reverse();
-  if(!keys.length){el.innerHTML='';return;}
+  if(!keys.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:30px;">لا توجد فواتير محفوظة</div>';return;}
   var html='';
   for(var ki=0;ki<keys.length;ki++){
     var key=keys[ki];
     var parts=key.split('-');var yr=parts[0];var mo=parts[1];
-    var files=pcGroups[key]||[];
-    var filesHTML='';
-    for(var fi=0;fi<files.length;fi++){
-      var f=files[fi];
-      filesHTML+='<div class="saved-item">';
-      filesHTML+='<span style="font-size:12px;">📄 '+f.name+'</span>';
-      filesHTML+='<div style="display:flex;gap:4px;">';
-      filesHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpen(\''+key+'\','+fi+')">فتح</button>';
-      filesHTML+='<button class="btn btn-red btn-sm" onclick="pcRemoveFile(\''+key+'\','+fi+')">x</button>';
-      filesHTML+='</div></div>';
+    var invoices=pcGroups[key]||[];
+    var invHTML='';
+    for(var ii=0;ii<invoices.length;ii++){
+      var inv=invoices[ii];
+      var flist=inv.files||[];
+      var tagsHTML='';
+      for(var fi=0;fi<flist.length;fi++){
+        var colors=['#1DA9BD','#276749','#7C3AED'];
+        tagsHTML+='<span style="font-size:10px;background:'+colors[fi%3]+'22;color:'+colors[fi%3]+';padding:2px 8px;border-radius:10px;margin-left:4px;">'+flist[fi].label+'</span>';
+      }
+      var btnsHTML='';
+      for(var fi2=0;fi2<flist.length;fi2++){
+        btnsHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpenFile(\''+key+'\','+ii+','+fi2+')" title="'+flist[fi2].label+'">فتح '+flist[fi2].label+'</button>';
+      }
+      invHTML+='<div style="padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;">';
+      invHTML+='<div><div style="font-weight:700;font-size:13px;">'+inv.vendor+'</div>';
+      invHTML+='<div style="font-size:11px;color:#64748B;margin:3px 0;">'+inv.desc+'</div>';
+      invHTML+='<div>'+tagsHTML+'</div></div>';
+      invHTML+='<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">'+btnsHTML;
+      invHTML+='<button class="btn btn-red btn-sm" onclick="pcRemoveInvoice(\''+key+'\','+ii+')">حذف</button></div></div>';
     }
     html+='<div class="card" style="margin-bottom:16px;">';
-    html+='<div class="card-header"><h3>'+(MONTHS[mo]||mo)+' '+yr+' <span style="font-size:11px;color:var(--sub);">('+files.length+' ملف)</span></h3>';
+    html+='<div class="card-header"><h3>'+MONTHS[mo]+' '+yr;
+    html+=' <span style="font-size:11px;color:var(--sub);">('+invoices.length+' فاتورة)</span></h3>';
     html+='<div style="display:flex;gap:6px;">';
-    html+='<button class="btn btn-green btn-sm" onclick="pcExport(\''+key+'\')">تصدير ZIP</button>';
-    html+='<button class="btn btn-red btn-sm" onclick="pcDeleteGroup(\''+key+'\')">حذف</button>';
+    html+='<button class="btn btn-green btn-sm" onclick="pcExport(\''+key+'\')">📦 تصدير ZIP</button>';
+    html+='<button class="btn btn-red btn-sm" onclick="pcDeleteGroup(\''+key+'\')">حذف الشهر</button>';
     html+='</div></div>';
-    html+='<div class="card-body">'+filesHTML+'</div></div>';
+    html+='<div style="padding:0;">'+invHTML+'</div></div>';
   }
   el.innerHTML=html;
 }
-function pcOpen(key,i){window.open(pcGroups[key][i].b64,'_blank');}
-function pcRemoveFile(key,i){pcGroups[key].splice(i,1);if(!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
-function pcDeleteGroup(key){if(!confirm('حذف المجموعة؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
+
+function pcOpenFile(key,ii,fi){
+  var inv=(pcGroups[key]||[])[ii];
+  if(inv&&inv.files[fi]) window.open(inv.files[fi].b64,'_blank');
+}
+function pcRemoveInvoice(key,ii){
+  if(!confirm('حذف هذه الفاتورة؟'))return;
+  (pcGroups[key]||[]).splice(ii,1);
+  if(pcGroups[key]&&!pcGroups[key].length) delete pcGroups[key];
+  localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
+  renderPCGroups();
+}
+function pcOpen(key,i){window.open((pcGroups[key]||[])[i]?.b64||'','_blank');}
+function pcRemoveFile(key,i){(pcGroups[key]||[]).splice(i,1);if(pcGroups[key]&&!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
+function pcDeleteGroup(key){if(!confirm('حذف شهر كامل؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
+
+async function pcExport(key){
+  var invoices=pcGroups[key]||[];
+  if(!invoices.length){toast('لا توجد فواتير',true);return;}
+  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  var p=key.split('-');
+  var fname='PettyCash_'+MONTHS[p[1]]+'_'+p[0];
+  toast('جاري تجهيز ZIP...');
+  try{
+    var zip=new JSZip();
+    var mf=zip.folder(fname);
+    invoices.forEach(function(inv,i){
+      var fn=(i+1)+'_'+inv.vendor+'_'+inv.desc;
+      var invFolder=mf.folder(fn);
+      (inv.files||[]).forEach(function(f){
+        var b64=f.b64.includes(',')?f.b64.split(',')[1]:f.b64;
+        invFolder.file(f.label+'_'+f.name,b64,{base64:true});
+      });
+    });
+    var blob=await zip.generateAsync({type:'blob'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.zip';a.click();
+    toast('✅ تم تصدير '+invoices.length+' فاتورة في ZIP منظم');
+  }catch(e){toast('خطأ: '+e.message,true);}
+}
+
 
 /* ══════════════ INIT ══════════════ */
 function init(){
