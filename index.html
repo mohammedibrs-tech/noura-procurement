@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>إدارة المشتريات — نورة</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 :root{
@@ -830,7 +830,7 @@ function expExcel(){
   sc(ws,`E${totR}`,'',{fill:fill(C),border});
 
   XLSX.utils.book_append_sheet(wb,ws,'العهدة المالية');
-  XLSX.writeFile(wb,'العهدة_المالية.xlsx',{bookSST:false,cellStyles:true});
+  XLSX.writeFile(wb,'العهدة_المالية.xlsx');
   toast('تم التصدير ✅');
 }
 
@@ -1509,7 +1509,7 @@ function cmpExcel(){
   );
 
   XLSX.utils.book_append_sheet(wb,ws2,'بنود العقد');
-  XLSX.writeFile(wb,`مقارنة_الأسعار_${title}.xlsx`,{bookSST:false,cellStyles:true});
+  XLSX.writeFile(wb,`مقارنة_الأسعار_${title}.xlsx`);
   toast('تم تصدير Excel ✅');
 }
 
