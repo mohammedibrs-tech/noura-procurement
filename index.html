@@ -1456,6 +1456,7 @@ function renderCmpCompanies(){
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddTerm('+co.id+')" style="margin-top:4px;">+ إضافة بند</button>';
     html+='</div></div>';
   }
+  el.innerHTML=html;
   // أضف ملخص المقارنة
   if(cmpCompanies.length > 1){
     var tots2=cmpCompanies.map(function(co){return{name:co.name||'—',total:co.rows.reduce(function(s,r){return s+(r.count*(r.unitPrice||0));},0)};});
