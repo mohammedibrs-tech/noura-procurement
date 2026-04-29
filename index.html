@@ -695,6 +695,8 @@ async function sbDelete(table,id){
 /* ══════════════ BUDGET ══════════════ */
 let expenses=[];
 let budgetTotal=0,budgetTarget=0;
+let poSaved=[];
+let pcGroups={};
 
 async function initBudget(){
   const saved=JSON.parse(localStorage.getItem('budget_cfg')||'{}');
@@ -906,7 +908,7 @@ function expExcel(){
 }
 
 /* ══════════════ PO ══════════════ */
-let poRows=1,poSaved=[];
+let poRows=1;
 
 function poAddRow(){
   poRows++;
@@ -964,15 +966,19 @@ async function poSave(){
 }
 
 function renderPoSaved(){
-  const el=document.getElementById('po-saved');
-  el.innerHTML=poSaved.map((s,i)=>`
-    <div class="saved-item">
-      <div class="saved-item-info"><strong>${s.company}</strong><span style="color:var(--sub)">${s.num||''} — ${s.date||''}</span></div>
-      <div class="saved-item-actions">
-        <button class="btn btn-green btn-sm" onclick="poExcelById(${i})">Excel</button>
-        <button class="btn btn-red btn-sm" onclick="poPrintById(${i})">PDF</button>
-      </div>
-    </div>`).join('');
+  var el=document.getElementById('po-saved');if(!el)return;
+  if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
+  var html='';
+  for(var i=0;i<poSaved.length;i++){
+    var s=poSaved[i];
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info"><strong>'+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.num||'')+' — '+(s.date||'')+'</span></div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-green btn-sm" onclick="poExcelById('+i+')">Excel</button>'+
+        '<button class="btn btn-red btn-sm" onclick="poPrintById('+i+')">PDF</button>'+
+      '</div></div>';
+  }
+  el.innerHTML=html;
 }
 
 function poExcel(){poExcelData({
@@ -1181,14 +1187,19 @@ function rfqSave(){
   renderRfqSaved();toast('تم الحفظ');
 }
 function renderRfqSaved(){
-  document.getElementById('rfq-saved').innerHTML=rfqSaved.map((s,i)=>`
-    <div class="saved-item">
-      <div class="saved-item-info"><strong>السادة / ${s.company}</strong><span style="color:var(--sub)">${s.date||''}</span></div>
-      <div class="saved-item-actions">
-        <button class="btn btn-red btn-sm" onclick="rfqPrintById(${i})">PDF</button>
-        <button class="btn btn-gray btn-sm" onclick="rfqDel(${i})">×</button>
-      </div>
-    </div>`).join('');
+  var el=document.getElementById('rfq-saved');if(!el)return;
+  if(!rfqSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
+  var html='';
+  for(var i=0;i<rfqSaved.length;i++){
+    var s=rfqSaved[i];
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info"><strong>السادة / '+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+'</span></div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">PDF</button>'+
+        '<button class="btn btn-gray btn-sm" onclick="rfqDel('+i+')">×</button>'+
+      '</div></div>';
+  }
+  el.innerHTML=html;
 }
 function rfqDel(i){rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();}
 function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
@@ -1264,15 +1275,21 @@ function dnSave(){
   renderDnSaved();toast('تم الحفظ');
 }
 function renderDnSaved(){
-  document.getElementById('dn-saved').innerHTML=dnSaved.map((s,i)=>`
-    <div class="saved-item">
-      <div class="saved-item-info"><strong>${s.company}</strong><span style="color:var(--sub)">${s.lpo||''} — ${s.date||''}</span></div>
-      <div class="saved-item-actions">
-        <button class="btn btn-green btn-sm" onclick="dnExcelById(${i})">Excel</button>
-        <button class="btn btn-red btn-sm" onclick="dnPrintById(${i})">PDF</button>
-        <button class="btn btn-gray btn-sm" onclick="dnDel(${i})">×</button>
-      </div>
-    </div>`).join('');
+  var el=document.getElementById('dn-saved');if(!el)return;
+  if(!dnSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد سندات محفوظة</div>';return;}
+  var html='';
+  for(var i=0;i<dnSaved.length;i++){
+    var s=dnSaved[i];
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info"><strong>'+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.lpo||'')+' — '+(s.date||'')+'</span></div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-green btn-sm" onclick="dnExcelById('+i+')">Excel</button>'+
+        '<button class="btn btn-red btn-sm" onclick="dnPrintById('+i+')">PDF</button>'+
+        '<button class="btn btn-gray btn-sm" onclick="dnDel('+i+')">×</button>'+
+      '</div></div>';
+  }
+  el.innerHTML=html;
+
 }
 function dnDel(i){dnSaved.splice(i,1);localStorage.setItem('dn_saved',JSON.stringify(dnSaved));renderDnSaved();}
 function dnPrint(){dnPrintData({company:document.getElementById('dn-co').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()});}
@@ -1323,6 +1340,7 @@ let cmpCompanies = []; // [{id, name, rows:[{cat,nat,count,unitPrice}], terms:[s
 let cmpSaved = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
 let cmpEditId = null; // للتعديل
 
+function escH(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
 function cmpAddCompany(){
   const id = Date.now();
   cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0}], terms:['']});
@@ -1335,86 +1353,68 @@ function cmpDelCompany(id){
 }
 
 function renderCmpCompanies(){
-  const el = document.getElementById('cmp-companies-body');
-  if(!cmpCompanies.length){
-    el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">اضغط "+ إضافة شركة" للبدء</div>';
-    return;
+  var el=document.getElementById('cmp-companies-body');
+  if(!el)return;
+  if(!cmpCompanies.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">اضغط + إضافة شركة للبدء</div>';return;}
+  var html='';
+  for(var ci=0;ci<cmpCompanies.length;ci++){
+    var co=cmpCompanies[ci];
+    if(!co.rows)co.rows=[];if(!co.terms)co.terms=[''];
+    var monthly=0;
+    for(var ri=0;ri<co.rows.length;ri++) monthly+=(co.rows[ri].count||0)*(co.rows[ri].unitPrice||0);
+    var annual=monthly*12;
+    var rowsHTML='';
+    for(var ri2=0;ri2<co.rows.length;ri2++){
+      var row=co.rows[ri2];
+      rowsHTML+='<tr>';
+      rowsHTML+='<td><input value="'+(row.cat||'')+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'cat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="فئة"></td>';
+      rowsHTML+='<td><input value="'+(row.nat||'')+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'nat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="جنسية"></td>';
+      rowsHTML+='<td><input type="number" value="'+(row.count||1)+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'count\',this.value)" style="width:60px;border:none;background:transparent;text-align:center;"></td>';
+      rowsHTML+='<td><input type="number" value="'+(row.unitPrice||0)+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'unitPrice\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;"></td>';
+      rowsHTML+='<td style="text-align:right;font-weight:700;color:#244062;">'+((row.count||0)*(row.unitPrice||0)).toLocaleString('ar-SA')+'</td>';
+      rowsHTML+='<td><button onclick="cmpDelRow('+co.id+','+ri2+')" style="background:none;border:none;color:var(--red);cursor:pointer;">x</button></td>';
+      rowsHTML+='</tr>';
+    }
+    var termsHTML='';
+    for(var ti=0;ti<co.terms.length;ti++){
+      termsHTML+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+      termsHTML+='<span style="font-weight:700;color:#244062;min-width:20px;">'+(ti+1)+'.</span>';
+      termsHTML+='<input value="'+(co.terms[ti]||'')+'" oninput="cmpUpdateTerm('+co.id+','+ti+',this.value)" placeholder="بند العقد..." style="flex:1;padding:6px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;">';
+      termsHTML+='<button onclick="cmpDelTerm('+co.id+','+ti+')" style="background:none;border:none;color:var(--red);cursor:pointer;">x</button>';
+      termsHTML+='</div>';
+    }
+    html+='<div style="border:2px solid #244062;border-radius:10px;margin-bottom:16px;overflow:hidden;">';
+    html+='<div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
+    html+='<input value="'+(co.name||'')+'" oninput="cmpUpdateName('+co.id+',this.value)" placeholder="اسم الشركة" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">';
+    html+='<button onclick="cmpDelCompany('+co.id+')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف</button>';
+    html+='</div><div style="padding:14px;">';
+    html+='<div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود الخدمة</div>';
+    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr><th>الفئة</th><th>الجنسية</th><th>العدد</th><th>القيمة الإفرادية</th><th>القيمة الكلية</th><th></th></tr></thead><tbody>'+rowsHTML+'</tbody></table>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+    html+='<button class="btn btn-gray btn-sm" onclick="cmpAddRow('+co.id+')">+ إضافة صف</button>';
+    html+='<span style="font-size:12px;font-weight:700;">الشهري: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b> | السنوي: <b style="color:#244062;">'+annual.toLocaleString('ar-SA')+' ر.س</b></span>';
+    html+='</div><div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود العقد</div>';
+    html+='<div>'+termsHTML+'</div>';
+    html+='<button class="btn btn-gray btn-sm" onclick="cmpAddTerm('+co.id+')" style="margin-top:4px;">+ إضافة بند</button>';
+    html+='</div></div>';
   }
-  el.innerHTML = cmpCompanies.map(co=>`
-    <div style="border:2px solid #244062;border-radius:10px;margin-bottom:16px;overflow:hidden;">
-      <!-- هيدر الشركة -->
-      <div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
-        <input value="${co.name}" oninput="cmpUpdateName(${co.id},this.value)"
-          placeholder="اسم الشركة" 
-          style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">
-        <button onclick="cmpDelCompany(${co.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف الشركة</button>
-      </div>
-
-      <div style="padding:14px;">
-        <!-- جدول البنود -->
-        <div style="font-weight:700;color:#244062;margin-bottom:8px;font-size:12px;">بنود الخدمة</div>
-        <table class="tbl" style="margin-bottom:8px;">
-          <thead>
-            <tr>
-              <th>الفئة / Category</th>
-              <th>الجنسية / Nationality</th>
-              <th>العدد / Count</th>
-              <th>القيمة الشهرية الإفرادية</th>
-              <th>القيمة الشهرية الكلية</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cmp-rows-${co.id}">
-            ${co.rows.map((r,ri)=>`
-              <tr>
-                <td><input value="${r.cat}" oninput="cmpUpdateRow(${co.id},${ri},'cat',this.value)" placeholder="مثال: حارس أمن" style="width:100%;border:none;background:transparent;"></td>
-                <td><input value="${r.nat}" oninput="cmpUpdateRow(${co.id},${ri},'nat',this.value)" placeholder="سعودي/غير سعودي" style="width:100%;border:none;background:transparent;"></td>
-                <td><input type="number" value="${r.count}" oninput="cmpUpdateRow(${co.id},${ri},'count',this.value)" style="width:60px;border:none;background:transparent;text-align:center;"></td>
-                <td><input type="number" value="${r.unitPrice}" oninput="cmpUpdateRow(${co.id},${ri},'unitPrice',this.value)" style="width:100px;border:none;background:transparent;text-align:right;"></td>
-                <td style="text-align:right;font-weight:700;color:#244062;">${(r.count*(r.unitPrice||0)).toLocaleString('ar-SA')}</td>
-                <td><button onclick="cmpDelRow(${co.id},${ri})" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <button class="btn btn-gray btn-sm" onclick="cmpAddRow(${co.id})">+ إضافة صف</button>
-          <div style="font-size:13px;font-weight:700;">
-            الإجمالي الشهري: <span style="color:#244062;">${co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0).toLocaleString('ar-SA')} ر.س</span>
-            &nbsp;|&nbsp;
-            الإجمالي السنوي: <span style="color:#244062;">${(co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)*12).toLocaleString('ar-SA')} ر.س</span>
-          </div>
-        </div>
-
-        <!-- بنود العقد -->
-        <div style="font-weight:700;color:#244062;margin-bottom:8px;font-size:12px;">بنود العقد</div>
-        <div id="cmp-terms-${co.id}">
-          ${co.terms.map((t,ti)=>`
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <span style="font-weight:700;color:#244062;min-width:20px;">${ti+1}.</span>
-              <input value="${t}" oninput="cmpUpdateTerm(${co.id},${ti},this.value)"
-                placeholder="أدخل بند العقد..."
-                style="flex:1;padding:6px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;">
-              <button onclick="cmpDelTerm(${co.id},${ti})" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button>
-            </div>`).join('')}
-        </div>
-        <button class="btn btn-gray btn-sm" onclick="cmpAddTerm(${co.id})" style="margin-top:4px;">+ إضافة بند</button>
-      </div>
-    </div>`).join('');
-
   // أضف ملخص المقارنة
   if(cmpCompanies.length > 1){
-    const tots = cmpCompanies.map(co=>({name:co.name||'—',total:co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)}));
-    const min = Math.min(...tots.map(t=>t.total).filter(v=>v>0));
-    el.innerHTML += `<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">
-      <div style="font-weight:700;color:#276749;margin-bottom:10px;font-size:13px;">📊 ملخص المقارنة</div>
-      ${tots.map(t=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">
-        <span>${t.name}</span>
-        <span style="font-weight:700;color:${t.total===min&&min>0?'#276749':'#C53030'};">
-          ${t.total.toLocaleString('ar-SA')} ر.س/شهر
-          ${t.total===min&&min>0?' ★ الأفضل':''}
-        </span>
-      </div>`).join('')}
-    </div>`;
+    var tots2=cmpCompanies.map(function(co){return{name:co.name||'—',total:co.rows.reduce(function(s,r){return s+(r.count*(r.unitPrice||0));},0)};});
+    var min2=Math.min.apply(null,tots2.map(function(t){return t.total;}).filter(function(v){return v>0;}));
+    var summHTML='';
+    summHTML+='<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">';
+    summHTML+='<div style="font-weight:700;color:#276749;margin-bottom:10px;font-size:13px;">ملخص المقارنة</div>';
+    tots2.forEach(function(t){
+      var clr=t.total===min2&&min2>0?'#276749':'#C53030';
+      var best=t.total===min2&&min2>0?' الافضل':'';
+      summHTML+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">';
+      summHTML+='<span>'+t.name+'</span>';
+      summHTML+='<span style="font-weight:700;color:'+clr+';">'+t.total.toLocaleString('ar-SA')+' ر.س/شهر'+best+'</span>';
+      summHTML+='</div>';
+    });
+    summHTML+='</div>';
+    el.innerHTML+=summHTML;
   }
 }
 
@@ -1471,18 +1471,22 @@ function cmpSaveData(){
 }
 
 function renderCmpSaved(){
-  const el=document.getElementById('cmp-saved-list');
-  if(!el)return;
+  var el=document.getElementById('cmp-saved-list');if(!el)return;
   if(!cmpSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد مقارنات محفوظة</div>';return;}
-  el.innerHTML=cmpSaved.map((s,i)=>`
-    <div class="saved-item">
-      <div class="saved-item-info"><strong>${s.title}</strong><span style="color:var(--sub)">${s.date||''} — ${s.companies?.length||0} شركات</span></div>
-      <div class="saved-item-actions">
-        <button class="btn btn-primary btn-sm" onclick="cmpLoad(${i})">تعديل</button>
-        <button class="btn btn-green btn-sm" onclick="cmpExcelById(${i})">Excel</button>
-        <button class="btn btn-gray btn-sm" onclick="cmpDel(${i})">×</button>
-      </div>
-    </div>`).join('');
+  var html='';
+  for(var i=0;i<cmpSaved.length;i++){
+    var s=cmpSaved[i];
+    var cnt=(s.companies&&s.companies.length)||0;
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info"><strong>'+(s.title||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+' — '+cnt+' شركات</span></div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-primary btn-sm" onclick="cmpLoad('+i+')">تعديل</button>'+
+        '<button class="btn btn-green btn-sm" onclick="cmpExcelById('+i+')">Excel</button>'+
+        '<button class="btn btn-gray btn-sm" onclick="cmpDel('+i+')">×</button>'+
+      '</div></div>';
+  }
+  el.innerHTML=html;
+
 }
 
 function cmpLoad(i){
@@ -1522,7 +1526,7 @@ function cmpExcelFromData(title,date,companies){
 
   // ورقة ملخص المقارنة
   const summaryData=[[title],['التاريخ: '+date],[''],['الشركة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الأفضل']];
-  const tots=companies.map(co=>({name:co.name||'—',monthly:co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)}));
+  const tots=(companies||[]).map(co=>({name:co.name||'—',monthly:(co.rows||[]).reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)}));
   const minV=Math.min(...tots.map(t=>t.monthly).filter(v=>v>0));
   tots.forEach(t=>summaryData.push([t.name,t.monthly,t.monthly*12,t.monthly===minV&&minV>0?'★ الأفضل':'']));
   const ws0=XLSX.utils.aoa_to_sheet(summaryData);
@@ -1540,7 +1544,7 @@ function cmpExcelFromData(title,date,companies){
   XLSX.utils.book_append_sheet(wb,ws0,'ملخص المقارنة');
 
   // ورقة لكل شركة
-  companies.forEach(co=>{
+  (companies||[]).forEach(co=>{ if(!co.rows) co.rows=[]; if(!co.terms) co.terms=[''];
     const name=(co.name||'شركة').substring(0,28);
     const monthly=co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0);
     const data=[
@@ -1582,6 +1586,40 @@ function cmpExcelFromData(title,date,companies){
   toast('تم التصدير ✅');
 }
 
+function renderPCGroups(){
+  var el=document.getElementById('pc-groups');if(!el)return;
+  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  var keys=Object.keys(pcGroups).sort().reverse();
+  if(!keys.length){el.innerHTML='';return;}
+  var html='';
+  for(var ki=0;ki<keys.length;ki++){
+    var key=keys[ki];
+    var parts=key.split('-');var yr=parts[0];var mo=parts[1];
+    var files=pcGroups[key]||[];
+    var filesHTML='';
+    for(var fi=0;fi<files.length;fi++){
+      var f=files[fi];
+      filesHTML+='<div class="saved-item">';
+      filesHTML+='<span style="font-size:12px;">📄 '+f.name+'</span>';
+      filesHTML+='<div style="display:flex;gap:4px;">';
+      filesHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpen(\''+key+'\','+fi+')">فتح</button>';
+      filesHTML+='<button class="btn btn-red btn-sm" onclick="pcRemoveFile(\''+key+'\','+fi+')">x</button>';
+      filesHTML+='</div></div>';
+    }
+    html+='<div class="card" style="margin-bottom:16px;">';
+    html+='<div class="card-header"><h3>'+(MONTHS[mo]||mo)+' '+yr+' <span style="font-size:11px;color:var(--sub);">('+files.length+' ملف)</span></h3>';
+    html+='<div style="display:flex;gap:6px;">';
+    html+='<button class="btn btn-green btn-sm" onclick="pcExport(\''+key+'\')">تصدير ZIP</button>';
+    html+='<button class="btn btn-red btn-sm" onclick="pcDeleteGroup(\''+key+'\')">حذف</button>';
+    html+='</div></div>';
+    html+='<div class="card-body">'+filesHTML+'</div></div>';
+  }
+  el.innerHTML=html;
+}
+function pcOpen(key,i){window.open(pcGroups[key][i].b64,'_blank');}
+function pcRemoveFile(key,i){pcGroups[key].splice(i,1);if(!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
+function pcDeleteGroup(key){if(!confirm('حذف المجموعة؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
+
 /* ══════════════ INIT ══════════════ */
 function init(){
   const today=new Date().toISOString().split('T')[0];
@@ -1598,7 +1636,7 @@ function init(){
   pcGroups=JSON.parse(localStorage.getItem('pc_groups')||'{}');
   expenses=JSON.parse(localStorage.getItem('expenses_local')||'[]');
   initBudget();
-  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();renderPCGroups();
+  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();if(typeof renderPCGroups==='function')renderPCGroups();
 }
 
 </script>
