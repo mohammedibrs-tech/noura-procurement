@@ -952,43 +952,116 @@ function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:J
 
 function poPrintData(d){
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
-  const tax=sub*0.15;const tot=sub+tax;
+  const tax=sub*0.15; const tot=sub+tax;
   const dt=d.date?new Date(d.date):new Date();
   const ds=`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
-  const rHTML=(d.rows||[]).map(r=>`<tr><td style="text-align:center">${r.num}</td><td>${r.item}</td><td>${r.desc||''}</td><td style="text-align:center">${r.qty}</td><td>${r.uom||''}</td><td style="text-align:left">${(r.price||0).toLocaleString('ar-SA')}</td><td style="text-align:left;font-weight:700;">${(r.total||0).toLocaleString('ar-SA')}</td><td>${r.notes||''}</td></tr>`).join('');
+
+  // تحويل الرقم لكلمات (مبسط)
+  function numToWords(n){
+    const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    if(n===0)return'Zero';
+    const parts=[];
+    const t=Math.floor(n/1000);if(t)parts.push(ones[t]||'')+'Thousand';
+    const h=Math.floor((n%1000)/100);if(h)parts.push(ones[h]+' Hundred');
+    const r=n%100;if(r<20&&r>0)parts.push(ones[r]);else if(r>=20){parts.push(tens[Math.floor(r/10)]+(r%10?' '+ones[r%10]:''));}
+    return parts.join(' ');
+  }
+
+  const rHTML=(d.rows||[]).map(r=>`
+    <tr>
+      <td style="text-align:center;border:1px solid #ccc;padding:6px 4px;">${r.num}</td>
+      <td style="border:1px solid #ccc;padding:6px 4px;">${r.item}</td>
+      <td style="border:1px solid #ccc;padding:6px 4px;">${r.desc||''}</td>
+      <td style="text-align:center;border:1px solid #ccc;padding:6px 4px;">${r.qty}</td>
+      <td style="text-align:center;border:1px solid #ccc;padding:6px 4px;">${r.uom||''}</td>
+      <td style="text-align:right;border:1px solid #ccc;padding:6px 4px;">${(r.price||0).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+      <td style="text-align:right;border:1px solid #ccc;padding:6px 4px;">${(r.total||0).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+      <td style="border:1px solid #ccc;padding:6px 4px;">${r.notes||''}</td>
+    </tr>`).join('');
+
   printDoc(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="font-size:15px;font-weight:900;color:#276749;">Local Purchase Order — طلب شراء محلي</div>
-      <div style="background:#276749;color:#fff;padding:3px 12px;border-radius:4px;font-size:12px;font-weight:700;">${d.num||'PO#'}</div>
+    <!-- التاريخ والرقم - يمين -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <table style="border-collapse:collapse;font-size:11px;">
+        <tr><td style="border:1px solid #ccc;padding:4px 10px;font-weight:700;background:#f5f5f5;">Date / التاريخ</td><td style="border:1px solid #ccc;padding:4px 14px;">${ds}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:4px 10px;font-weight:700;background:#f5f5f5;">PO # / تعميد رقم</td><td style="border:1px solid #ccc;padding:4px 14px;">${d.num||'—'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:4px 10px;font-weight:700;background:#f5f5f5;">Quotation #</td><td style="border:1px solid #ccc;padding:4px 14px;">${d.quote||'—'}</td></tr>
+      </table>
     </div>
-    <div style="font-size:11px;color:#555;margin-bottom:10px;">التاريخ: ${ds} &nbsp;|&nbsp; رقم عرض السعر: ${d.quote||'—'}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-      <div style="background:rgba(235,248,250,0.9);border:1px solid #BEE3F8;border-radius:6px;padding:10px;font-size:11px;line-height:1.9;">
-        <div style="font-weight:700;color:#0D7A8A;margin-bottom:4px;border-bottom:1px solid #BEE3F8;padding-bottom:3px;">المورد / Vendor</div>
-        الشركة: <strong>${d.company}</strong><br>الرقم الضريبي: ${d.vat||'—'}<br>العنوان: ${d.addr||'—'}<br>التواصل: ${d.phone||'—'}<br>الإيميل: ${d.email||'—'}
-      </div>
-      <div style="background:rgba(235,248,250,0.9);border:1px solid #BEE3F8;border-radius:6px;padding:10px;font-size:11px;line-height:1.9;">
-        <div style="font-weight:700;color:#0D7A8A;margin-bottom:4px;border-bottom:1px solid #BEE3F8;padding-bottom:3px;">التسليم إلى / Delivery To</div>
-        شركة نورة لتعليم القيادة<br>الرقم الضريبي: ${d.del_vat||'314378311300003'}<br>العنوان: ${d.del_addr||'الرياض، جامعة الأميرة نورة'}<br>التواصل: ${d.del_phone||'+966538549436'}<br>الإيميل: ${d.del_email||'mialjamaan@nouradriving.sa'}
-      </div>
+
+    <!-- المورد والتسليم -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <table style="border-collapse:collapse;font-size:11px;width:100%;">
+        <tr><td colspan="2" style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;text-align:center;">المورد / Vendor</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;white-space:nowrap;">Company Name/ اسم الشركة</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.company||'—'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">VAT Number/ الرقم الضريبي</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.vat||'—'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Address / العنوان</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.addr||'—'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Contact No./ رقم التواصل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.phone||'—'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Email/ الإيميل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.email||'—'}</td></tr>
+      </table>
+      <table style="border-collapse:collapse;font-size:11px;width:100%;">
+        <tr><td colspan="2" style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;text-align:center;">التسليم / Delivery To</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;white-space:nowrap;">Delivery To/ التسليم إلى</td><td style="border:1px solid #ccc;padding:5px 8px;">Noura Driving Company</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">VAT Number/ الرقم الضريبي</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.del_vat||'310230667700003'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Address/ العنوان</td><td style="border:1px solid #ccc;padding:5px 8px;">Saudi Arabia, Riyadh, King Khaled Intl. Road - Princess Noura University</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Contact No./ رقم التواصل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.del_phone||'+966538549436'}</td></tr>
+        <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Email / الإيميل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.del_email||'mialjamaan@nouradriving.sa'}</td></tr>
+      </table>
     </div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px;">
-      <thead><tr style="background:#276749;color:#fff;"><th style="padding:7px 8px;text-align:right;">م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th></tr></thead>
-      <tbody>${rHTML}
-        <tr><td colspan="6" style="text-align:left;font-weight:700;padding:6px 8px;border-top:2px solid #276749;">المجموع قبل الضريبة</td><td style="font-weight:700;text-align:left;padding:6px 8px;">${sub.toLocaleString('ar-SA')}</td><td></td></tr>
-        <tr><td colspan="6" style="text-align:left;padding:6px 8px;">الضريبة 15%</td><td style="text-align:left;padding:6px 8px;">${tax.toLocaleString('ar-SA')}</td><td></td></tr>
-        <tr style="background:rgba(39,103,73,0.1);"><td colspan="6" style="text-align:left;font-weight:900;padding:6px 8px;">الإجمالي شامل الضريبة</td><td style="font-weight:900;text-align:left;padding:6px 8px;color:#276749;">${tot.toLocaleString('ar-SA')} ر.س</td><td></td></tr>
-      </tbody>
+
+    <!-- جدول البنود -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+      <thead>
+        <tr style="background:#244062;color:#fff;">
+          <th style="border:1px solid #ccc;padding:6px 4px;text-align:center;">S.N<br>الرقم</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;">Item<br>الصنف</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;">Description<br>الوصف</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;text-align:center;">Qty<br>الكمية</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;text-align:center;">UOM<br>الوحدة</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;text-align:right;">Unit Price<br>سعر الوحدة</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;text-align:right;">Total<br>الإجمالي</th>
+          <th style="border:1px solid #ccc;padding:6px 4px;">Notes<br>ملاحظات</th>
+        </tr>
+      </thead>
+      <tbody>${rHTML}</tbody>
     </table>
-    <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
-      <div style="flex:1;text-align:center;border-top:2px solid #276749;padding-top:8px;font-size:11px;">Prepared By<br><br>محمد الجمعان</div>
-      <div style="flex:1;text-align:center;border-top:2px solid #276749;padding-top:8px;font-size:11px;">Reviewed By<br><br>___________</div>
-      <div style="flex:1;text-align:center;border-top:2px solid #276749;padding-top:8px;font-size:11px;">CEO Approval<br><br>___________</div>
+
+    <!-- المجاميع -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">Amount / المجموع</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">TAX / الضريبة</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${tax.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;color:#244062;">Net Amount / المبلغ الأصلي</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:700;color:#244062;">${tot.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
+    </table>
+
+    <!-- الشروط -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;">
+      <tr><td colspan="2" style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;">Terms & Conditions / الشروط والأحكام</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;width:30%;">Payment/ الدفع</td><td style="border:1px solid #ccc;padding:5px 8px;">100% after delivery</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Delivery Time/ مدة التسليم</td><td style="border:1px solid #ccc;padding:5px 8px;">1 week</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Warranty/ الضمان</td><td style="border:1px solid #ccc;padding:5px 8px;">1 month</td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Validity/ صلاحية التعميد</td><td style="border:1px solid #ccc;padding:5px 8px;">PO should be cancelled if the vendor fails to complete with terms of the offer</td></tr>
+    </table>
+
+    <!-- التوقيعات -->
+    <div style="margin-top:6px;">
+      <div style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;font-size:11px;margin-bottom:10px;">Approvals / الاعتمادات</div>
+      <div style="display:flex;justify-content:space-between;gap:16px;margin-top:8px;">
+        <div style="flex:1;text-align:center;font-size:11px;">
+          <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
+          <div style="border-top:1px solid #000;padding-top:6px;">محمد الجمعان</div>
+        </div>
+        <div style="flex:1;text-align:center;font-size:11px;">
+          <div style="margin-bottom:40px;">تم مراجعته من قبل / Reviewed By</div>
+          <div style="border-top:1px solid #000;padding-top:6px;">___________</div>
+        </div>
+        <div style="flex:1;text-align:center;font-size:11px;">
+          <div style="margin-bottom:40px;">تم اعتماده من قبل / Approved By</div>
+          <div style="border-top:1px solid #000;padding-top:6px;">___________</div>
+        </div>
+      </div>
     </div>`);
 }
-
-/* ══════════════ RFQ ══════════════ */
-let rfqRows=1,rfqSaved=[];
 
 function rfqAddRow(){
   rfqRows++;
