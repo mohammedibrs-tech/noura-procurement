@@ -545,10 +545,17 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
   <!-- تصدير -->
   <div class="actions">
+    <button class="btn btn-primary" onclick="cmpSaveData()">حفظ المقارنة</button>
     <button class="btn btn-green" onclick="cmpExcel()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
       تصدير Excel
     </button>
+  </div>
+
+  <!-- المقارنات المحفوظة -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>المقارنات المحفوظة</h3></div>
+    <div class="card-body"><div class="saved-list" id="cmp-saved-list"></div></div>
   </div>
 </div>
 </div><!-- /main -->
@@ -970,16 +977,15 @@ table{border-collapse:collapse;width:100%;}
 <img class="bg" src="${BG}">
 <div class="content">
 
-  <!-- رقم PO والتاريخ يمين -->
-  <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-    <table style="width:240px;">
+  <!-- عنوان -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div><div style="font-size:18px;font-weight:900;color:#244062;">Purchase Order</div><div style="font-size:14px;font-weight:700;color:#244062;">طلب شراء</div></div>
+    <table style="width:240px;border-collapse:collapse;">
       <tr><td class="lbl">Date / التاريخ</td><td class="val">${ds}</td></tr>
       <tr><td class="lbl">PO # / تعميد رقم</td><td class="val">${d.num||'—'}</td></tr>
       <tr><td class="lbl">Quotation #</td><td class="val">${d.quote||'—'}</td></tr>
     </table>
   </div>
-
-  <!-- المورد يسار | التسليم يمين -->
   <div style="display:flex;gap:8px;margin-bottom:8px;">
     <table style="flex:1;">
       <tr><td colspan="2" class="blue" style="text-align:center;">المورد / Vendor</td></tr>
@@ -1066,6 +1072,284 @@ table{border-collapse:collapse;width:100%;}
   w.document.write(html);
   w.document.close();
   w.onload=()=>{w.focus();w.print();};
+}
+
+/* ══════════════ RFQ ══════════════ */
+let rfqRows=1;
+let rfqSaved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+
+function rfqAddRow(){
+  rfqRows++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" placeholder="اسم الصنف"></td><td><input class="rfq-qty" placeholder="1" style="width:60px;"></td><td><input class="rfq-notes" placeholder=""></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  document.getElementById('rfq-tbody').appendChild(tr);
+}
+function rfqDelRow(btn){btn.closest('tr').remove();}
+function rfqGetRows(){
+  return Array.from(document.querySelectorAll('#rfq-tbody tr')).map((tr,i)=>({
+    num:i+1,item:tr.querySelector('.rfq-item')?.value||'',
+    qty:tr.querySelector('.rfq-qty')?.value||'',
+    notes:tr.querySelector('.rfq-notes')?.value||''
+  }));
+}
+function rfqSave(){
+  const co=document.getElementById('rfq-co').value.trim();
+  if(!co){toast('أدخل اسم الشركة',true);return;}
+  const data={id:Date.now(),company:co,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()};
+  rfqSaved.unshift(data);
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+  renderRfqSaved();toast('تم الحفظ');
+}
+function renderRfqSaved(){
+  document.getElementById('rfq-saved').innerHTML=rfqSaved.map((s,i)=>`
+    <div class="saved-item">
+      <div class="saved-item-info"><strong>السادة / ${s.company}</strong><span style="color:var(--sub)">${s.date||''}</span></div>
+      <div class="saved-item-actions">
+        <button class="btn btn-red btn-sm" onclick="rfqPrintById(${i})">PDF</button>
+        <button class="btn btn-gray btn-sm" onclick="rfqDel(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+function rfqDel(i){rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();}
+function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
+function rfqPrintById(i){const s=rfqSaved[i];if(s)rfqPrintData(s);}
+function rfqPrintData(d){
+  const dt=d.date?new Date(d.date):new Date();
+  const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
+  const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
+<div class="page"><img class="bg" src="${FORM_BG}">
+<div class="content">
+<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div>
+<div style="font-size:12px;color:#244062;margin-bottom:12px;">خطاب طلب عرض سعر</div>
+<div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;">
+  <div><strong>السادة / ${d.company||'___'}</strong></div>
+  <div>التاريخ: ${ds}</div>
+</div>
+<p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p>
+<table style="margin-bottom:10px;">
+  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">الرقم</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<table style="margin-bottom:10px;">
+  <tr><td class="blue" colspan="2">Terms & Conditions / الشروط والأحكام</td></tr>
+  <tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr>
+  <tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr>
+  <tr><td class="lbl">الضمان</td><td class="val">-</td></tr>
+  <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
+</table>
+<div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div><div style="border-top:1px solid #000;padding-top:6px;">محمد الجمعان</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
+</div>
+</div></div></body></html>`);
+  w.document.close();w.onload=()=>{w.focus();w.print();};
+}
+
+/* ══════════════ DN ══════════════ */
+let dnRows=1;
+let dnSaved=JSON.parse(localStorage.getItem('dn_saved')||'[]');
+let dnPDFs=JSON.parse(localStorage.getItem('dn_pdfs')||'[]');
+
+function dnAddRow(){
+  dnRows++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${dnRows}</td><td><input class="dn-item" placeholder="المنتج/الخدمة"></td><td><input class="dn-qty" placeholder="1" style="width:60px;"></td><td><input class="dn-notes" placeholder=""></td><td><button onclick="dnDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  document.getElementById('dn-tbody').appendChild(tr);
+}
+function dnDelRow(btn){btn.closest('tr').remove();}
+function dnGetRows(){
+  return Array.from(document.querySelectorAll('#dn-tbody tr')).map((tr,i)=>({
+    num:i+1,item:tr.querySelector('.dn-item')?.value||'',
+    qty:tr.querySelector('.dn-qty')?.value||'',
+    notes:tr.querySelector('.dn-notes')?.value||''
+  }));
+}
+function dnAddPDF(inp){
+  Array.from(inp.files).forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{dnPDFs.push({name:f.name,b64:e.target.result});localStorage.setItem('dn_pdfs',JSON.stringify(dnPDFs));};
+    reader.readAsDataURL(f);
+  });
+  inp.value='';
+}
+function dnSave(){
+  const co=document.getElementById('dn-co').value.trim();
+  if(!co){toast('أدخل اسم الشركة',true);return;}
+  const data={id:Date.now(),company:co,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()};
+  dnSaved.unshift(data);
+  localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
+  renderDnSaved();toast('تم الحفظ');
+}
+function renderDnSaved(){
+  document.getElementById('dn-saved').innerHTML=dnSaved.map((s,i)=>`
+    <div class="saved-item">
+      <div class="saved-item-info"><strong>${s.company}</strong><span style="color:var(--sub)">${s.lpo||''} — ${s.date||''}</span></div>
+      <div class="saved-item-actions">
+        <button class="btn btn-green btn-sm" onclick="dnExcelById(${i})">Excel</button>
+        <button class="btn btn-red btn-sm" onclick="dnPrintById(${i})">PDF</button>
+        <button class="btn btn-gray btn-sm" onclick="dnDel(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+function dnDel(i){dnSaved.splice(i,1);localStorage.setItem('dn_saved',JSON.stringify(dnSaved));renderDnSaved();}
+function dnPrint(){dnPrintData({company:document.getElementById('dn-co').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()});}
+function dnPrintById(i){const s=dnSaved[i];if(s)dnPrintData(s);}
+function dnExcelById(i){const s=dnSaved[i];if(s)dnExcelData(s);}
+function dnPrintData(d){
+  const dt=d.date?new Date(d.date):new Date();
+  const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
+  const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
+<div class="page"><img class="bg" src="${FORM_BG}">
+<div class="content">
+<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Delivery Note</div>
+<div style="font-size:12px;color:#244062;margin-bottom:12px;">سند الاستلام</div>
+<div style="display:flex;gap:8px;margin-bottom:10px;">
+  <table style="flex:1;"><tr><td class="lbl">اسم الشركة المورّدة</td><td class="val">${d.company}</td></tr><tr><td class="lbl">رقم التعميد</td><td class="val">${d.lpo||'—'}</td></tr><tr><td class="lbl">التاريخ</td><td class="val">${ds}</td></tr><tr><td class="lbl">تم التسليم من قبل</td><td class="val">${d.from||'—'}</td></tr></table>
+</div>
+<table style="margin-bottom:12px;">
+  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">المنتج / Product & Service Description</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:12%;">الكمية / Qty</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات / Notes</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<div style="display:flex;justify-content:space-between;margin-top:30px;gap:20px;">
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Received By / تم الاستلام من قبل</div><div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br>التاريخ:<br>التوقيع:</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Delivered By / تم التسليم من قبل</div><div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br>التاريخ:<br>التوقيع:</div></div>
+</div>
+</div></div></body></html>`);
+  w.document.close();w.onload=()=>{w.focus();w.print();};
+}
+function dnExcelData(d){
+  const bin=atob(DN_B64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  const wb=XLSX.read(arr,{type:'array',cellStyles:true});
+  const ws=wb.Sheets['Sheet1'];
+  function sc(c,v){if(!ws[c])ws[c]={};ws[c].t=typeof v==='number'?'n':'s';ws[c].v=v;ws[c].w=String(v);}
+  sc('C8',d.company);sc('C9',d.lpo||'');
+  const dt=d.date?new Date(d.date):new Date();
+  sc('C10',`${dt.getDate()}/${dt.getMonth()+1}/${dt.getFullYear()}`);
+  sc('C11',d.from||'');
+  for(let r=14;r<=20;r++){['A','B','C','D'].forEach(c=>{try{if(ws[c+r])ws[c+r].v='',ws[c+r].w='';}catch(e){}});}
+  (d.rows||[]).forEach((row,i)=>{const r=14+i;sc(`A${r}`,row.num);sc(`B${r}`,row.item);sc(`C${r}`,parseFloat(row.qty)||row.qty||'');sc(`D${r}`,row.notes||'');});
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
+  const a=document.createElement('a');a.href='data:application/octet-stream;base64,'+out;a.download=`DN_${d.company}.xlsx`;a.click();
+  toast('تم تصدير Excel');
+}
+
+/* ══════════════ مقارنة الأسعار ══════════════ */
+let cmpRowCount=2;
+let cmpItemCount=1;
+let cmpSaved=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+
+function cmpAddCompany(){
+  cmpRowCount++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${cmpRowCount}</td>
+    <td><input class="cmp-name" placeholder="اسم الشركة" style="min-width:120px;"></td>
+    <td><input class="cmp-services" placeholder="الخدمات" style="min-width:150px;"></td>
+    <td><input class="cmp-monthly" type="number" placeholder="0" oninput="cmpCalc()" style="width:100px;"></td>
+    <td class="cmp-annual" style="font-weight:700;">0</td>
+    <td class="cmp-diff" style="color:var(--sub);">—</td>
+    <td class="cmp-pct" style="color:var(--sub);">—</td>
+    <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+  document.getElementById('cmp-tbody').appendChild(tr);
+}
+function cmpDelRow(btn){btn.closest('tr').remove();cmpCalc();}
+function cmpCalc(){
+  const rows=Array.from(document.querySelectorAll('#cmp-tbody tr'));
+  const data=rows.map(tr=>{const m=parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;return{tr,monthly:m,annual:m*12};});
+  data.forEach(d=>d.tr.querySelector('.cmp-annual').textContent=d.annual.toLocaleString('ar-SA'));
+  const min=Math.min(...data.map(d=>d.annual).filter(v=>v>0));
+  data.forEach(d=>{
+    if(d.annual<=0){d.tr.querySelector('.cmp-diff').textContent='—';d.tr.querySelector('.cmp-pct').textContent='—';return;}
+    const diff=d.annual-min;const pct=min>0?((diff/d.annual)*100).toFixed(1):0;
+    const dc=d.tr.querySelector('.cmp-diff'),pc=d.tr.querySelector('.cmp-pct');
+    if(diff===0){dc.textContent='—';pc.textContent='الأفضل ★';pc.style.color='var(--green)';pc.style.fontWeight='700';d.tr.style.background='rgba(39,103,73,0.07)';}
+    else{dc.textContent='+'+diff.toLocaleString('ar-SA');dc.style.color='var(--red)';pc.textContent=pct+'%';pc.style.color='var(--red)';d.tr.style.background='';}
+  });
+  const best=data.find(d=>d.annual===min&&min>0);
+  const el=document.getElementById('cmp-best');
+  if(best){const name=best.tr.querySelector('.cmp-name')?.value||'الشركة الأولى';el.style.display='block';el.textContent=`✅ الأفضل سعراً: ${name} — ${min.toLocaleString('ar-SA')} ر.س سنوياً`;}
+  else el.style.display='none';
+}
+function cmpAddItem(){
+  cmpItemCount++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${cmpItemCount}</td>
+    <td><input class="ci-name" placeholder="اسم البند" style="min-width:160px;"></td>
+    <td><input class="ci-unit" type="number" placeholder="0" oninput="cmpItemCalc(this)" style="width:100px;"></td>
+    <td class="ci-monthly" style="font-weight:700;">0</td>
+    <td class="ci-annual" style="font-weight:700;color:var(--primary);">0</td>
+    <td><button onclick="cmpDelItem(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+  document.getElementById('cmp-items-tbody').appendChild(tr);
+}
+function cmpDelItem(btn){btn.closest('tr').remove();cmpItemTotals();}
+function cmpItemCalc(inp){
+  const tr=inp.closest('tr');const unit=parseFloat(inp.value)||0;
+  tr.querySelector('.ci-monthly').textContent=unit.toLocaleString('ar-SA');
+  tr.querySelector('.ci-annual').textContent=(unit*12).toLocaleString('ar-SA');
+  cmpItemTotals();
+}
+function cmpItemTotals(){
+  let tm=0,ta=0;
+  document.querySelectorAll('#cmp-items-tbody tr').forEach(tr=>{const unit=parseFloat(tr.querySelector('.ci-unit')?.value)||0;tm+=unit;ta+=unit*12;});
+  document.getElementById('ci-total-monthly').textContent=tm.toLocaleString('ar-SA');
+  document.getElementById('ci-total-annual').textContent=ta.toLocaleString('ar-SA');
+}
+function cmpSaveData(){
+  const title=document.getElementById('cmp-title').value||'مقارنة بدون عنوان';
+  const date=document.getElementById('cmp-date').value;
+  const companies=Array.from(document.querySelectorAll('#cmp-tbody tr')).map((tr,i)=>{
+    const m=parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;
+    return{num:i+1,name:tr.querySelector('.cmp-name')?.value||'',services:tr.querySelector('.cmp-services')?.value||'',monthly:m,annual:m*12,diff:tr.querySelector('.cmp-diff')?.textContent||'—',pct:tr.querySelector('.cmp-pct')?.textContent||'—'};
+  });
+  const items=Array.from(document.querySelectorAll('#cmp-items-tbody tr')).map((tr,i)=>{
+    const unit=parseFloat(tr.querySelector('.ci-unit')?.value)||0;
+    return{num:i+1,name:tr.querySelector('.ci-name')?.value||'',unit,monthly:unit,annual:unit*12};
+  });
+  const data={id:Date.now(),title,date,companies,items};
+  cmpSaved.unshift(data);
+  localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
+  renderCmpSaved();toast('تم حفظ المقارنة');
+}
+function renderCmpSaved(){
+  const el=document.getElementById('cmp-saved-list');
+  if(!el)return;
+  el.innerHTML=cmpSaved.map((s,i)=>`
+    <div class="saved-item">
+      <div class="saved-item-info"><strong>${s.title}</strong><span style="color:var(--sub)">${s.date||''}</span></div>
+      <div class="saved-item-actions">
+        <button class="btn btn-green btn-sm" onclick="cmpExcelById(${i})">Excel</button>
+        <button class="btn btn-gray btn-sm" onclick="cmpDel(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+function cmpDel(i){cmpSaved.splice(i,1);localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));renderCmpSaved();}
+function cmpExcelById(i){
+  const s=cmpSaved[i];if(!s)return;
+  // أعد بناء الجداول مؤقتاً من البيانات المحفوظة وصدّر
+  cmpExcelFromData(s.title,s.date,s.companies,s.items);
+}
+
+/* ══════════════ INIT ══════════════ */
+function init(){
+  const today=new Date().toISOString().split('T')[0];
+  ['po-date','rfq-date','dn-date','pc-from','pc-to','cmp-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=today;});
+  document.getElementById('po-del-email').value='mialjamaan@nouradriving.sa';
+  document.getElementById('po-del-phone').value='+966538549436';
+  document.getElementById('po-del-addr').value='Saudi Arabia, Riyadh, King Khaled Intl. Road';
+  document.getElementById('po-del-vat').value='314378311300003';
+  // استرجع البيانات المحفوظة
+  rfqSaved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+  dnSaved=JSON.parse(localStorage.getItem('dn_saved')||'[]');
+  cmpSaved=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+  poSaved=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
+  pcGroups=JSON.parse(localStorage.getItem('pc_groups')||'{}');
+  expenses=JSON.parse(localStorage.getItem('expenses_local')||'[]');
+  initBudget();
+  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();renderPCGroups();
 }
 
 </script>
