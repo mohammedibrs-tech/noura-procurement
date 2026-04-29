@@ -1000,7 +1000,7 @@ function poPrintData(d){
         <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Contact No./ رقم التواصل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.phone||'—'}</td></tr>
         <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Email/ الإيميل</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.email||'—'}</td></tr>
       </table>
-      <table style="border-collapse:collapse;font-size:11px;width:100%;">
+      <table style="border-collapse:collapse;font-size:11px;width:100%;direction:ltr;">
         <tr><td colspan="2" style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;text-align:center;">التسليم / Delivery To</td></tr>
         <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;white-space:nowrap;">Delivery To/ التسليم إلى</td><td style="border:1px solid #ccc;padding:5px 8px;">Noura Driving Company</td></tr>
         <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">VAT Number/ الرقم الضريبي</td><td style="border:1px solid #ccc;padding:5px 8px;">${d.del_vat||'310230667700003'}</td></tr>
@@ -1011,7 +1011,7 @@ function poPrintData(d){
     </div>
 
     <!-- جدول البنود -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;direction:ltr;">
       <thead>
         <tr style="background:#244062;color:#fff;">
           <th style="border:1px solid #ccc;padding:6px 4px;text-align:center;">S.N<br>الرقم</th>
@@ -1028,14 +1028,14 @@ function poPrintData(d){
     </table>
 
     <!-- المجاميع -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;direction:ltr;">
       <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">Amount / المجموع</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
       <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">TAX / الضريبة</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${tax.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
       <tr><td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;color:#244062;">Net Amount / المبلغ الأصلي</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:700;color:#244062;">${tot.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
     </table>
 
     <!-- الشروط -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;direction:ltr;">
       <tr><td colspan="2" style="background:#244062;color:#fff;padding:6px 10px;font-weight:700;">Terms & Conditions / الشروط والأحكام</td></tr>
       <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;width:30%;">Payment/ الدفع</td><td style="border:1px solid #ccc;padding:5px 8px;">100% after delivery</td></tr>
       <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f5f5f5;font-weight:600;">Delivery Time/ مدة التسليم</td><td style="border:1px solid #ccc;padding:5px 8px;">1 week</td></tr>
