@@ -1494,13 +1494,12 @@ function cmpUpdateName(id,val){
 }
 function cmpUpdateRow(id,ri,field,val){
   const co=cmpCompanies.find(c=>c.id===id);
-  if(!co)return;
-  co.rows[ri][field]=field==='cat'||field==='nat'?val:parseFloat(val)||0;
-  // تحديث الإجمالي في الخلية
-  const tbody=document.getElementById('cmp-rows-'+id);
-  if(tbody){
-    const tds=tbody.rows[ri]?.cells;
-    if(tds&&tds[4]) tds[4].textContent=(co.rows[ri].count*(co.rows[ri].unitPrice||0)).toLocaleString('ar-SA');
+  if(!co||!co.rows[ri])return;
+  if(field==='cat'||field==='nat'||field==='vatType') co.rows[ri][field]=val;
+  else co.rows[ri][field]=parseFloat(val)||0;
+  // إذا تغير vatType أو الأرقام أعد رسم الشركة
+  if(field==='vatType'||field==='unitPrice'||field==='count'){
+    renderCmpCompanies();
   }
 }
 function cmpAddRow(id){
