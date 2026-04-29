@@ -445,6 +445,86 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 <div class="page" id="page-cmp">
   <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
 
+  <!-- معلومات المقارنة -->
+  <div class="card">
+    <div class="card-header"><h3>معلومات المقارنة</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
+        <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- الشركات -->
+  <div class="card">
+    <div class="card-header">
+      <h3>الشركات والبنود</h3>
+      <button class="btn btn-primary btn-sm" onclick="cmpAddCompany()">+ إضافة شركة</button>
+    </div>
+    <div class="card-body" id="cmp-companies-body">
+      <!-- تُضاف الشركات ديناميكياً -->
+    </div>
+  </div>
+
+  <!-- تصدير وحفظ -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="cmpSaveData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
+      حفظ المقارنة
+    </button>
+    <button class="btn btn-green" onclick="cmpExcel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+      تصدير Excel
+    </button>
+  </div>
+
+  <!-- المقارنات المحفوظة -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>المقارنات المحفوظة</h3></div>
+    <div class="card-body"><div class="saved-list" id="cmp-saved-list"></div></div>
+  </div>
+</div>
+
+<!-- ══ Petty Cash ══ -->
+<div class="page" id="page-pc">
+  <div class="page-header"><h1>Petty Cash</h1><p>تجميع فواتير كل شهر في ملف PDF واحد</p></div>
+
+  <!-- إضافة مجموعة جديدة -->
+  <div class="card">
+    <div class="card-header"><h3>إضافة مجموعة فواتير</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>الشهر</label>
+          <select id="pc-month">
+            <option value="01">يناير</option><option value="02">فبراير</option>
+            <option value="03">مارس</option><option value="04">أبريل</option>
+            <option value="05">مايو</option><option value="06">يونيو</option>
+            <option value="07">يوليو</option><option value="08">أغسطس</option>
+            <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
+            <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div class="field"><label>السنة</label>
+          <input id="pc-year" type="number" placeholder="2026" value="2026">
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>رفع ملفات PDF</label>
+        <input type="file" id="pc-upload" accept=".pdf" multiple onchange="pcAdd(this)" style="margin-top:4px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- المجموعات المحفوظة -->
+  <div id="pc-groups"></div>
+</div>
+
+
+<!-- ══ مقارنة الأسعار ══ -->
+<div class="page" id="page-cmp">
+  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
+
   <!-- عنوان المقارنة -->
   <div class="card">
     <div class="card-header"><h3>معلومات المقارنة</h3></div>
@@ -1239,98 +1319,267 @@ function dnExcelData(d){
 }
 
 /* ══════════════ مقارنة الأسعار ══════════════ */
-let cmpRowCount=2;
-let cmpItemCount=1;
-let cmpSaved=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+let cmpCompanies = []; // [{id, name, rows:[{cat,nat,count,unitPrice}], terms:[str]}]
+let cmpSaved = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+let cmpEditId = null; // للتعديل
 
 function cmpAddCompany(){
-  cmpRowCount++;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${cmpRowCount}</td>
-    <td><input class="cmp-name" placeholder="اسم الشركة" style="min-width:120px;"></td>
-    <td><input class="cmp-services" placeholder="الخدمات" style="min-width:150px;"></td>
-    <td><input class="cmp-monthly" type="number" placeholder="0" oninput="cmpCalc()" style="width:100px;"></td>
-    <td class="cmp-annual" style="font-weight:700;">0</td>
-    <td class="cmp-diff" style="color:var(--sub);">—</td>
-    <td class="cmp-pct" style="color:var(--sub);">—</td>
-    <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-  document.getElementById('cmp-tbody').appendChild(tr);
+  const id = Date.now();
+  cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0}], terms:['']});
+  renderCmpCompanies();
 }
-function cmpDelRow(btn){btn.closest('tr').remove();cmpCalc();}
-function cmpCalc(){
-  const rows=Array.from(document.querySelectorAll('#cmp-tbody tr'));
-  const data=rows.map(tr=>{const m=parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;return{tr,monthly:m,annual:m*12};});
-  data.forEach(d=>d.tr.querySelector('.cmp-annual').textContent=d.annual.toLocaleString('ar-SA'));
-  const min=Math.min(...data.map(d=>d.annual).filter(v=>v>0));
-  data.forEach(d=>{
-    if(d.annual<=0){d.tr.querySelector('.cmp-diff').textContent='—';d.tr.querySelector('.cmp-pct').textContent='—';return;}
-    const diff=d.annual-min;const pct=min>0?((diff/d.annual)*100).toFixed(1):0;
-    const dc=d.tr.querySelector('.cmp-diff'),pc=d.tr.querySelector('.cmp-pct');
-    if(diff===0){dc.textContent='—';pc.textContent='الأفضل ★';pc.style.color='var(--green)';pc.style.fontWeight='700';d.tr.style.background='rgba(39,103,73,0.07)';}
-    else{dc.textContent='+'+diff.toLocaleString('ar-SA');dc.style.color='var(--red)';pc.textContent=pct+'%';pc.style.color='var(--red)';d.tr.style.background='';}
-  });
-  const best=data.find(d=>d.annual===min&&min>0);
-  const el=document.getElementById('cmp-best');
-  if(best){const name=best.tr.querySelector('.cmp-name')?.value||'الشركة الأولى';el.style.display='block';el.textContent=`✅ الأفضل سعراً: ${name} — ${min.toLocaleString('ar-SA')} ر.س سنوياً`;}
-  else el.style.display='none';
+
+function cmpDelCompany(id){
+  cmpCompanies = cmpCompanies.filter(c=>c.id!==id);
+  renderCmpCompanies();
 }
-function cmpAddItem(){
-  cmpItemCount++;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${cmpItemCount}</td>
-    <td><input class="ci-name" placeholder="اسم البند" style="min-width:160px;"></td>
-    <td><input class="ci-unit" type="number" placeholder="0" oninput="cmpItemCalc(this)" style="width:100px;"></td>
-    <td class="ci-monthly" style="font-weight:700;">0</td>
-    <td class="ci-annual" style="font-weight:700;color:var(--primary);">0</td>
-    <td><button onclick="cmpDelItem(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-  document.getElementById('cmp-items-tbody').appendChild(tr);
+
+function renderCmpCompanies(){
+  const el = document.getElementById('cmp-companies-body');
+  if(!cmpCompanies.length){
+    el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">اضغط "+ إضافة شركة" للبدء</div>';
+    return;
+  }
+  el.innerHTML = cmpCompanies.map(co=>`
+    <div style="border:2px solid #244062;border-radius:10px;margin-bottom:16px;overflow:hidden;">
+      <!-- هيدر الشركة -->
+      <div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <input value="${co.name}" oninput="cmpUpdateName(${co.id},this.value)"
+          placeholder="اسم الشركة" 
+          style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">
+        <button onclick="cmpDelCompany(${co.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف الشركة</button>
+      </div>
+
+      <div style="padding:14px;">
+        <!-- جدول البنود -->
+        <div style="font-weight:700;color:#244062;margin-bottom:8px;font-size:12px;">بنود الخدمة</div>
+        <table class="tbl" style="margin-bottom:8px;">
+          <thead>
+            <tr>
+              <th>الفئة / Category</th>
+              <th>الجنسية / Nationality</th>
+              <th>العدد / Count</th>
+              <th>القيمة الشهرية الإفرادية</th>
+              <th>القيمة الشهرية الكلية</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cmp-rows-${co.id}">
+            ${co.rows.map((r,ri)=>`
+              <tr>
+                <td><input value="${r.cat}" oninput="cmpUpdateRow(${co.id},${ri},'cat',this.value)" placeholder="مثال: حارس أمن" style="width:100%;border:none;background:transparent;"></td>
+                <td><input value="${r.nat}" oninput="cmpUpdateRow(${co.id},${ri},'nat',this.value)" placeholder="سعودي/غير سعودي" style="width:100%;border:none;background:transparent;"></td>
+                <td><input type="number" value="${r.count}" oninput="cmpUpdateRow(${co.id},${ri},'count',this.value)" style="width:60px;border:none;background:transparent;text-align:center;"></td>
+                <td><input type="number" value="${r.unitPrice}" oninput="cmpUpdateRow(${co.id},${ri},'unitPrice',this.value)" style="width:100px;border:none;background:transparent;text-align:right;"></td>
+                <td style="text-align:right;font-weight:700;color:#244062;">${(r.count*(r.unitPrice||0)).toLocaleString('ar-SA')}</td>
+                <td><button onclick="cmpDelRow(${co.id},${ri})" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <button class="btn btn-gray btn-sm" onclick="cmpAddRow(${co.id})">+ إضافة صف</button>
+          <div style="font-size:13px;font-weight:700;">
+            الإجمالي الشهري: <span style="color:#244062;">${co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0).toLocaleString('ar-SA')} ر.س</span>
+            &nbsp;|&nbsp;
+            الإجمالي السنوي: <span style="color:#244062;">${(co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)*12).toLocaleString('ar-SA')} ر.س</span>
+          </div>
+        </div>
+
+        <!-- بنود العقد -->
+        <div style="font-weight:700;color:#244062;margin-bottom:8px;font-size:12px;">بنود العقد</div>
+        <div id="cmp-terms-${co.id}">
+          ${co.terms.map((t,ti)=>`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-weight:700;color:#244062;min-width:20px;">${ti+1}.</span>
+              <input value="${t}" oninput="cmpUpdateTerm(${co.id},${ti},this.value)"
+                placeholder="أدخل بند العقد..."
+                style="flex:1;padding:6px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;">
+              <button onclick="cmpDelTerm(${co.id},${ti})" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button>
+            </div>`).join('')}
+        </div>
+        <button class="btn btn-gray btn-sm" onclick="cmpAddTerm(${co.id})" style="margin-top:4px;">+ إضافة بند</button>
+      </div>
+    </div>`).join('');
+
+  // أضف ملخص المقارنة
+  if(cmpCompanies.length > 1){
+    const tots = cmpCompanies.map(co=>({name:co.name||'—',total:co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)}));
+    const min = Math.min(...tots.map(t=>t.total).filter(v=>v>0));
+    el.innerHTML += `<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">
+      <div style="font-weight:700;color:#276749;margin-bottom:10px;font-size:13px;">📊 ملخص المقارنة</div>
+      ${tots.map(t=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">
+        <span>${t.name}</span>
+        <span style="font-weight:700;color:${t.total===min&&min>0?'#276749':'#C53030'};">
+          ${t.total.toLocaleString('ar-SA')} ر.س/شهر
+          ${t.total===min&&min>0?' ★ الأفضل':''}
+        </span>
+      </div>`).join('')}
+    </div>`;
+  }
 }
-function cmpDelItem(btn){btn.closest('tr').remove();cmpItemTotals();}
-function cmpItemCalc(inp){
-  const tr=inp.closest('tr');const unit=parseFloat(inp.value)||0;
-  tr.querySelector('.ci-monthly').textContent=unit.toLocaleString('ar-SA');
-  tr.querySelector('.ci-annual').textContent=(unit*12).toLocaleString('ar-SA');
-  cmpItemTotals();
+
+function cmpUpdateName(id,val){
+  const co=cmpCompanies.find(c=>c.id===id);if(co)co.name=val;
 }
-function cmpItemTotals(){
-  let tm=0,ta=0;
-  document.querySelectorAll('#cmp-items-tbody tr').forEach(tr=>{const unit=parseFloat(tr.querySelector('.ci-unit')?.value)||0;tm+=unit;ta+=unit*12;});
-  document.getElementById('ci-total-monthly').textContent=tm.toLocaleString('ar-SA');
-  document.getElementById('ci-total-annual').textContent=ta.toLocaleString('ar-SA');
+function cmpUpdateRow(id,ri,field,val){
+  const co=cmpCompanies.find(c=>c.id===id);
+  if(!co)return;
+  co.rows[ri][field]=field==='cat'||field==='nat'?val:parseFloat(val)||0;
+  // تحديث الإجمالي في الخلية
+  const tbody=document.getElementById('cmp-rows-'+id);
+  if(tbody){
+    const tds=tbody.rows[ri]?.cells;
+    if(tds&&tds[4]) tds[4].textContent=(co.rows[ri].count*(co.rows[ri].unitPrice||0)).toLocaleString('ar-SA');
+  }
 }
+function cmpAddRow(id){
+  const co=cmpCompanies.find(c=>c.id===id);
+  if(co){co.rows.push({cat:'',nat:'',count:1,unitPrice:0});renderCmpCompanies();}
+}
+function cmpDelRow(id,ri){
+  const co=cmpCompanies.find(c=>c.id===id);
+  if(co&&co.rows.length>1){co.rows.splice(ri,1);renderCmpCompanies();}
+}
+function cmpUpdateTerm(id,ti,val){
+  const co=cmpCompanies.find(c=>c.id===id);if(co)co.terms[ti]=val;
+}
+function cmpAddTerm(id){
+  const co=cmpCompanies.find(c=>c.id===id);
+  if(co){co.terms.push('');renderCmpCompanies();}
+}
+function cmpDelTerm(id,ti){
+  const co=cmpCompanies.find(c=>c.id===id);
+  if(co&&co.terms.length>1){co.terms.splice(ti,1);renderCmpCompanies();}
+}
+
 function cmpSaveData(){
   const title=document.getElementById('cmp-title').value||'مقارنة بدون عنوان';
   const date=document.getElementById('cmp-date').value;
-  const companies=Array.from(document.querySelectorAll('#cmp-tbody tr')).map((tr,i)=>{
-    const m=parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;
-    return{num:i+1,name:tr.querySelector('.cmp-name')?.value||'',services:tr.querySelector('.cmp-services')?.value||'',monthly:m,annual:m*12,diff:tr.querySelector('.cmp-diff')?.textContent||'—',pct:tr.querySelector('.cmp-pct')?.textContent||'—'};
-  });
-  const items=Array.from(document.querySelectorAll('#cmp-items-tbody tr')).map((tr,i)=>{
-    const unit=parseFloat(tr.querySelector('.ci-unit')?.value)||0;
-    return{num:i+1,name:tr.querySelector('.ci-name')?.value||'',unit,monthly:unit,annual:unit*12};
-  });
-  const data={id:Date.now(),title,date,companies,items};
-  cmpSaved.unshift(data);
+  if(!cmpCompanies.length){toast('أضف شركة واحدة على الأقل',true);return;}
+  if(cmpEditId){
+    // تعديل موجود
+    const idx=cmpSaved.findIndex(s=>s.id===cmpEditId);
+    if(idx!==-1) cmpSaved[idx]={id:cmpEditId,title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))};
+    cmpEditId=null;
+    toast('تم تحديث المقارنة');
+  }else{
+    cmpSaved.unshift({id:Date.now(),title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))});
+    toast('تم حفظ المقارنة');
+  }
   localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
-  renderCmpSaved();toast('تم حفظ المقارنة');
+  renderCmpSaved();
 }
+
 function renderCmpSaved(){
   const el=document.getElementById('cmp-saved-list');
   if(!el)return;
+  if(!cmpSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد مقارنات محفوظة</div>';return;}
   el.innerHTML=cmpSaved.map((s,i)=>`
     <div class="saved-item">
-      <div class="saved-item-info"><strong>${s.title}</strong><span style="color:var(--sub)">${s.date||''}</span></div>
+      <div class="saved-item-info"><strong>${s.title}</strong><span style="color:var(--sub)">${s.date||''} — ${s.companies?.length||0} شركات</span></div>
       <div class="saved-item-actions">
+        <button class="btn btn-primary btn-sm" onclick="cmpLoad(${i})">تعديل</button>
         <button class="btn btn-green btn-sm" onclick="cmpExcelById(${i})">Excel</button>
         <button class="btn btn-gray btn-sm" onclick="cmpDel(${i})">×</button>
       </div>
     </div>`).join('');
 }
-function cmpDel(i){cmpSaved.splice(i,1);localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));renderCmpSaved();}
+
+function cmpLoad(i){
+  const s=cmpSaved[i];if(!s)return;
+  document.getElementById('cmp-title').value=s.title||'';
+  document.getElementById('cmp-date').value=s.date||'';
+  cmpCompanies=JSON.parse(JSON.stringify(s.companies||[]));
+  cmpEditId=s.id;
+  renderCmpCompanies();
+  document.getElementById('page-cmp').scrollIntoView({behavior:'smooth'});
+  toast('تم تحميل المقارنة للتعديل');
+}
+
+function cmpDel(i){
+  if(!confirm('حذف هذه المقارنة؟'))return;
+  cmpSaved.splice(i,1);
+  localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
+  renderCmpSaved();
+}
+
+function cmpExcel(){
+  const title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
+  const date=document.getElementById('cmp-date').value||new Date().toISOString().split('T')[0];
+  cmpExcelFromData(title,date,cmpCompanies);
+}
+
 function cmpExcelById(i){
   const s=cmpSaved[i];if(!s)return;
-  // أعد بناء الجداول مؤقتاً من البيانات المحفوظة وصدّر
-  cmpExcelFromData(s.title,s.date,s.companies,s.items);
+  cmpExcelFromData(s.title,s.date,s.companies||[]);
+}
+
+function cmpExcelFromData(title,date,companies){
+  const wb=XLSX.utils.book_new();
+  const C={rgb:'244062'},W={rgb:'FFFFFF'},LB={rgb:'EBF8FA'},GR={rgb:'276749'},RD={rgb:'C53030'};
+  const hS={font:{name:'Calibri',sz:11,bold:true,color:W},fill:{patternType:'solid',fgColor:C},alignment:{horizontal:'center'},border:{top:{style:'thin',color:{rgb:'244062'}},bottom:{style:'thin',color:{rgb:'244062'}},left:{style:'thin',color:{rgb:'244062'}},right:{style:'thin',color:{rgb:'244062'}}}};
+  const sc=(ws,a,v,s)=>{if(!ws[a])ws[a]={};ws[a].v=v;ws[a].t=typeof v==='number'?'n':'s';ws[a].w=String(v);if(s)ws[a].s=s;};
+
+  // ورقة ملخص المقارنة
+  const summaryData=[[title],['التاريخ: '+date],[''],['الشركة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الأفضل']];
+  const tots=companies.map(co=>({name:co.name||'—',monthly:co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0)}));
+  const minV=Math.min(...tots.map(t=>t.monthly).filter(v=>v>0));
+  tots.forEach(t=>summaryData.push([t.name,t.monthly,t.monthly*12,t.monthly===minV&&minV>0?'★ الأفضل':'']));
+  const ws0=XLSX.utils.aoa_to_sheet(summaryData);
+  ws0['!cols']=[{wch:30},{wch:22},{wch:22},{wch:15}];
+  ws0['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:1,c:0},e:{r:1,c:3}}];
+  sc(ws0,'A1',title,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:{rgb:'1A2B4A'}},alignment:{horizontal:'center'}});
+  ['A4','B4','C4','D4'].forEach((a,i)=>sc(ws0,a,['الشركة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الأفضل'][i],hS));
+  tots.forEach((t,i)=>{
+    const r=5+i;const isBest=t.monthly===minV&&minV>0;const bg=isBest?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
+    sc(ws0,`A${r}`,t.name,{font:{name:'Calibri',sz:11,bold:isBest,color:{rgb:'1A2B4A'}},fill:{patternType:'solid',fgColor:bg},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}}}});
+    sc(ws0,`B${r}`,t.monthly,{font:{name:'Calibri',sz:11,bold:true,color:isBest?GR:RD},fill:{patternType:'solid',fgColor:bg}});
+    sc(ws0,`C${r}`,t.monthly*12,{font:{name:'Calibri',sz:11,bold:true,color:isBest?GR:RD},fill:{patternType:'solid',fgColor:bg}});
+    sc(ws0,`D${r}`,isBest?'★ الأفضل':'',{font:{name:'Calibri',sz:11,bold:true,color:GR},fill:{patternType:'solid',fgColor:bg}});
+  });
+  XLSX.utils.book_append_sheet(wb,ws0,'ملخص المقارنة');
+
+  // ورقة لكل شركة
+  companies.forEach(co=>{
+    const name=(co.name||'شركة').substring(0,28);
+    const monthly=co.rows.reduce((s,r)=>s+(r.count*(r.unitPrice||0)),0);
+    const data=[
+      [co.name||'—'],[''],
+      ['الفئة','الجنسية','العدد','القيمة الشهرية الإفرادية','القيمة الشهرية الكلية'],
+      ...co.rows.map(r=>[r.cat||'',r.nat||'',r.count,r.unitPrice||0,(r.count*(r.unitPrice||0))]),
+      ['','','','الإجمالي الشهري',monthly],
+      ['','','','الإجمالي السنوي',monthly*12],
+      [''],['بنود العقد'],
+      ...co.terms.map((t,i)=>[`${i+1}. ${t}`])
+    ];
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    ws['!cols']=[{wch:25},{wch:18},{wch:10},{wch:25},{wch:22}];
+    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
+    sc(ws,'A1',co.name||'—',{font:{name:'Calibri',sz:13,bold:true,color:W},fill:{patternType:'solid',fgColor:C},alignment:{horizontal:'center'}});
+    ['A3','B3','C3','D3','E3'].forEach((a,i)=>sc(ws,a,['الفئة','الجنسية','العدد','القيمة الشهرية الإفرادية','القيمة الشهرية الكلية'][i],hS));
+    co.rows.forEach((r,i)=>{
+      const row=4+i;const bg=i%2===0?{rgb:'FFFFFF'}:LB;
+      sc(ws,`A${row}`,r.cat||'',{font:{name:'Calibri',sz:11},fill:{patternType:'solid',fgColor:bg},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}}}});
+      sc(ws,`B${row}`,r.nat||'',{font:{name:'Calibri',sz:11},fill:{patternType:'solid',fgColor:bg}});
+      sc(ws,`C${row}`,r.count,{font:{name:'Calibri',sz:11},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+      sc(ws,`D${row}`,r.unitPrice||0,{font:{name:'Calibri',sz:11},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+      sc(ws,`E${row}`,r.count*(r.unitPrice||0),{font:{name:'Calibri',sz:11,bold:true,color:C},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    });
+    const totRow=4+co.rows.length;
+    sc(ws,`D${totRow}`,'الإجمالي الشهري',{font:{name:'Calibri',sz:11,bold:true,color:W},fill:{patternType:'solid',fgColor:C}});
+    sc(ws,`E${totRow}`,monthly,{font:{name:'Calibri',sz:12,bold:true,color:W},fill:{patternType:'solid',fgColor:C}});
+    sc(ws,`D${totRow+1}`,'الإجمالي السنوي',{font:{name:'Calibri',sz:11,bold:true,color:W},fill:{patternType:'solid',fgColor:{rgb:'1A2B4A'}}});
+    sc(ws,`E${totRow+1}`,monthly*12,{font:{name:'Calibri',sz:12,bold:true,color:W},fill:{patternType:'solid',fgColor:{rgb:'1A2B4A'}}});
+    // بنود العقد
+    const termsStart=totRow+4;
+    sc(ws,`A${termsStart}`,'بنود العقد',{font:{name:'Calibri',sz:11,bold:true,color:W},fill:{patternType:'solid',fgColor:C}});
+    ws['!merges'].push({s:{r:termsStart-1,c:0},e:{r:termsStart-1,c:4}});
+    co.terms.forEach((t,i)=>sc(ws,`A${termsStart+1+i}`,`${i+1}. ${t}`,{font:{name:'Calibri',sz:11}}));
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  });
+
+  XLSX.writeFile(wb,`مقارنة_${title}.xlsx`);
+  toast('تم التصدير ✅');
 }
 
 /* ══════════════ INIT ══════════════ */
