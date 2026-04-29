@@ -1461,13 +1461,19 @@ function cmpSaveData(){
     const idx=cmpSaved.findIndex(s=>s.id===cmpEditId);
     if(idx!==-1) cmpSaved[idx]={id:cmpEditId,title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))};
     cmpEditId=null;
-    toast('تم تحديث المقارنة');
+    toast('تم تحديث المقارنة ✅');
   }else{
     cmpSaved.unshift({id:Date.now(),title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))});
-    toast('تم حفظ المقارنة');
+    toast('تم حفظ المقارنة ✅');
   }
   localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
   renderCmpSaved();
+  // صفّر للمقارنة الجديدة
+  cmpCompanies=[];
+  cmpEditId=null;
+  document.getElementById('cmp-title').value='';
+  document.getElementById('cmp-date').value=new Date().toISOString().split('T')[0];
+  renderCmpCompanies();
 }
 
 function renderCmpSaved(){
