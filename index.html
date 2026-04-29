@@ -744,21 +744,94 @@ function renderTopItems(){
 }
 
 function expExcel(){
-  const wb=XLSX.utils.book_new();
-  const data=[
+  const wb = XLSX.utils.book_new();
+  const spent = expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const remain = budgetTotal - spent;
+  const savedAmt = Math.max(0, budgetTarget - spent);
+  const savePct = budgetTarget>0 ? ((savedAmt/budgetTarget)*100).toFixed(1)+'%' : '0%';
+
+  // ── ثوابت الألوان ──
+  const C  = {rgb:'1DA9BD'}; // اللون الرئيسي
+  const W  = {rgb:'FFFFFF'};
+  const NK = {rgb:'1A2B4A'}; // navy
+  const GR = {rgb:'276749'}; // أخضر
+  const RD = {rgb:'C53030'}; // أحمر
+  const LB = {rgb:'EBF8FA'}; // فاتح
+
+  const hFont = (c={})=>({name:'Calibri',sz:11,bold:true,color:c});
+  const bFont = (c={})=>({name:'Calibri',sz:11,bold:false,color:c});
+  const fill  = (c)=>({patternType:'solid',fgColor:c});
+  const border= {top:{style:'thin',color:{rgb:'E2E8F0'}},bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}};
+  const aR = {horizontal:'right'};
+  const aC = {horizontal:'center'};
+
+  const sc=(ws,addr,v,s)=>{
+    if(!ws[addr]) ws[addr]={};
+    ws[addr].v=v; ws[addr].t=typeof v==='number'?'n':'s'; ws[addr].w=String(v);
+    if(s) ws[addr].s=s;
+  };
+
+  // ── بيانات الجدول ──
+  const rows=[
     ['إدارة المشتريات — سجل المصروفات'],
-    ['العهدة الكلية',budgetTotal,'الهدف',budgetTarget],
     [''],
-    ['الإدارة','البند','المبلغ','التاريخ','ملاحظات'],
-    ...expenses.map(e=>[e.department,e.item_name,parseFloat(e.amount)||0,e.expense_date,e.notes]),
+    ['إجمالي العهدة','المصروف','المتبقي','الهدف','نسبة التوفير'],
+    [budgetTotal, spent, remain, budgetTarget, savePct],
     [''],
-    ['الإجمالي','','=SUM(C5:C'+( 4+expenses.length)+')','','']
+    ['الإدارة','البند','المبلغ (ر.س)','التاريخ','ملاحظات'],
+    ...expenses.map(e=>[e.department||'—',e.item_name,parseFloat(e.amount)||0,e.expense_date||'—',e.notes||'—']),
+    [''],
+    ['','','الإجمالي','',''],
+    ['','',spent,'',''],
   ];
-  const ws=XLSX.utils.aoa_to_sheet(data);
-  ws['!cols']=[{wch:20},{wch:25},{wch:15},{wch:15},{wch:30}];
-  XLSX.utils.book_append_sheet(wb,ws,'المصروفات');
-  XLSX.writeFile(wb,'العهدة_المالية.xlsx');
-  toast('تم التصدير');
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:28},{wch:18},{wch:16},{wch:32}];
+
+  // ── عنوان رئيسي ──
+  sc(ws,'A1',rows[0][0],{font:hFont(W),fill:fill(NK),alignment:{horizontal:'center'},border});
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
+
+  // ── هيدر KPIs ──
+  ['A3','B3','C3','D3','E3'].forEach((a,i)=>{
+    sc(ws,a,rows[2][i],{font:hFont(W),fill:fill(C),alignment:aC,border});
+  });
+
+  // ── قيم KPIs ──
+  const kpiColors=[NK,RD,GR,{rgb:'7C3AED'},{rgb:'0D7A8A'}];
+  ['A4','B4','C4','D4','E4'].forEach((a,i)=>{
+    sc(ws,a,rows[3][i],{font:{name:'Calibri',sz:13,bold:true,color:kpiColors[i]},fill:fill(LB),alignment:aC,border});
+  });
+
+  // ── هيدر الجدول ──
+  const hRow=5; // row index 0-based = 5 (row 6)
+  ['A','B','C','D','E'].forEach((c,i)=>{
+    sc(ws,c+(hRow+1),['الإدارة','البند','المبلغ (ر.س)','التاريخ','ملاحظات'][i],
+      {font:hFont(W),fill:fill(C),alignment:aR,border});
+  });
+
+  // ── صفوف البيانات ──
+  expenses.forEach((e,i)=>{
+    const r=hRow+2+i;
+    const bg=i%2===0?fill({rgb:'FFFFFF'}):fill(LB);
+    sc(ws,`A${r}`,e.department||'—',{font:bFont(NK),fill:bg,alignment:aR,border});
+    sc(ws,`B${r}`,e.item_name,{font:bFont(NK),fill:bg,alignment:aR,border});
+    sc(ws,`C${r}`,parseFloat(e.amount)||0,{font:{name:'Calibri',sz:11,bold:true,color:RD},fill:bg,alignment:aR,border});
+    sc(ws,`D${r}`,e.expense_date||'—',{font:bFont({rgb:'64748B'}),fill:bg,alignment:aC,border});
+    sc(ws,`E${r}`,e.notes||'—',{font:bFont({rgb:'64748B'}),fill:bg,alignment:aR,border});
+  });
+
+  // ── صف الإجمالي ──
+  const totR=hRow+2+expenses.length+1;
+  sc(ws,`A${totR}`,'',{fill:fill(C),border});
+  sc(ws,`B${totR}`,'الإجمالي الكلي',{font:hFont(W),fill:fill(C),alignment:aR,border});
+  sc(ws,`C${totR}`,spent,{font:{name:'Calibri',sz:12,bold:true,color:W},fill:fill(C),alignment:aR,border});
+  sc(ws,`D${totR}`,'',{fill:fill(C),border});
+  sc(ws,`E${totR}`,'',{fill:fill(C),border});
+
+  XLSX.utils.book_append_sheet(wb,ws,'العهدة المالية');
+  XLSX.writeFile(wb,'العهدة_المالية.xlsx',{bookSST:false,cellStyles:true});
+  toast('تم التصدير ✅');
 }
 
 /* ══════════════ PO ══════════════ */
@@ -1338,102 +1411,106 @@ function cmpItemTotals(){
 
 function cmpExcel(){
   const title = document.getElementById('cmp-title').value || 'مقارنة الأسعار';
-  const date  = document.getElementById('cmp-date').value  || new Date().toISOString().split('T')[0];
-
+  const date  = document.getElementById('cmp-date').value || new Date().toISOString().split('T')[0];
   const wb = XLSX.utils.book_new();
 
+  // ── ثوابت ──
+  const C  = {rgb:'1DA9BD'};
+  const W  = {rgb:'FFFFFF'};
+  const NK = {rgb:'1A2B4A'};
+  const GR = {rgb:'276749'};
+  const RD = {rgb:'C53030'};
+  const LB = {rgb:'EBF8FA'};
+  const hS = (fill,color=W)=>({font:{name:'Calibri',sz:11,bold:true,color},fill:{patternType:'solid',fgColor:fill},alignment:{horizontal:'center'},border:{top:{style:'thin',color:{rgb:'1DA9BD'}},bottom:{style:'thin',color:{rgb:'1DA9BD'}},left:{style:'thin',color:{rgb:'1DA9BD'}},right:{style:'thin',color:{rgb:'1DA9BD'}}}});
+  const dS = (fillC,fontC=NK,bold=false)=>({font:{name:'Calibri',sz:11,bold,color:fontC},fill:{patternType:'solid',fgColor:fillC},alignment:{horizontal:'right'},border:{top:{style:'thin',color:{rgb:'E2E8F0'}},bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}});
+  const sc=(ws,a,v,s)=>{ if(!ws[a]) ws[a]={}; ws[a].v=v; ws[a].t=typeof v==='number'?'n':'s'; ws[a].w=String(v); if(s) ws[a].s=s; };
+
   /* ── ورقة 1: مقارنة الشركات ── */
-  const cmpRows = Array.from(document.querySelectorAll('#cmp-tbody tr')).map((tr,i) => {
+  const cmpRows = Array.from(document.querySelectorAll('#cmp-tbody tr')).map((tr,i)=>{
     const m = parseFloat(tr.querySelector('.cmp-monthly')?.value)||0;
-    return [
-      i+1,
-      tr.querySelector('.cmp-name')?.value||'',
-      tr.querySelector('.cmp-services')?.value||'',
-      m,
-      m*12,
-      tr.querySelector('.cmp-diff')?.textContent||'—',
-      tr.querySelector('.cmp-pct')?.textContent||'—'
-    ];
+    return {num:i+1, name:tr.querySelector('.cmp-name')?.value||'', services:tr.querySelector('.cmp-services')?.value||'', monthly:m, annual:m*12, diff:tr.querySelector('.cmp-diff')?.textContent||'—', pct:tr.querySelector('.cmp-pct')?.textContent||'—'};
   });
+  const bestRow = cmpRows.find(r=>r.pct.includes('الأفضل'));
 
-  const cmpData = [
-    [title],
-    ['التاريخ:', date],
-    [''],
+  const ws1 = XLSX.utils.aoa_to_sheet([
+    [title],[`التاريخ: ${date}`],[''],
     ['م','اسم الشركة','الخدمات المقدمة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الفارق (ر.س)','نسبة التوفير'],
-    ...cmpRows
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(cmpData);
+    ...cmpRows.map(r=>[r.num,r.name,r.services,r.monthly,r.annual,r.diff,r.pct])
+  ]);
+  ws1['!cols']=[{wch:5},{wch:28},{wch:38},{wch:22},{wch:22},{wch:18},{wch:16}];
+  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
 
-  // تنسيق
-  ws1['!cols'] = [{wch:5},{wch:25},{wch:35},{wch:20},{wch:20},{wch:18},{wch:15}];
-  ws1['!merges'] = [{s:{r:0,c:0},e:{r:0,c:6}}];
+  // عنوان
+  sc(ws1,'A1',title,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
+  sc(ws1,'A2',`التاريخ: ${date}`,{font:{name:'Calibri',sz:11,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});
 
-  // ألوان الهيدر
-  const headerStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'1DA9BD'}},alignment:{horizontal:'center'}};
-  ['A4','B4','C4','D4','E4','F4','G4'].forEach(c=>{
-    if(!ws1[c]) ws1[c]={};
-    ws1[c].s = headerStyle;
+  // هيدر الجدول
+  ['A4','B4','C4','D4','E4','F4','G4'].forEach((a,i)=>{
+    sc(ws1,a,['م','اسم الشركة','الخدمات المقدمة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الفارق (ر.س)','نسبة التوفير'][i], hS(C));
   });
 
-  // لون العنوان
-  if(ws1['A1']) ws1['A1'].s = {font:{bold:true,sz:14,color:{rgb:'1A2B4A'}},fill:{fgColor:{rgb:'EBF8FA'}}};
-
-  // تلوين الصفوف
-  cmpRows.forEach((row,i) => {
-    const r = 4 + i; // 0-indexed row
-    const pct = row[6];
-    const isB = pct && pct.includes('الأفضل');
-    ['A','B','C','D','E','F','G'].forEach((c,ci) => {
-      const cell = c+(r+1);
-      if(!ws1[cell]) ws1[cell] = {t:'s',v:''};
-      ws1[cell].s = {
-        fill: {fgColor: {rgb: isB ? 'E6F4EA' : (i%2===0?'F8FAFB':'FFFFFF')}},
-        font: isB && ci>=3 ? {bold:true,color:{rgb:'276749'}} : {},
-        border: {bottom:{style:'thin',color:{rgb:'E2E8F0'}}}
-      };
-    });
+  // صفوف البيانات
+  cmpRows.forEach((r,i)=>{
+    const row = 5+i;
+    const isBest = r.pct.includes('الأفضل');
+    const bg = isBest ? {rgb:'E6F4EA'} : (i%2===0?{rgb:'FFFFFF'}:LB);
+    sc(ws1,`A${row}`,r.num,     dS(bg,NK));
+    sc(ws1,`B${row}`,r.name,    dS(bg,NK,true));
+    sc(ws1,`C${row}`,r.services,dS(bg,NK));
+    sc(ws1,`D${row}`,r.monthly, dS(bg,isBest?GR:NK,isBest));
+    sc(ws1,`E${row}`,r.annual,  dS(bg,isBest?GR:NK,true));
+    sc(ws1,`F${row}`,r.diff,    dS(bg,r.diff==='—'?NK:RD));
+    sc(ws1,`G${row}`,r.pct,     {font:{name:'Calibri',sz:11,bold:isBest,color:isBest?GR:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'},border:{top:{style:'thin',color:{rgb:'E2E8F0'}},bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}});
   });
 
-  XLSX.utils.book_append_sheet(wb, ws1, 'مقارنة الشركات');
+  // صف الأفضل في الأسفل
+  if(bestRow){
+    const sumR = 5+cmpRows.length;
+    ws1['!merges'].push({s:{r:sumR-1,c:0},e:{r:sumR-1,c:6}});
+    sc(ws1,`A${sumR}`,`✅ الأفضل سعراً: ${bestRow.name} — ${bestRow.annual.toLocaleString('ar-SA')} ر.س سنوياً`,
+      {font:{name:'Calibri',sz:12,bold:true,color:GR},fill:{patternType:'solid',fgColor:{rgb:'E6F4EA'}},alignment:{horizontal:'center'}});
+  }
+
+  XLSX.utils.book_append_sheet(wb,ws1,'مقارنة الشركات');
 
   /* ── ورقة 2: بنود العقد ── */
-  const itemRows = Array.from(document.querySelectorAll('#cmp-items-tbody tr')).map((tr,i) => {
+  const itemRows = Array.from(document.querySelectorAll('#cmp-items-tbody tr')).map((tr,i)=>{
     const unit = parseFloat(tr.querySelector('.ci-unit')?.value)||0;
-    return [i+1, tr.querySelector('.ci-name')?.value||'', unit, unit, unit*12];
+    return {num:i+1,name:tr.querySelector('.ci-name')?.value||'',unit,monthly:unit,annual:unit*12};
   });
-  const totalM = itemRows.reduce((s,r)=>s+r[3],0);
-  const totalA = itemRows.reduce((s,r)=>s+r[4],0);
+  const totalM=itemRows.reduce((s,r)=>s+r.monthly,0);
+  const totalA=itemRows.reduce((s,r)=>s+r.annual,0);
 
-  const itemData = [
-    [title + ' — بنود العقد'],
-    [''],
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    [title+' — بنود العقد'],[''],
     ['م','البند','السعر الإفرادي (ر.س)','القيمة الشهرية (ر.س)','القيمة السنوية (ر.س)'],
-    ...itemRows,
+    ...itemRows.map(r=>[r.num,r.name,r.unit,r.monthly,r.annual]),
     ['','الإجمالي','',totalM,totalA]
-  ];
-  const ws2 = XLSX.utils.aoa_to_sheet(itemData);
-  ws2['!cols'] = [{wch:5},{wch:35},{wch:22},{wch:22},{wch:22}];
-  ws2['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
+  ]);
+  ws2['!cols']=[{wch:5},{wch:38},{wch:22},{wch:22},{wch:22}];
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
 
-  ['A3','B3','C3','D3','E3'].forEach(c=>{
-    if(!ws2[c]) ws2[c]={};
-    ws2[c].s = headerStyle;
-  });
-  if(ws2['A1']) ws2['A1'].s = {font:{bold:true,sz:13,color:{rgb:'1A2B4A'}},fill:{fgColor:{rgb:'EBF8FA'}}};
+  sc(ws2,'A1',title+' — بنود العقد',{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
+  ['A3','B3','C3','D3','E3'].forEach((a,i)=>sc(ws2,a,['م','البند','السعر الإفرادي (ر.س)','القيمة الشهرية (ر.س)','القيمة السنوية (ر.س)'][i],hS(C)));
 
-  // صف الإجمالي
-  const totRow = itemRows.length + 4;
-  ['A','B','C','D','E'].forEach(c => {
-    const cell = c+totRow;
-    if(!ws2[cell]) ws2[cell]={t:'s',v:''};
-    ws2[cell].s = {font:{bold:true},fill:{fgColor:{rgb:'1DA9BD'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
+  itemRows.forEach((r,i)=>{
+    const row=4+i;
+    const bg=i%2===0?{rgb:'FFFFFF'}:LB;
+    sc(ws2,`A${row}`,r.num,    dS(bg,NK));
+    sc(ws2,`B${row}`,r.name,   dS(bg,NK,true));
+    sc(ws2,`C${row}`,r.unit,   dS(bg,C,true));
+    sc(ws2,`D${row}`,r.monthly,dS(bg,NK));
+    sc(ws2,`E${row}`,r.annual, dS(bg,GR,true));
   });
 
-  XLSX.utils.book_append_sheet(wb, ws2, 'بنود العقد');
+  const totR=4+itemRows.length;
+  ['A','B','C','D','E'].forEach((c,i)=>
+    sc(ws2,`${c}${totR}`,['','الإجمالي','',totalM,totalA][i],hS(C))
+  );
 
-  XLSX.writeFile(wb, `مقارنة_الأسعار_${title}.xlsx`);
-  toast('تم تصدير Excel بنجاح');
+  XLSX.utils.book_append_sheet(wb,ws2,'بنود العقد');
+  XLSX.writeFile(wb,`مقارنة_الأسعار_${title}.xlsx`,{bookSST:false,cellStyles:true});
+  toast('تم تصدير Excel ✅');
 }
 
 /* ══════════════ INIT ══════════════ */
