@@ -1897,28 +1897,25 @@ async function pcAddInvoice(){
   // رفع كل ملف — Storage إذا ضبط، وإلا base64 محلياً
   async function uploadFile(file, label){
     if(!file)return;
-    var path = key+'/'+invId+'/'+label+'_'+file.name;
-    var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
-      method:'POST',
-      headers:{
-        'apikey':SK,
-        'Authorization':'Bearer '+SK,
-        'Content-Type':file.type||'application/pdf',
-        'x-upsert':'true'
-      },
-      body:file
-    });
-    if(res.ok){
-      var url=SB+'/storage/v1/object/public/petty-cash/'+path;
-      invoice.files.push({label:label,name:file.name,url:url});
-    } else {
-      // fallback: قراءة كـ base64 لو Storage فشل
-      await new Promise(function(resolve){
-        var reader=new FileReader();
-        reader.onload=function(e){invoice.files.push({label:label,name:file.name,b64:e.target.result});resolve();};
-        reader.readAsDataURL(file);
+    // جرب Storage أولاً
+    try{
+      var path = key+'/'+invId+'/'+label+'_'+file.name;
+      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
+        method:'POST',
+        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
+        body:file
       });
-    }
+      if(res.ok){
+        invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+path});
+        return;
+      }
+    }catch(e){/* Storage فشل - سنستخدم base64 */}
+    // fallback: base64
+    await new Promise(function(resolve){
+      var reader=new FileReader();
+      reader.onload=function(e){invoice.files.push({label:label,name:file.name,b64:e.target.result});resolve();};
+      reader.readAsDataURL(file);
+    });
   }
 
   await uploadFile(taxFile,    'الفاتورة_الضريبية');
@@ -2086,14 +2083,15 @@ async function taameedSave(){
   // دالة رفع ملف واحد
   async function uploadOne(file, label){
     if(!file) return null;
-    var path = 'taameeds/'+taameed.id+'/'+label+'_'+file.name;
-    var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
-      method:'POST',
-      headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
-      body:file
-    });
-    if(res.ok) return {name:file.name, url:SB+'/storage/v1/object/public/petty-cash/'+path};
-    // fallback base64
+    try{
+      var path = 'taameeds/'+taameed.id+'/'+label+'_'+file.name;
+      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
+        method:'POST',
+        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
+        body:file
+      });
+      if(res.ok) return {name:file.name, url:SB+'/storage/v1/object/public/petty-cash/'+path};
+    }catch(e){/* fallback */}
     return await new Promise(function(resolve){
       var r=new FileReader();
       r.onload=function(e){resolve({name:file.name,b64:e.target.result});};
