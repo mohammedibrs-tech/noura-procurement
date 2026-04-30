@@ -1516,12 +1516,14 @@ let cmpEditId = null; // للتعديل
 
 function escH(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
 function cmpAddCompany(){
+  cmpSyncAllInputs();
   const id = Date.now();
-  cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0}], terms:['']});
+  cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0,vatType:'none'}], terms:['']});
   renderCmpCompanies();
 }
 
 function cmpDelCompany(id){
+  cmpSyncAllInputs();
   cmpCompanies = cmpCompanies.filter(c=>c.id!==id);
   renderCmpCompanies();
 }
@@ -1621,22 +1623,48 @@ function cmpUpdateRow(id,ri,field,val){
     renderCmpCompanies();
   }
 }
+function cmpSyncAllInputs(){
+  // احفظ كل القيم المكتوبة في الـ inputs قبل إعادة الرسم
+  cmpCompanies.forEach(function(co){
+    // اسم الشركة
+    var nameInp=document.querySelector('input[oninput*="cmpUpdateName('+co.id+')"]');
+    if(nameInp) co.name=nameInp.value;
+    // صفوف البنود
+    co.rows.forEach(function(row,ri){
+      var catInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'cat\'"]');
+      var natInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'nat\'"]');
+      var cntInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'count\'"]');
+      var prInp  =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'unitPrice\'"]');
+      if(catInp) row.cat=catInp.value;
+      if(natInp) row.nat=natInp.value;
+      if(cntInp) row.count=parseFloat(cntInp.value)||0;
+      if(prInp)  row.unitPrice=parseFloat(String(prInp.value).replace(/,/g,''))||0;
+    });
+    // بنود العقد
+    co.terms.forEach(function(t,ti){
+      var tInp=document.querySelector('input[oninput*="cmpUpdateTerm('+co.id+','+ti+')"]');
+      if(tInp) co.terms[ti]=tInp.value;
+    });
+  });
+}
+
 function cmpAddRow(id){
+  cmpSyncAllInputs();
   const co=cmpCompanies.find(c=>c.id===id);
-  if(co){co.rows.push({cat:'',nat:'',count:1,unitPrice:0});renderCmpCompanies();}
+  if(co){co.rows.push({cat:'',nat:'',count:1,unitPrice:0,vatType:'none'});renderCmpCompanies();}
 }
 function cmpDelRow(id,ri){
+  cmpSyncAllInputs();
   const co=cmpCompanies.find(c=>c.id===id);
   if(co&&co.rows.length>1){co.rows.splice(ri,1);renderCmpCompanies();}
 }
-function cmpUpdateTerm(id,ti,val){
-  const co=cmpCompanies.find(c=>c.id===id);if(co)co.terms[ti]=val;
-}
 function cmpAddTerm(id){
+  cmpSyncAllInputs();
   const co=cmpCompanies.find(c=>c.id===id);
   if(co){co.terms.push('');renderCmpCompanies();}
 }
 function cmpDelTerm(id,ti){
+  cmpSyncAllInputs();
   const co=cmpCompanies.find(c=>c.id===id);
   if(co&&co.terms.length>1){co.terms.splice(ti,1);renderCmpCompanies();}
 }
@@ -1733,7 +1761,7 @@ function cmpSyncFromDOM(){
 }
 
 function cmpExcel(){
-  cmpSyncFromDOM();
+  cmpSyncAllInputs();
   const title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
   const date=document.getElementById('cmp-date').value||new Date().toISOString().split('T')[0];
   cmpExcelFromData(title,date,cmpCompanies);
