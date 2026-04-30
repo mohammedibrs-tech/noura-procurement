@@ -1537,25 +1537,24 @@ function renderCmpCompanies(){
     var co=cmpCompanies[ci];
     if(!co.rows)co.rows=[];if(!co.terms)co.terms=[''];
     var monthly=0;
-    for(var ri=0;ri<co.rows.length;ri++){var rr=co.rows[ri];var rb=(rr.count||0)*(rr.unitPrice||0);var vt=rr.vatType||'none';monthly+=vt==='added'?rb*1.15:rb;}
+    for(var ri=0;ri<co.rows.length;ri++){
+      var rr=co.rows[ri];var rb=(rr.count||0)*(parseFloat(String(rr.unitPrice||0).replace(/,/g,''))||0);
+      var vt=rr.vatType||'none';monthly+=vt==='added'?rb*1.15:rb;
+    }
     var annual=monthly*12;
     var rowsHTML='';
     for(var ri2=0;ri2<co.rows.length;ri2++){
       var row=co.rows[ri2];
-      rowsHTML+='<tr>';
-      rowsHTML+='<td><input value="'+(row.cat||'')+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'cat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="فئة"></td>';
-      rowsHTML+='<td><input value="'+(row.nat||'')+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'nat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="الوصف"></td>';
-      rowsHTML+='<td><input type="number" value="'+(row.count||1)+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'count\',this.value)" style="width:60px;border:none;background:transparent;text-align:center;"></td>';
-      rowsHTML+='<td><input type="text" inputmode="decimal" value="'+(row.unitPrice||0)+'" oninput="cmpUpdateRow('+co.id+','+ri2+',\'unitPrice\',this.value)" style="width:110px;border:none;background:transparent;text-align:right;" placeholder="0"></td>';
-      var rBase=(row.count||0)*(parseFloat(String(row.unitPrice).replace(/,/g,''))||0);
+      var rBase=(row.count||0)*(parseFloat(String(row.unitPrice||0).replace(/,/g,''))||0);
       var vatType=row.vatType||'none';
-      var rVat=0;
-      if(vatType==='added') rVat=rBase*0.15;
-      else if(vatType==='included') rVat=rBase-(rBase/1.15);
+      var rVat=vatType==='added'?rBase*0.15:(vatType==='included'?rBase-(rBase/1.15):0);
       var rTot=vatType==='added'?rBase+rVat:rBase;
-      // الإجمالي الشهري أولاً (قبل الضريبة)
+      rowsHTML+='<tr>';
+      rowsHTML+='<td><input data-cid="'+co.id+'" data-ri="'+ri2+'" data-field="cat" value="'+(row.cat||'')+'" onchange="cmpUpdateRow('+co.id+','+ri2+',\'cat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="فئة"></td>';
+      rowsHTML+='<td><input data-cid="'+co.id+'" data-ri="'+ri2+'" data-field="nat" value="'+(row.nat||'')+'" onchange="cmpUpdateRow('+co.id+','+ri2+',\'nat\',this.value)" style="width:100%;border:none;background:transparent;font-size:11px;" placeholder="الوصف"></td>';
+      rowsHTML+='<td><input type="number" data-cid="'+co.id+'" data-ri="'+ri2+'" data-field="count" value="'+(row.count||1)+'" onchange="cmpUpdateRow('+co.id+','+ri2+',\'count\',this.value)" style="width:60px;border:none;background:transparent;text-align:center;"></td>';
+      rowsHTML+='<td><input type="text" inputmode="decimal" data-cid="'+co.id+'" data-ri="'+ri2+'" data-field="unitPrice" value="'+(row.unitPrice||0)+'" onchange="cmpUpdateRow('+co.id+','+ri2+',\'unitPrice\',this.value)" style="width:110px;border:none;background:transparent;text-align:right;" placeholder="0"></td>';
       rowsHTML+='<td style="text-align:right;font-weight:700;color:#276749;background:#F0FFF4;">'+rBase.toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
-      // عمود الضريبة
       rowsHTML+='<td><select onchange="cmpUpdateRow('+co.id+','+ri2+',\'vatType\',this.value)" style="border:none;background:transparent;font-size:10px;width:90px;">'
         +'<option value="none"'+(vatType==='none'?' selected':'')+'>لا ضريبة</option>'
         +'<option value="included"'+(vatType==='included'?' selected':'')+'>شامل VAT</option>'
@@ -1563,24 +1562,24 @@ function renderCmpCompanies(){
         +'</select></td>';
       rowsHTML+='<td style="text-align:right;color:#C53030;">'+(rVat>0?rVat.toLocaleString('ar-SA',{minimumFractionDigits:2}):'—')+'</td>';
       rowsHTML+='<td style="text-align:right;font-weight:700;color:#244062;">'+( rTot*12).toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
-      rowsHTML+='<td><button onclick="cmpDelRow('+co.id+','+ri2+')" style="background:none;border:none;color:var(--red);cursor:pointer;">x</button></td>';
+      rowsHTML+='<td><button onclick="cmpDelRow('+co.id+','+ri2+')" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
       rowsHTML+='</tr>';
     }
     var termsHTML='';
     for(var ti=0;ti<co.terms.length;ti++){
       termsHTML+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
       termsHTML+='<span style="font-weight:700;color:#244062;min-width:20px;">'+(ti+1)+'.</span>';
-      termsHTML+='<input value="'+(co.terms[ti]||'')+'" oninput="cmpUpdateTerm('+co.id+','+ti+',this.value)" placeholder="بند العقد..." style="flex:1;padding:6px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;">';
-      termsHTML+='<button onclick="cmpDelTerm('+co.id+','+ti+')" style="background:none;border:none;color:var(--red);cursor:pointer;">x</button>';
+      termsHTML+='<input data-cid="'+co.id+'" data-ti="'+ti+'" data-field="term" value="'+(co.terms[ti]||'')+'" onchange="cmpUpdateTerm('+co.id+','+ti+',this.value)" placeholder="بند العقد..." style="flex:1;padding:6px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;">';
+      termsHTML+='<button onclick="cmpDelTerm('+co.id+','+ti+')" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button>';
       termsHTML+='</div>';
     }
     html+='<div style="border:2px solid #244062;border-radius:10px;margin-bottom:16px;overflow:hidden;">';
     html+='<div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
-    html+='<input value="'+(co.name||'')+'" oninput="cmpUpdateName('+co.id+',this.value)" placeholder="اسم الشركة" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">';
+    html+='<input data-cid="'+co.id+'" data-field="name" value="'+(co.name||'')+'" onchange="cmpUpdateName('+co.id+',this.value)" placeholder="اسم الشركة" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">';
     html+='<button onclick="cmpDelCompany('+co.id+')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف</button>';
     html+='</div><div style="padding:14px;">';
     html+='<div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود الخدمة</div>';
-    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية (ر.س)</th><th style="color:#276749;background:#F0FFF4;">الإجمالي الشهري</th><th>الضريبة</th><th>مبلغ VAT (ر.س)</th><th>الإجمالي السنوي الكلي (ر.س)</th><th></th></tr></thead><tbody>'+rowsHTML+'</tbody></table>';
+    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية (ر.س)</th><th style="background:#F0FFF4;color:#276749;">الإجمالي الشهري</th><th>الضريبة</th><th>مبلغ VAT (ر.س)</th><th>الإجمالي السنوي الكلي (ر.س)</th><th></th></tr></thead><tbody>'+rowsHTML+'</tbody></table>';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddRow('+co.id+')">+ إضافة صف</button>';
     html+='<span style="font-size:12px;font-weight:700;">الشهري: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b> | السنوي: <b style="color:#244062;">'+annual.toLocaleString('ar-SA')+' ر.س</b></span>';
@@ -1590,19 +1589,21 @@ function renderCmpCompanies(){
     html+='</div></div>';
   }
   el.innerHTML=html;
-  // أضف ملخص المقارنة
-  if(cmpCompanies.length > 1){
-    var tots2=cmpCompanies.map(function(co){return{name:co.name||'—',total:co.rows.reduce(function(s,r){return s+(r.count*(r.unitPrice||0));},0)};});
+  // ملخص المقارنة
+  if(cmpCompanies.length>1){
+    var tots2=cmpCompanies.map(function(co2){
+      var m=0;
+      co2.rows.forEach(function(r){var b=(r.count||0)*(parseFloat(String(r.unitPrice||0).replace(/,/g,''))||0);m+=r.vatType==='added'?b*1.15:b;});
+      return{name:co2.name||'—',total:m};
+    });
     var min2=Math.min.apply(null,tots2.map(function(t){return t.total;}).filter(function(v){return v>0;}));
-    var summHTML='';
-    summHTML+='<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">';
-    summHTML+='<div style="font-weight:700;color:#276749;margin-bottom:10px;font-size:13px;">ملخص المقارنة</div>';
+    var summHTML='<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">';
+    summHTML+='<div style="font-weight:700;color:#276749;margin-bottom:10px;">ملخص المقارنة</div>';
     tots2.forEach(function(t){
-      var clr=t.total===min2&&min2>0?'#276749':'#C53030';
-      var best=t.total===min2&&min2>0?' الافضل':'';
+      var isBest=t.total===min2&&min2>0;
       summHTML+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">';
       summHTML+='<span>'+t.name+'</span>';
-      summHTML+='<span style="font-weight:700;color:'+clr+';">'+t.total.toLocaleString('ar-SA')+' ر.س/شهر'+best+'</span>';
+      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':'#C53030')+';">'+t.total.toLocaleString('ar-SA')+' ر.س/شهر'+(isBest?' ★ الأفضل':'')+'</span>';
       summHTML+='</div>';
     });
     summHTML+='</div>';
@@ -1618,33 +1619,27 @@ function cmpUpdateRow(id,ri,field,val){
   if(!co||!co.rows[ri])return;
   if(field==='cat'||field==='nat'||field==='vatType') co.rows[ri][field]=val;
   else co.rows[ri][field]=parseFloat(String(val).replace(/,/g,''))||0;
-  // أعد الرسم فقط عند تغيير vatType أو العدد — مو عند كتابة السعر
-  if(field==='vatType'||field==='count'){
-    renderCmpCompanies();
-  }
+  if(field==='vatType'||field==='count') renderCmpCompanies();
 }
+function cmpUpdateTerm(id,ti,val){
+  const co=cmpCompanies.find(c=>c.id===id);if(co&&co.terms)co.terms[ti]=val;
+}
+
 function cmpSyncAllInputs(){
-  // احفظ كل القيم المكتوبة في الـ inputs قبل إعادة الرسم
-  cmpCompanies.forEach(function(co){
-    // اسم الشركة
-    var nameInp=document.querySelector('input[oninput*="cmpUpdateName('+co.id+')"]');
-    if(nameInp) co.name=nameInp.value;
-    // صفوف البنود
-    co.rows.forEach(function(row,ri){
-      var catInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'cat\'"]');
-      var natInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'nat\'"]');
-      var cntInp =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'count\'"]');
-      var prInp  =document.querySelector('input[oninput*="cmpUpdateRow('+co.id+','+ri+',\'unitPrice\'"]');
-      if(catInp) row.cat=catInp.value;
-      if(natInp) row.nat=natInp.value;
-      if(cntInp) row.count=parseFloat(cntInp.value)||0;
-      if(prInp)  row.unitPrice=parseFloat(String(prInp.value).replace(/,/g,''))||0;
-    });
-    // بنود العقد
-    co.terms.forEach(function(t,ti){
-      var tInp=document.querySelector('input[oninput*="cmpUpdateTerm('+co.id+','+ti+')"]');
-      if(tInp) co.terms[ti]=tInp.value;
-    });
+  // اقرأ من data attributes — أموثق وأضمن
+  document.querySelectorAll('#cmp-companies-body [data-cid]').forEach(function(inp){
+    var cid=parseInt(inp.getAttribute('data-cid'));
+    var ri=inp.getAttribute('data-ri');
+    var ti=inp.getAttribute('data-ti');
+    var f=inp.getAttribute('data-field');
+    var co=cmpCompanies.find(function(c){return c.id===cid;});
+    if(!co)return;
+    if(f==='name') co.name=inp.value;
+    else if(f&&ri!==null&&co.rows[ri]){
+      if(f==='cat'||f==='nat') co.rows[ri][f]=inp.value;
+      else co.rows[ri][f]=parseFloat(String(inp.value).replace(/,/g,''))||0;
+    }
+    else if(f==='term'&&ti!==null) co.terms[ti]=inp.value;
   });
 }
 
