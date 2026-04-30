@@ -847,7 +847,14 @@ async function initBudget(){
   budgetTotal=saved.total||0;budgetTarget=saved.target||0;
   document.getElementById('b-total-inp').value=budgetTotal||'';
   document.getElementById('b-target-inp').value=budgetTarget||'';
-  try{expenses=await sbGet('expenses');}catch(e){expenses=JSON.parse(localStorage.getItem('expenses')||'[]');}
+  // لا تمسح البيانات إذا Supabase رجع فارغ أو فشل
+  const sbExp=await sbGet('expenses');
+  if(sbExp&&sbExp.length>0){
+    expenses=sbExp;
+    localStorage.setItem('expenses_local',JSON.stringify(expenses));
+  }else{
+    expenses=JSON.parse(localStorage.getItem('expenses_local')||'[]');
+  }
   budgetCalc();renderExpenses();
 }
 
@@ -1885,7 +1892,9 @@ async function pcAddInvoice(){
 
   toast('جاري رفع الملفات...');
 
-  // رفع كل ملف إلى Supabase Storage
+  try{
+
+  // رفع كل ملف — Storage إذا ضبط، وإلا base64 محلياً
   async function uploadFile(file, label){
     if(!file)return;
     var path = key+'/'+invId+'/'+label+'_'+file.name;
@@ -1935,6 +1944,11 @@ async function pcAddInvoice(){
   document.getElementById('pc-erp').value='';
   document.getElementById('pc-transfer').value='';
   toast('تمت إضافة الفاتورة ✅');
+
+  }catch(e){
+    console.error('pcAddInvoice error:',e);
+    toast('خطأ: '+e.message,true);
+  }
 }
 
 function renderPCGroups(){
