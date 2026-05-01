@@ -3217,13 +3217,39 @@ async function init(){
   document.getElementById('po-del-phone').value='+966538549436';
   document.getElementById('po-del-addr').value='Saudi Arabia, Riyadh, King Khaled Intl. Road';
   document.getElementById('po-del-vat').value='314378311300003';
-  // استرجع البيانات المحفوظة
-  // تحميل من Supabase أولاً ثم localStorage كـ fallback
-  pcGroups=JSON.parse(localStorage.getItem('pc_groups')||'{}');
-  poSaved=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
-  await loadFromSupabase();
-  initBudget();
-  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();renderTaameeds();renderContracts();if(typeof renderPCGroups==='function')renderPCGroups();
+
+  // ── خطوة ١: اعرض البيانات المحلية فوراً (لا تنتظر الشبكة) ──
+  pcGroups  = JSON.parse(localStorage.getItem('pc_groups')||'{}');
+  poSaved   = JSON.parse(localStorage.getItem('po_saved_local')||'[]');
+  rfqSaved  = JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+  dnSaved   = JSON.parse(localStorage.getItem('dn_saved')||'[]');
+  cmpSaved  = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+  taameeds  = JSON.parse(localStorage.getItem('taameeds')||'[]');
+  contracts = JSON.parse(localStorage.getItem('contracts')||'[]');
+  expenses  = JSON.parse(localStorage.getItem('expenses_local')||'[]');
+  const savedCfg = JSON.parse(localStorage.getItem('budget_cfg')||'{}');
+  budgetTotal = savedCfg.total||0;
+  budgetTarget= savedCfg.target||0;
+  const ti = document.getElementById('b-total-inp');
+  const ti2= document.getElementById('b-target-inp');
+  if(ti)ti.value=budgetTotal||'';
+  if(ti2)ti2.value=budgetTarget||'';
+
+  // اعرض كل شيء فوراً
+  budgetCalc();renderExpenses();
+  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
+  renderTaameeds();renderContracts();
+  if(typeof renderPCGroups==='function')renderPCGroups();
+
+  // ── خطوة ٢: زامن مع Supabase في الخلفية بدون انتظار ──
+  loadFromSupabase().then(()=>{
+    initBudget();
+    renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
+    renderTaameeds();renderContracts();
+    if(typeof renderPCGroups==='function')renderPCGroups();
+  }).catch(()=>{
+    // Supabase فشل — البيانات المحلية كافية
+  });
 }
 
 </script>
