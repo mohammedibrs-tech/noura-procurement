@@ -296,6 +296,7 @@ function numToWords(n){
     <div class="card-header">
       <h3>سجل المصروفات</h3>
       <button class="btn btn-green btn-sm" onclick="expExcel()">تصدير Excel</button>
+      <button class="btn btn-red btn-sm" onclick="expPrint()">تصدير PDF</button>
     </div>
     <div class="card-body" style="overflow-x:auto;">
       <table class="tbl">
@@ -1092,6 +1093,9 @@ function expExcel(){
   ws['!merges'].push({s:{r,c:0},e:{r,c:2}});
   ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
 
+  // أضف صورة التوقيع كـ base64 في الخلية كـ note/overlay
+  // xlsx-js-style لا يدعم addImage مباشرة - PDF هو المكان الصح للتوقيع
+
   ws['!cols']=[{wch:22},{wch:28},{wch:16},{wch:22},{wch:20},{wch:12}];
   ws['!ref']='A1:F'+(r+2);
   ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0};
@@ -1099,6 +1103,138 @@ function expExcel(){
   XLSX.utils.book_append_sheet(wb,ws,'العهدة المالية');
   XLSX.writeFile(wb,'العهدة_المالية.xlsx');
   toast('تم التصدير ✅');
+}
+
+function expPrint(){
+  const spent=expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const remain=budgetTotal-spent;
+  const savePct=budgetTarget>0?((Math.max(0,budgetTarget-spent)/budgetTarget)*100).toFixed(1)+'%':'0%';
+  const today=new Date().toLocaleDateString('ar-SA');
+  const SIG=SIG_URL;
+  const BG=FORM_BG;
+
+  // أكثر الإدارات صرفاً
+  const deptMap={};
+  expenses.forEach(e=>{
+    const d=e.department||'أخرى';
+    if(!deptMap[d])deptMap[d]={total:0,items:{}};
+    deptMap[d].total+=parseFloat(e.amount)||0;
+    deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
+  });
+  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([dept,data],i)=>{
+    const topItem=Object.entries(data.items).sort((a,b)=>b[1]-a[1])[0];
+    const pct=spent>0?((data.total/spent)*100).toFixed(1)+'%':'0%';
+    return`<tr style="background:${i%2===0?'#fff':'#EBF8FA'}">
+      <td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;font-weight:600;">${dept}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;text-align:right;color:#C53030;font-weight:700;">${data.total.toLocaleString('ar-SA')} ر.س</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;text-align:center;">${pct}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;color:#64748B;">${topItem?topItem[0]:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const expRows=expenses.map((e,i)=>`
+    <tr style="background:${i%2===0?'#fff':'#EBF8FA'}">
+      <td style="padding:5px 8px;border-bottom:1px solid #E2E8F0;">${e.department||'—'}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #E2E8F0;">${e.item_name||'—'}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #E2E8F0;text-align:right;font-weight:700;color:#C53030;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #E2E8F0;text-align:center;color:#64748B;">${e.expense_date||'—'}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #E2E8F0;color:#64748B;">${e.notes||'—'}</td>
+    </tr>`).join('');
+
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+<style>
+@page{size:A4;margin:0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;}
+.page{position:relative;width:210mm;min-height:297mm;overflow:hidden;}
+.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.kpi{border-radius:8px;padding:10px;text-align:center;}
+.kpi-label{font-size:9px;color:#64748B;margin-bottom:4px;}
+.kpi-val{font-size:16px;font-weight:900;}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+th{padding:7px 10px;text-align:right;font-size:10px;}
+.sig-area{display:flex;justify-content:space-between;margin-top:20px;gap:20px;}
+.sig-box{flex:1;text-align:center;}
+</style>
+</head><body>
+<div class="page">
+<img class="bg" src="${BG}">
+<div class="content">
+
+  <div style="text-align:center;margin-bottom:14px;">
+    <div style="font-size:15px;font-weight:900;color:#1A2B4A;">سجل مصروفات العهدة المالية</div>
+    <div style="font-size:10px;color:#64748B;margin-top:2px;">التاريخ: ${today}</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" style="background:#EBF8FA;">
+      <div class="kpi-label">إجمالي العهدة</div>
+      <div class="kpi-val" style="color:#1A2B4A;">${budgetTotal.toLocaleString('ar-SA')}</div>
+      <div class="kpi-label">ر.س</div>
+    </div>
+    <div class="kpi" style="background:#FFF5F5;">
+      <div class="kpi-label">المصروف</div>
+      <div class="kpi-val" style="color:#C53030;">${spent.toLocaleString('ar-SA')}</div>
+      <div class="kpi-label">ر.س</div>
+    </div>
+    <div class="kpi" style="background:#F0FFF4;">
+      <div class="kpi-label">المتبقي</div>
+      <div class="kpi-val" style="color:#276749;">${remain.toLocaleString('ar-SA')}</div>
+      <div class="kpi-label">ر.س</div>
+    </div>
+    <div class="kpi" style="background:#FAF5FF;">
+      <div class="kpi-label">نسبة التوفير</div>
+      <div class="kpi-val" style="color:#7C3AED;">${savePct}</div>
+    </div>
+  </div>
+
+  <!-- أكثر الإدارات صرفاً -->
+  <div style="font-size:12px;font-weight:700;color:#1DA9BD;margin-bottom:6px;border-bottom:2px solid #1DA9BD;padding-bottom:4px;">أكثر الإدارات صرفاً</div>
+  <table>
+    <thead><tr style="background:#1DA9BD;color:#fff;">
+      <th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أكثر المشتريات</th>
+    </tr></thead>
+    <tbody>${deptRows}</tbody>
+  </table>
+
+  <!-- سجل المصروفات -->
+  <div style="font-size:12px;font-weight:700;color:#1DA9BD;margin-bottom:6px;border-bottom:2px solid #1DA9BD;padding-bottom:4px;">سجل المصروفات التفصيلي</div>
+  <table>
+    <thead><tr style="background:#1DA9BD;color:#fff;">
+      <th>الإدارة</th><th>البند</th><th style="text-align:right;">المبلغ</th><th style="text-align:center;">التاريخ</th><th>ملاحظات</th>
+    </tr></thead>
+    <tbody>${expRows}
+    <tr style="background:#1DA9BD;">
+      <td colspan="2" style="padding:6px 10px;font-weight:700;color:#fff;">الإجمالي الكلي</td>
+      <td style="padding:6px 10px;text-align:right;font-weight:900;color:#fff;">${spent.toLocaleString('ar-SA')} ر.س</td>
+      <td colspan="2"></td>
+    </tr></tbody>
+  </table>
+
+  <!-- التوقيعات -->
+  <div class="sig-area">
+    <div class="sig-box">
+      <div style="font-size:10px;font-weight:700;color:#1DA9BD;margin-bottom:30px;">مسؤول المشتريات</div>
+      <div style="position:relative;display:inline-block;min-width:100px;">
+        <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:70px;object-fit:contain;z-index:1;">
+        <div style="border-top:1px solid #000;padding-top:5px;position:relative;z-index:0;font-size:10px;">محمد الجمعان</div>
+      </div>
+    </div>
+    <div class="sig-box">
+      <div style="font-size:10px;font-weight:700;color:#1DA9BD;margin-bottom:30px;">أخصائي الحسابات</div>
+      <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;margin-top:78px;">_______________</div>
+    </div>
+  </div>
+
+</div>
+</div>
+</body></html>`);
+  w.document.close();
+  w.onload=()=>{w.focus();w.print();};
 }
 
 /* ══════════════ PO ══════════════ */
@@ -1229,6 +1365,7 @@ function poPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const BG=FORM_BG;
+  const SIG=SIG_URL;
 
   const rHTML=(d.rows||[]).map(r=>`<tr>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.num}</td>
@@ -1432,9 +1569,9 @@ function rfqPrintData(d){
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
   <div style="flex:1;text-align:center;">
       <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
-      <div style="position:relative;display:inline-block;">
-        <img src="${SIG_URL}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:70px;object-fit:contain;z-index:1;pointer-events:none;">
-        <div style="border-top:1px solid #000;padding-top:6px;position:relative;">محمد الجمعان</div>
+      <div style="position:relative;display:inline-block;min-width:120px;">
+        <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
+        <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">محمد الجمعان</div>
       </div>
     </div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
@@ -1506,6 +1643,7 @@ function dnPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
+  const SIG=SIG_URL;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
 <div class="page"><img class="bg" src="${FORM_BG}">
@@ -1521,13 +1659,16 @@ function dnPrintData(d){
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:20px;">
   <div style="flex:1;text-align:center;">
-      <div style="margin-bottom:20px;">Received By / تم الاستلام من قبل</div>
-      <div style="position:relative;display:inline-block;">
-        <img src="${SIG_URL}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:70px;object-fit:contain;z-index:1;pointer-events:none;">
-        <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;">محمد الجمعان</div>
-      </div>
+    <div style="margin-bottom:40px;">Received By / تم الاستلام من قبل</div>
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br><br>التاريخ:<br><br>التوقيع:</div>
+  </div>
+  <div style="flex:1;text-align:center;">
+    <div style="margin-bottom:20px;">Delivered By / تم التسليم من قبل</div>
+    <div style="position:relative;display:inline-block;min-width:120px;">
+      <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
+      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">محمد الجمعان</div>
     </div>
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Delivered By / تم التسليم من قبل</div><div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br>التاريخ:<br>التوقيع:</div></div>
+  </div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
