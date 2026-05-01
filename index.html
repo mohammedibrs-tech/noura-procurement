@@ -845,17 +845,29 @@ let poSaved=[];
 let pcGroups={};
 
 async function initBudget(){
-  const saved=JSON.parse(localStorage.getItem('budget_cfg')||'{}');
-  budgetTotal=saved.total||0;budgetTarget=saved.target||0;
+  // جلب إعداد العهدة من Supabase أولاً
+  const sbCfg=await sbGet('budget_config','limit=1');
+  if(sbCfg&&sbCfg.length>0){
+    budgetTotal=parseFloat(sbCfg[0].total)||0;
+    budgetTarget=parseFloat(sbCfg[0].target)||0;
+    localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal,target:budgetTarget}));
+  }else{
+    const saved=JSON.parse(localStorage.getItem('budget_cfg')||'{}');
+    budgetTotal=saved.total||0;budgetTarget=saved.target||0;
+  }
   document.getElementById('b-total-inp').value=budgetTotal||'';
   document.getElementById('b-target-inp').value=budgetTarget||'';
-  // لا تمسح البيانات إذا Supabase رجع فارغ أو فشل
+  // جلب المصروفات — Supabase أولاً، ثم دمج مع localStorage
   const sbExp=await sbGet('expenses');
+  const localExp=JSON.parse(localStorage.getItem('expenses_local')||'[]');
   if(sbExp&&sbExp.length>0){
-    expenses=sbExp;
+    // دمج: أضف المحلي اللي ما موجود في Supabase
+    const sbIds=new Set(sbExp.map(e=>String(e.id)));
+    const onlyLocal=localExp.filter(e=>!sbIds.has(String(e.id)));
+    expenses=[...sbExp,...onlyLocal];
     localStorage.setItem('expenses_local',JSON.stringify(expenses));
   }else{
-    expenses=JSON.parse(localStorage.getItem('expenses_local')||'[]');
+    expenses=localExp;
   }
   budgetCalc();renderExpenses();
 }
@@ -877,7 +889,15 @@ function budgetCalc(){
 
 function budgetSave(){
   localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal,target:budgetTarget}));
-  toast('تم حفظ إعدادات العهدة');
+  // احفظ في Supabase
+  sbGet('budget_config','limit=1').then(res=>{
+    if(res&&res.length>0){
+      sbUpdate('budget_config',res[0].id,{total:budgetTotal,target:budgetTarget,updated_at:new Date().toISOString()});
+    }else{
+      sbInsert('budget_config',{total:budgetTotal,target:budgetTarget});
+    }
+  }).catch(()=>{});
+  toast('تم حفظ إعدادات العهدة ✅');
 }
 
 async function expAdd(){
@@ -888,15 +908,22 @@ async function expAdd(){
   const notes=document.getElementById('exp-notes').value.trim();
   if(!item||!amount){toast('أدخل البند والمبلغ',true);return;}
   const row={department:dept,item_name:item,amount,expense_date:date||new Date().toISOString().split('T')[0],notes,created_at:new Date().toISOString()};
-  try{
-    const res=await sbInsert('expenses',row);
-    if(Array.isArray(res))expenses.unshift(res[0]);
-    else expenses.unshift({...row,id:Date.now()});
-  }catch(e){expenses.unshift({...row,id:Date.now()});localStorage.setItem('expenses',JSON.stringify(expenses));}
+  // احفظ محلياً فوراً
+  const localRow={...row,id:Date.now()};
+  expenses.unshift(localRow);
+  localStorage.setItem('expenses_local',JSON.stringify(expenses));
+  // ثم أرسل لـ Supabase في الخلفية
+  sbInsert('expenses',row).then(res=>{
+    if(res&&Array.isArray(res)&&res[0]){
+      // حدّث الـ id بالـ uuid من Supabase
+      const idx=expenses.findIndex(e=>e.id===localRow.id);
+      if(idx!==-1){expenses[idx]={...expenses[idx],...res[0]};localStorage.setItem('expenses_local',JSON.stringify(expenses));}
+    }
+  }).catch(()=>{});
   document.getElementById('exp-item').value='';
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-notes').value='';
-  budgetCalc();renderExpenses();toast('تمت الإضافة');
+  budgetCalc();renderExpenses();toast('تمت الإضافة ✅');
 }
 
 function renderExpenses(){
