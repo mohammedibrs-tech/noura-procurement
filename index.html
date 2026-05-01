@@ -1082,7 +1082,7 @@ function expExcel(){
   ws['!merges'].push({s:{r,c:0},e:{r,c:2}});
   ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
   r+=5; // مسافة للتوقيع
-  sc(ws,`A${r+1}`,'محمد الجمعان',{font:{name:'Calibri',sz:10},alignment:{horizontal:'center'},border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
+  sc(ws,`A${r+1}`,'محمد الجمعان',{font:{name:'Calibri',sz:10,italic:true},alignment:{horizontal:'center'},border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
   sc(ws,`D${r+1}`,'',{border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
   ws['!merges'].push({s:{r,c:0},e:{r,c:2}});
   ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
@@ -1430,7 +1430,13 @@ function rfqPrintData(d){
   <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div><div style="border-top:1px solid #000;padding-top:6px;">محمد الجمعان</div></div>
+  <div style="flex:1;text-align:center;">
+      <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
+      <div style="position:relative;display:inline-block;">
+        <img src="${SIG_URL}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:70px;object-fit:contain;z-index:1;pointer-events:none;">
+        <div style="border-top:1px solid #000;padding-top:6px;position:relative;">محمد الجمعان</div>
+      </div>
+    </div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
 </div>
@@ -1514,7 +1520,13 @@ function dnPrintData(d){
   <tbody>${rows}</tbody>
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:20px;">
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:10px;">Received By / تم الاستلام من قبل</div><img src="${SIG_URL}" style="height:50px;object-fit:contain;display:block;margin:0 auto 4px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">محمد الجمعان</div></div>
+  <div style="flex:1;text-align:center;">
+      <div style="margin-bottom:20px;">Received By / تم الاستلام من قبل</div>
+      <div style="position:relative;display:inline-block;">
+        <img src="${SIG_URL}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:70px;object-fit:contain;z-index:1;pointer-events:none;">
+        <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;">محمد الجمعان</div>
+      </div>
+    </div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Delivered By / تم التسليم من قبل</div><div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br>التاريخ:<br>التوقيع:</div></div>
 </div>
 </div></div></body></html>`);
@@ -2327,41 +2339,81 @@ function renderTaameeds(){
 
 /* ══════════════ INIT ══════════════ */
 async function loadFromSupabase(){
+  // دالة دمج آمنة: تجمع Supabase مع localStorage بدون فقدان أي بيانات
+  function mergeById(sbData, localData, idField='id'){
+    const merged=[...localData];
+    sbData.forEach(function(sbItem){
+      const exists=merged.some(function(l){return String(l[idField])===String(sbItem[idField]);});
+      if(!exists) merged.unshift(sbItem);
+    });
+    return merged;
+  }
+
   // RFQ
   const rfqRes=await sbGet('procurement_rfq');
-  if(rfqRes&&rfqRes.length){rfqSaved=rfqRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));}
-  else rfqSaved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+  const rfqLocal=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+  if(rfqRes&&rfqRes.length){
+    const sbMapped=rfqRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
+    rfqSaved=mergeById(sbMapped,rfqLocal);
+  }else rfqSaved=rfqLocal;
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+
   // DN
   const dnRes=await sbGet('procurement_dn');
-  if(dnRes&&dnRes.length){dnSaved=dnRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));localStorage.setItem('dn_saved',JSON.stringify(dnSaved));}
-  else dnSaved=JSON.parse(localStorage.getItem('dn_saved')||'[]');
+  const dnLocal=JSON.parse(localStorage.getItem('dn_saved')||'[]');
+  if(dnRes&&dnRes.length){
+    const sbMapped=dnRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
+    dnSaved=mergeById(sbMapped,dnLocal);
+  }else dnSaved=dnLocal;
+  localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
+
   // CMP
   const cmpRes=await sbGet('procurement_cmp');
-  if(cmpRes&&cmpRes.length){cmpSaved=cmpRes.map(r=>({...r,companies:typeof r.companies==='string'?JSON.parse(r.companies):r.companies}));localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));}
-  else cmpSaved=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
-  // PO (orders table)
+  const cmpLocal=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+  if(cmpRes&&cmpRes.length){
+    const sbMapped=cmpRes.map(r=>({...r,companies:typeof r.companies==='string'?JSON.parse(r.companies):r.companies}));
+    cmpSaved=mergeById(sbMapped,cmpLocal);
+  }else cmpSaved=cmpLocal;
+  localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
+
+  // PO
   const poRes=await sbGet('orders');
+  const poLocal=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
   if(poRes&&poRes.length){
-    poSaved=poRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
-    localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-  }else poSaved=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
+    const sbMapped=poRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
+    poSaved=mergeById(sbMapped,poLocal);
+  }else poSaved=poLocal;
+  localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+
   // التعاميد
   const tmRes=await sbGet('procurement_taameeds');
+  const tmLocal=JSON.parse(localStorage.getItem('taameeds')||'[]');
   if(tmRes&&tmRes.length){
-    taameeds=tmRes.map(function(r){return typeof r.data==='string'?JSON.parse(r.data):r.data;}).filter(Boolean);
-    localStorage.setItem('taameeds',JSON.stringify(taameeds));
-  }else taameeds=JSON.parse(localStorage.getItem('taameeds')||'[]');
+    const sbMapped=tmRes.map(function(r){return typeof r.data==='string'?JSON.parse(r.data):r.data;}).filter(Boolean);
+    taameeds=mergeById(sbMapped,tmLocal);
+  }else taameeds=tmLocal;
+  localStorage.setItem('taameeds',JSON.stringify(taameeds));
+
+  // Petty Cash — دمج بدون حذف
   const pcRes=await sbGet('procurement_pc');
+  const pcLocal=JSON.parse(localStorage.getItem('pc_groups')||'{}');
   if(pcRes&&pcRes.length){
-    pcGroups={};
+    // ابدأ من المحلي وأضف من Supabase ما لم يكن موجوداً
+    const merged={...pcLocal};
     pcRes.forEach(function(r){
-      var key=r.month_key;
-      if(!pcGroups[key])pcGroups[key]=[];
-      var inv=typeof r.invoice==='string'?JSON.parse(r.invoice):r.invoice;
-      if(inv) pcGroups[key].push(inv);
+      const key=r.month_key;
+      if(!merged[key]) merged[key]=[];
+      const inv=typeof r.invoice==='string'?JSON.parse(r.invoice):r.invoice;
+      if(inv){
+        const exists=merged[key].some(function(i){return String(i.id)===String(inv.id);});
+        if(!exists) merged[key].push(inv);
+      }
     });
-    localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
-  }
+    pcGroups=merged;
+  }else pcGroups=pcLocal;
+  localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
+
+  // العهدة — لا تلمسها هنا، initBudget تتولاها بأمان
 }
 
 async function init(){
