@@ -940,7 +940,7 @@ function renderExpenses(){
     html+='<tr>';
     html+='<td><select onchange="expUpdate('+ei+',\'department\',this.value)" style="border:none;background:transparent;font-size:11px;width:140px;">'+opts+'</select></td>';
     html+='<td><input value="'+(e.item_name||'')+'" onchange="expUpdate('+ei+',\'item_name\',this.value)" style="border:none;background:transparent;width:100%;font-size:11px;"></td>';
-    html+='<td><input type="number" value="'+(parseFloat(e.amount)||0)+'" onchange="expUpdate('+ei+',\'amount\',this.value)" style="border:none;background:transparent;width:80px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
+    html+='<td><input type="number" value="'+(parseFloat(e.amount)||0)+'" onchange="expUpdate('+ei+',\'amount\',this.value)" style="border:none;background:transparent;width:110px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
     html+='<td>'+(e.expense_date||'—')+'</td>';
     html+='<td>'+(e.notes||'—')+'</td>';
     html+='<td><button onclick="expDel(\''+e.id+'\','+ei+')" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
@@ -951,9 +951,15 @@ function renderExpenses(){
 
 function expUpdate(idx,field,val){
   if(!expenses[idx])return;
-  expenses[idx][field]=val;
+  if(field==='amount') expenses[idx][field]=parseFloat(val)||0;
+  else expenses[idx][field]=val;
   localStorage.setItem('expenses_local',JSON.stringify(expenses));
   budgetCalc();
+  // sync لـ Supabase في الخلفية
+  const e=expenses[idx];
+  if(e.id&&String(e.id).length>10){
+    sbUpdate('expenses',e.id,{[field]:expenses[idx][field]}).catch(()=>{});
+  }
 }
 
 async function expDel(id,idx){
