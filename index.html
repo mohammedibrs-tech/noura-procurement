@@ -4659,8 +4659,7 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 <p style="margin-top:16px;">${c.views||''}</p>
 <div style="margin-top:40px;"><p><strong>أعضاء اللجنة:</strong></p>
 <div style="text-align:center;margin-top:20px;">
-  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">الرئيس</div>
-  <div style="font-size:11px;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong>${c.chairName}</strong></div>
+  <div style="font-size:15px;font-weight:700;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:14px;">${c.chairName}</strong></div>
   <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:30px;">
     ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:50px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
   </div>
@@ -4717,8 +4716,7 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
 <div style="text-align:center;margin-top:20px;">
-  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">الرئيس</div>
-  <div style="font-size:11px;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong>${c.chairName}</strong></div>
+  <div style="font-size:15px;font-weight:700;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:14px;">${c.chairName}</strong></div>
   <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:30px;">
     ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:50px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
   </div>
