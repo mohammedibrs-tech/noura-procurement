@@ -4632,8 +4632,8 @@ function committeeExportTechPDF(){
 }
 function committeeExportTechPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
+  const BG=FORM_BG;
   const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
-  // فقط التقييم الفني — بدون أي مبالغ
   const techRows=(c.offers||[]).map(o=>`
     <tr>
       <td style="border:1px solid #ccc;padding:6px 10px;font-weight:600;">${o.name}</td>
@@ -4642,32 +4642,31 @@ function committeeExportTechPDFData(c){
     </tr>`).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
-</head><body>
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
+.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+.content{position:relative;z-index:1;padding:38mm 15mm 20mm 15mm;}
+h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
+</head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض — النسخة الفنية<br><span style="font-size:12px;">لطلب (${c.subject})</span></h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <div style="margin:10px 20px;">${membersText}</div>
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية الخاصة فقد تبين الآتـي:</p>
 <table>
-  <thead><tr>
-    <th>اسم الشركة أو المؤسسة</th>
-    <th>التقييم الفني</th>
-    <th>ملاحظات</th>
-  </tr></thead>
+  <thead><tr><th>اسم الشركة أو المؤسسة</th><th>التقييم الفني</th><th>ملاحظات</th></tr></thead>
   <tbody>${techRows}</tbody>
 </table>
 <p style="margin-top:16px;">${c.views||''}</p>
-<div style="margin-top:40px;">
-  <p><strong>أعضاء اللجنة:</strong></p>
+<div style="margin-top:40px;"><p><strong>أعضاء اللجنة:</strong></p>
   <div style="text-align:center;margin-top:16px;">
-    <div style="font-size:12px;font-weight:700;margin-bottom:50px;">الرئيس<br>${c.chairName}<br><br><span style="font-size:10px;font-weight:400;">التوقيع: ____________________</span></div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
+    <div style="font-size:11px;color:#244062;margin-bottom:50px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
     <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
       ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="font-size:11px;font-weight:600;">${m.name}</div><div style="font-size:10px;color:#64748B;margin-bottom:30px;">${m.title||'عضو'}</div><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;color:#64748B;">التوقيع</div></div>`).join('')}
     </div>
   </div>
 </div>
-</body></html>`);
+</div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
@@ -4687,6 +4686,7 @@ function committeeExportPDF(){
 
 function committeeExportPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
+  const BG=FORM_BG;
   const offersTable=`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
     <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #fff;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #fff;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #fff;">ملاحظات</th></tr></thead>
     <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr style="background:${i%2===0?'#fff':'#EBF8FA'}"><td style="padding:6px 8px;border:1px solid #E2E8F0;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #E2E8F0;text-align:center;font-weight:700;color:#1DA9BD;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #E2E8F0;color:#64748B;">${o.notes||''}</td></tr>`).join('')}</tbody>
@@ -4694,8 +4694,11 @@ function committeeExportPDFData(c){
   const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;text-align:justify;}.sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:20px;text-align:center;}.sig-box{border-top:1px solid #000;padding-top:6px;font-size:10px;margin-top:50px;}</style>
-</head><body>
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
+.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+.content{position:relative;z-index:1;padding:38mm 15mm 20mm 15mm;}
+h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;text-align:justify;}</style>
+</head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
@@ -4713,11 +4716,14 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
-<div style="margin-top:16px;text-align:center;"><div style="font-size:12px;font-weight:700;margin-bottom:40px;">الرئيس<br>${c.chairName}</div>
-<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
-${(c.members||[]).map((m,i)=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:100px;margin-top:50px;">${m.name}</div></div>`).join('')}
-</div></div></div>
-</body></html>`);
+<div style="margin-top:16px;text-align:center;">
+  <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
+  <div style="font-size:11px;color:#244062;margin-bottom:40px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
+  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
+    ${(c.members||[]).map(m=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:100px;margin-top:50px;">${m.name}<br><span style="font-size:9px;color:#64748B;">${m.title||'عضو'}</span></div></div>`).join('')}
+  </div>
+</div></div>
+</div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
