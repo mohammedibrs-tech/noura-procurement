@@ -4702,8 +4702,8 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
-<p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin:8px 20px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+<p style="font-size:9px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:9px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 <p><strong>اطلعت اللجنة على العروض المالية للشركات المقدمة لهذه المنافسة وتم ترتيب العروض من الأقل سعراً للأعلى سعراً على النحو الآتي:</strong></p>
 ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
@@ -4714,11 +4714,11 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
-<div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
-<div style="text-align:center;margin-top:20px;">
-  <div style="font-size:15px;font-weight:700;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:14px;">${c.chairName}</strong></div>
-  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:30px;">
-    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:50px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
+<div style="margin-top:20px;"><strong>أعضاء اللجنة:</strong>
+<div style="text-align:center;margin-top:10px;">
+  <div style="font-size:15px;font-weight:700;margin-bottom:25px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:14px;">${c.chairName}</strong></div>
+  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:16px;">
+    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:20px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
   </div>
 </div>
 </div>
