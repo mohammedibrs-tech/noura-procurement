@@ -4633,7 +4633,7 @@ function committeeExportTechPDF(){
 function committeeExportTechPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
-  const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
+  const membersText=(c.members||[]).map(m=>m.name).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
   const techRows=(c.offers||[]).map(o=>`
     <tr>
       <td style="border:1px solid #000;padding:6px 10px;font-weight:600;">${o.name}</td>
@@ -4695,7 +4695,7 @@ function committeeExportPDFData(c){
     <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
     <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`).join('')}</tbody>
   </table>`;
-  const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
+  const membersText=(c.members||[]).map(m=>m.name).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
