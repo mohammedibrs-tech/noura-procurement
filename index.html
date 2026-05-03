@@ -4642,9 +4642,8 @@ function committeeExportTechPDFData(c){
     </tr>`).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}.notice{background:#FFF8E1;border:1px solid #F59E0B;padding:8px 12px;border-radius:6px;font-size:10px;color:#92400E;margin-bottom:16px;text-align:center;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
+<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
 </head><body>
-<div class="notice">🔒 النسخة الفنية — للاطلاع والتوقيع فقط | لا تحتوي على العروض المالية</div>
 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض — النسخة الفنية<br><span style="font-size:12px;">لطلب (${c.subject})</span></h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
