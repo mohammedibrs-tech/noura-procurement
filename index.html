@@ -5627,14 +5627,16 @@ async function init(){
   document.getElementById('po-del-vat').value='314378311300003';
 
   // ── خطوة ١: اعرض البيانات المحلية فوراً (لا تنتظر الشبكة) ──
-  pcGroups  = JSON.parse(localStorage.getItem('pc_groups')||'{}');
-  poSaved   = JSON.parse(localStorage.getItem('po_saved_local')||'[]');
-  rfqSaved  = JSON.parse(localStorage.getItem('rfq_saved')||'[]');
-  dnSaved   = JSON.parse(localStorage.getItem('dn_saved')||'[]');
-  cmpSaved  = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
-  taameeds  = JSON.parse(localStorage.getItem('taameeds')||'[]');
-  contracts = JSON.parse(localStorage.getItem('contracts')||'[]');
-  expenses  = JSON.parse(localStorage.getItem('expenses_local')||'[]');
+  pcGroups   = JSON.parse(localStorage.getItem('pc_groups')||'{}');
+  poSaved    = JSON.parse(localStorage.getItem('po_saved_local')||'[]');
+  rfqSaved   = JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+  dnSaved    = JSON.parse(localStorage.getItem('dn_saved')||'[]');
+  cmpSaved   = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
+  taameeds   = JSON.parse(localStorage.getItem('taameeds')||'[]');
+  contracts  = JSON.parse(localStorage.getItem('contracts')||'[]');
+  suppliers  = JSON.parse(localStorage.getItem('suppliers')||'[]');
+  committees = JSON.parse(localStorage.getItem('committees')||'[]');
+  expenses   = JSON.parse(localStorage.getItem('expenses_local')||'[]');
   const savedCfg = JSON.parse(localStorage.getItem('budget_cfg')||'{}');
   budgetTotal = savedCfg.total||0;
   budgetTarget= savedCfg.target||0;
@@ -5646,14 +5648,14 @@ async function init(){
   // اعرض كل شيء فوراً
   budgetCalc();renderExpenses();
   renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
-  renderTaameeds();renderContracts();
+  renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
   if(typeof renderPCGroups==='function')renderPCGroups();
 
   // ── خطوة ٢: زامن مع Supabase في الخلفية بدون انتظار ──
   loadFromSupabase().then(()=>{
     initBudget();
     renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
-    renderTaameeds();renderContracts();
+    renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
     if(typeof renderPCGroups==='function')renderPCGroups();
   }).catch(()=>{
     // Supabase فشل — البيانات المحلية كافية
