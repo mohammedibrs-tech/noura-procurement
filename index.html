@@ -4650,7 +4650,7 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض — النسخة الفنية<br><span style="font-size:12px;">لطلب (${c.subject})</span></h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
-<div style="margin:10px 20px;">${membersText}</div>
+<p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية الخاصة فقد تبين الآتـي:</p>
 <table>
   <thead><tr><th>اسم الشركة أو المؤسسة</th><th>التقييم الفني</th><th>ملاحظات</th></tr></thead>
@@ -4690,7 +4690,7 @@ function committeeExportPDFData(c){
     <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
     <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`).join('')}</tbody>
   </table>`;
-  const membersText=(c.members||[]).map(m=>m.name).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
+  const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
@@ -4701,7 +4701,7 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
-<div style="margin:10px 20px;">${membersText}</div>
+<p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 <div style="margin:8px 20px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 <p><strong>اطلعت اللجنة على العروض المالية للشركات المقدمة لهذه المنافسة وتم ترتيب العروض من الأقل سعراً للأعلى سعراً على النحو الآتي:</strong></p>
