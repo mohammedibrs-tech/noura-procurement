@@ -207,6 +207,10 @@ function numToWords(n){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       التقرير النصف سنوي
     </div>
+    <div class="sb-item" onclick="nav('committee')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><rect x="1" y="3" width="15" height="18" rx="2"/></svg>
+      لجنة فحص العروض
+    </div>
     <div class="sb-sep"></div>
     <div class="sb-label">الموردون</div>
     <div class="sb-item" onclick="nav('suppliers')">
@@ -879,6 +883,92 @@ function numToWords(n){
     </div>
   </div>
   <div id="semi-report-content" style="margin-top:16px;"></div>
+</div>
+
+<!-- ══ لجنة فحص العروض ══ -->
+<div class="page" id="page-committee">
+  <div class="page-header"><h1>لجنة فحص العروض</h1><p>إنشاء محاضر لجنة فحص العروض وتصديرها</p></div>
+
+  <!-- فورم إنشاء/تعديل محضر -->
+  <div class="card" id="committee-form-card">
+    <div class="card-header">
+      <h3 id="committee-form-title">إنشاء محضر جديد</h3>
+      <button class="btn btn-gray btn-sm" onclick="committeeReset()">🔄 جديد</button>
+    </div>
+    <div class="card-body">
+
+      <!-- معلومات المحضر -->
+      <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;">معلومات المحضر</div>
+      <div class="form-grid">
+        <div class="field"><label>رقم المحضر</label><input id="cm-num" placeholder="012"></div>
+        <div class="field"><label>موضوع الطلب (عقد ماذا)</label><input id="cm-subject" placeholder="مثال: عقد النظافة والصيانة"></div>
+        <div class="field"><label>اليوم</label>
+          <select id="cm-day-name">
+            <option>الأحد</option><option>الاثنين</option><option>الثلاثاء</option>
+            <option>الأربعاء</option><option>الخميس</option><option>الجمعة</option><option>السبت</option>
+          </select>
+        </div>
+        <div class="field"><label>التاريخ</label><input id="cm-date" type="date"></div>
+        <div class="field"><label>رقم قرار تشكيل اللجنة</label><input id="cm-decision" placeholder="642"></div>
+        <div class="field"><label>تاريخ قرار التشكيل</label><input id="cm-decision-date" placeholder="10/09/2024"></div>
+      </div>
+
+      <!-- رئيس اللجنة -->
+      <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:16px;">رئيس اللجنة</div>
+      <div class="form-grid">
+        <div class="field"><label>المسمى الوظيفي للرئيس</label><input id="cm-chair-title" value="الرئيس التنفيذي"></div>
+        <div class="field"><label>اسم الرئيس</label><input id="cm-chair-name" value="أ/ أحمد بن محمد المحيسن"></div>
+      </div>
+
+      <!-- أعضاء اللجنة -->
+      <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:16px;">أعضاء اللجنة</div>
+      <div id="cm-members-list">
+        <div class="form-grid" style="margin-bottom:8px;" data-member="0">
+          <div class="field"><label>العضو الأول</label><input class="cm-member-name" placeholder="الاسم" value="أ. عمرو يحيى جاد"></div>
+          <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:8px;" data-member="1">
+          <div class="field"><label>العضو الثاني</label><input class="cm-member-name" placeholder="الاسم" value="أ. فهد عجب الحربي"></div>
+          <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:8px;" data-member="2">
+          <div class="field"><label>العضو الثالث</label><input class="cm-member-name" placeholder="الاسم" value="أ. محمد الجمعان"></div>
+          <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
+        </div>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="cmAddMember()" style="margin-bottom:12px;">+ إضافة عضو</button>
+
+      <!-- الشركات والعروض -->
+      <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:8px;">العروض المقدمة</div>
+      <div id="cm-offers-list"></div>
+      <button class="btn btn-gray btn-sm" onclick="cmAddOffer()" style="margin-bottom:12px;">+ إضافة شركة / عرض</button>
+
+      <!-- التوصيات -->
+      <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:8px;">مرئيات وتوصيات اللجنة</div>
+      <div class="field"><label>مرئيات اللجنة</label><textarea id="cm-views" rows="3" placeholder="اكتب مرئيات اللجنة...">قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل</textarea></div>
+      <div class="field" style="margin-top:8px;"><label>الشركة الفائزة (للترسية)</label><input id="cm-winner" placeholder="اسم الشركة الفائزة"></div>
+      <div class="field" style="margin-top:8px;"><label>المبلغ الإجمالي للترسية (ر.س) — يُكتب رقماً وكتابةً</label>
+        <div style="display:flex;gap:8px;">
+          <input id="cm-winner-amount" type="number" placeholder="28931.01" oninput="cmUpdateAmountWords()" style="flex:1;">
+          <input id="cm-winner-words" placeholder="المبلغ بالكلمات (تلقائي)" style="flex:2;background:#f5f5f5;" readonly>
+        </div>
+      </div>
+      <div class="field" style="margin-top:8px;"><label>تاريخ بداية العقد</label><input id="cm-start-date" placeholder="1/8/2025م"></div>
+      <div class="field" style="margin-top:8px;"><label>ملاحظات إضافية</label><textarea id="cm-extra-notes" rows="2" placeholder="أي ملاحظات..."></textarea></div>
+
+      <div class="actions" style="margin-top:16px;gap:8px;">
+        <button class="btn btn-primary" onclick="committeeSave()">💾 حفظ المحضر</button>
+        <button class="btn btn-green" onclick="committeeExportWord()">📄 تصدير Word</button>
+        <button class="btn btn-red" onclick="committeeExportPDF()">🖨️ طباعة PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- المحاضر المحفوظة -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>المحاضر المحفوظة</h3></div>
+    <div class="card-body" id="committee-list"><div style="text-align:center;color:#aaa;padding:20px;">لا توجد محاضر محفوظة</div></div>
+  </div>
 </div>
 
 <!-- ══ الموردون ══ -->
@@ -4365,6 +4455,275 @@ function exportSemiExcel(){
   toast('تم تصدير Excel ✅');
 }
 
+/* ══════════════ لجنة فحص العروض ══════════════ */
+let committees=JSON.parse(localStorage.getItem('committees')||'[]');
+let committeeEditId=null;
+
+function cmAddMember(){
+  const list=document.getElementById('cm-members-list');
+  const idx=list.querySelectorAll('[data-member]').length;
+  const div=document.createElement('div');
+  div.className='form-grid';div.style.marginBottom='8px';div.setAttribute('data-member',idx);
+  div.innerHTML=`<div class="field"><label>العضو ${idx+1}</label><input class="cm-member-name" placeholder="الاسم"></div><div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div><div style="display:flex;align-items:flex-end;padding-bottom:2px;"><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button></div>`;
+  list.appendChild(div);
+}
+
+function cmAddOffer(){
+  const list=document.getElementById('cm-offers-list');
+  const idx=list.querySelectorAll('.cm-offer-row').length;
+  const div=document.createElement('div');
+  div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
+  div.innerHTML=`<div class="form-grid">
+    <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
+    <div class="field"><label>المبلغ شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" placeholder="0"></div>
+    <div class="field"><label>التقييم الفني</label>
+      <select class="cm-offer-status">
+        <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
+        <option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option>
+        <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
+      </select>
+    </div>
+    <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
+    <div style="display:flex;align-items:flex-end;"><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button></div>
+  </div>`;
+  list.appendChild(div);
+}
+
+function cmUpdateAmountWords(){
+  const n=parseFloat(document.getElementById('cm-winner-amount').value)||0;
+  document.getElementById('cm-winner-words').value=n>0?numToWords(Math.floor(n))+' ريال و'+Math.round((n%1)*100)+' هللة فقط لاغير':'';
+}
+
+function cmGetData(){
+  const members=[];
+  document.querySelectorAll('#cm-members-list [data-member]').forEach(row=>{
+    const name=row.querySelector('.cm-member-name')?.value?.trim();
+    const title=row.querySelector('.cm-member-title')?.value?.trim();
+    if(name)members.push({name,title:title||'عضو'});
+  });
+  const offers=[];
+  document.querySelectorAll('.cm-offer-row').forEach(row=>{
+    const name=row.querySelector('.cm-offer-name')?.value?.trim();
+    const amount=parseFloat(row.querySelector('.cm-offer-amount')?.value)||0;
+    const status=row.querySelector('.cm-offer-status')?.value||'';
+    const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
+    if(name)offers.push({name,amount,status,notes});
+  });
+  return{
+    num:document.getElementById('cm-num').value.trim(),
+    subject:document.getElementById('cm-subject').value.trim(),
+    dayName:document.getElementById('cm-day-name').value,
+    date:document.getElementById('cm-date').value,
+    decision:document.getElementById('cm-decision').value.trim(),
+    decisionDate:document.getElementById('cm-decision-date').value.trim(),
+    chairTitle:document.getElementById('cm-chair-title').value.trim(),
+    chairName:document.getElementById('cm-chair-name').value.trim(),
+    members,offers,
+    views:document.getElementById('cm-views').value.trim(),
+    winner:document.getElementById('cm-winner').value.trim(),
+    winnerAmount:parseFloat(document.getElementById('cm-winner-amount').value)||0,
+    winnerWords:document.getElementById('cm-winner-words').value.trim(),
+    startDate:document.getElementById('cm-start-date').value.trim(),
+    extraNotes:document.getElementById('cm-extra-notes').value.trim(),
+  };
+}
+
+function committeeReset(){
+  committeeEditId=null;
+  document.getElementById('committee-form-title').textContent='إنشاء محضر جديد';
+  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('cm-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('cm-views').value='قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل';
+  document.getElementById('cm-offers-list').innerHTML='';
+  document.getElementById('committee-form-card').scrollIntoView({behavior:'smooth'});
+}
+
+async function committeeSave(){
+  const data=cmGetData();
+  if(!data.subject){toast('أدخل موضوع الطلب',true);return;}
+  const record={id:committeeEditId||Date.now(),...data,created_at:new Date().toISOString()};
+  if(committeeEditId){
+    const idx=committees.findIndex(c=>c.id===committeeEditId);
+    if(idx!==-1)committees[idx]=record;
+  }else{
+    committees.unshift(record);
+  }
+  localStorage.setItem('committees',JSON.stringify(committees));
+  sbInsert('procurement_committees',{committee_id:record.id,data:JSON.stringify(record)}).catch(()=>{});
+  committeeEditId=null;
+  renderCommittees();toast('تم حفظ المحضر ✅');
+}
+
+function committeeEdit(id){
+  const c=committees.find(x=>x.id===id);if(!c)return;
+  committeeEditId=id;
+  document.getElementById('committee-form-title').textContent='تعديل المحضر: '+c.subject;
+  document.getElementById('cm-num').value=c.num||'';
+  document.getElementById('cm-subject').value=c.subject||'';
+  document.getElementById('cm-day-name').value=c.dayName||'الأحد';
+  document.getElementById('cm-date').value=c.date||'';
+  document.getElementById('cm-decision').value=c.decision||'';
+  document.getElementById('cm-decision-date').value=c.decisionDate||'';
+  document.getElementById('cm-chair-title').value=c.chairTitle||'';
+  document.getElementById('cm-chair-name').value=c.chairName||'';
+  document.getElementById('cm-views').value=c.views||'';
+  document.getElementById('cm-winner').value=c.winner||'';
+  document.getElementById('cm-winner-amount').value=c.winnerAmount||'';
+  document.getElementById('cm-winner-words').value=c.winnerWords||'';
+  document.getElementById('cm-start-date').value=c.startDate||'';
+  document.getElementById('cm-extra-notes').value=c.extraNotes||'';
+  // أعضاء
+  const ml=document.getElementById('cm-members-list');ml.innerHTML='';
+  (c.members||[]).forEach((m,i)=>{
+    const div=document.createElement('div');div.className='form-grid';div.style.marginBottom='8px';div.setAttribute('data-member',i);
+    div.innerHTML=`<div class="field"><label>العضو ${i+1}</label><input class="cm-member-name" value="${m.name||''}"></div><div class="field"><label>المسمى</label><input class="cm-member-title" value="${m.title||'عضو'}"></div>`;
+    ml.appendChild(div);
+  });
+  // عروض
+  const ol=document.getElementById('cm-offers-list');ol.innerHTML='';
+  (c.offers||[]).forEach(o=>{
+    const div=document.createElement('div');div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
+    div.innerHTML=`<div class="form-grid"><div class="field"><label>الشركة</label><input class="cm-offer-name" value="${o.name||''}"></div><div class="field"><label>المبلغ</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div><div class="field"><label>التقييم</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div><div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div></div>`;
+    ol.appendChild(div);
+  });
+  document.getElementById('committee-form-card').scrollIntoView({behavior:'smooth'});
+}
+
+function committeeDelete(id){
+  if(!confirm('حذف هذا المحضر؟'))return;
+  committees=committees.filter(c=>c.id!==id);
+  localStorage.setItem('committees',JSON.stringify(committees));
+  renderCommittees();toast('تم الحذف');
+}
+
+function renderCommittees(){
+  const el=document.getElementById('committee-list');if(!el)return;
+  if(!committees.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد محاضر محفوظة</div>';return;}
+  let html='';
+  committees.forEach(c=>{
+    const dateStr=c.date?new Date(c.date).toLocaleDateString('ar-SA'):'—';
+    html+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:1px solid #E2E8F0;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">محضر رقم ${c.num||'—'} — ${c.subject}</div>
+        <div style="font-size:11px;color:#64748B;margin-top:3px;">${dateStr} | الفائز: ${c.winner||'لم يُحدد'} | ${(c.winnerAmount||0).toLocaleString('ar-SA')} ر.س</div>
+        <div style="font-size:11px;color:#64748B;">${(c.offers||[]).length} عروض مقدمة</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn btn-primary btn-sm" onclick="committeeEdit(${c.id})">تعديل</button>
+        <button class="btn btn-green btn-sm" onclick="committeeLoadAndExportWord(${c.id})">Word</button>
+        <button class="btn btn-red btn-sm" onclick="committeeLoadAndExportPDF(${c.id})">PDF</button>
+        <button class="btn btn-gray btn-sm" onclick="committeeDelete(${c.id})">×</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function committeeLoadAndExportWord(id){
+  const c=committees.find(x=>x.id===id);if(!c)return;
+  committeeExportWordData(c);
+}
+function committeeLoadAndExportPDF(id){
+  const c=committees.find(x=>x.id===id);if(!c)return;
+  committeeExportPDFData(c);
+}
+
+function committeeExportPDF(){
+  const data=cmGetData();
+  committeeExportPDFData(data);
+}
+
+function committeeExportPDFData(c){
+  const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
+  const offersTable=`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #fff;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #fff;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #fff;">ملاحظات</th></tr></thead>
+    <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr style="background:${i%2===0?'#fff':'#EBF8FA'}"><td style="padding:6px 8px;border:1px solid #E2E8F0;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #E2E8F0;text-align:center;font-weight:700;color:#1DA9BD;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #E2E8F0;color:#64748B;">${o.notes||''}</td></tr>`).join('')}</tbody>
+  </table>`;
+  const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;text-align:justify;}.sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:20px;text-align:center;}.sig-box{border-top:1px solid #000;padding-top:6px;font-size:10px;margin-top:50px;}</style>
+</head><body>
+<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
+<h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
+<p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
+<div style="margin:10px 20px;">${membersText}</div>
+<p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
+<div style="margin:8px 20px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+<p><strong>اطلعت اللجنة على العروض المالية للشركات المقدمة لهذه المنافسة وتم ترتيب العروض من الأقل سعراً للأعلى سعراً على النحو الآتي:</strong></p>
+${offersTable}
+<p><strong>مرئيات لجنة فحص العروض:</strong></p>
+<p>${c.views||''}</p>
+<p><strong>توصيات لجنة فحص العروض:</strong></p>
+<p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) بقيمة إجمالية قدرها (<strong>${(c.winnerAmount||0).toLocaleString('ar-SA')}</strong>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%) وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
+${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}م.</p>`:''}
+<p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
+<p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
+${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
+<div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
+<div style="margin-top:16px;text-align:center;"><div style="font-size:12px;font-weight:700;margin-bottom:40px;">الرئيس<br>${c.chairName}</div>
+<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
+${(c.members||[]).map((m,i)=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:100px;margin-top:50px;">${m.name}</div></div>`).join('')}
+</div></div></div>
+</body></html>`);
+  w.document.close();w.onload=()=>{w.focus();w.print();};
+}
+
+function committeeExportWord(){
+  const data=cmGetData();
+  committeeExportWordData(data);
+}
+
+async function committeeExportWordData(c){
+  toast('جاري إنشاء ملف Word...');
+  const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
+  // بناء محتوى Word باستخدام HTML داخل blob
+  const offersRows=(c.offers||[]).sort((a,b)=>a.amount-b.amount).map(o=>`
+    <tr>
+      <td style="border:1px solid black;padding:4px 8px;">${o.name}</td>
+      <td style="border:1px solid black;padding:4px 8px;text-align:center;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>
+      <td style="border:1px solid black;padding:4px 8px;">${o.notes||''}</td>
+    </tr>`).join('');
+  const membersText=(c.members||[]).map(m=>`<p style="margin-right:20px;">- ${m.name}</p>`).join('');
+  const techReview=(c.offers||[]).map(o=>`<p style="margin-right:20px;">- <b>${o.name}</b> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</p>`).join('');
+
+  const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>
+@page{size:A4;margin:2cm 1.5cm;}body{font-family:Arial;font-size:11pt;direction:rtl;text-align:right;}h2{text-align:center;font-size:13pt;}p{margin:4pt 0;line-height:1.8;}table{width:100%;border-collapse:collapse;margin:8pt 0;}th{background:#1A2B4A;color:white;padding:5pt 8pt;border:1pt solid #1A2B4A;font-size:10pt;}td{padding:5pt 8pt;border:1pt solid #ccc;font-size:10pt;}.meta{display:flex;justify-content:space-between;margin-bottom:12pt;font-size:10pt;}
+</style></head><body>
+<div class="meta"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
+<h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
+<p>إنه في يوم <b>${c.dayName}</b> الموافق <b>${dt}</b>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<b>${c.decision}</b>) الصادر بتاريخ <b>${c.decisionDate}</b>م برئاسة <b>${c.chairTitle} ${c.chairName}</b> وعضوية كلاً من:</p>
+${membersText}
+<p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
+${techReview}
+<p><b>اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى:</b></p>
+<table><thead><tr><th>اسم الشركة أو المؤسسة</th><th>إجمالي المبلغ السنوي شاملاً الضريبة</th><th>ملاحظات</th></tr></thead>
+<tbody>${offersRows}</tbody></table>
+<p><b>مرئيات لجنة فحص العروض:</b></p>
+<p>${c.views||''}</p>
+<p><b>توصيات لجنة فحص العروض:</b></p>
+<p>أولاً: ترسية المشروع على (<b>${c.winner}</b>) بقيمة إجمالية قدرها (<b>${(c.winnerAmount||0).toLocaleString('ar-SA')}</b>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%).</p>
+${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}م.</p>`:''}
+<p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
+<p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
+${c.extraNotes?`<p>${c.extraNotes}</p>`:''}
+<br><br>
+<p><b>أعضاء اللجنة:</b></p>
+<p style="text-align:center;"><b>الرئيس<br>${c.chairName}</b></p>
+<br><br>
+<table style="width:100%;border:none;"><tr>
+${(c.members||[]).map(m=>`<td style="text-align:center;border:none;border-top:1pt solid #000;padding-top:4pt;">${m.name}</td>`).join('')}
+</tr></table>
+</body></html>`;
+
+  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='محضر_لجنة_فحص_العروض_'+c.num+'.doc';
+  a.click();
+  toast('تم تصدير Word ✅');
+}
+
 /* ══════════════ الموردون ══════════════ */
 let suppliers=JSON.parse(localStorage.getItem('suppliers')||'[]');
 let supplierEditId=null;
@@ -5242,6 +5601,11 @@ async function loadFromSupabase(){
   }else contracts=ctLocal;
   localStorage.setItem('contracts',JSON.stringify(contracts));
 
+  // المحاضر
+  const cmRes=await sbGet('procurement_committees');
+  const cmLocal=JSON.parse(localStorage.getItem('committees')||'[]');
+  if(cmRes&&cmRes.length){const sbMapped=cmRes.map(r=>typeof r.data==='string'?JSON.parse(r.data):r.data).filter(Boolean);committees=mergeById(sbMapped,cmLocal);}else committees=cmLocal;
+  localStorage.setItem('committees',JSON.stringify(committees));
   // الموردون
   const supRes=await sbGet('procurement_suppliers');
   const supLocal=JSON.parse(localStorage.getItem('suppliers')||'[]');
