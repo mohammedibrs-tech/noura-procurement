@@ -960,6 +960,7 @@ function numToWords(n){
         <button class="btn btn-primary" onclick="committeeSave()">💾 حفظ المحضر</button>
         <button class="btn btn-green" onclick="committeeExportWord()">📄 تصدير Word</button>
         <button class="btn btn-red" onclick="committeeExportPDF()">🖨️ طباعة PDF</button>
+        <button class="btn btn-gray" onclick="committeeExportTechPDF()" title="بدون مبالغ — للتوقيع الفني">🔒 النسخة الفنية</button>
       </div>
     </div>
   </div>
@@ -4613,11 +4614,62 @@ function renderCommittees(){
         <button class="btn btn-primary btn-sm" onclick="committeeEdit(${c.id})">تعديل</button>
         <button class="btn btn-green btn-sm" onclick="committeeLoadAndExportWord(${c.id})">Word</button>
         <button class="btn btn-red btn-sm" onclick="committeeLoadAndExportPDF(${c.id})">PDF</button>
+        <button class="btn btn-gray btn-sm" onclick="committeeLoadAndExportTechPDF(${c.id})" title="النسخة الفنية بدون مبالغ">🔒 فني</button>
         <button class="btn btn-gray btn-sm" onclick="committeeDelete(${c.id})">×</button>
       </div>
     </div>`;
   });
   el.innerHTML=html;
+}
+
+function committeeLoadAndExportTechPDF(id){
+  const c=committees.find(x=>x.id===id);if(!c)return;
+  committeeExportTechPDFData(c);
+}
+function committeeExportTechPDF(){
+  const data=cmGetData();
+  committeeExportTechPDFData(data);
+}
+function committeeExportTechPDFData(c){
+  const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
+  const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
+  // فقط التقييم الفني — بدون أي مبالغ
+  const techRows=(c.offers||[]).map(o=>`
+    <tr>
+      <td style="border:1px solid #ccc;padding:6px 10px;font-weight:600;">${o.name}</td>
+      <td style="border:1px solid #ccc;padding:6px 10px;text-align:center;color:${o.status.includes('مطابق فنياً')&&!o.status.includes('غير مطابق')?'#276749':'#C53030'};font-weight:700;">${o.status}</td>
+      <td style="border:1px solid #ccc;padding:6px 10px;color:#64748B;">${o.notes||''}</td>
+    </tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+<style>@page{size:A4;margin:20mm 15mm 20mm 15mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;}h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}.notice{background:#FFF8E1;border:1px solid #F59E0B;padding:8px 12px;border-radius:6px;font-size:10px;color:#92400E;margin-bottom:16px;text-align:center;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
+</head><body>
+<div class="notice">🔒 النسخة الفنية — للاطلاع والتوقيع فقط | لا تحتوي على العروض المالية</div>
+<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
+<h2>محضر لجنة فحص العروض — النسخة الفنية<br><span style="font-size:12px;">لطلب (${c.subject})</span></h2>
+<p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
+<div style="margin:10px 20px;">${membersText}</div>
+<p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية الخاصة فقد تبين الآتـي:</p>
+<table>
+  <thead><tr>
+    <th>اسم الشركة أو المؤسسة</th>
+    <th>التقييم الفني</th>
+    <th>ملاحظات</th>
+  </tr></thead>
+  <tbody>${techRows}</tbody>
+</table>
+<p style="margin-top:16px;">${c.views||''}</p>
+<div style="margin-top:40px;">
+  <p><strong>أعضاء اللجنة:</strong></p>
+  <div style="text-align:center;margin-top:16px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:50px;">الرئيس<br>${c.chairName}<br><br><span style="font-size:10px;font-weight:400;">التوقيع: ____________________</span></div>
+    <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
+      ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="font-size:11px;font-weight:600;">${m.name}</div><div style="font-size:10px;color:#64748B;margin-bottom:30px;">${m.title||'عضو'}</div><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;color:#64748B;">التوقيع</div></div>`).join('')}
+    </div>
+  </div>
+</div>
+</body></html>`);
+  w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
 function committeeLoadAndExportWord(id){
