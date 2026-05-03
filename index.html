@@ -4658,17 +4658,13 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 </table>
 <p style="margin-top:16px;">${c.views||''}</p>
 <div style="margin-top:40px;"><p><strong>أعضاء اللجنة:</strong></p>
-<table style="width:100%;border-collapse:collapse;margin-top:16px;">
-  <tr>
-    <td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;width:20%;">
-      الرئيس<br>
-      <span style="font-size:11px;font-weight:400;">${c.chairTitle||'الرئيس التنفيذي'}</span><br>
-      <span style="font-size:12px;">${c.chairName}</span><br><br>
-      <span style="font-size:10px;">التوقيع: ___________</span>
-    </td>
-    ${(c.members||[]).map(m=>`<td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;"><span style="display:block;">${m.name}</span><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span><br><br><span style="font-size:10px;">التوقيع: ___________</span></td>`).join('')}
-  </tr>
-</table>
+<div style="text-align:center;margin-top:20px;">
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">الرئيس</div>
+  <div style="font-size:11px;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong>${c.chairName}</strong></div>
+  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:30px;">
+    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:50px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
+  </div>
+</div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -4720,17 +4716,13 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
-<table style="width:100%;border-collapse:collapse;margin-top:16px;">
-  <tr>
-    <td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;width:20%;">
-      الرئيس<br>
-      <span style="font-size:11px;font-weight:400;">${c.chairTitle||'الرئيس التنفيذي'}</span><br>
-      <span style="font-size:12px;">${c.chairName}</span><br><br>
-      <span style="font-size:10px;">التوقيع: ___________</span>
-    </td>
-    ${(c.members||[]).map(m=>`<td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;"><span style="display:block;">${m.name}</span><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span><br><br><span style="font-size:10px;">التوقيع: ___________</span></td>`).join('')}
-  </tr>
-</table>
+<div style="text-align:center;margin-top:20px;">
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">الرئيس</div>
+  <div style="font-size:11px;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong>${c.chairName}</strong></div>
+  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:30px;">
+    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="border-top:1px solid #000;padding-top:6px;font-size:13px;font-weight:700;margin-top:50px;">${m.name}<br><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
+  </div>
+</div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
