@@ -4703,7 +4703,7 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
-<div style="margin:8px 20px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin:8px 20px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 <p><strong>اطلعت اللجنة على العروض المالية للشركات المقدمة لهذه المنافسة وتم ترتيب العروض من الأقل سعراً للأعلى سعراً على النحو الآتي:</strong></p>
 ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
