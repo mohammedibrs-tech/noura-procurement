@@ -4636,9 +4636,9 @@ function committeeExportTechPDFData(c){
   const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
   const techRows=(c.offers||[]).map(o=>`
     <tr>
-      <td style="border:1px solid #ccc;padding:6px 10px;font-weight:600;">${o.name}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px;text-align:center;color:${o.status.includes('مطابق فنياً')&&!o.status.includes('غير مطابق')?'#276749':'#C53030'};font-weight:700;">${o.status}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px;color:#64748B;">${o.notes||''}</td>
+      <td style="border:1px solid #000;padding:6px 10px;font-weight:600;">${o.name}</td>
+      <td style="border:1px solid #000;padding:6px 10px;text-align:center;color:${o.status.includes('مطابق فنياً')&&!o.status.includes('غير مطابق')?'#276749':'#C53030'};font-weight:700;">${o.status}</td>
+      <td style="border:1px solid #000;padding:6px 10px;">${o.notes||''}</td>
     </tr>`).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
@@ -4662,7 +4662,7 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
     <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
     <div style="font-size:11px;color:#244062;margin-bottom:50px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
     <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
-      ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="font-size:11px;font-weight:600;">${m.name}</div><div style="font-size:10px;color:#64748B;margin-bottom:30px;">${m.title||'عضو'}</div><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;color:#64748B;">التوقيع</div></div>`).join('')}
+      ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="font-size:13px;font-weight:700;">${m.name}</div><div style="font-size:10px;color:#444;margin-bottom:30px;">${m.title||'عضو'}</div><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;color:#64748B;">التوقيع</div></div>`).join('')}
     </div>
   </div>
 </div>
@@ -4688,8 +4688,8 @@ function committeeExportPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
   const offersTable=`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
-    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #fff;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #fff;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #fff;">ملاحظات</th></tr></thead>
-    <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr style="background:${i%2===0?'#fff':'#EBF8FA'}"><td style="padding:6px 8px;border:1px solid #E2E8F0;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #E2E8F0;text-align:center;font-weight:700;color:#1DA9BD;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #E2E8F0;color:#64748B;">${o.notes||''}</td></tr>`).join('')}</tbody>
+    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
+    <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`).join('')}</tbody>
   </table>`;
   const membersText=(c.members||[]).map(m=>`- ${m.name}`).join('<br>');
   const w=window.open('','_blank');
@@ -4720,7 +4720,7 @@ ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
   <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
   <div style="font-size:11px;color:#244062;margin-bottom:40px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
   <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
-    ${(c.members||[]).map(m=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:100px;margin-top:50px;">${m.name}<br><span style="font-size:9px;color:#64748B;">${m.title||'عضو'}</span></div></div>`).join('')}
+    ${(c.members||[]).map(m=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:120px;margin-top:50px;font-size:13px;font-weight:700;">${m.name}<br><span style="font-size:10px;font-weight:400;color:#444;">${m.title||'عضو'}</span></div></div>`).join('')}
   </div>
 </div></div>
 </div></div></body></html>`);
