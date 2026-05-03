@@ -4637,7 +4637,7 @@ function committeeExportTechPDFData(c){
   const techRows=(c.offers||[]).map(o=>`
     <tr>
       <td style="border:1px solid #000;padding:6px 10px;font-weight:600;">${o.name}</td>
-      <td style="border:1px solid #000;padding:6px 10px;text-align:center;color:${o.status.includes('مطابق فنياً')&&!o.status.includes('غير مطابق')?'#276749':'#C53030'};font-weight:700;">${o.status}</td>
+      <td style="border:1px solid #000;padding:6px 10px;text-align:center;font-weight:700;">${o.status}</td>
       <td style="border:1px solid #000;padding:6px 10px;">${o.notes||''}</td>
     </tr>`).join('');
   const w=window.open('','_blank');
@@ -4658,13 +4658,17 @@ h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 
 </table>
 <p style="margin-top:16px;">${c.views||''}</p>
 <div style="margin-top:40px;"><p><strong>أعضاء اللجنة:</strong></p>
-  <div style="text-align:center;margin-top:16px;">
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
-    <div style="font-size:11px;color:#244062;margin-bottom:50px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
-    <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
-      ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:120px;"><div style="font-size:13px;font-weight:700;">${m.name}</div><div style="font-size:10px;color:#444;margin-bottom:30px;">${m.title||'عضو'}</div><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;color:#64748B;">التوقيع</div></div>`).join('')}
-    </div>
-  </div>
+<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+  <tr>
+    <td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;width:20%;">
+      الرئيس<br>
+      <span style="font-size:11px;font-weight:400;">${c.chairTitle||'الرئيس التنفيذي'}</span><br>
+      <span style="font-size:12px;">${c.chairName}</span><br><br>
+      <span style="font-size:10px;">التوقيع: ___________</span>
+    </td>
+    ${(c.members||[]).map(m=>`<td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;"><span style="display:block;">${m.name}</span><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span><br><br><span style="font-size:10px;">التوقيع: ___________</span></td>`).join('')}
+  </tr>
+</table>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -4716,13 +4720,18 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:30px;"><strong>أعضاء اللجنة:</strong>
-<div style="margin-top:16px;text-align:center;">
-  <div style="font-size:12px;font-weight:700;margin-bottom:8px;">الرئيس</div>
-  <div style="font-size:11px;color:#244062;margin-bottom:40px;">${c.chairTitle||'الرئيس التنفيذي'}<br>${c.chairName}</div>
-  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;">
-    ${(c.members||[]).map(m=>`<div style="text-align:center;"><div style="border-top:1px solid #000;padding-top:6px;min-width:120px;margin-top:50px;font-size:13px;font-weight:700;">${m.name}<br><span style="font-size:10px;font-weight:400;color:#444;">${m.title||'عضو'}</span></div></div>`).join('')}
-  </div>
-</div></div>
+<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+  <tr>
+    <td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;width:20%;">
+      الرئيس<br>
+      <span style="font-size:11px;font-weight:400;">${c.chairTitle||'الرئيس التنفيذي'}</span><br>
+      <span style="font-size:12px;">${c.chairName}</span><br><br>
+      <span style="font-size:10px;">التوقيع: ___________</span>
+    </td>
+    ${(c.members||[]).map(m=>`<td style="border:1px solid #000;padding:10px;text-align:center;font-weight:700;font-size:13px;"><span style="display:block;">${m.name}</span><span style="font-size:10px;font-weight:400;">${m.title||'عضو'}</span><br><br><span style="font-size:10px;">التوقيع: ___________</span></td>`).join('')}
+  </tr>
+</table>
+</div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
