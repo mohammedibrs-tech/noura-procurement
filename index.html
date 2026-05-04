@@ -1806,11 +1806,36 @@ function renderRfqSaved(){
     html+='<div class="saved-item">'+
       '<div class="saved-item-info"><strong>السادة / '+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+'</span></div>'+
       '<div class="saved-item-actions">'+
+        '<button class="btn btn-primary btn-sm" onclick="rfqEdit('+i+')">تعديل</button>'+
         '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">PDF</button>'+
         '<button class="btn btn-gray btn-sm" onclick="rfqDel('+i+')">×</button>'+
       '</div></div>';
   }
   el.innerHTML=html;
+}
+function rfqEdit(i){
+  const s=rfqSaved[i];if(!s)return;
+  document.getElementById('rfq-co').value=s.company||'';
+  document.getElementById('rfq-date').value=s.date||'';
+  document.getElementById('rfq-notes').value=s.notes||'';
+  // امسح الصفوف الحالية وأعد بناءها
+  const tbody=document.getElementById('rfq-tbody');
+  if(tbody){
+    tbody.innerHTML='';
+    rfqRows=0;
+    (s.rows||[]).forEach(r=>{
+      rfqRows++;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:60px;"></td><td><input class="rfq-notes" value="${r.notes||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  // احذفه من المحفوظات ليُعاد حفظه بعد التعديل
+  rfqSaved.splice(i,1);
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+  renderRfqSaved();
+  document.getElementById('rfq-co').scrollIntoView({behavior:'smooth'});
+  toast('تم تحميل RFQ للتعديل ✅');
 }
 function rfqDel(i){rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();}
 function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
@@ -1819,8 +1844,8 @@ function rfqPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
+  const SIG=SIG_URL;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:38mm 14mm 20mm 14mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
 <div class="page"><img class="bg" src="${FORM_BG}">
 <div class="content">
 <div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div>
@@ -1843,17 +1868,21 @@ function rfqPrintData(d){
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
   <div style="flex:1;text-align:center;">
-      <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
-      <div style="position:relative;display:inline-block;min-width:120px;">
-        <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
-        <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">محمد الجمعان</div>
-      </div>
+    <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
+    <div style="position:relative;display:inline-block;min-width:120px;">
+      <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
+      <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">محمد الجمعان</div>
     </div>
+  </div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
 </div>
-</div></div></body></html>`);
-  w.document.close();w.onload=()=>{w.focus();w.print();};
+</div></div></body></html>`;
+  const w=window.open('','_blank');
+  if(!w){toast('يرجى السماح بالنوافذ المنبثقة في المتصفح',true);return;}
+  w.document.write(html);
+  w.document.close();
+  w.onload=()=>{w.focus();w.print();};
 }
 
 /* ══════════════ DN ══════════════ */
