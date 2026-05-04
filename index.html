@@ -2537,17 +2537,66 @@ function pcOpen(key,i){window.open((pcGroups[key]||[])[i]?.b64||'','_blank');}
 function pcRemoveFile(key,i){(pcGroups[key]||[]).splice(i,1);if(pcGroups[key]&&!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
 function pcDeleteGroup(key){if(!confirm('حذف شهر كامل؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
 
+async function pcFetchFile(url){
+  // جلب الملف من Supabase مع المصادقة لتجاوز CORS
+  try{
+    var r=await fetch(url,{
+      headers:{'apikey':SK,'Authorization':'Bearer '+SK}
+    });
+    if(r.ok) return await r.arrayBuffer();
+  }catch(e){}
+  // محاولة ثانية بدون headers (Public bucket)
+  try{
+    var r2=await fetch(url);
+    if(r2.ok) return await r2.arrayBuffer();
+  }catch(e){}
+  return null;
+}
+
 async function pcExport(key){
   var invoices=pcGroups[key]||[];
   if(!invoices.length){toast('لا توجد فواتير',true);return;}
   var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
   var p=key.split('-');
   var fname='PettyCash_'+MONTHS[p[1]]+'_'+p[0];
+
+  // جمع كل الملفات القابلة للتصدير
+  var allFiles=[];
+  for(var i=0;i<invoices.length;i++){
+    var inv=invoices[i];
+    (inv.files||[]).forEach(function(f){
+      if(!f.failed&&f.url) allFiles.push({inv:inv,invIdx:i,f:f});
+    });
+  }
+  if(!allFiles.length){toast('لا توجد ملفات مرفوعة قابلة للتصدير',true);return;}
+
+  // اختبار CORS: هل نقدر نجلب ملف؟
+  toast('جاري فحص الاتصال...');
+  var testBuf=await pcFetchFile(allFiles[0].f.url);
+
+  if(!testBuf){
+    // CORS يمنع الجلب — افتح الملفات مباشرة في المتصفح للحفظ اليدوي
+    toast('سيتم فتح الملفات مباشرة للحفظ...');
+    await new Promise(function(r){setTimeout(r,1000);});
+    for(var j=0;j<allFiles.length;j++){
+      var a=document.createElement('a');
+      a.href=allFiles[j].f.url;
+      a.target='_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      await new Promise(function(r){setTimeout(r,700);});
+    }
+    toast('تم فتح '+allFiles.length+' ملف — احفظ كل واحد يدوياً');
+    return;
+  }
+
+  // CORS شغال — نبني ZIP كامل
   toast('جاري تجهيز ZIP...');
   try{
     var zip=new JSZip();
     var mf=zip.folder(fname);
-    var errors=0;
+    var ok=0,errors=0;
     for(var i=0;i<invoices.length;i++){
       var inv=invoices[i];
       var fn=(i+1)+'_'+inv.vendor+'_'+inv.desc;
@@ -2556,19 +2605,15 @@ async function pcExport(key){
       for(var fi=0;fi<files.length;fi++){
         var f=files[fi];
         if(f.failed||!f.url){errors++;continue;}
-        try{
-          // جلب الملف من Supabase Storage
-          var resp=await fetch(f.url);
-          if(!resp.ok){errors++;continue;}
-          var buf=await resp.arrayBuffer();
-          invFolder.file(f.label+'_'+f.name, buf);
-        }catch(e){errors++;}
+        var buf=await pcFetchFile(f.url);
+        if(buf){invFolder.file(f.label+'_'+f.name,buf);ok++;}
+        else{invFolder.file(f.label+'_رابط.txt','رابط الملف:
+'+f.url);errors++;}
       }
     }
     var blob=await zip.generateAsync({type:'blob'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.zip';a.click();
-    if(errors>0) toast('✅ تم التصدير ('+errors+' ملف تعذّر تحميله)');
-    else toast('✅ تم تصدير '+invoices.length+' فاتورة في ZIP منظم');
+    toast('تم تصدير '+ok+' ملف'+(errors?' — '+errors+' ملف تعذّر':''));
   }catch(e){toast('خطأ: '+e.message,true);}
 }
 
