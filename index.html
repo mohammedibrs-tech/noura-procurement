@@ -4491,9 +4491,36 @@ function cmAddOffer(){
   list.appendChild(div);
 }
 
+function numToWordsAr(n){
+  if(!n||n===0)return'صفر';
+  const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+  const tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+  const hundreds=['','مئة','مئتان','ثلاثمئة','أربعمئة','خمسمئة','ستمئة','سبعمئة','ثمانمئة','تسعمئة'];
+  function h(num){
+    if(num===0)return'';
+    if(num<20)return ones[num];
+    if(num<100){const t=Math.floor(num/10);const o=num%10;return o===0?tens[t]:ones[o]+' و'+tens[t];}
+    const hu=Math.floor(num/100);const rest=num%100;
+    return rest===0?hundreds[hu]:hundreds[hu]+' و'+h(rest);
+  }
+  n=Math.floor(n);
+  if(n>=1000000){const m=Math.floor(n/1000000);const r=n%1000000;return(m===1?'مليون':m===2?'مليونان':h(m)+' ملايين')+(r>0?' و'+numToWordsAr(r):'');}
+  if(n>=1000){const k=Math.floor(n/1000);const r=n%1000;const kw=k===1?'ألف':k===2?'ألفان':k<11?h(k)+' آلاف':h(k)+' ألف';return kw+(r>0?' و'+h(r):'');}
+  return h(n);
+}
+
 function cmUpdateAmountWords(){
   const n=parseFloat(document.getElementById('cm-winner-amount').value)||0;
-  document.getElementById('cm-winner-words').value=n>0?numToWords(Math.floor(n))+' ريال و'+Math.round((n%1)*100)+' هللة فقط لاغير':'';
+  if(n>0){
+    const riyals=Math.floor(n);
+    const halalas=Math.round((n%1)*100);
+    let words=numToWordsAr(riyals)+' ريال';
+    if(halalas>0)words+=' و'+numToWordsAr(halalas)+' هللة';
+    words+=' فقط لاغير';
+    document.getElementById('cm-winner-words').value=words;
+  }else{
+    document.getElementById('cm-winner-words').value='';
+  }
 }
 
 function cmGetData(){
