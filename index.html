@@ -2405,12 +2405,12 @@ async function pcAddInvoice(){
 
   try{
 
-  // رفع كل ملف — Storage إذا ضبط، وإلا base64 محلياً
+  // رفع كل ملف — Storage فقط، بدون base64 (لتجنب امتلاء localStorage)
   async function uploadFile(file, label){
     if(!file)return;
-    // جرب Storage أولاً
+    var path = key+'/'+invId+'/'+label+'_'+file.name;
+    var uploaded=false;
     try{
-      var path = key+'/'+invId+'/'+label+'_'+file.name;
       var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
         method:'POST',
         headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
@@ -2418,15 +2418,12 @@ async function pcAddInvoice(){
       });
       if(res.ok){
         invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+path});
-        return;
+        uploaded=true;
       }
-    }catch(e){/* Storage فشل - سنستخدم base64 */}
-    // fallback: base64
-    await new Promise(function(resolve){
-      var reader=new FileReader();
-      reader.onload=function(e){invoice.files.push({label:label,name:file.name,b64:e.target.result});resolve();};
-      reader.readAsDataURL(file);
-    });
+    }catch(e){}
+    if(!uploaded){
+      invoice.files.push({label:label,name:file.name,url:null,failed:true});
+    }
   }
 
   await uploadFile(taxFile,    'الفاتورة_الضريبية');
@@ -2440,9 +2437,20 @@ async function pcAddInvoice(){
     invoice:JSON.stringify(invoice)
   });
 
-  // حفظ محلي أيضاً
+  // حفظ محلي — بدون base64 لتجنب QuotaExceeded
   pcGroups[key].push(invoice);
-  localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
+  try{
+    // احذف أي b64 قديمة قبل الحفظ
+    var cleanGroups={};
+    Object.keys(pcGroups).forEach(function(k){
+      cleanGroups[k]=(pcGroups[k]||[]).map(function(inv){
+        var ci=Object.assign({},inv);
+        ci.files=(ci.files||[]).map(function(f){var cf=Object.assign({},f);delete cf.b64;return cf;});
+        return ci;
+      });
+    });
+    localStorage.setItem('pc_groups',JSON.stringify(cleanGroups));
+  }catch(e){ console.warn('localStorage quota - data saved in Supabase only'); }
   renderPCGroups();
 
   document.getElementById('pc-vendor').value='';
@@ -2476,11 +2484,16 @@ function renderPCGroups(){
       var tagsHTML='';
       for(var fi=0;fi<flist.length;fi++){
         var colors=['#1DA9BD','#276749','#7C3AED'];
-        tagsHTML+='<span style="font-size:10px;background:'+colors[fi%3]+'22;color:'+colors[fi%3]+';padding:2px 8px;border-radius:10px;margin-left:4px;">'+flist[fi].label+'</span>';
+        var failBadge=flist[fi].failed?'⚠️ ':'';
+        tagsHTML+='<span style="font-size:10px;background:'+(flist[fi].failed?'#FEF3C7':''+colors[fi%3]+'22')+';color:'+(flist[fi].failed?'#92400E':colors[fi%3])+';padding:2px 8px;border-radius:10px;margin-left:4px;">'+failBadge+flist[fi].label+'</span>';
       }
       var btnsHTML='';
       for(var fi2=0;fi2<flist.length;fi2++){
-        btnsHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpenFile(\''+key+'\','+ii+','+fi2+')" title="'+flist[fi2].label+'">فتح '+flist[fi2].label+'</button>';
+        if(flist[fi2].failed){
+          btnsHTML+='<button class="btn btn-gray btn-sm" disabled style="opacity:0.5;font-size:10px;" title="فشل الرفع">⚠️ '+flist[fi2].label+'</button>';
+        }else{
+          btnsHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpenFile(\''+key+'\','+ii+','+fi2+')" title="'+flist[fi2].label+'">فتح '+flist[fi2].label+'</button>';
+        }
       }
       invHTML+='<div style="padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;">';
       invHTML+='<div><div style="font-weight:700;font-size:13px;">'+inv.vendor+'</div>';
@@ -5741,6 +5754,10 @@ async function init(){
 
   // ── خطوة ١: اعرض البيانات المحلية فوراً (لا تنتظر الشبكة) ──
   pcGroups   = JSON.parse(localStorage.getItem('pc_groups')||'{}');
+  // تنظيف base64 القديمة من localStorage لتحرير المساحة
+  var needsClean=false;
+  Object.keys(pcGroups).forEach(function(k){(pcGroups[k]||[]).forEach(function(inv){(inv.files||[]).forEach(function(f){if(f.b64){delete f.b64;needsClean=true;}});});});
+  if(needsClean){try{localStorage.setItem('pc_groups',JSON.stringify(pcGroups));}catch(e){}}
   poSaved    = JSON.parse(localStorage.getItem('po_saved_local')||'[]');
   rfqSaved   = JSON.parse(localStorage.getItem('rfq_saved')||'[]');
   dnSaved    = JSON.parse(localStorage.getItem('dn_saved')||'[]');
@@ -5851,12 +5868,10 @@ async function pcSaveEdit(){
       });
       if(res.ok){ inv.files.push({label:label,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path}); continue; }
     }catch(e){}
-    // fallback base64
-    await new Promise(function(resolve){
-      var reader=new FileReader();
-      reader.onload=function(e){inv.files.push({label:label,name:f.name,b64:e.target.result});resolve();};
-      reader.readAsDataURL(f);
-    });
+    // Storage فشل — نحفظ اسم الملف فقط
+    if(!uploaded){
+      inv.files.push({label:label,name:f.name,url:null,failed:true});
+    }
   }
 
   // حفظ محلي
