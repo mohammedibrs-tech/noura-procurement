@@ -589,10 +589,10 @@ function numToWords(n){
         <div class="field"><label>البيان (وصف المصروف)</label><input id="pc-desc" placeholder="مثال: صيانة أجهزة التكييف"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px;">
-        <div class="field"><label style="color:#1DA9BD;font-weight:700;">📄 الفاتورة الضريبية</label><input type="file" id="pc-tax" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#276749;font-weight:700;">📄 سند الاستلام</label><input type="file" id="pc-receipt" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#7C3AED;font-weight:700;">📄 طلب ERP</label><input type="file" id="pc-erp" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#C53030;font-weight:700;">📄 إيصال التحويل</label><input type="file" id="pc-transfer" accept=".pdf" style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#1DA9BD;font-weight:700;">📄 الفاتورة الضريبية</label><input type="file" id="pc-tax" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#276749;font-weight:700;">📄 سند الاستلام</label><input type="file" id="pc-receipt" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#7C3AED;font-weight:700;">📄 طلب ERP</label><input type="file" id="pc-erp" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
+        <div class="field"><label style="color:#C53030;font-weight:700;">📄 إيصال التحويل</label><input type="file" id="pc-transfer" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
       </div>
       <button class="btn btn-primary" onclick="pcAddInvoice()" style="margin-top:14px;">+ إضافة الفاتورة</button>
     </div>
@@ -2405,11 +2405,10 @@ async function pcAddInvoice(){
 
   try{
 
-  // رفع كل ملف — Storage فقط، بدون base64 (لتجنب امتلاء localStorage)
-  async function uploadFile(file, label){
+  // رفع ملف واحد إلى Storage
+  async function uploadOne(file, label){
     if(!file)return;
     var path = key+'/'+invId+'/'+label+'_'+file.name;
-    var uploaded=false;
     try{
       var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
         method:'POST',
@@ -2418,18 +2417,26 @@ async function pcAddInvoice(){
       });
       if(res.ok){
         invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+path});
-        uploaded=true;
+        return;
       }
     }catch(e){}
-    if(!uploaded){
-      invoice.files.push({label:label,name:file.name,url:null,failed:true});
-    }
+    invoice.files.push({label:label,name:file.name,url:null,failed:true});
   }
 
-  await uploadFile(taxFile,    'الفاتورة_الضريبية');
-  await uploadFile(receiptFile,'سند_الاستلام');
-  await uploadFile(erpFile,    'طلب_ERP');
-  await uploadFile(transferFile,'إيصال_التحويل');
+  // رفع كل الملفات (كل input يقبل multiple)
+  var fileMap=[
+    {el:'pc-tax',    label:'الفاتورة_الضريبية'},
+    {el:'pc-receipt',label:'سند_الاستلام'},
+    {el:'pc-erp',    label:'طلب_ERP'},
+    {el:'pc-transfer',label:'إيصال_التحويل'}
+  ];
+  for(var fi=0;fi<fileMap.length;fi++){
+    var files=document.getElementById(fileMap[fi].el).files;
+    for(var fj=0;fj<files.length;fj++){
+      var suffix=files.length>1?'_'+(fj+1):'';
+      await uploadOne(files[fj], fileMap[fi].label+suffix);
+    }
+  }
 
   // حفظ في Supabase DB
   await sbInsert('procurement_pc',{
@@ -2455,10 +2462,7 @@ async function pcAddInvoice(){
 
   document.getElementById('pc-vendor').value='';
   document.getElementById('pc-desc').value='';
-  document.getElementById('pc-tax').value='';
-  document.getElementById('pc-receipt').value='';
-  document.getElementById('pc-erp').value='';
-  document.getElementById('pc-transfer').value='';
+  ['pc-tax','pc-receipt','pc-erp','pc-transfer'].forEach(function(id){document.getElementById(id).value='';});
   toast('تمت إضافة الفاتورة ✅');
 
   }catch(e){
@@ -2543,17 +2547,28 @@ async function pcExport(key){
   try{
     var zip=new JSZip();
     var mf=zip.folder(fname);
-    invoices.forEach(function(inv,i){
+    var errors=0;
+    for(var i=0;i<invoices.length;i++){
+      var inv=invoices[i];
       var fn=(i+1)+'_'+inv.vendor+'_'+inv.desc;
       var invFolder=mf.folder(fn);
-      (inv.files||[]).forEach(function(f){
-        var b64=f.b64.includes(',')?f.b64.split(',')[1]:f.b64;
-        invFolder.file(f.label+'_'+f.name,b64,{base64:true});
-      });
-    });
+      var files=inv.files||[];
+      for(var fi=0;fi<files.length;fi++){
+        var f=files[fi];
+        if(f.failed||!f.url){errors++;continue;}
+        try{
+          // جلب الملف من Supabase Storage
+          var resp=await fetch(f.url);
+          if(!resp.ok){errors++;continue;}
+          var buf=await resp.arrayBuffer();
+          invFolder.file(f.label+'_'+f.name, buf);
+        }catch(e){errors++;}
+      }
+    }
     var blob=await zip.generateAsync({type:'blob'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.zip';a.click();
-    toast('✅ تم تصدير '+invoices.length+' فاتورة في ZIP منظم');
+    if(errors>0) toast('✅ تم التصدير ('+errors+' ملف تعذّر تحميله)');
+    else toast('✅ تم تصدير '+invoices.length+' فاتورة في ZIP منظم');
   }catch(e){toast('خطأ: '+e.message,true);}
 }
 
@@ -5853,24 +5868,23 @@ async function pcSaveEdit(){
   ];
 
   for(var i=0;i<fileMap.length;i++){
-    var f=document.getElementById(fileMap[i].id).files[0];
-    if(!f)continue;
+    var flist=document.getElementById(fileMap[i].id).files;
+    if(!flist||!flist.length)continue;
     var label=fileMap[i].label;
-    // احذف الملف القديم من نفس النوع إن وجد
-    inv.files=inv.files.filter(function(x){return x.label!==label;});
-    // رفع الجديد
-    try{
-      var path=pcEditKey+'/'+inv.id+'/'+label+'_'+f.name;
-      var res=await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
-        method:'POST',
-        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':f.type||'application/pdf','x-upsert':'true'},
-        body:f
-      });
-      if(res.ok){ inv.files.push({label:label,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path}); continue; }
-    }catch(e){}
-    // Storage فشل — نحفظ اسم الملف فقط
-    if(!uploaded){
-      inv.files.push({label:label,name:f.name,url:null,failed:true});
+    for(var fj=0;fj<flist.length;fj++){
+      var f=flist[fj];
+      var suffix=flist.length>1?'_'+(fj+1):'';
+      var fullLabel=label+suffix;
+      try{
+        var path=pcEditKey+'/'+inv.id+'/'+fullLabel+'_'+f.name;
+        var res=await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
+          method:'POST',
+          headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':f.type||'application/pdf','x-upsert':'true'},
+          body:f
+        });
+        if(res.ok){ inv.files.push({label:fullLabel,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path}); continue; }
+      }catch(e){}
+      inv.files.push({label:fullLabel,name:f.name,url:null,failed:true});
     }
   }
 
@@ -5926,19 +5940,19 @@ async function pcSaveEdit(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-size:11px;font-weight:700;color:#1DA9BD;display:block;margin-bottom:3px;">📄 الفاتورة الضريبية</label>
-            <input type="file" id="pce-tax" accept=".pdf" style="font-size:11px;width:100%;">
+            <input type="file" id="pce-tax" accept=".pdf" multiple style="font-size:11px;width:100%;">
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:#276749;display:block;margin-bottom:3px;">📄 سند الاستلام</label>
-            <input type="file" id="pce-receipt" accept=".pdf" style="font-size:11px;width:100%;">
+            <input type="file" id="pce-receipt" accept=".pdf" multiple style="font-size:11px;width:100%;">
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:#7C3AED;display:block;margin-bottom:3px;">📄 طلب ERP</label>
-            <input type="file" id="pce-erp" accept=".pdf" style="font-size:11px;width:100%;">
+            <input type="file" id="pce-erp" accept=".pdf" multiple style="font-size:11px;width:100%;">
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:#C53030;display:block;margin-bottom:3px;">📄 إيصال التحويل</label>
-            <input type="file" id="pce-transfer" accept=".pdf" style="font-size:11px;width:100%;">
+            <input type="file" id="pce-transfer" accept=".pdf" multiple style="font-size:11px;width:100%;">
           </div>
         </div>
       </div>
