@@ -2607,8 +2607,7 @@ async function pcExport(key){
         if(f.failed||!f.url){errors++;continue;}
         var buf=await pcFetchFile(f.url);
         if(buf){invFolder.file(f.label+'_'+f.name,buf);ok++;}
-        else{invFolder.file(f.label+'_رابط.txt','رابط الملف:
-'+f.url);errors++;}
+        else{invFolder.file(f.label+'_رابط.txt','رابط الملف: '+f.url);errors++;}
       }
     }
     var blob=await zip.generateAsync({type:'blob'});
