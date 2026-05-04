@@ -4714,7 +4714,7 @@ function committeeExportPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
   const offersTable=`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
-    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
+    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ الشهري شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
     <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`).join('')}</tbody>
   </table>`;
   const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
