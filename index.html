@@ -233,10 +233,26 @@ function numToWords(n){
     <p>متابعة الميزانية والمصروفات</p>
   </div>
 
+  <!-- فلتر الشهر المركزي -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="font-weight:700;color:#244062;font-size:14px;">📅 عرض شهر:</div>
+    <select id="budget-month" onchange="budgetCalcMonth()" style="padding:8px 14px;border:1.5px solid #244062;border-radius:8px;font-size:13px;font-weight:600;color:#244062;background:#fff;min-width:130px;">
+      <option value="">كل الشهور</option>
+      <option value="01">يناير</option><option value="02">فبراير</option>
+      <option value="03">مارس</option><option value="04">أبريل</option>
+      <option value="05">مايو</option><option value="06">يونيو</option>
+      <option value="07">يوليو</option><option value="08">أغسطس</option>
+      <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
+      <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+    </select>
+    <input id="budget-year" type="number" value="2026" onchange="budgetCalcMonth()" style="width:80px;padding:8px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;">
+    <span id="budget-month-label" style="font-size:12px;color:#64748B;"></span>
+  </div>
+
   <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi" style="border-right:4px solid var(--primary);">
-      <div class="kpi-label">إجمالي العهدة</div>
+      <div class="kpi-label">عهدة الشهر</div>
       <div class="kpi-val" id="b-total">0</div>
       <div class="kpi-sub">ريال سعودي</div>
     </div>
@@ -260,15 +276,14 @@ function numToWords(n){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <!-- إدخال العهدة -->
     <div class="card">
-      <div class="card-header"><h3>إعداد العهدة</h3></div>
+      <div class="card-header"><h3>إعداد العهدة الشهرية</h3></div>
       <div class="card-body">
         <div class="field" style="margin-bottom:12px;">
-          <label>إجمالي العهدة (ر.س)</label>
-          <input id="b-total-inp" type="number" placeholder="مثال: 50000" oninput="budgetCalc()">
+          <label>عهدة الشهر الواحد (ر.س)</label>
+          <input id="b-total-inp" type="number" placeholder="مثال: 10000" oninput="budgetCalcMonth()">
         </div>
-        <div class="field" style="margin-bottom:12px;">
-          <label>الميزانية المستهدفة للتوفير (ر.س)</label>
-          <input id="b-target-inp" type="number" placeholder="مثال: 5000" oninput="budgetCalc()">
+        <div style="background:#F0F9FF;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#1DA9BD;">
+          💡 هذا المبلغ يُطبّق على كل شهر بشكل مستقل
         </div>
         <button class="btn btn-primary" onclick="budgetSave()">حفظ</button>
       </div>
@@ -351,7 +366,7 @@ function numToWords(n){
     <div class="card-header">
       <h3>سجل المصروفات</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <select id="filter-month" onchange="renderExpenses()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
+        <select id="filter-month" onchange="syncBudgetFilter()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
           <option value="">كل الشهور</option>
           <option value="01">يناير</option><option value="02">فبراير</option>
           <option value="03">مارس</option><option value="04">أبريل</option>
@@ -360,7 +375,7 @@ function numToWords(n){
           <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
           <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
         </select>
-        <input id="filter-year" type="number" value="2026" onchange="renderExpenses()" style="width:75px;font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
+        <input id="filter-year" type="number" value="2026" onchange="syncBudgetFilter()" style="width:75px;font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
         <button class="btn btn-green btn-sm" onclick="expExcel()">Excel</button>
         <button class="btn btn-red btn-sm" onclick="expPrint()">PDF</button>
       </div>
@@ -1174,14 +1189,13 @@ async function initBudget(){
   const sbCfg=await sbGet('budget_config','limit=1');
   if(sbCfg&&sbCfg.length>0){
     budgetTotal=parseFloat(sbCfg[0].total)||0;
-    budgetTarget=parseFloat(sbCfg[0].target)||0;
+    // budgetTarget محذوف — العهدة شهرية ثابتة
     localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal,target:budgetTarget}));
   }else{
     const saved=JSON.parse(localStorage.getItem('budget_cfg')||'{}');
-    budgetTotal=saved.total||0;budgetTarget=saved.target||0;
+    budgetTotal=saved.total||10000;
   }
-  document.getElementById('b-total-inp').value=budgetTotal||'';
-  document.getElementById('b-target-inp').value=budgetTarget||'';
+  document.getElementById('b-total-inp').value=budgetTotal||10000;
   // جلب المصروفات — Supabase أولاً، ثم دمج مع localStorage
   const sbExp=await sbGet('expenses');
   const localExp=JSON.parse(localStorage.getItem('expenses_local')||'[]');
@@ -1194,35 +1208,91 @@ async function initBudget(){
   }else{
     expenses=localExp;
   }
-  budgetCalc();renderExpenses();
+  // تعيين الشهر الحالي تلقائياً
+  var nowMonth=String(new Date().getMonth()+1).padStart(2,'0');
+  var nowYear=String(new Date().getFullYear());
+  var bm=document.getElementById('budget-month');
+  var by=document.getElementById('budget-year');
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  if(bm) bm.value=nowMonth;
+  if(by) by.value=nowYear;
+  if(fm) fm.value=nowMonth;
+  if(fy) fy.value=nowYear;
+  budgetCalcMonth();
 }
 
-function budgetCalc(){
-  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||0;
-  budgetTarget=parseFloat(document.getElementById('b-target-inp').value)||0;
-  const spent=expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const remain=budgetTotal-spent;
-  const savedAmt=Math.max(0,budgetTarget-spent);
-  const savePct=budgetTarget>0?((savedAmt/budgetTarget)*100).toFixed(1):0;
-  const el_total=document.getElementById('b-total');if(el_total)el_total.textContent=budgetTotal.toLocaleString('ar-SA');
-  const el_remain=document.getElementById('b-remain');if(el_remain)el_remain.textContent=remain.toLocaleString('ar-SA');
-  const el_spent=document.getElementById('b-spent');if(el_spent)el_spent.textContent=spent.toLocaleString('ar-SA');
-  const el_pct=document.getElementById('b-save-pct');if(el_pct)el_pct.textContent=savePct+'%';
-  const el_amt=document.getElementById('b-save-amt');if(el_amt)el_amt.textContent='مبلغ التوفير: '+savedAmt.toLocaleString('ar-SA')+' ر.س';
+function budgetCalcMonth(){
+  // عهدة الشهر الواحد
+  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
+  var selMonth=(document.getElementById('budget-month')||{value:''}).value;
+  var selYear=(document.getElementById('budget-year')||{value:'2026'}).value||'2026';
+
+  // فلتر المصروفات حسب الشهر المختار
+  var filtered;
+  if(selMonth){
+    var key=selYear+'-'+selMonth;
+    filtered=expenses.filter(function(e){
+      var mk=e.month_key||(e.expense_date||'').substring(0,7);
+      return mk===key;
+    });
+  } else {
+    filtered=expenses;
+  }
+
+  var spent=filtered.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  var monthBudget=budgetTotal; // 10,000 لكل شهر
+  var remain=monthBudget-spent;
+  var savePct=monthBudget>0?Math.max(0,(remain/monthBudget)*100).toFixed(1):0;
+  var savedAmt=Math.max(0,remain);
+
+  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  var label=selMonth?(MONTHS[selMonth]+' '+selYear):'كل الشهور';
+  var lbl=document.getElementById('budget-month-label');
+  if(lbl) lbl.textContent='— '+label+' ('+filtered.length+' مصروف)';
+
+  var el_total=document.getElementById('b-total');if(el_total)el_total.textContent=monthBudget.toLocaleString('ar-SA');
+  var el_remain=document.getElementById('b-remain');if(el_remain)el_remain.textContent=remain.toLocaleString('ar-SA');
+  var el_spent=document.getElementById('b-spent');if(el_spent)el_spent.textContent=spent.toLocaleString('ar-SA');
+  var el_pct=document.getElementById('b-save-pct');if(el_pct)el_pct.textContent=savePct+'%';
+  var el_amt=document.getElementById('b-save-amt');if(el_amt)el_amt.textContent='مبلغ التوفير: '+savedAmt.toLocaleString('ar-SA')+' ر.س';
+
+  // مزامنة فلتر جدول المصروفات مع نفس الشهر
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  if(fm&&fm.value!==selMonth){fm.value=selMonth;}
+  if(fy&&selYear&&fy.value!==selYear){fy.value=selYear;}
+
+  renderExpenses();
   renderTopDepts();renderMonthCompare();renderTopItems();
 }
 
+// alias للتوافق مع الكود القديم
+function budgetCalc(){ budgetCalcMonth(); }
+
+// مزامنة فلتر الجدول مع فلتر العهدة
+function syncBudgetFilter(){
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  var bm=document.getElementById('budget-month');
+  var by=document.getElementById('budget-year');
+  if(bm&&fm&&bm.value!==fm.value) bm.value=fm.value;
+  if(by&&fy&&by.value!==fy.value) by.value=fy.value;
+  budgetCalcMonth();
+}
+
 function budgetSave(){
-  localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal,target:budgetTarget}));
-  // احفظ في Supabase
-  sbGet('budget_config','limit=1').then(res=>{
+  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
+  localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal}));
+  sbGet('budget_config','limit=1').then(function(res){
     if(res&&res.length>0){
-      sbUpdate('budget_config',res[0].id,{total:budgetTotal,target:budgetTarget,updated_at:new Date().toISOString()});
+      sbUpdate('budget_config',res[0].id,{total:budgetTotal,updated_at:new Date().toISOString()});
     }else{
-      sbInsert('budget_config',{total:budgetTotal,target:budgetTarget});
+      sbInsert('budget_config',{total:budgetTotal});
     }
-  }).catch(()=>{});
-  toast('تم حفظ إعدادات العهدة ✅');
+  }).catch(function(){});
+  budgetCalcMonth();
+  toast('تم حفظ عهدة الشهر: '+budgetTotal.toLocaleString('ar-SA')+' ر.س ✅');
 }
 
 async function expAdd(){
