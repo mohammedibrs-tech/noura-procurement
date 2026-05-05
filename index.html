@@ -322,6 +322,10 @@ function numToWords(n){
           <input id="exp-inv" placeholder="INV-001">
         </div>
         <div class="field">
+          <label>اسم الشركة / المورد</label>
+          <input id="exp-vendor" list="suppliers-datalist" placeholder="اختر أو اكتب اسم المورد" oninput="buildSupplierDatalist()">
+        </div>
+        <div class="field">
           <label>البند / المشتري</label>
           <input id="exp-item" placeholder="مثال: طابعات HP">
         </div>
@@ -401,7 +405,7 @@ function numToWords(n){
       </div>
       <div class="section-title">بيانات المورد</div>
       <div class="form-grid">
-        <div class="field"><label>اسم الشركة</label><input id="po-co" placeholder="اسم الشركة المورّدة"></div>
+        <div class="field"><label>اسم الشركة</label><input id="po-co" list="suppliers-datalist" placeholder="اختر أو اكتب اسم الشركة المورّدة" oninput="buildSupplierDatalist()"></div>
         <div class="field"><label>الرقم الضريبي</label><input id="po-vat" placeholder="الرقم الضريبي للمورد"></div>
         <div class="field"><label>العنوان</label><input id="po-addr" placeholder="عنوان المورد"></div>
         <div class="field"><label>رقم التواصل</label><input id="po-phone" placeholder="+966XXXXXXXXX"></div>
@@ -585,7 +589,7 @@ function numToWords(n){
           </select>
         </div>
         <div class="field"><label>السنة</label><input id="pc-year" type="number" value="2026"></div>
-        <div class="field"><label>اسم الشركة / المورد</label><input id="pc-vendor" placeholder="مثال: شركة الأمانة للتجارة"></div>
+        <div class="field"><label>اسم الشركة / المورد</label><input id="pc-vendor" list="suppliers-datalist" placeholder="اختر أو اكتب اسم المورد" oninput="buildSupplierDatalist()"></div>
         <div class="field"><label>البيان (وصف المصروف)</label><input id="pc-desc" placeholder="مثال: صيانة أجهزة التكييف"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px;">
@@ -976,7 +980,7 @@ function numToWords(n){
 <div class="page" id="page-suppliers">
   <div class="page-header"><h1>الموردون</h1><p>إدارة بيانات الموردين والخدمات المقدمة</p></div>
   <div class="card">
-    <div class="card-header"><h3 id="supplier-form-title">إضافة مورد جديد</h3><button class="btn btn-gray btn-sm" onclick="supplierReset()">🔄 جديد</button></div>
+    <div class="card-header"><h3 id="supplier-form-title">إضافة مورد جديد</h3><div style="display:flex;gap:6px;"><button class="btn btn-gray btn-sm" onclick="importSuppliersFromExpenses()">📥 استيراد من المصروفات</button><button class="btn btn-gray btn-sm" onclick="supplierReset()">🔄 جديد</button></div></div>
     <div class="card-body">
       <div class="form-grid">
         <div class="field"><label>اسم الشركة / المورد</label><input id="sup-name" placeholder="اسم الشركة"></div>
@@ -1226,13 +1230,16 @@ async function expAdd(){
   const month=document.getElementById('exp-month').value;
   const year=document.getElementById('exp-year').value||new Date().getFullYear();
   const invNum=document.getElementById('exp-inv').value.trim();
+  const vendor=(document.getElementById('exp-vendor')||{value:''}).value.trim();
   const item=document.getElementById('exp-item').value.trim();
   const amount=parseFloat(document.getElementById('exp-amount').value)||0;
   const date=document.getElementById('exp-date').value;
   const notes=document.getElementById('exp-notes').value.trim();
   if(!item||!amount){toast('أدخل البند والمبلغ',true);return;}
+  // إضافة المورد تلقائياً إن كان جديداً
+  if(vendor) autoAddSupplier(vendor);
   const monthKey=year+'-'+month;
-  const row={department:dept,month_key:monthKey,invoice_num:invNum,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
+  const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
   const localRow={...row,id:Date.now()};
   expenses.unshift(localRow);
   localStorage.setItem('expenses_local',JSON.stringify(expenses));
@@ -1242,6 +1249,7 @@ async function expAdd(){
       if(idx!==-1){expenses[idx]={...expenses[idx],...res[0]};localStorage.setItem('expenses_local',JSON.stringify(expenses));}
     }
   }).catch(()=>{});
+  const expVendorEl=document.getElementById('exp-vendor');if(expVendorEl)expVendorEl.value='';
   document.getElementById('exp-item').value='';
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-notes').value='';
@@ -1556,6 +1564,8 @@ function poGetRows(){
 async function poSave(){
   const co=document.getElementById('po-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
+  // إضافة المورد تلقائياً
+  autoAddSupplier(co);
   const data={
     company:co,num:document.getElementById('po-num').value,date:document.getElementById('po-date').value,
     vat:document.getElementById('po-vat').value,email:document.getElementById('po-email').value,
@@ -2390,6 +2400,7 @@ async function pcAddInvoice(){
   var vendor = document.getElementById('pc-vendor').value.trim();
   var desc   = document.getElementById('pc-desc').value.trim();
   if(!vendor||!desc){toast('أدخل اسم الشركة والبيان',true);return;}
+  autoAddSupplier(vendor);
   var taxFile      = document.getElementById('pc-tax').files[0];
   var receiptFile  = document.getElementById('pc-receipt').files[0];
   var erpFile      = document.getElementById('pc-erp').files[0];
@@ -4921,6 +4932,47 @@ function supplierReset(){
   document.getElementById('sup-category').value='أمن وحراسة';
 }
 
+// ══ إضافة مورد تلقائياً من اسم (بدون تكرار) ══
+function autoAddSupplier(name){
+  if(!name||!name.trim())return;
+  name=name.trim();
+  var exists=suppliers.find(function(s){return s.name.trim()===name;});
+  if(exists)return; // موجود مسبقاً
+  var sup={id:Date.now(),name:name,service:'',phone:'',email:'',contact:'',category:'أخرى',notes:'',created_at:new Date().toISOString()};
+  suppliers.unshift(sup);
+  localStorage.setItem('suppliers',JSON.stringify(suppliers));
+  sbInsert('procurement_suppliers',{supplier_id:sup.id,data:JSON.stringify(sup)}).catch(function(){});
+  renderSuppliers();
+}
+
+// ══ بناء datalist من الموردين ══
+function buildSupplierDatalist(){
+  var dl=document.getElementById('suppliers-datalist');
+  if(!dl){dl=document.createElement('datalist');dl.id='suppliers-datalist';document.body.appendChild(dl);}
+  dl.innerHTML='';
+  suppliers.forEach(function(s){
+    var opt=document.createElement('option');
+    opt.value=s.name;
+    dl.appendChild(opt);
+  });
+}
+
+// ══ استيراد أسماء الموردين من المصروفات الحالية (مرة واحدة) ══
+function importSuppliersFromExpenses(){
+  var names=new Set();
+  expenses.forEach(function(e){if(e.vendor&&e.vendor.trim())names.add(e.vendor.trim());});
+  // أيضاً من item_name اللي يبدأ بشركة أو اسم (اختياري - من vendor فقط)
+  var added=0;
+  names.forEach(function(name){
+    if(!suppliers.find(function(s){return s.name.trim()===name;})){
+      autoAddSupplier(name);added++;
+    }
+  });
+  if(added>0){toast('تم استيراد '+added+' مورد من المصروفات ✅');}
+  else{toast('لا يوجد موردون جدد للاستيراد');}
+  buildSupplierDatalist();
+}
+
 async function supplierSave(){
   const name=document.getElementById('sup-name').value.trim();
   if(!name){toast('أدخل اسم المورد',true);return;}
@@ -5839,6 +5891,7 @@ async function init(){
   renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
   renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
   if(typeof renderPCGroups==='function')renderPCGroups();
+  if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
 
   // ── خطوة ٢: زامن مع Supabase في الخلفية بدون انتظار ──
   loadFromSupabase().then(()=>{
@@ -5969,7 +6022,7 @@ async function pcSaveEdit(){
     <div style="padding:20px;">
       <div style="margin-bottom:14px;">
         <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:5px;">اسم الشركة / المورد</label>
-        <input id="pce-vendor" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" placeholder="مثال: شركة الأمانة للتجارة">
+        <input id="pce-vendor" list="suppliers-datalist" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" placeholder="اختر أو اكتب اسم المورد" oninput="buildSupplierDatalist()">
       </div>
       <div style="margin-bottom:18px;">
         <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:5px;">البيان (وصف المصروف)</label>
