@@ -449,6 +449,50 @@ function numToWords(n){
         <div>VAT 15%: <strong id="po-tax">0</strong> ر.س</div>
         <div style="font-size:15px;font-weight:900;color:var(--primary);">الإجمالي: <strong id="po-tot">0</strong> ر.س</div>
       </div>
+      <!-- شروط التسليم والضمان والدفع -->
+      <div class="section-title" style="margin-top:16px;">شروط التسليم والضمان والدفع</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>مدة التسليم</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="po-delivery-days" type="number" min="1" value="" placeholder="مثال: 7" style="width:80px;">
+            <select id="po-delivery-unit" style="flex:1;">
+              <option value="يوم عمل">يوم عمل</option>
+              <option value="يوم">يوم</option>
+              <option value="أسبوع">أسبوع</option>
+              <option value="شهر">شهر</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>مدة الضمان</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="po-warranty-val" type="number" min="0" value="" placeholder="مثال: 12" style="width:80px;">
+            <select id="po-warranty-unit" style="flex:1;">
+              <option value="شهر">شهر</option>
+              <option value="سنة">سنة</option>
+              <option value="يوم">يوم</option>
+              <option value="لا يوجد ضمان">لا يوجد ضمان</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>شروط الدفع</label>
+          <select id="po-payment-terms" onchange="poToggleCustomPayment(this.value)" style="width:100%;">
+            <option value="فور الاستلام">فور الاستلام</option>
+            <option value="خلال 30 يوم">خلال 30 يوم</option>
+            <option value="خلال 45 يوم">خلال 45 يوم</option>
+            <option value="خلال 60 يوم">خلال 60 يوم</option>
+            <option value="50% مقدم والباقي عند التسليم">50% مقدم والباقي عند التسليم</option>
+            <option value="100% مقدم">100% مقدم</option>
+            <option value="custom">تخصيص...</option>
+          </select>
+        </div>
+        <div class="field" id="po-payment-custom-wrap" style="display:none;">
+          <label>شرط دفع مخصص</label>
+          <input id="po-payment-custom" placeholder="اكتب شرط الدفع...">
+        </div>
+      </div>
       <div class="actions">
         <button class="btn btn-primary" onclick="poSave()">حفظ</button>
         <button class="btn btn-green" onclick="poExcel()">تصدير Excel</button>
@@ -1646,14 +1690,83 @@ function poGetRows(){
   });
 }
 
+async function poToggleCustomPayment(val){
+  var wrap=document.getElementById('po-payment-custom-wrap');
+  if(wrap) wrap.style.display=(val==='custom')?'block':'none';
+}
+
+function poGetTerms(){
+  var delivery='';
+  var days=document.getElementById('po-delivery-days').value;
+  var unit=document.getElementById('po-delivery-unit').value;
+  if(days) delivery=days+' '+unit;
+
+  var warranty='';
+  var wval=document.getElementById('po-warranty-val').value;
+  var wunit=document.getElementById('po-warranty-unit').value;
+  if(wunit==='لا يوجد ضمان') warranty='لا يوجد ضمان';
+  else if(wval) warranty=wval+' '+wunit;
+
+  var payTerms=document.getElementById('po-payment-terms').value;
+  var payment=payTerms==='custom'?(document.getElementById('po-payment-custom').value||''):payTerms;
+
+  return {delivery:delivery, warranty:warranty, payment:payment};
+}
+
+function poSetTerms(terms){
+  if(!terms)return;
+  if(terms.delivery){
+    var parts=terms.delivery.split(' ');
+    var num=parts[0];
+    var unit=parts.slice(1).join(' ');
+    var dayEl=document.getElementById('po-delivery-days');
+    var unitEl=document.getElementById('po-delivery-unit');
+    if(dayEl) dayEl.value=num;
+    if(unitEl){
+      var opts=Array.from(unitEl.options).map(function(o){return o.value;});
+      if(opts.indexOf(unit)!==-1) unitEl.value=unit;
+    }
+  }
+  if(terms.warranty){
+    var wparts=terms.warranty.split(' ');
+    var wnum=wparts[0];
+    var wunit2=wparts.slice(1).join(' ');
+    var wvalEl=document.getElementById('po-warranty-val');
+    var wunitEl=document.getElementById('po-warranty-unit');
+    if(terms.warranty==='لا يوجد ضمان'){
+      if(wunitEl) wunitEl.value='لا يوجد ضمان';
+    } else {
+      if(wvalEl) wvalEl.value=wnum;
+      if(wunitEl){
+        var wopts=Array.from(wunitEl.options).map(function(o){return o.value;});
+        if(wopts.indexOf(wunit2)!==-1) wunitEl.value=wunit2;
+      }
+    }
+  }
+  if(terms.payment){
+    var ptEl=document.getElementById('po-payment-terms');
+    if(ptEl){
+      var popts=Array.from(ptEl.options).map(function(o){return o.value;});
+      if(popts.indexOf(terms.payment)!==-1){
+        ptEl.value=terms.payment;
+      } else {
+        ptEl.value='custom';
+        var cEl=document.getElementById('po-payment-custom');
+        if(cEl) cEl.value=terms.payment;
+        poToggleCustomPayment('custom');
+      }
+    }
+  }
+}
+
 async function poSave(){
   const co=document.getElementById('po-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
-  // إضافة المورد تلقائياً
   autoAddSupplier(co);
+  const terms=poGetTerms();
   const data={
     company:co,num:document.getElementById('po-num').value,date:document.getElementById('po-date').value,
-    vat:document.getElementById('po-vat').value,email:document.getElementById('po-email').value,
+    vat:document.getElementById('po-vat').value,terms:terms,email:document.getElementById('po-email').value,
     phone:document.getElementById('po-phone').value,addr:document.getElementById('po-addr').value,
     del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
     del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
@@ -1724,7 +1837,7 @@ function poPrint(){poPrintData({
   addr:document.getElementById('po-addr').value,
   del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
   del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
-  quote:document.getElementById('po-quote').value,rows:poGetRows()
+  quote:document.getElementById('po-quote').value,terms:poGetTerms(),rows:poGetRows()
 });}
 
 function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:JSON.parse(s.rows||'[]')});}
@@ -1833,10 +1946,10 @@ table{border-collapse:collapse;width:100%;}
   <!-- الشروط -->
   <table style="margin-bottom:8px;">
     <tr><td colspan="2" class="blue">Terms & Conditions / الشروط والأحكام</td></tr>
-    <tr><td class="lbl" style="width:25%;">Payment/ الدفع</td><td class="val">100% after delivery</td></tr>
-    <tr><td class="lbl">Delivery Time/ مدة التسليم</td><td class="val">1 week</td></tr>
-    <tr><td class="lbl">Warranty/ الضمان</td><td class="val">1 month</td></tr>
-    <tr><td class="lbl">Validity/ صلاحية التعميد</td><td class="val">PO should be cancelled if the vendor fails to complete with terms of the offer</td></tr>
+    <tr><td class="lbl" style="width:30%;">Payment / الدفع</td><td class="val">${(d.terms&&d.terms.payment)||'فور الاستلام'}</td></tr>
+    <tr><td class="lbl">Delivery Time / مدة التسليم</td><td class="val">${(d.terms&&d.terms.delivery)||'—'}</td></tr>
+    <tr><td class="lbl">Warranty / الضمان</td><td class="val">${(d.terms&&d.terms.warranty)||'—'}</td></tr>
+    <tr><td class="lbl">Validity / صلاحية التعميد</td><td class="val">PO should be cancelled if the vendor fails to complete with terms of the offer</td></tr>
   </table>
 
   <!-- التوقيعات -->
