@@ -1759,6 +1759,102 @@ function poSetTerms(terms){
   }
 }
 
+let poEditIdx = null; // null = إضافة جديدة، رقم = وضع تعديل
+
+function poEditById(i){
+  var s=poSaved[i];
+  if(!s)return;
+  poEditIdx=i;
+
+  // تعبئة الفورم بالبيانات
+  document.getElementById('po-co').value=s.company||'';
+  document.getElementById('po-num').value=s.num||'';
+  document.getElementById('po-date').value=s.date||'';
+  document.getElementById('po-vat').value=s.vat||'';
+  document.getElementById('po-email').value=s.email||'';
+  document.getElementById('po-phone').value=s.phone||'';
+  document.getElementById('po-addr').value=s.addr||'';
+  document.getElementById('po-del-email').value=s.del_email||'';
+  document.getElementById('po-del-phone').value=s.del_phone||'';
+  document.getElementById('po-del-addr').value=s.del_addr||'';
+  document.getElementById('po-del-vat').value=s.del_vat||'';
+  document.getElementById('po-quote').value=s.quote||'';
+
+  // الشروط
+  if(s.terms) poSetTerms(s.terms);
+
+  // البنود
+  var rows=[];
+  try{rows=JSON.parse(s.rows||'[]');}catch(e){}
+  var tbody=document.getElementById('po-tbody');
+  tbody.innerHTML='';
+  rows.forEach(function(r,ri){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(ri+1)+'</td>'+
+      '<td><input class="po-item" value="'+(r.item||'')+'" placeholder="الصنف"></td>'+
+      '<td><input class="po-desc" value="'+(r.desc||'')+'" placeholder="الوصف"></td>'+
+      '<td><input class="po-qty" type="number" value="'+(r.qty||1)+'" oninput="poCalcRow(this)" style="width:60px;"></td>'+
+      '<td><input class="po-uom" value="'+(r.uom||'')+'" placeholder="جهاز" style="width:60px;"></td>'+
+      '<td><input class="po-price" type="number" value="'+(r.price||0)+'" oninput="poCalcRow(this)" style="width:80px;"></td>'+
+      '<td class="po-total">'+(r.total||0)+'</td>'+
+      '<td><input class="po-notes" value="'+(r.notes||'')+'" placeholder=""></td>'+
+      '<td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
+    tbody.appendChild(tr);
+  });
+  poCalcTotal();
+
+  // تغيير زر الحفظ
+  var saveBtn=document.querySelector('[onclick="poSave()"]');
+  if(saveBtn){saveBtn.textContent='💾 حفظ التعديلات';saveBtn.style.background='#F59E0B';saveBtn.style.color='#fff';}
+
+  // إضافة زر إلغاء
+  if(!document.getElementById('po-cancel-edit')){
+    var cancelBtn=document.createElement('button');
+    cancelBtn.id='po-cancel-edit';
+    cancelBtn.className='btn btn-gray';
+    cancelBtn.textContent='إلغاء التعديل';
+    cancelBtn.onclick=poResetEdit;
+    if(saveBtn) saveBtn.parentNode.insertBefore(cancelBtn, saveBtn.nextSibling);
+  }
+
+  // انتقل للأعلى
+  document.getElementById('page-po').scrollIntoView({behavior:'smooth'});
+  toast('وضع التعديل — عدّل البيانات ثم اضغط حفظ');
+}
+
+function poResetEdit(){
+  poEditIdx=null;
+  // إعادة زر الحفظ
+  var saveBtn=document.querySelector('[onclick="poSave()"]');
+  if(saveBtn){saveBtn.textContent='حفظ';saveBtn.style.background='';saveBtn.style.color='';}
+  var cancelBtn=document.getElementById('po-cancel-edit');
+  if(cancelBtn) cancelBtn.remove();
+  // مسح الفورم
+  ['po-co','po-num','po-date','po-vat','po-email','po-phone','po-addr',
+   'po-del-email','po-del-phone','po-del-addr','po-del-vat','po-quote'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('po-delivery-days').value='';
+  document.getElementById('po-warranty-val').value='';
+  document.getElementById('po-payment-terms').value='فور الاستلام';
+  document.getElementById('po-payment-custom-wrap').style.display='none';
+  var tbody=document.getElementById('po-tbody');
+  tbody.innerHTML='<tr><td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
+  poCalcTotal();
+}
+
+async function poDeleteById(i){
+  var s=poSaved[i];
+  if(!s)return;
+  if(!confirm('حذف طلب الشراء: '+s.company+' — '+s.num+'؟'))return;
+  poSaved.splice(i,1);
+  localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+  // حذف من Supabase
+  if(s.id) sbUpdate('orders',s.id,{deleted:true}).catch(function(){});
+  renderPoSaved();
+  toast('تم الحذف ✅');
+}
+
 async function poSave(){
   const co=document.getElementById('po-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
@@ -1773,11 +1869,25 @@ async function poSave(){
     quote:document.getElementById('po-quote').value,rows:JSON.stringify(poGetRows()),
     created_at:new Date().toISOString()
   };
-  const res=await sbInsert('orders',data);
-  if(res&&Array.isArray(res)&&res[0]){poSaved.unshift(res[0]);}
-  else{poSaved.unshift({...data,id:Date.now()});}
-  localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-  renderPoSaved();toast('تم الحفظ ✅');
+  if(poEditIdx !== null){
+    // وضع التعديل — حدّث السجل الموجود
+    var existing=poSaved[poEditIdx];
+    var updatedData={...existing,...data};
+    poSaved[poEditIdx]=updatedData;
+    localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+    // تحديث Supabase
+    if(existing.id) sbUpdate('orders',existing.id,data).catch(function(){});
+    poResetEdit();
+    renderPoSaved();
+    toast('تم حفظ التعديلات ✅');
+  } else {
+    // إضافة جديدة
+    const res=await sbInsert('orders',data);
+    if(res&&Array.isArray(res)&&res[0]){poSaved.unshift(res[0]);}
+    else{poSaved.unshift({...data,id:Date.now()});}
+    localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+    renderPoSaved();toast('تم الحفظ ✅');
+  }
 }
 
 function renderPoSaved(){
@@ -1786,11 +1896,19 @@ function renderPoSaved(){
   var html='';
   for(var i=0;i<poSaved.length;i++){
     var s=poSaved[i];
-    html+='<div class="saved-item">'+
-      '<div class="saved-item-info"><strong>'+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.num||'')+' — '+(s.date||'')+'</span></div>'+
-      '<div class="saved-item-actions">'+
+    var tot=0;try{var rr=JSON.parse(s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
+    var totWithVat=(tot*1.15).toFixed(2);
+    html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
+      '<div class="saved-item-info">'+
+        '<strong style="font-size:13px;color:#244062;">'+(s.company||'')+'</strong>'+
+        '<span style="color:var(--sub);font-size:11px;"> | '+(s.num||'—')+' | '+(s.date||'—')+'</span>'+
+        (totWithVat>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+parseFloat(totWithVat).toLocaleString('ar-SA')+' ر.س</span>':'')+
+      '</div>'+
+      '<div class="saved-item-actions" style="display:flex;gap:4px;flex-wrap:wrap;">'+
+        '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="poEditById('+i+')">✏️ تعديل</button>'+
         '<button class="btn btn-green btn-sm" onclick="poExcelById('+i+')">Excel</button>'+
         '<button class="btn btn-red btn-sm" onclick="poPrintById('+i+')">PDF</button>'+
+        '<button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;border:1px solid #C53030;" onclick="poDeleteById('+i+')">🗑️ حذف</button>'+
       '</div></div>';
   }
   el.innerHTML=html;
