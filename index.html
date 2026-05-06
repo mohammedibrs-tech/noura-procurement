@@ -217,6 +217,10 @@ function numToWords(n){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       الموردون
     </div>
+    <div class="sb-item" onclick="nav('supplier-reports');supInit()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      تقارير الموردين
+    </div>
   </div>
 </div>
 
@@ -1036,6 +1040,173 @@ function numToWords(n){
 </div>
 
 <!-- ══ الموردون ══ -->
+<div class="page" id="page-supplier-reports">
+<style>
+:root{--sr-navy:#1B2A4A;--sr-teal:#0D7377;--sr-teal2:#14AAAD;--sr-gold:#C9A84C;--sr-gold2:#F0D080;--sr-orange:#E07B39;--sr-red:#C0392B;--sr-green:#1A7C5A;--sr-green2:#27AE60;--sr-gray:#F4F6FA;--sr-border:#D8DEE9;--sr-text:#2D3748;--sr-muted:#718096;--sr-white:#FFFFFF;--sr-radius:14px;--sr-shadow:0 4px 24px rgba(27,42,74,0.10);--sr-shadow2:0 2px 8px rgba(27,42,74,0.07);}
+.sr-wrap{direction:rtl;font-family:'Segoe UI','Tahoma',Arial,sans-serif;padding:24px 20px 40px;box-sizing:border-box;}
+.sr-page-header{background:linear-gradient(135deg,var(--sr-navy) 0%,var(--sr-teal) 100%);border-radius:var(--sr-radius);padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:var(--sr-shadow);}
+.sr-page-header-text h2{color:var(--sr-gold2);font-size:1.5rem;font-weight:800;margin:0 0 4px;}
+.sr-page-header-text p{color:rgba(255,255,255,0.75);font-size:0.88rem;margin:0;}
+.sr-header-icon{width:50px;height:50px;background:rgba(255,255,255,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.sr-add-btn{background:var(--sr-gold);color:var(--sr-navy);border:none;padding:10px 20px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s,transform 0.1s;white-space:nowrap;}
+.sr-add-btn:hover{background:var(--sr-gold2);transform:translateY(-1px);}
+.sr-dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
+.sr-stat-card{background:var(--sr-white);border-radius:var(--sr-radius);padding:18px;display:flex;align-items:center;gap:12px;box-shadow:var(--sr-shadow2);border-right:4px solid transparent;transition:transform 0.15s;}
+.sr-stat-card:hover{transform:translateY(-2px);}
+.sr-stat-card.urgent{border-color:var(--sr-red);}
+.sr-stat-card.soon{border-color:var(--sr-orange);}
+.sr-stat-card.ok{border-color:var(--sr-green2);}
+.sr-stat-card.total{border-color:var(--sr-teal);}
+.sr-stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.urgent .sr-stat-icon{background:#FDECEA;}.soon .sr-stat-icon{background:#FEF3E7;}.ok .sr-stat-icon{background:#E8F8F0;}.total .sr-stat-icon{background:#E6F4F5;}
+.sr-stat-info h3{font-size:1.6rem;font-weight:800;color:var(--sr-text);margin:0;}
+.sr-stat-info p{font-size:0.75rem;color:var(--sr-muted);margin:2px 0 0;}
+.sr-month-nav{background:var(--sr-white);border-radius:var(--sr-radius);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--sr-shadow2);margin-bottom:18px;}
+.sr-month-nav h3{margin:0;font-size:1rem;color:var(--sr-navy);font-weight:700;}
+.sr-month-btns{display:flex;gap:7px;}
+.sr-month-btn{padding:6px 13px;border-radius:8px;border:1.5px solid var(--sr-border);background:#fff;color:var(--sr-text);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.sr-month-btn:hover{background:var(--sr-teal);color:#fff;border-color:var(--sr-teal);}
+.sr-month-btn.current{background:var(--sr-navy);color:var(--sr-gold2);border-color:var(--sr-navy);}
+.sr-section-title{font-size:1rem;font-weight:700;color:var(--sr-navy);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.sr-section-title::before{content:'';width:4px;height:18px;background:var(--sr-teal);border-radius:2px;display:inline-block;}
+.sr-table-wrap{background:var(--sr-white);border-radius:var(--sr-radius);box-shadow:var(--sr-shadow2);overflow:hidden;margin-bottom:24px;overflow-x:auto;}
+.sr-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+.sr-table thead th{background:var(--sr-navy);color:var(--sr-gold2);padding:13px 14px;text-align:right;font-weight:700;font-size:0.82rem;white-space:nowrap;}
+.sr-table tbody tr{border-bottom:1px solid var(--sr-border);transition:background 0.15s;}
+.sr-table tbody tr:last-child{border-bottom:none;}
+.sr-table tbody tr:hover{background:#F7FAFC;}
+.sr-table tbody td{padding:12px 14px;color:var(--sr-text);vertical-align:middle;}
+.sr-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:0.78rem;font-weight:600;white-space:nowrap;}
+.sr-badge.urgent{background:#FDECEA;color:var(--sr-red);}
+.sr-badge.soon{background:#FEF3E7;color:var(--sr-orange);}
+.sr-badge.ok{background:#E8F8F0;color:var(--sr-green);}
+.sr-badge.done{background:#E8F8F0;color:var(--sr-green2);}
+.sr-badge.pending{background:#EEF2FF;color:#5A4E8F;}
+.sr-req-list{display:flex;flex-wrap:wrap;gap:5px;}
+.sr-req-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.15s;border:1.5px solid transparent;user-select:none;}
+.sr-req-chip.checked{background:var(--sr-green);color:#fff;border-color:var(--sr-green);}
+.sr-req-chip.unchecked{background:#F0F4FF;color:#5A4E8F;border-color:#C5CFEF;}
+.sr-action-btns{display:flex;gap:6px;}
+.sr-btn-edit,.sr-btn-del{width:30px;height:30px;border-radius:7px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;transition:all 0.15s;}
+.sr-btn-edit{background:#E6F4F5;color:var(--sr-teal);}
+.sr-btn-edit:hover{background:var(--sr-teal);color:#fff;}
+.sr-btn-del{background:#FDECEA;color:var(--sr-red);}
+.sr-btn-del:hover{background:var(--sr-red);color:#fff;}
+.sr-empty{text-align:center;padding:50px 20px;color:var(--sr-muted);}
+.sr-empty .sr-empty-icon{font-size:2.5rem;margin-bottom:10px;}
+.sr-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.sr-modal-overlay.open{display:flex;}
+.sr-modal{background:var(--sr-white);border-radius:18px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);direction:rtl;}
+.sr-modal-header{background:linear-gradient(135deg,var(--sr-navy),var(--sr-teal));padding:20px 26px;border-radius:18px 18px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.sr-modal-header h3{color:var(--sr-gold2);margin:0;font-size:1.05rem;}
+.sr-modal-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.sr-modal-close:hover{background:rgba(255,255,255,0.25);}
+.sr-modal-body{padding:24px;}
+.sr-field{margin-bottom:16px;}
+.sr-field label{display:block;font-size:0.83rem;font-weight:700;color:var(--sr-navy);margin-bottom:5px;}
+.sr-field label .rm{color:var(--sr-red);margin-right:2px;}
+.sr-field input,.sr-field select{width:100%;padding:9px 13px;border:1.5px solid var(--sr-border);border-radius:9px;font-size:0.88rem;color:var(--sr-text);box-sizing:border-box;direction:rtl;transition:border-color 0.15s;font-family:inherit;}
+.sr-field input:focus,.sr-field select:focus{outline:none;border-color:var(--sr-teal);box-shadow:0 0 0 3px rgba(13,115,119,0.12);}
+.sr-req-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+.sr-req-check{display:flex;align-items:center;gap:6px;padding:9px;border:1.5px solid var(--sr-border);border-radius:8px;cursor:pointer;transition:all 0.15s;font-size:0.82rem;font-weight:600;color:var(--sr-text);}
+.sr-req-check:hover{border-color:var(--sr-teal);background:#F0FAFA;}
+.sr-req-check input[type=checkbox]{accent-color:var(--sr-teal);width:14px;height:14px;}
+.sr-modal-footer{padding:0 24px 22px;display:flex;gap:9px;justify-content:flex-end;}
+.sr-btn-cancel{padding:9px 18px;border-radius:9px;border:1.5px solid var(--sr-border);background:#fff;color:var(--sr-muted);font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.sr-btn-cancel:hover{background:var(--sr-gray);}
+.sr-btn-save{padding:9px 22px;border-radius:9px;border:none;background:var(--sr-teal);color:#fff;font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.sr-btn-save:hover{background:var(--sr-navy);}
+</style>
+
+<div class="sr-wrap">
+  <div class="sr-page-header">
+    <div class="sr-header-icon">🏢</div>
+    <div class="sr-page-header-text" style="flex:1">
+      <h2>تقارير الموردين</h2>
+      <p>متابعة فواتير ومتطلبات الشركات المورّدة شهرياً</p>
+    </div>
+    <button class="sr-add-btn" onclick="srOpenModal()">＋ إضافة مورّد</button>
+  </div>
+
+  <div class="sr-month-nav">
+    <h3 id="sr-month-label">--</h3>
+    <div class="sr-month-btns">
+      <button class="sr-month-btn" onclick="srChangeMonth(-1)">‹ السابق</button>
+      <button class="sr-month-btn current" onclick="srGoToday()">الشهر الحالي</button>
+      <button class="sr-month-btn" onclick="srChangeMonth(1)">التالي ›</button>
+    </div>
+  </div>
+
+  <div class="sr-dashboard" id="sr-dashboard"></div>
+
+  <div class="sr-section-title">قائمة الموردين — متطلبات الشهر</div>
+  <div class="sr-table-wrap">
+    <table class="sr-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم الشركة</th>
+          <th>الإدارة المعنية</th>
+          <th>تاريخ الفاتورة</th>
+          <th>الأيام المتبقية</th>
+          <th>المتطلبات</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="sr-table-body">
+        <tr><td colspan="8"><div class="sr-empty"><div class="sr-empty-icon">📋</div><p>لا يوجد موردون — اضغط "إضافة مورّد"</p></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div><!-- /page-supplier-reports -->
+
+<!-- Modal -->
+<div class="sr-modal-overlay" id="sr-modal">
+  <div class="sr-modal">
+    <div class="sr-modal-header">
+      <h3 id="sr-modal-title">إضافة مورّد جديد</h3>
+      <button class="sr-modal-close" onclick="srCloseModal()">✕</button>
+    </div>
+    <div class="sr-modal-body">
+      <input type="hidden" id="sr-edit-id">
+      <div class="sr-field">
+        <label>اسم الشركة <span class="rm">*</span></label>
+        <input type="text" id="sr-company-name" placeholder="مثال: شركة الأمل للخدمات">
+      </div>
+      <div class="sr-field">
+        <label>الإدارة المعنية <span class="rm">*</span></label>
+        <input type="text" id="sr-department" placeholder="مثال: إدارة الصيانة">
+      </div>
+      <div class="sr-field">
+        <label>يوم استحقاق الفاتورة (من كل شهر) <span class="rm">*</span></label>
+        <select id="sr-invoice-day">
+          <option value="">-- اختر اليوم --</option>
+        </select>
+      </div>
+      <div class="sr-field">
+        <label>المتطلبات المطلوبة <span class="rm">*</span></label>
+        <div class="sr-req-grid">
+          <label class="sr-req-check"><input type="checkbox" id="srr-invoice" value="فاتورة"> فاتورة</label>
+          <label class="sr-req-check"><input type="checkbox" id="srr-completion" value="شهادة إنجاز"> شهادة إنجاز</label>
+          <label class="sr-req-check"><input type="checkbox" id="srr-attendance" value="كشف حضور"> كشف حضور</label>
+          <label class="sr-req-check"><input type="checkbox" id="srr-receipt" value="شهادة استلام مواد"> شهادة استلام مواد</label>
+        </div>
+      </div>
+      <div class="sr-field">
+        <label>ملاحظات</label>
+        <input type="text" id="sr-notes" placeholder="اختياري...">
+      </div>
+    </div>
+    <div style="height:1px;background:var(--sr-border);margin:0 24px 18px;"></div>
+    <div class="sr-modal-footer">
+      <button class="sr-btn-cancel" onclick="srCloseModal()">إلغاء</button>
+      <button class="sr-btn-save" onclick="srSave()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-suppliers">
   <div class="page-header"><h1>الموردون</h1><p>إدارة بيانات الموردين والخدمات المقدمة</p></div>
   <div class="card">
@@ -6389,4 +6560,181 @@ async function pcSaveEdit(){
   </div>
 </div>
 
+<script>
+// ============================================================
+// تقارير الموردين — JavaScript
+// ============================================================
+const SR_KEY    = 'noura_sr_vendors_v1';
+const SR_CH_KEY = 'noura_sr_checks_v1';
+let srYear  = new Date().getFullYear();
+let srMonth = new Date().getMonth();
+
+const SR_AR_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                      'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+function srGetVendors(){ try{return JSON.parse(localStorage.getItem(SR_KEY)||'[]');}catch{return [];} }
+function srSaveVendors(a){ localStorage.setItem(SR_KEY,JSON.stringify(a)); }
+function srGetChecks(){ try{return JSON.parse(localStorage.getItem(SR_CH_KEY)||'{}');}catch{return {};} }
+function srSaveChecks(o){ localStorage.setItem(SR_CH_KEY,JSON.stringify(o)); }
+function srCK(id){ return id+'_'+srYear+'-'+String(srMonth+1).padStart(2,'0'); }
+
+function srDaysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function srDaysUntil(d,m,y){
+  const t=new Date(); t.setHours(0,0,0,0);
+  return Math.ceil((new Date(y,m,d)-t)/86400000);
+}
+
+// Day dropdown fill
+(function(){
+  const sel=document.getElementById('sr-invoice-day');
+  if(sel) for(let i=1;i<=31;i++) sel.innerHTML+=`<option value="${i}">${i}</option>`;
+})();
+
+function srChangeMonth(d){
+  srMonth+=d;
+  if(srMonth>11){srMonth=0;srYear++;}
+  if(srMonth<0){srMonth=11;srYear--;}
+  srRender();
+}
+function srGoToday(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth(); srRender(); }
+
+function srRenderDashboard(vendors){
+  document.getElementById('sr-month-label').textContent=SR_AR_MONTHS[srMonth]+' '+srYear;
+  let urgent=0,soon=0,ok=0;
+  vendors.forEach(s=>{
+    const day=Math.min(s.invoiceDay,srDaysInMonth(srYear,srMonth));
+    const d=srDaysUntil(day,srMonth,srYear);
+    if(d<=3)urgent++; else if(d<=7)soon++; else ok++;
+  });
+  document.getElementById('sr-dashboard').innerHTML=`
+    <div class="sr-stat-card total"><div class="sr-stat-icon">🏢</div><div class="sr-stat-info"><h3>${vendors.length}</h3><p>إجمالي الموردين</p></div></div>
+    <div class="sr-stat-card urgent"><div class="sr-stat-icon">🔴</div><div class="sr-stat-info"><h3>${urgent}</h3><p>فاتورة خلال 3 أيام</p></div></div>
+    <div class="sr-stat-card soon"><div class="sr-stat-icon">🟠</div><div class="sr-stat-info"><h3>${soon}</h3><p>فاتورة خلال أسبوع</p></div></div>
+    <div class="sr-stat-card ok"><div class="sr-stat-icon">🟢</div><div class="sr-stat-info"><h3>${ok}</h3><p>متسعة في الوقت</p></div></div>`;
+}
+
+function srRender(){
+  const vendors=srGetVendors();
+  const checks=srGetChecks();
+  srRenderDashboard(vendors);
+  const tbody=document.getElementById('sr-table-body');
+  if(!vendors.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="sr-empty"><div class="sr-empty-icon">📋</div><p>لا يوجد موردون — اضغط "إضافة مورّد"</p></div></td></tr>`;
+    return;
+  }
+  const sorted=[...vendors].sort((a,b)=>{
+    const da=srDaysUntil(Math.min(a.invoiceDay,srDaysInMonth(srYear,srMonth)),srMonth,srYear);
+    const db=srDaysUntil(Math.min(b.invoiceDay,srDaysInMonth(srYear,srMonth)),srMonth,srYear);
+    return da-db;
+  });
+  tbody.innerHTML=sorted.map((s,i)=>{
+    const day=Math.min(s.invoiceDay,srDaysInMonth(srYear,srMonth));
+    const dl=srDaysUntil(day,srMonth,srYear);
+    const dateStr=`${day} ${SR_AR_MONTHS[srMonth]} ${srYear}`;
+    let badge;
+    if(dl<0)      badge=`<span class="sr-badge urgent">⚠ منتهية</span>`;
+    else if(dl===0)badge=`<span class="sr-badge urgent">🔴 اليوم!</span>`;
+    else if(dl<=3) badge=`<span class="sr-badge urgent">🔴 بعد ${dl} أيام</span>`;
+    else if(dl<=7) badge=`<span class="sr-badge soon">🟠 بعد ${dl} أيام</span>`;
+    else           badge=`<span class="sr-badge ok">🟢 بعد ${dl} يوم</span>`;
+    const ck=srCK(s.id);
+    const sv=checks[ck]||{};
+    const allDone=s.requirements.every(r=>sv[r]);
+    const chips=s.requirements.map(r=>{
+      const done=!!sv[r];
+      return `<span class="sr-req-chip ${done?'checked':'unchecked'}" onclick="srToggle('${s.id}','${r}')">${done?'✓ ':''} ${r}</span>`;
+    }).join('');
+    const status=allDone?`<span class="sr-badge done">✅ مكتملة</span>`:`<span class="sr-badge pending">⏳ جاري</span>`;
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${s.name}</strong>${s.notes?`<br><small style="color:#718096">${s.notes}</small>`:''}</td>
+      <td>${s.department}</td>
+      <td><strong>${dateStr}</strong></td>
+      <td>${badge}</td>
+      <td><div class="sr-req-list">${chips||'<span style="color:#718096;font-size:0.8rem">لا توجد</span>'}</div></td>
+      <td>${status}</td>
+      <td><div class="sr-action-btns">
+        <button class="sr-btn-edit" onclick="srEdit('${s.id}')">✏️</button>
+        <button class="sr-btn-del"  onclick="srDelete('${s.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function srToggle(id,req){
+  const checks=srGetChecks();
+  const ck=srCK(id);
+  if(!checks[ck])checks[ck]={};
+  checks[ck][req]=!checks[ck][req];
+  srSaveChecks(checks);
+  const s=srGetVendors().find(x=>x.id===id);
+  if(s&&s.requirements.every(r=>checks[ck][r]))
+    toast(`✅ اكتملت متطلبات "${s.name}" لهذا الشهر!`);
+  srRender();
+}
+
+function srOpenModal(editId=null){
+  document.getElementById('sr-edit-id').value='';
+  document.getElementById('sr-company-name').value='';
+  document.getElementById('sr-department').value='';
+  document.getElementById('sr-invoice-day').value='';
+  document.getElementById('sr-notes').value='';
+  ['srr-invoice','srr-completion','srr-attendance','srr-receipt']
+    .forEach(id=>document.getElementById(id).checked=false);
+  document.getElementById('sr-modal-title').textContent=editId?'تعديل بيانات المورّد':'إضافة مورّد جديد';
+  if(editId){
+    document.getElementById('sr-edit-id').value=editId;
+    const s=srGetVendors().find(x=>x.id===editId);
+    if(s){
+      document.getElementById('sr-company-name').value=s.name;
+      document.getElementById('sr-department').value=s.department;
+      document.getElementById('sr-invoice-day').value=s.invoiceDay;
+      document.getElementById('sr-notes').value=s.notes||'';
+      const rm={'فاتورة':'srr-invoice','شهادة إنجاز':'srr-completion','كشف حضور':'srr-attendance','شهادة استلام مواد':'srr-receipt'};
+      s.requirements.forEach(r=>{const el=document.getElementById(rm[r]);if(el)el.checked=true;});
+    }
+  }
+  document.getElementById('sr-modal').classList.add('open');
+}
+function srCloseModal(){ document.getElementById('sr-modal').classList.remove('open'); }
+
+function srSave(){
+  const name=document.getElementById('sr-company-name').value.trim();
+  const dept=document.getElementById('sr-department').value.trim();
+  const day=parseInt(document.getElementById('sr-invoice-day').value);
+  const notes=document.getElementById('sr-notes').value.trim();
+  const editId=document.getElementById('sr-edit-id').value;
+  const rm={'فاتورة':'srr-invoice','شهادة إنجاز':'srr-completion','كشف حضور':'srr-attendance','شهادة استلام مواد':'srr-receipt'};
+  const requirements=Object.entries(rm).filter(([,id])=>document.getElementById(id).checked).map(([l])=>l);
+  if(!name){toast('⚠ يرجى إدخال اسم الشركة',true);return;}
+  if(!dept){toast('⚠ يرجى إدخال الإدارة المعنية',true);return;}
+  if(!day) {toast('⚠ يرجى تحديد يوم الفاتورة',true);return;}
+  if(!requirements.length){toast('⚠ اختر متطلباً واحداً على الأقل',true);return;}
+  const vendors=srGetVendors();
+  if(editId){
+    const idx=vendors.findIndex(x=>x.id===editId);
+    if(idx!==-1){vendors[idx]={...vendors[idx],name,department:dept,invoiceDay:day,requirements,notes};}
+    toast(`✅ تم تحديث "${name}"`);
+  }else{
+    vendors.push({id:'sr_'+Date.now(),name,department:dept,invoiceDay:day,requirements,notes,createdAt:new Date().toISOString()});
+    toast(`✅ تمت إضافة "${name}"`);
+  }
+  srSaveVendors(vendors);
+  srCloseModal();
+  srRender();
+}
+function srEdit(id){ srOpenModal(id); }
+function srDelete(id){
+  const vendors=srGetVendors();
+  const s=vendors.find(x=>x.id===id);
+  if(!s)return;
+  if(!confirm(`هل أنت متأكد من حذف "${s.name}"؟`))return;
+  srSaveVendors(vendors.filter(x=>x.id!==id));
+  toast(`🗑 تم حذف "${s.name}"`);
+  srRender();
+}
+function supInit(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth(); srRender(); }
+
+document.getElementById('sr-modal').addEventListener('click',function(e){if(e.target===this)srCloseModal();});
+</script>
 </body></html></div><!-- /main -->
