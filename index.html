@@ -1616,21 +1616,33 @@ function expExcel(){
 }
 
 function expPrint(){
-  const spent=expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  // ── فلترة بالشهر والسنة المحددَين ──
+  const filterMonth=(document.getElementById('filter-month')||{}).value||'';
+  const filterYear=(document.getElementById('filter-year')||{}).value||'';
+  const filtered=expenses.filter(function(e){
+    if(!filterMonth) return true;
+    const key=e.month_key||(e.expense_date||'').substring(0,7);
+    if(filterMonth&&filterYear) return key===(filterYear+'-'+filterMonth);
+    if(filterMonth) return (key||'').endsWith('-'+filterMonth);
+    return true;
+  });
+  const monthNames={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  const monthLabel=filterMonth?(monthNames[filterMonth]+(filterYear?' '+filterYear:'')):'كل الشهور';
+  const spent=filtered.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const remain=budgetTotal-spent;
   const savePct=budgetTarget>0?((Math.max(0,budgetTarget-spent)/budgetTarget)*100).toFixed(1)+'%':'0%';
   const today=new Date().toLocaleDateString('ar-SA');
   const SIG=SIG_URL;const BG=FORM_BG;
   const deptMap={};
-  expenses.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
+  filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
-  const expRows=expenses.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
+  const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
   const CSS=`@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:36mm 12mm 14mm 12mm;}.report-title{font-size:14px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:12px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:12px;}.kpi-box{padding:9px 12px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:3px;}.kpi-val{font-size:18px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:8px;color:#1DA9BD;margin-top:2px;}.section-title{font-size:10px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:3px;margin-bottom:7px;margin-top:10px;}table{width:100%;border-collapse:collapse;font-size:9px;}thead th{padding:4px 7px;text-align:right;font-size:8px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:4px 7px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:16px;margin-top:12px;padding-top:8px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <div class="page"><img class="bg" src="${BG}"><div class="content">
-<div class="report-title">سجل مصروفات العهدة المالية</div>
-<div class="report-sub">تاريخ الإصدار: ${today}</div>
+<div class="report-title">سجل مصروفات العهدة المالية — ${monthLabel}</div>
+<div class="report-sub">تاريخ الإصدار: ${today} | عدد المصروفات: ${filtered.length}</div>
 <div class="kpi-grid">
   <div class="kpi-box"><div class="kpi-label">إجمالي العهدة</div><div class="kpi-val">${budgetTotal.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال</div></div>
   <div class="kpi-box"><div class="kpi-label">المصروف</div><div class="kpi-val">${spent.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال</div></div>
