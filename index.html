@@ -2257,16 +2257,16 @@ table{border-collapse:collapse;width:100%;}
   <div class="blue" style="margin-bottom:14px;">Approvals / الاعتمادات</div>
   <div style="display:flex;justify-content:space-between;gap:16px;">
     <div style="flex:1;text-align:center;font-size:11px;">
-      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل<br><strong>الرئيس التنفيذي</strong></div>
-      <div style="border-top:1px solid #000;padding-top:5px;">أ.أحمد بن محمد المحيسن</div>
+      <div style="margin-bottom:40px;">Prepared By / أعدت بواسطة</div>
+      <div style="border-top:1px solid #000;padding-top:5px;">أ.محمد ابراهيم الجمعان</div>
     </div>
     <div style="flex:1;text-align:center;font-size:11px;">
       <div style="margin-bottom:40px;">Reviewed By / تم مراجعته من قبل</div>
       <div style="border-top:1px solid #000;padding-top:5px;">أ.عمرو يحيى جاد</div>
     </div>
     <div style="flex:1;text-align:center;font-size:11px;">
-      <div style="margin-bottom:40px;">Prepared By / أعدت بواسطة</div>
-      <div style="border-top:1px solid #000;padding-top:5px;">أ.محمد ابراهيم الجمعان</div>
+      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل<br><strong>الرئيس التنفيذي</strong></div>
+      <div style="border-top:1px solid #000;padding-top:5px;">أ.أحمد بن محمد المحيسن</div>
     </div>
   </div>
 
@@ -2376,8 +2376,6 @@ function rfqPrintData(d){
   <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
 </table>
   <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Approved By / تم اعتماده<br><strong>الرئيس التنفيذي</strong></div><div style="border-top:1px solid #000;padding-top:6px;">أ.أحمد بن محمد المحيسن</div></div>
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Reviewed By / تم مراجعته</div><div style="border-top:1px solid #000;padding-top:6px;">أ.عمرو يحيى جاد</div></div>
   <div style="flex:1;text-align:center;">
     <div style="margin-bottom:40px;">Prepared By / أعدت بواسطة</div>
     <div style="position:relative;display:inline-block;min-width:120px;">
@@ -2385,6 +2383,8 @@ function rfqPrintData(d){
       <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">أ.محمد ابراهيم الجمعان</div>
     </div>
   </div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Reviewed By / تم مراجعته</div><div style="border-top:1px solid #000;padding-top:6px;">أ.عمرو يحيى جاد</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">Approved By / تم اعتماده<br><strong>الرئيس التنفيذي</strong></div><div style="border-top:1px solid #000;padding-top:6px;">أ.أحمد بن محمد المحيسن</div></div>
 </div>
 </div></div></body></html>`;
   const w=window.open('','_blank');
