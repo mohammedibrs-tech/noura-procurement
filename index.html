@@ -984,22 +984,18 @@ function numToWords(n){
       <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:16px;">رئيس اللجنة</div>
       <div class="form-grid">
         <div class="field"><label>المسمى الوظيفي للرئيس</label><input id="cm-chair-title" value="الرئيس التنفيذي"></div>
-        <div class="field"><label>اسم الرئيس</label><input id="cm-chair-name" value="أ/ أحمد بن محمد المحيسن"></div>
+        <div class="field"><label>اسم الرئيس</label><input id="cm-chair-name" value="أ.أحمد بن محمد المحيسن"></div>
       </div>
 
       <!-- أعضاء اللجنة -->
       <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:16px;">أعضاء اللجنة</div>
       <div id="cm-members-list">
         <div class="form-grid" style="margin-bottom:8px;" data-member="0">
-          <div class="field"><label>العضو الأول</label><input class="cm-member-name" placeholder="الاسم" value="أ. عمرو يحيى جاد"></div>
+          <div class="field"><label>العضو الأول</label><input class="cm-member-name" placeholder="الاسم" value="أ.عمرو يحيى جاد"></div>
           <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
         </div>
         <div class="form-grid" style="margin-bottom:8px;" data-member="1">
-          <div class="field"><label>العضو الثاني</label><input class="cm-member-name" placeholder="الاسم" value="أ. فهد عجب الحربي"></div>
-          <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
-        </div>
-        <div class="form-grid" style="margin-bottom:8px;" data-member="2">
-          <div class="field"><label>العضو الثالث</label><input class="cm-member-name" placeholder="الاسم" value="أ. محمد الجمعان"></div>
+          <div class="field"><label>العضو الثاني</label><input class="cm-member-name" placeholder="الاسم" value="أ.محمد ابراهيم الجمعان"></div>
           <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
         </div>
       </div>
@@ -1764,7 +1760,7 @@ function expExcel(){
   ws['!merges'].push({s:{r,c:0},e:{r,c:2}});
   ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
   r+=5; // مسافة للتوقيع
-  sc(ws,`A${r+1}`,'محمد الجمعان',{font:{name:'Calibri',sz:10,italic:true},alignment:{horizontal:'center'},border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
+  sc(ws,`A${r+1}`,'أ.محمد ابراهيم الجمعان',{font:{name:'Calibri',sz:10,italic:true},alignment:{horizontal:'center'},border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
   sc(ws,`D${r+1}`,'',{border:{top:{style:'medium',color:{rgb:'1DA9BD'}}}});
   ws['!merges'].push({s:{r,c:0},e:{r,c:2}});
   ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
@@ -1827,7 +1823,7 @@ function expPrint(){
 <table><thead><tr><th>الإدارة</th><th>البند</th><th style="text-align:right;">المبلغ</th><th style="text-align:center;">التاريخ</th><th>ملاحظات</th></tr></thead>
 <tbody>${expRows}
 <tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الكلي</td><td class="teal val" style="text-align:right;">${spent.toLocaleString('ar-SA')} ر.س</td><td colspan="2"></td></tr></tbody></table>
-<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">أخصائي الحسابات</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
+<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">أخصائي الحسابات</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -2257,16 +2253,16 @@ table{border-collapse:collapse;width:100%;}
   <div class="blue" style="margin-bottom:14px;">Approvals / الاعتمادات</div>
   <div style="display:flex;justify-content:space-between;gap:16px;">
     <div style="flex:1;text-align:center;font-size:11px;">
-      <div style="margin-bottom:40px;">Prepared By / أعدت بواسطة</div>
-      <div style="border-top:1px solid #000;padding-top:5px;">محمد الجمعان</div>
+      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل</div>
+      <div style="border-top:1px solid #000;padding-top:5px;">أ.أحمد بن محمد المحيسن</div>
     </div>
     <div style="flex:1;text-align:center;font-size:11px;">
       <div style="margin-bottom:40px;">Reviewed By / تم مراجعته من قبل</div>
-      <div style="border-top:1px solid #000;padding-top:5px;">___________</div>
+      <div style="border-top:1px solid #000;padding-top:5px;">أ.عمرو يحيى جاد</div>
     </div>
     <div style="flex:1;text-align:center;font-size:11px;">
-      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل</div>
-      <div style="border-top:1px solid #000;padding-top:5px;">___________</div>
+      <div style="margin-bottom:40px;">Prepared By / أعدت بواسطة</div>
+      <div style="border-top:1px solid #000;padding-top:5px;">أ.محمد ابراهيم الجمعان</div>
     </div>
   </div>
 
@@ -2375,16 +2371,16 @@ function rfqPrintData(d){
   <tr><td class="lbl">الضمان</td><td class="val">-</td></tr>
   <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
 </table>
-<div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
+  <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">أ.أحمد بن محمد المحيسن</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">أ.عمرو يحيى جاد</div></div>
   <div style="flex:1;text-align:center;">
     <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
     <div style="position:relative;display:inline-block;min-width:120px;">
       <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
-      <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">محمد الجمعان</div>
+      <div style="border-top:1px solid #000;padding-top:6px;position:relative;z-index:0;">أ.محمد ابراهيم الجمعان</div>
     </div>
   </div>
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">___________</div></div>
 </div>
 </div></div></body></html>`;
   const w=window.open('','_blank');
@@ -2479,7 +2475,7 @@ function dnPrintData(d){
     <div style="margin-bottom:20px;">Delivered By / تم التسليم من قبل</div>
     <div style="position:relative;display:inline-block;min-width:120px;">
       <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
-      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">محمد الجمعان</div>
+      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">أ.محمد ابراهيم الجمعان</div>
     </div>
   </div>
 </div>
@@ -4389,7 +4385,7 @@ function exportContractsPDF(){
 <tbody>${rows}
 <tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')}</td><td style="text-align:right;">${(totalMonthly*12).toLocaleString('ar-SA')}</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')}</td></tr>
 </tbody></table>
-<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
+<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -5032,7 +5028,7 @@ function exportSemiPDF(){
   const SIG=SIG_URL;const BG=FORM_BG;
   const content=document.getElementById('semi-report-content').innerHTML;
   const CSS='@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:20mm 14mm 12mm 14mm;}table{width:100%;border-collapse:collapse;font-size:9px;}thead th{padding:4px 7px;text-align:right;font-size:8px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:4px 7px;}.card{border:1px solid #E2E8F0;border-radius:6px;margin-bottom:8px;}.card-header{padding:7px 12px;border-bottom:1px solid #E2E8F0;font-weight:700;font-size:11px;}.card-body{padding:8px 12px;}.tbl{width:100%;border-collapse:collapse;}';
-  const SIG_B=`<div style="display:flex;gap:24px;margin-top:12px;padding-top:10px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>`;
+  const SIG_B=`<div style="display:flex;gap:24px;margin-top:12px;padding-top:10px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page"><img class="bg" src="${BG}"><div class="content"><div style="font-size:16px;font-weight:700;color:#244062;margin-bottom:2px;">التقرير النصف سنوي — النصف ${halfName} ${year}</div><div style="font-size:9px;color:#64748B;margin-bottom:12px;">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')}</div>${content}${SIG_B}</div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -5355,10 +5351,11 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:12px;"><strong style="font-size:10px;">أعضاء اللجنة:</strong>
 <div style="text-align:center;margin-top:8px;">
-  <div style="font-size:13px;font-weight:700;margin-bottom:18px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:12px;">${c.chairName}</strong></div>
-  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;">
-    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:100px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">${m.name}<br><span style="font-size:9px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
-  </div>
+	  <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:10px;">
+	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.أحمد بن محمد المحيسن<br><span style="font-size:9px;font-weight:400;">الرئيس التنفيذي</span></div></div>
+	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.عمرو يحيى جاد<br><span style="font-size:9px;font-weight:400;">عضو</span></div></div>
+	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.محمد ابراهيم الجمعان<br><span style="font-size:9px;font-weight:400;">عضو</span></div></div>
+	  </div>
 </div>
 </div>
 </div></div></body></html>`);
@@ -5641,7 +5638,7 @@ function exportAnnualPDF(){
   const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>(e.expense_date||e.created_at||'').startsWith(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
   const maxT=Math.max(...monthlyData.map(x=>x.t),1);
   const CSS='@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:20mm 14mm 12mm 14mm;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:10px;}.kpi-box{padding:9px 12px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:3px;}.kpi-val{font-size:19px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:8px;color:#1DA9BD;margin-top:2px;}.section-title{font-size:10px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:3px;margin-bottom:7px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:10px;}table{width:100%;border-collapse:collapse;font-size:9px;}thead th{padding:4px 7px;text-align:right;font-size:8px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:4px 7px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}';
-  const SIG_B=`<div style="display:flex;gap:24px;margin-top:12px;padding-top:10px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>`;
+  const SIG_B=`<div style="display:flex;gap:24px;margin-top:12px;padding-top:10px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
 <div style="font-size:16px;font-weight:700;color:#244062;margin-bottom:2px;">التقرير السنوي — ${year}</div>
@@ -6039,7 +6036,7 @@ ${expiringC.length?`<div style="border:1px solid #E2E8F0;padding:7px 12px;margin
 <div class="section-title">تفاصيل المصروفات</div>
 <table><thead><tr><th>الإدارة</th><th>البند</th><th style="text-align:right;">المبلغ</th><th style="text-align:center;">التاريخ</th></tr></thead>
 <tbody>${expRows}<tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي</td><td class="teal val" style="text-align:right;">${totalSpent.toLocaleString('ar-SA')} ر.س</td><td></td></tr></tbody></table>
-<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
+<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -6248,7 +6245,7 @@ function exportQuarterlyPDF(){
 <table><thead><tr><th>الشركة</th><th>الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">السنوي</th><th style="text-align:center;">ينتهي</th><th style="text-align:right;">وفر التفاوض</th></tr></thead>
 <tbody>${activeC.map(c=>`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td class="muted" style="text-align:center;">${c.end||'—'}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`).join('')}
 <tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي</td><td class="teal val" style="text-align:right;">${totalCM.toLocaleString('ar-SA')}</td><td style="text-align:right;">${(totalCM*12).toLocaleString('ar-SA')}</td><td></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')}</td></tr></tbody></table>
-<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">محمد الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
+<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:58px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;color:#244062;margin-bottom:54px;">المدير المباشر</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#64748B;">_______________</div></div></div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
