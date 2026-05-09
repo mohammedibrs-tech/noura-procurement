@@ -2257,7 +2257,7 @@ table{border-collapse:collapse;width:100%;}
   <div class="blue" style="margin-bottom:14px;">Approvals / الاعتمادات</div>
   <div style="display:flex;justify-content:space-between;gap:16px;">
     <div style="flex:1;text-align:center;font-size:11px;">
-      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل</div>
+      <div style="margin-bottom:40px;">Approved By / تم اعتماده من قبل<br><strong>الرئيس التنفيذي</strong></div>
       <div style="border-top:1px solid #000;padding-top:5px;">أ.أحمد بن محمد المحيسن</div>
     </div>
     <div style="flex:1;text-align:center;font-size:11px;">
@@ -2376,7 +2376,7 @@ function rfqPrintData(d){
   <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
 </table>
   <div style="display:flex;justify-content:space-between;margin-top:30px;gap:16px;">
-  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By</div><div style="border-top:1px solid #000;padding-top:6px;">أ.أحمد بن محمد المحيسن</div></div>
+  <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم اعتماده / Approved By<br><strong>الرئيس التنفيذي</strong></div><div style="border-top:1px solid #000;padding-top:6px;">أ.أحمد بن محمد المحيسن</div></div>
   <div style="flex:1;text-align:center;"><div style="margin-bottom:40px;">تم مراجعته / Reviewed By</div><div style="border-top:1px solid #000;padding-top:6px;">أ.عمرو يحيى جاد</div></div>
   <div style="flex:1;text-align:center;">
     <div style="margin-bottom:40px;">أعدت بواسطة / Prepared By</div>
@@ -5360,12 +5360,12 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:12px;"><strong style="font-size:10px;">أعضاء اللجنة:</strong>
-	<div style="text-align:center;margin-top:8px;">
-	  <div style="font-size:12px;font-weight:700;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:11px;">${c.chairName}</strong></div>
-	  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;">
-	    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:100px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;font-weight:700;margin-top:12px;">${m.name}<br><span style="font-size:8px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
-	  </div>
-	</div>
+		<div style="text-align:center;margin-top:8px;">
+		  <div style="font-size:12px;font-weight:700;margin-bottom:100px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:11px;">${c.chairName}</strong></div>
+		  <div style="display:flex;justify-content:space-around;gap:10px;padding:0 10px;">
+		    ${(c.members||[]).map(m=>`<div style="text-align:center;flex:1;"><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;font-weight:700;margin-top:12px;">${m.name}<br><span style="font-size:8px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
+		  </div>
+		</div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
