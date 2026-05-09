@@ -995,7 +995,11 @@ function numToWords(n){
           <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
         </div>
         <div class="form-grid" style="margin-bottom:8px;" data-member="1">
-          <div class="field"><label>العضو الثاني</label><input class="cm-member-name" placeholder="الاسم" value="أ.محمد ابراهيم الجمعان"></div>
+          <div class="field"><label>العضو الثاني</label><input class="cm-member-name" placeholder="الاسم" value="أ. فهد عجب الحربي"></div>
+          <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:8px;" data-member="2">
+          <div class="field"><label>العضو الثالث</label><input class="cm-member-name" placeholder="الاسم" value="أ.محمد ابراهيم الجمعان"></div>
           <div class="field"><label>المسمى</label><input class="cm-member-title" placeholder="المسمى الوظيفي" value="عضو"></div>
         </div>
       </div>
@@ -5279,10 +5283,13 @@ function committeeExportTechPDFData(c){
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
-.content{position:relative;z-index:1;padding:38mm 15mm 20mm 15mm;}
-h2{text-align:center;font-size:14px;font-weight:700;margin:16px 0;}p{margin:6px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
+.content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
+h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
 </head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
-<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
+	<div style="text-align:right;font-size:10px;margin-bottom:16px;">
+	  <div>التاريخ: ${dt}</div>
+	  <div>رقم المحضر: ${c.num||'—'}</div>
+	</div>
 <h2>محضر لجنة فحص العروض — النسخة الفنية<br><span style="font-size:12px;">لطلب (${c.subject})</span></h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
@@ -5330,10 +5337,13 @@ function committeeExportPDFData(c){
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;line-height:1.6;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
-.content{position:relative;z-index:1;padding:36mm 14mm 14mm 14mm;}
-h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0;text-align:justify;font-size:10px;}</style>
+.content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
+h2{text-align:center;font-size:11px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:9.5px;}</style>
 </head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
-<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:16px;"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
+	<div style="text-align:right;font-size:10px;margin-bottom:16px;">
+	  <div>التاريخ: ${dt}</div>
+	  <div>رقم المحضر: ${c.num||'—'}</div>
+	</div>
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
@@ -5350,13 +5360,12 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:12px;"><strong style="font-size:10px;">أعضاء اللجنة:</strong>
-<div style="text-align:center;margin-top:8px;">
-	  <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:10px;">
-	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.أحمد بن محمد المحيسن<br><span style="font-size:9px;font-weight:400;">الرئيس التنفيذي</span></div></div>
-	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.عمرو يحيى جاد<br><span style="font-size:9px;font-weight:400;">عضو</span></div></div>
-	    <div style="text-align:center;min-width:150px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:11px;font-weight:700;margin-top:16px;">أ.محمد ابراهيم الجمعان<br><span style="font-size:9px;font-weight:400;">عضو</span></div></div>
+	<div style="text-align:center;margin-top:8px;">
+	  <div style="font-size:12px;font-weight:700;margin-bottom:60px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:11px;">${c.chairName}</strong></div>
+	  <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;">
+	    ${(c.members||[]).map(m=>`<div style="text-align:center;min-width:100px;"><div style="border-top:1px solid #000;padding-top:4px;font-size:10px;font-weight:700;margin-top:12px;">${m.name}<br><span style="font-size:8px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
 	  </div>
-</div>
+	</div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
