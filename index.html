@@ -638,7 +638,10 @@ function numToWords(n){
 <div class="page" id="page-pc">
   <div class="page-header"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div>
   <div class="card">
-    <div class="card-header"><h3>إضافة فاتورة جديدة</h3></div>
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <h3>إضافة فاتورة جديدة</h3>
+      <button class="btn btn-secondary btn-sm" onclick="loadFromSupabase().then(()=>renderPCGroups())" title="مزامنة يدوية مع السحابة">🔄 مزامنة السحابة</button>
+    </div>
     <div class="card-body">
       <div class="form-grid">
         <div class="field"><label>الشهر</label>
@@ -6346,9 +6349,12 @@ function exportQuarterlyPDF(){
 async function loadFromSupabase(){
   // دالة دمج آمنة: تجمع Supabase مع localStorage بدون فقدان أي بيانات
   function mergeById(sbData, localData, idField='id'){
+    // إذا كانت البيانات المحلية فارغة، خذ بيانات السحابة مباشرة
+    if(!localData || localData.length === 0) return sbData;
     const merged=[...localData];
     sbData.forEach(function(sbItem){
       const exists=merged.some(function(l){return String(l[idField])===String(sbItem[idField]);});
+      // إذا كان العنصر موجوداً في السحابة وغير موجود محلياً (مثل حالة الهاتف الجديد)، أضفه
       if(!exists) merged.unshift(sbItem);
     });
     return merged;
@@ -6497,13 +6503,26 @@ async function init(){
   if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
 
   // ── خطوة ٢: زامن مع Supabase بقوة لضمان المزامنة بين الأجهزة ──
-  toast('جاري جلب البيانات من السحابة...');
+  // إذا كانت البيانات المحلية فارغة (مثل فتح المنصة لأول مرة على الهاتف)، أظهر رسالة انتظار
+  const isFirstTime = poSaved.length === 0 && rfqSaved.length === 0 && Object.keys(pcGroups).length === 0;
+  if(isFirstTime) toast('جاري تهيئة البيانات السحابية لأول مرة... ⏳');
+  else toast('جاري تحديث البيانات من السحابة...');
+
   loadFromSupabase().then(()=>{
     initBudget();
     renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
     renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
     if(typeof renderPCGroups==='function')renderPCGroups();
-    toast('تمت مزامنة البيانات السحابية بنجاح ✅');
+    if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
+    
+    // إذا كان الهاتف يفتح لأول مرة، قم بتحديث الواجهة بالكامل
+    if(isFirstTime) {
+      toast('تم جلب بياناتك السحابية بنجاح ✅');
+      // تحديث بسيط للواجهة لضمان ظهور البيانات
+      setTimeout(() => { if(typeof renderPCGroups==='function') renderPCGroups(); }, 500);
+    } else {
+      toast('تم تحديث البيانات ✅');
+    }
   }).catch((err)=>{
     console.error('Supabase Sync Error:', err);
     toast('تنبيه: تعذر الاتصال بالسحابة، تعمل المنصة بالبيانات المحلية فقط', true);
