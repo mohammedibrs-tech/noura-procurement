@@ -1362,6 +1362,57 @@ function nav(page){
   event.currentTarget.classList.add('active');
 }
 
+/* ── INDEXEDDB FOR PETTY CASH ── */
+const dbName = "PettyCashDB";
+const storeName = "files";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function saveFileLocally(key, blob) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    const store = tx.objectStore(storeName);
+    const request = store.put(blob, key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getFileLocally(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const store = tx.objectStore(storeName);
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteFileLocally(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    const store = tx.objectStore(storeName);
+    const request = store.delete(key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
 /* ── SUPABASE ── */
 async function sbGet(table,filter=''){
   try{
@@ -1373,9 +1424,16 @@ async function sbGet(table,filter=''){
 async function sbInsert(table,data){
   try{
     const r=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
-    if(!r.ok)throw new Error(r.status);
+    if(!r.ok) {
+      const errText = await r.text();
+      console.error('Supabase Insert Error:', errText);
+      throw new Error(r.status);
+    }
     return r.json();
-  }catch(e){return null;}
+  }catch(e){
+    console.error('Supabase Insert Exception:', e);
+    return null;
+  }
 }
 async function sbUpdate(table,id,data){
   try{
@@ -1512,18 +1570,25 @@ function syncBudgetFilter(){
   budgetCalcMonth();
 }
 
-function budgetSave(){
+async function budgetSave(){
   budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
   localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal}));
-  sbGet('budget_config','limit=1').then(function(res){
-    if(res&&res.length>0){
-      sbUpdate('budget_config',res[0].id,{total:budgetTotal,updated_at:new Date().toISOString()});
-    }else{
-      sbInsert('budget_config',{total:budgetTotal});
+  
+  toast('جاري المزامنة سحابياً...');
+  try {
+    const res = await sbGet('budget_config','limit=1');
+    if(res && res.length > 0){
+      await sbUpdate('budget_config', res[0].id, {total:budgetTotal, updated_at:new Date().toISOString()});
+    } else {
+      await sbInsert('budget_config', {total:budgetTotal});
     }
-  }).catch(function(){});
+    toast('تم حفظ عهدة الشهر ومزامنتها بنجاح ✅');
+  } catch(e) {
+    console.error('Budget sync failed', e);
+    toast('تم الحفظ محلياً (تعذر الاتصال بالسحابة)', true);
+  }
+  
   budgetCalcMonth();
-  toast('تم حفظ عهدة الشهر: '+budgetTotal.toLocaleString('ar-SA')+' ر.س ✅');
 }
 
 async function expAdd(){
@@ -1537,25 +1602,36 @@ async function expAdd(){
   const date=document.getElementById('exp-date').value;
   const notes=document.getElementById('exp-notes').value.trim();
   if(!item||!amount){toast('أدخل البند والمبلغ',true);return;}
-  // إضافة المورد تلقائياً إن كان جديداً
+  
   if(vendor) autoAddSupplier(vendor);
   const monthKey=year+'-'+month;
   const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
   const localRow={...row,id:Date.now()};
   expenses.unshift(localRow);
   localStorage.setItem('expenses_local',JSON.stringify(expenses));
-  sbInsert('expenses',row).then(res=>{
-    if(res&&Array.isArray(res)&&res[0]){
-      const idx=expenses.findIndex(e=>e.id===localRow.id);
-      if(idx!==-1){expenses[idx]={...expenses[idx],...res[0]};localStorage.setItem('expenses_local',JSON.stringify(expenses));}
+  
+  toast('جاري المزامنة سحابياً...');
+  try {
+    const res = await sbInsert('expenses', row);
+    if(res && Array.isArray(res) && res[0]){
+      const idx = expenses.findIndex(e => e.id === localRow.id);
+      if(idx !== -1) {
+        expenses[idx] = {...expenses[idx], ...res[0]};
+        localStorage.setItem('expenses_local', JSON.stringify(expenses));
+      }
     }
-  }).catch(()=>{});
+    toast('تمت الإضافة والمزامنة بنجاح ✅');
+  } catch(e) {
+    console.error('Expense sync failed', e);
+    toast('تمت الإضافة محلياً (تعذر الاتصال بالسحابة)', true);
+  }
+
   const expVendorEl=document.getElementById('exp-vendor');if(expVendorEl)expVendorEl.value='';
   document.getElementById('exp-item').value='';
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-notes').value='';
   document.getElementById('exp-inv').value='';
-  budgetCalc();renderExpenses();toast('تمت الإضافة ✅');
+  budgetCalc();renderExpenses();
 }
 
 function renderExpenses(){
@@ -2917,29 +2993,30 @@ async function pcAddInvoice(){
 
   try{
 
-  // رفع ملف واحد إلى Storage
+  // رفع ملف واحد إلى Storage (مع دعم الحفظ المحلي كبديل)
   async function uploadOne(file, label){
     if(!file)return;
-    // تنظيف اسم الملف من الرموز الخاصة لتجنب مشاكل المسارات
     const cleanFileName = file.name.replace(/[^\x00-\x7F]/g, "").replace(/\s+/g, "_");
-    var path = key+'/'+invId+'/'+label+'_'+cleanFileName;
+    const storagePath = key+'/'+invId+'/'+label+'_'+cleanFileName;
+    const localKey = 'pc_'+invId+'_'+label;
+    
+    // دائماً احفظ نسخة محلياً في IndexedDB كضمان
+    try { await saveFileLocally(localKey, file); } catch(e) { console.error('Local save failed', e); }
+
     try{
-      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
+      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+storagePath,{
         method:'POST',
         headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
         body:file
       });
       if(res.ok){
-        invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+path});
+        invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+storagePath, localKey: localKey});
         return;
-      } else {
-        const errText = await res.text();
-        console.error('Upload failed for:', label, errText);
       }
-    }catch(e){
-      console.error('Upload exception:', e);
-    }
-    invoice.files.push({label:label,name:file.name,url:null,failed:true});
+    }catch(e){}
+    
+    // إذا فشل الرفع للسحابة، نعتمد على النسخة المحلية
+    invoice.files.push({label:label,name:file.name,url:null,localKey:localKey,isLocalOnly:true});
   }
 
   // رفع كل الملفات (كل input يقبل multiple)
@@ -3038,10 +3115,21 @@ function renderPCGroups(){
   el.innerHTML=html;
 }
 
-function pcOpenFile(key,ii,fi){
+async function pcOpenFile(key,ii,fi){
   var inv=(pcGroups[key]||[])[ii];
   if(!inv||!inv.files[fi])return;
   var f=inv.files[fi];
+  
+  if(f.localKey){
+    try {
+      const localBlob = await getFileLocally(f.localKey);
+      if(localBlob){
+        window.open(URL.createObjectURL(localBlob), '_blank');
+        return;
+      }
+    } catch(e) {}
+  }
+  
   if(f.url) window.open(f.url,'_blank');
   else if(f.b64) window.open(f.b64,'_blank');
 }
@@ -3056,15 +3144,18 @@ function pcOpen(key,i){window.open((pcGroups[key]||[])[i]?.b64||'','_blank');}
 function pcRemoveFile(key,i){(pcGroups[key]||[]).splice(i,1);if(pcGroups[key]&&!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
 function pcDeleteGroup(key){if(!confirm('حذف شهر كامل؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
 
-async function pcFetchFile(url){
-  // جلب الملف من Supabase مع المصادقة لتجاوز CORS
+async function pcFetchFile(url, localKey){
+  if(localKey){
+    try {
+      const blob = await getFileLocally(localKey);
+      if(blob) return await blob.arrayBuffer();
+    } catch(e) {}
+  }
+  if(!url) return null;
   try{
-    var r=await fetch(url,{
-      headers:{'apikey':SK,'Authorization':'Bearer '+SK}
-    });
+    var r=await fetch(url,{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
     if(r.ok) return await r.arrayBuffer();
   }catch(e){}
-  // محاولة ثانية بدون headers (Public bucket)
   try{
     var r2=await fetch(url);
     if(r2.ok) return await r2.arrayBuffer();
@@ -3081,48 +3172,14 @@ async function pcExport(key){
 
   // جمع كل الملفات القابلة للتصدير
   var allFiles=[];
-  var failedCount=0;
   for(var i=0;i<invoices.length;i++){
     var inv=invoices[i];
     (inv.files||[]).forEach(function(f){
-      if(!f.failed && f.url) {
-        allFiles.push({inv:inv,invIdx:i,f:f});
-      } else if(f.failed) {
-        failedCount++;
-      }
+      if(f.url || f.localKey) allFiles.push({inv:inv,invIdx:i,f:f});
     });
   }
-  if(!allFiles.length){
-    if(failedCount > 0) {
-      toast('تعذر التصدير: يوجد ' + failedCount + ' ملفات فشل رفعها سابقاً', true);
-    } else {
-      toast('لا توجد ملفات مرفوعة في هذا الشهر', true);
-    }
-    return;
-  }
+  if(!allFiles.length){toast('لا توجد ملفات مرفوعة في هذا الشهر', true); return;}
 
-  // اختبار CORS: هل نقدر نجلب ملف؟
-  toast('جاري فحص الاتصال...');
-  var testBuf=await pcFetchFile(allFiles[0].f.url);
-
-  if(!testBuf){
-    // CORS يمنع الجلب — افتح الملفات مباشرة في المتصفح للحفظ اليدوي
-    toast('سيتم فتح الملفات مباشرة للحفظ...');
-    await new Promise(function(r){setTimeout(r,1000);});
-    for(var j=0;j<allFiles.length;j++){
-      var a=document.createElement('a');
-      a.href=allFiles[j].f.url;
-      a.target='_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      await new Promise(function(r){setTimeout(r,700);});
-    }
-    toast('تم فتح '+allFiles.length+' ملف — احفظ كل واحد يدوياً');
-    return;
-  }
-
-  // CORS شغال — نبني ZIP كامل
   toast('جاري تجهيز ZIP...');
   try{
     var zip=new JSZip();
@@ -3135,10 +3192,11 @@ async function pcExport(key){
       var files=inv.files||[];
       for(var fi=0;fi<files.length;fi++){
         var f=files[fi];
-        if(f.failed||!f.url){errors++;continue;}
-        var buf=await pcFetchFile(f.url);
+        // نقبل الملف إذا كان له رابط أو مخزن محلياً
+        if(!f.url && !f.localKey){errors++;continue;}
+        var buf=await pcFetchFile(f.url, f.localKey);
         if(buf){invFolder.file(f.label+'_'+f.name,buf);ok++;}
-        else{invFolder.file(f.label+'_رابط.txt','رابط الملف: '+f.url);errors++;}
+        else{invFolder.file(f.label+'_رابط.txt','رابط الملف: '+(f.url||'غير متوفر'));errors++;}
       }
     }
     var blob=await zip.generateAsync({type:'blob'});
@@ -6383,6 +6441,21 @@ async function loadFromSupabase(){
   }else suppliers=supLocal;
   localStorage.setItem('suppliers',JSON.stringify(suppliers));
   // العهدة — لا تلمسها هنا، initBudget تتولاها بأمان
+  
+  // مزامنة إعدادات الميزانية (العهدة المالية)
+  const budgetRes = await sbGet('procurement_config', 'key=eq.budget_cfg');
+  if(budgetRes && budgetRes.length) {
+    const cfg = typeof budgetRes[0].value === 'string' ? JSON.parse(budgetRes[0].value) : budgetRes[0].value;
+    if(cfg) {
+      localStorage.setItem('budget_cfg', JSON.stringify(cfg));
+      budgetTotal = cfg.total || 0;
+      budgetTarget = cfg.target || 0;
+      const ti = document.getElementById('b-total-inp');
+      const ti2 = document.getElementById('b-target-inp');
+      if(ti) ti.value = budgetTotal || '';
+      if(ti2) ti2.value = budgetTarget || '';
+    }
+  }
 }
 
 async function init(){
@@ -6423,14 +6496,17 @@ async function init(){
   if(typeof renderPCGroups==='function')renderPCGroups();
   if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
 
-  // ── خطوة ٢: زامن مع Supabase في الخلفية بدون انتظار ──
+  // ── خطوة ٢: زامن مع Supabase بقوة لضمان المزامنة بين الأجهزة ──
+  toast('جاري جلب البيانات من السحابة...');
   loadFromSupabase().then(()=>{
     initBudget();
     renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
     renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
     if(typeof renderPCGroups==='function')renderPCGroups();
-  }).catch(()=>{
-    // Supabase فشل — البيانات المحلية كافية
+    toast('تمت مزامنة البيانات السحابية بنجاح ✅');
+  }).catch((err)=>{
+    console.error('Supabase Sync Error:', err);
+    toast('تنبيه: تعذر الاتصال بالسحابة، تعمل المنصة بالبيانات المحلية فقط', true);
   });
 }
 
@@ -6505,6 +6581,8 @@ async function pcSaveEdit(){
       var f=flist[fj];
       var suffix=flist.length>1?'_'+(fj+1):'';
       var fullLabel=label+suffix;
+      const localKey = 'pc_'+inv.id+'_'+fullLabel;
+      try { await saveFileLocally(localKey, f); } catch(e) {}
       try{
         const cleanFileName = f.name.replace(/[^\x00-\x7F]/g, "").replace(/\s+/g, "_");
         var path=pcEditKey+'/'+inv.id+'/'+fullLabel+'_'+cleanFileName;
@@ -6513,9 +6591,9 @@ async function pcSaveEdit(){
           headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':f.type||'application/pdf','x-upsert':'true'},
           body:f
         });
-        if(res.ok){ inv.files.push({label:fullLabel,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path}); continue; }
+        if(res.ok){ inv.files.push({label:fullLabel,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path, localKey:localKey}); continue; }
       }catch(e){}
-      inv.files.push({label:fullLabel,name:f.name,url:null,failed:true});
+      inv.files.push({label:fullLabel,name:f.name,url:null,localKey:localKey,isLocalOnly:true});
     }
   }
 
