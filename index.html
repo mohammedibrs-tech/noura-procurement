@@ -2966,23 +2966,22 @@ async function pcAddInvoice(){
   // حفظ محلي — بدون base64 لتجنب QuotaExceeded
   pcGroups[key].push(invoice);
   try{
-    // احذف أي b64 قديمة قبل الحفظ
-    var cleanGroups={};
-    Object.keys(pcGroups).forEach(function(k){
-      cleanGroups[k]=(pcGroups[k]||[]).map(function(inv){
-        var ci=Object.assign({},inv);
-        ci.files=(ci.files||[]).map(function(f){var cf=Object.assign({},f);delete cf.b64;return cf;});
-        return ci;
-      });
-    });
-    localStorage.setItem('pc_groups',JSON.stringify(cleanGroups));
+    localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
   }catch(e){ console.warn('localStorage quota - data saved in Supabase only'); }
   renderPCGroups();
 
   document.getElementById('pc-vendor').value='';
   document.getElementById('pc-desc').value='';
+  document.getElementById('pc-amount').value='';
   ['pc-tax','pc-receipt','pc-erp','pc-transfer'].forEach(function(id){document.getElementById(id).value='';});
-  toast('تمت إضافة الفاتورة ✅');
+  
+  var successCount = invoice.files.filter(f => !f.failed).length;
+  var failCount = invoice.files.filter(f => f.failed).length;
+  if(failCount > 0) {
+    toast('تم الحفظ مع فشل رفع ' + failCount + ' ملفات. تأكد من إعدادات Storage', true);
+  } else {
+    toast('تمت إضافة الفاتورة ورفع ' + successCount + ' ملفات بنجاح ✅');
+  }
 
   }catch(e){
     console.error('pcAddInvoice error:',e);
@@ -3082,13 +3081,25 @@ async function pcExport(key){
 
   // جمع كل الملفات القابلة للتصدير
   var allFiles=[];
+  var failedCount=0;
   for(var i=0;i<invoices.length;i++){
     var inv=invoices[i];
     (inv.files||[]).forEach(function(f){
-      if(!f.failed&&f.url) allFiles.push({inv:inv,invIdx:i,f:f});
+      if(!f.failed && f.url) {
+        allFiles.push({inv:inv,invIdx:i,f:f});
+      } else if(f.failed) {
+        failedCount++;
+      }
     });
   }
-  if(!allFiles.length){toast('لا توجد ملفات مرفوعة قابلة للتصدير',true);return;}
+  if(!allFiles.length){
+    if(failedCount > 0) {
+      toast('تعذر التصدير: يوجد ' + failedCount + ' ملفات فشل رفعها سابقاً', true);
+    } else {
+      toast('لا توجد ملفات مرفوعة في هذا الشهر', true);
+    }
+    return;
+  }
 
   // اختبار CORS: هل نقدر نجلب ملف؟
   toast('جاري فحص الاتصال...');
