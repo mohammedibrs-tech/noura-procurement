@@ -1525,8 +1525,9 @@ function budgetCalcMonth(){
   if(selMonth){
     var key=selYear+'-'+selMonth;
     filtered=expenses.filter(function(e){
-      var mk=e.month_key||(e.expense_date||'').substring(0,7);
-      return mk===key;
+      var mKey = e.month_key || '';
+      var dKey = (e.expense_date || '').substring(0, 7);
+      return mKey === key || dKey === key;
     });
   } else {
     filtered=expenses;
@@ -1655,10 +1656,22 @@ function renderExpenses(){
   var filterYear=fyEl ? fyEl.value : '';
   
   var filtered=expenses.filter(function(e){
-    var key=e.month_key||(e.expense_date||'').substring(0,7);
-    if(filterMonth && filterYear) return key === (filterYear + '-' + filterMonth);
-    if(filterMonth) return key.endsWith('-' + filterMonth);
-    if(filterYear) return key.startsWith(filterYear + '-');
+    // استخراج السنة والشهر من month_key أو expense_date بشكل مرن
+    var mKey = e.month_key || ''; // مثال: 2026-05
+    var dKey = (e.expense_date || '').substring(0, 7); // مثال: 2026-05
+    
+    var eYear = '', eMonth = '';
+    if(mKey.includes('-')){
+      var parts = mKey.split('-');
+      eYear = parts[0]; eMonth = parts[1];
+    } else if(dKey.includes('-')){
+      var parts = dKey.split('-');
+      eYear = parts[0]; eMonth = parts[1];
+    }
+
+    if(filterMonth && filterYear) return eYear === filterYear && eMonth === filterMonth;
+    if(filterMonth) return eMonth === filterMonth;
+    if(filterYear) return eYear === filterYear;
     return true;
   });
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
