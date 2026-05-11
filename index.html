@@ -1634,18 +1634,31 @@ async function expAdd(){
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-notes').value='';
   document.getElementById('exp-inv').value='';
-  budgetCalc();renderExpenses();
+  // Update filters to match the month we just added to
+  const fm=document.getElementById('filter-month');
+  const fy=document.getElementById('filter-year');
+  const bm=document.getElementById('budget-month');
+  const by=document.getElementById('budget-year');
+  if(fm) fm.value = month;
+  if(fy) fy.value = year;
+  if(bm) bm.value = month;
+  if(by) by.value = year;
+
+  budgetCalcMonth();
 }
 
 function renderExpenses(){
   var tbody=document.getElementById('exp-tbody');
-  var filterMonth=document.getElementById('filter-month')&&document.getElementById('filter-month').value;
-  var filterYear=document.getElementById('filter-year')&&document.getElementById('filter-year').value;
+  var fmEl=document.getElementById('filter-month');
+  var fyEl=document.getElementById('filter-year');
+  var filterMonth=fmEl ? fmEl.value : '';
+  var filterYear=fyEl ? fyEl.value : '';
+  
   var filtered=expenses.filter(function(e){
-    if(!filterMonth) return true;
     var key=e.month_key||(e.expense_date||'').substring(0,7);
-    if(filterMonth&&filterYear) return key===(filterYear+'-'+filterMonth);
-    if(filterMonth) return (key||'').endsWith('-'+filterMonth);
+    if(filterMonth && filterYear) return key === (filterYear + '-' + filterMonth);
+    if(filterMonth) return key.endsWith('-' + filterMonth);
+    if(filterYear) return key.startsWith(filterYear + '-');
     return true;
   });
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
@@ -1694,7 +1707,7 @@ async function expDel(id,idx){
   if(!confirm('حذف هذا المصروف؟'))return;
   try{await sbDelete('expenses',id);}catch(e){}
   expenses.splice(idx,1);
-  localStorage.setItem('expenses',JSON.stringify(expenses));
+  localStorage.setItem('expenses_local',JSON.stringify(expenses));
   budgetCalc();renderExpenses();toast('تم الحذف');
 }
 
