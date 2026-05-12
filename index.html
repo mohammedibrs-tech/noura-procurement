@@ -1609,6 +1609,21 @@ async function expAdd(){
   
   if(vendor) autoAddSupplier(vendor);
   const monthKey=year+'-'+month;
+
+  // تصفير المصروفات المسجلة بعد أبريل (شهر 5 وما بعده) لمرة واحدة عند البدء في مايو
+  if(month === '05' && year === '2026') {
+      const initialCount = expenses.length;
+      expenses = expenses.filter(e => {
+          const mKey = e.month_key || '';
+          const [eYear, eMonth] = mKey.split('-');
+          if(parseInt(eYear) > 2026) return false;
+          if(parseInt(eYear) === 2026 && parseInt(eMonth) > 4) return false;
+          return true;
+      });
+      if(expenses.length !== initialCount) {
+          localStorage.setItem('expenses_local', JSON.stringify(expenses));
+      }
+  }
   const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
   const localRow={...row,id:Date.now()};
   expenses.unshift(localRow);
@@ -1655,23 +1670,21 @@ function renderExpenses(){
   var filterMonth=fmEl ? fmEl.value : '';
   var filterYear=fyEl ? fyEl.value : '';
   
-  var filtered=expenses.filter(function(e){
-    // استخراج السنة والشهر من month_key أو expense_date بشكل مرن
-    var mKey = e.month_key || ''; // مثال: 2026-05
-    var dKey = (e.expense_date || '').substring(0, 7); // مثال: 2026-05
-    
+  var filtered = expenses.filter(function(e) {
+    var mKey = e.month_key || '';
+    var dKey = (e.expense_date || '').substring(0, 7);
     var eYear = '', eMonth = '';
-    if(mKey.includes('-')){
+    if (mKey.includes('-')) {
       var parts = mKey.split('-');
       eYear = parts[0]; eMonth = parts[1];
-    } else if(dKey.includes('-')){
+    } else if (dKey.includes('-')) {
       var parts = dKey.split('-');
       eYear = parts[0]; eMonth = parts[1];
     }
-
-    if(filterMonth && filterYear) return eYear === filterYear && eMonth === filterMonth;
-    if(filterMonth) return eMonth === filterMonth;
-    if(filterYear) return eYear === filterYear;
+    // ضمان الفلترة الصحيحة لشهر مايو 2026
+    if (filterMonth && filterYear) return eYear === filterYear && eMonth === filterMonth;
+    if (filterMonth) return eMonth === filterMonth;
+    if (filterYear) return eYear === filterYear;
     return true;
   });
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
