@@ -1610,20 +1610,7 @@ async function expAdd(){
   if(vendor) autoAddSupplier(vendor);
   const monthKey=year+'-'+month;
 
-  // تصفير المصروفات المسجلة بعد أبريل (شهر 5 وما بعده) لمرة واحدة عند البدء في مايو
-  if(month === '05' && year === '2026') {
-      const initialCount = expenses.length;
-      expenses = expenses.filter(e => {
-          const mKey = e.month_key || '';
-          const [eYear, eMonth] = mKey.split('-');
-          if(parseInt(eYear) > 2026) return false;
-          if(parseInt(eYear) === 2026 && parseInt(eMonth) > 4) return false;
-          return true;
-      });
-      if(expenses.length !== initialCount) {
-          localStorage.setItem('expenses_local', JSON.stringify(expenses));
-      }
-  }
+
   const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
   const localRow={...row,id:Date.now()};
   expenses.unshift(localRow);
