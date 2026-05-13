@@ -280,7 +280,7 @@ function numToWords(n){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <!-- إدخال العهدة -->
     <div class="card">
-      <div class="card-header"><h3>إعداد العهدة الشهرية</h3></div>
+      <div class="card-header"><h3>إعداد العهدة الشهرية</h3><button class="btn btn-red btn-sm" onclick="resetLocalData()" title="امسح البيانات المحلية القديمة وأعد التحميل">🔄 إعادة ضبط البيانات</button></div>
       <div class="card-body">
         <div class="field" style="margin-bottom:12px;">
           <label>عهدة الشهر الواحد (ر.س)</label>
@@ -1511,10 +1511,24 @@ async function initBudget(){
     const sbIds=new Set(sbExp.map(e=>String(e.id)));
     const onlyLocal=localExp.filter(e=>!sbIds.has(String(e.id)));
     expenses=[...sbExp,...onlyLocal];
-    localStorage.setItem('expenses_local',JSON.stringify(expenses));
   }else{
     expenses=localExp;
   }
+  // ══ تنظيف شامل: صحّح month_key من expense_date، واحذف يونيو-ديسمبر للبيانات المستوردة ══
+  expenses=expenses.map(function(e){
+    var dateKey=(e.expense_date||'').substring(0,7);
+    if(dateKey && dateKey.length===7) return Object.assign({},e,{month_key:dateKey});
+    return e;
+  }).filter(function(e){
+    var mk=e.month_key||'';
+    var parts=mk.split('-');
+    var yr=parseInt(parts[0]||0);
+    var mn=parseInt(parts[1]||0);
+    // احذف المصروفات المستوردة (IDs تبدأ بـ 17000000) إذا كانت في يونيو 2026 أو أبعد
+    if(String(e.id).startsWith('17000000') && yr===2026 && mn>=6) return false;
+    return true;
+  });
+  localStorage.setItem('expenses_local',JSON.stringify(expenses));
   // تعيين الشهر الحالي تلقائياً
   var nowMonth=String(new Date().getMonth()+1).padStart(2,'0');
   var nowYear=String(new Date().getFullYear());
@@ -1587,6 +1601,13 @@ function syncBudgetFilter(){
   if(bm&&fm&&bm.value!==fm.value) bm.value=fm.value;
   if(by&&fy&&by.value!==fy.value) by.value=fy.value;
   budgetCalcMonth();
+}
+
+function resetLocalData(){
+  if(!confirm('سيتم مسح البيانات المحلية وإعادة تحميل الصفحة. هل تريد المتابعة؟')) return;
+  localStorage.removeItem('expenses_local');
+  localStorage.removeItem('budget_cfg');
+  location.reload();
 }
 
 async function budgetSave(){
