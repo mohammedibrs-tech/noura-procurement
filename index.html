@@ -876,9 +876,20 @@ function numToWords(n){
         <div class="field"><label>تاريخ بداية العقد</label><input id="ct-start" type="date"></div>
         <div class="field"><label>تاريخ انتهاء العقد</label><input id="ct-end" type="date"></div>
         <div class="field"><label>القيمة الشهرية (ر.س)</label><input id="ct-monthly" type="number" placeholder="0" oninput="ctCalc()"></div>
-        <div class="field"><label>القيمة السنوية (ر.س)</label><input id="ct-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
-        <div class="field"><label>الإيراد الشهري (ر.س)</label><input id="ct-rev-monthly" type="number" placeholder="0 — اتركه فارغاً إذا لا يوجد" oninput="ctCalcRev()"></div>
-        <div class="field"><label>الإيراد السنوي (ر.س)</label><input id="ct-rev-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field"><label>القيمة السنوية (ر.س)</label><input id="ct-annual" type="number" placeholder="0 — يُحسب تلقائياً أو أدخله يدوياً"></div>
+        <div class="field"><label>نوع الإيراد</label>
+          <select id="ct-rev-type" onchange="ctRevTypeChange()">
+            <option value="">— لا يوجد إيراد —</option>
+            <option value="monthly">شهري</option>
+            <option value="daily">تأجير مكان (عدد الأيام)</option>
+            <option value="fixed">مبلغ ثابت</option>
+          </select>
+        </div>
+        <div class="field" id="ct-rev-monthly-wrap" style="display:none;"><label>الإيراد الشهري (ر.س)</label><input id="ct-rev-monthly" type="number" placeholder="0" oninput="ctCalcRev()"></div>
+        <div class="field" id="ct-rev-annual-wrap" style="display:none;"><label>الإيراد السنوي (ر.س)</label><input id="ct-rev-annual" type="number" placeholder="0 — يُحسب تلقائياً"></div>
+        <div class="field" id="ct-rev-days-wrap" style="display:none;"><label>عدد أيام التأجير</label><input id="ct-rev-days" type="number" placeholder="عدد الأيام" oninput="ctCalcRevDaily()"></div>
+        <div class="field" id="ct-rev-day-price-wrap" style="display:none;"><label>سعر اليوم (ر.س)</label><input id="ct-rev-day-price" type="number" placeholder="0" oninput="ctCalcRevDaily()"></div>
+        <div class="field" id="ct-rev-daily-total-wrap" style="display:none;"><label>إجمالي إيراد التأجير (ر.س)</label><input id="ct-rev-daily-total" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
         <div class="field"><label>قيمة العقد الكلية (ر.س)</label><input id="ct-total" type="number" placeholder="0"></div>
         <div class="field"><label>الحالة</label>
           <select id="ct-status">
@@ -917,9 +928,28 @@ function numToWords(n){
         <div class="field"><label>اسم الشركة</label><input id="pt-vendor" placeholder="اسم الشركة المتوقعة"></div>
         <div class="field"><label>نوع الخدمة / العقد</label><input id="pt-type" placeholder="مثال: عقد نظافة، صيانة"></div>
         <div class="field"><label>القيمة الشهرية المتوقعة (ر.س)</label><input id="pt-monthly" type="number" placeholder="0" oninput="ptCalc()"></div>
-        <div class="field"><label>القيمة السنوية المتوقعة (ر.س)</label><input id="pt-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
-        <div class="field"><label>الإيراد الشهري المتوقع (ر.س)</label><input id="pt-rev-monthly" type="number" placeholder="0 — اتركه فارغاً إذا لا يوجد" oninput="ptCalcRev()"></div>
-        <div class="field"><label>الإيراد السنوي المتوقع (ر.س)</label><input id="pt-rev-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field"><label>القيمة السنوية المتوقعة (ر.س)</label><input id="pt-annual" type="number" placeholder="0 — يُحسب تلقائياً أو أدخله يدوياً"></div>
+        <div class="field"><label>مدة العقد المتوقعة</label>
+          <select id="pt-duration-type" onchange="ptDurationChange()">
+            <option value="annual">سنوي</option>
+            <option value="monthly">شهري</option>
+            <option value="days">أيام معدودة</option>
+          </select>
+        </div>
+        <div class="field" id="pt-duration-days-wrap" style="display:none;"><label>عدد الأيام</label><input id="pt-duration-days" type="number" placeholder="عدد الأيام"></div>
+        <div class="field"><label>نوع الإيراد المتوقع</label>
+          <select id="pt-rev-type" onchange="ptRevTypeChange()">
+            <option value="">— لا يوجد إيراد —</option>
+            <option value="monthly">شهري</option>
+            <option value="daily">تأجير مكان (عدد الأيام)</option>
+            <option value="fixed">مبلغ ثابت</option>
+          </select>
+        </div>
+        <div class="field" id="pt-rev-monthly-wrap" style="display:none;"><label>الإيراد الشهري المتوقع (ر.س)</label><input id="pt-rev-monthly" type="number" placeholder="0" oninput="ptCalcRev()"></div>
+        <div class="field" id="pt-rev-annual-wrap" style="display:none;"><label>الإيراد السنوي المتوقع (ر.س)</label><input id="pt-rev-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field" id="pt-rev-days-wrap" style="display:none;"><label>عدد أيام التأجير</label><input id="pt-rev-days" type="number" placeholder="عدد الأيام" oninput="ptCalcRevDaily()"></div>
+        <div class="field" id="pt-rev-day-price-wrap" style="display:none;"><label>سعر اليوم (ر.س)</label><input id="pt-rev-day-price" type="number" placeholder="0" oninput="ptCalcRevDaily()"></div>
+        <div class="field" id="pt-rev-daily-total-wrap" style="display:none;"><label>إجمالي إيراد التأجير المتوقع (ر.س)</label><input id="pt-rev-daily-total" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
         <div class="field"><label>الأولوية</label>
           <select id="pt-priority">
             <option value="high">عالية</option>
@@ -3697,11 +3727,68 @@ const STATUS_COLORS={active:'#276749',expiring:'#C53030',expired:'#64748B',pendi
 
 function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
-  document.getElementById('ct-annual').value=m*12;
+  const annualEl=document.getElementById('ct-annual');
+  if(!annualEl.value||annualEl.dataset.auto==='1'){annualEl.value=m*12;annualEl.dataset.auto='1';}
 }
 function ctCalcRev(){
   const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
-  document.getElementById('ct-rev-annual').value=m*12;
+  const a=document.getElementById('ct-rev-annual');
+  if(a)a.value=m*12;
+}
+function ctCalcRevDaily(){
+  const days=parseFloat(document.getElementById('ct-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('ct-rev-day-price').value)||0;
+  const el=document.getElementById('ct-rev-daily-total');
+  if(el)el.value=(days*price)||0;
+}
+function ctRevTypeChange(){
+  const t=document.getElementById('ct-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('ct-rev-monthly-wrap', t==='monthly');
+  show('ct-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('ct-rev-days-wrap', t==='daily');
+  show('ct-rev-day-price-wrap', t==='daily');
+  show('ct-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+// دوال المتوقع
+function ptDurationChange(){
+  const t=document.getElementById('pt-duration-type').value;
+  const w=document.getElementById('pt-duration-days-wrap');
+  if(w)w.style.display=t==='days'?'block':'none';
+}
+function ptRevTypeChange(){
+  const t=document.getElementById('pt-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('pt-rev-monthly-wrap', t==='monthly');
+  show('pt-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('pt-rev-days-wrap', t==='daily');
+  show('pt-rev-day-price-wrap', t==='daily');
+  show('pt-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const a=document.getElementById('pt-rev-annual');
+  if(a)a.value=m*12;
+}
+function ptCalcRevDaily(){
+  const days=parseFloat(document.getElementById('pt-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('pt-rev-day-price').value)||0;
+  const el=document.getElementById('pt-rev-daily-total');
+  if(el)el.value=(days*price)||0;
 }
 // دوال قسم المتوقع التعاقد
 let potentials=JSON.parse(localStorage.getItem('potentials')||'[]');
@@ -3718,20 +3805,33 @@ function ptCalcRev(){
 function potentialReset(){
   potentialEditId=null;
   ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
-  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual','pt-rev-days','pt-rev-day-price','pt-rev-daily-total','pt-duration-days'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pt-priority').value='high';
+  const prt=document.getElementById('pt-rev-type');if(prt)prt.value='';
+  const pdt=document.getElementById('pt-duration-type');if(pdt)pdt.value='annual';
+  ptRevTypeChange();ptDurationChange();
 }
 function potentialSave(){
   const vendor=document.getElementById('pt-vendor').value.trim();
   const type=document.getElementById('pt-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const annualVal=parseFloat(document.getElementById('pt-annual').value)||monthly*12;
+  const durationType=document.getElementById('pt-duration-type').value;
+  const durationDays=parseFloat(document.getElementById('pt-duration-days')?.value)||0;
+  const revType=document.getElementById('pt-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('pt-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('pt-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('pt-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('pt-rev-daily-total')?.value)||0;
   const rec={
     id:potentialEditId||Date.now(),
     vendor,type,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    durationType,durationDays,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -3763,7 +3863,8 @@ function renderPotentials(){
         <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
           <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
           ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
-          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.durationType==='days'&&p.durationDays>0?`<span style="font-size:11px;color:#7C3AED;">مدة: ${p.durationDays} يوم</span>`:p.durationType==='monthly'?`<span style="font-size:11px;color:#7C3AED;">شهري</span>`:`<span style="font-size:11px;color:#7C3AED;">سنوي</span>`}
+          ${p.revAnnual>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${(p.revType==='daily'?p.revAnnual:p.revMonthly||p.revAnnual).toLocaleString('ar-SA')} ر.س${p.revType==='monthly'?'/شهر':p.revType==='daily'?` (${p.revDays} يوم)`:''}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:5px;">
@@ -3780,7 +3881,10 @@ function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-rev-days','ct-rev-day-price','ct-rev-daily-total','ct-total','ct-saving'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const revType=document.getElementById('ct-rev-type');if(revType)revType.value='';
+  ctRevTypeChange();
+  const annualEl=document.getElementById('ct-annual');if(annualEl)annualEl.dataset.auto='';
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -3796,14 +3900,21 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  const revType=document.getElementById('ct-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('ct-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -3837,8 +3948,13 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
-  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
-  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
+  const revTypeEl=document.getElementById('ct-rev-type');
+  if(revTypeEl){revTypeEl.value=c.revType||'';ctRevTypeChange();}
+  const rme=document.getElementById('ct-rev-monthly');if(rme)rme.value=c.revMonthly||0;
+  const rae=document.getElementById('ct-rev-annual');if(rae)rae.value=c.revAnnual||0;
+  const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
+  const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
+  const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -4177,11 +4293,68 @@ function exportQuarterlyExcel(){
 
 function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
-  document.getElementById('ct-annual').value=m*12;
+  const annualEl=document.getElementById('ct-annual');
+  if(!annualEl.value||annualEl.dataset.auto==='1'){annualEl.value=m*12;annualEl.dataset.auto='1';}
 }
 function ctCalcRev(){
   const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
-  document.getElementById('ct-rev-annual').value=m*12;
+  const a=document.getElementById('ct-rev-annual');
+  if(a)a.value=m*12;
+}
+function ctCalcRevDaily(){
+  const days=parseFloat(document.getElementById('ct-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('ct-rev-day-price').value)||0;
+  const el=document.getElementById('ct-rev-daily-total');
+  if(el)el.value=(days*price)||0;
+}
+function ctRevTypeChange(){
+  const t=document.getElementById('ct-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('ct-rev-monthly-wrap', t==='monthly');
+  show('ct-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('ct-rev-days-wrap', t==='daily');
+  show('ct-rev-day-price-wrap', t==='daily');
+  show('ct-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+// دوال المتوقع
+function ptDurationChange(){
+  const t=document.getElementById('pt-duration-type').value;
+  const w=document.getElementById('pt-duration-days-wrap');
+  if(w)w.style.display=t==='days'?'block':'none';
+}
+function ptRevTypeChange(){
+  const t=document.getElementById('pt-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('pt-rev-monthly-wrap', t==='monthly');
+  show('pt-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('pt-rev-days-wrap', t==='daily');
+  show('pt-rev-day-price-wrap', t==='daily');
+  show('pt-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const a=document.getElementById('pt-rev-annual');
+  if(a)a.value=m*12;
+}
+function ptCalcRevDaily(){
+  const days=parseFloat(document.getElementById('pt-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('pt-rev-day-price').value)||0;
+  const el=document.getElementById('pt-rev-daily-total');
+  if(el)el.value=(days*price)||0;
 }
 // دوال قسم المتوقع التعاقد
 function ptCalc(){
@@ -4195,20 +4368,33 @@ function ptCalcRev(){
 function potentialReset(){
   potentialEditId=null;
   ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
-  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual','pt-rev-days','pt-rev-day-price','pt-rev-daily-total','pt-duration-days'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pt-priority').value='high';
+  const prt=document.getElementById('pt-rev-type');if(prt)prt.value='';
+  const pdt=document.getElementById('pt-duration-type');if(pdt)pdt.value='annual';
+  ptRevTypeChange();ptDurationChange();
 }
 function potentialSave(){
   const vendor=document.getElementById('pt-vendor').value.trim();
   const type=document.getElementById('pt-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const annualVal=parseFloat(document.getElementById('pt-annual').value)||monthly*12;
+  const durationType=document.getElementById('pt-duration-type').value;
+  const durationDays=parseFloat(document.getElementById('pt-duration-days')?.value)||0;
+  const revType=document.getElementById('pt-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('pt-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('pt-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('pt-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('pt-rev-daily-total')?.value)||0;
   const rec={
     id:potentialEditId||Date.now(),
     vendor,type,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    durationType,durationDays,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -4240,7 +4426,8 @@ function renderPotentials(){
         <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
           <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
           ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
-          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.durationType==='days'&&p.durationDays>0?`<span style="font-size:11px;color:#7C3AED;">مدة: ${p.durationDays} يوم</span>`:p.durationType==='monthly'?`<span style="font-size:11px;color:#7C3AED;">شهري</span>`:`<span style="font-size:11px;color:#7C3AED;">سنوي</span>`}
+          ${p.revAnnual>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${(p.revType==='daily'?p.revAnnual:p.revMonthly||p.revAnnual).toLocaleString('ar-SA')} ر.س${p.revType==='monthly'?'/شهر':p.revType==='daily'?` (${p.revDays} يوم)`:''}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:5px;">
@@ -4257,7 +4444,10 @@ function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-rev-days','ct-rev-day-price','ct-rev-daily-total','ct-total','ct-saving'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const revType=document.getElementById('ct-rev-type');if(revType)revType.value='';
+  ctRevTypeChange();
+  const annualEl=document.getElementById('ct-annual');if(annualEl)annualEl.dataset.auto='';
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -4273,14 +4463,21 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  const revType=document.getElementById('ct-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('ct-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -4314,8 +4511,13 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
-  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
-  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
+  const revTypeEl=document.getElementById('ct-rev-type');
+  if(revTypeEl){revTypeEl.value=c.revType||'';ctRevTypeChange();}
+  const rme=document.getElementById('ct-rev-monthly');if(rme)rme.value=c.revMonthly||0;
+  const rae=document.getElementById('ct-rev-annual');if(rae)rae.value=c.revAnnual||0;
+  const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
+  const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
+  const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -4884,11 +5086,68 @@ function exportQuarterlyExcel(){
 
 function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
-  document.getElementById('ct-annual').value=m*12;
+  const annualEl=document.getElementById('ct-annual');
+  if(!annualEl.value||annualEl.dataset.auto==='1'){annualEl.value=m*12;annualEl.dataset.auto='1';}
 }
 function ctCalcRev(){
   const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
-  document.getElementById('ct-rev-annual').value=m*12;
+  const a=document.getElementById('ct-rev-annual');
+  if(a)a.value=m*12;
+}
+function ctCalcRevDaily(){
+  const days=parseFloat(document.getElementById('ct-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('ct-rev-day-price').value)||0;
+  const el=document.getElementById('ct-rev-daily-total');
+  if(el)el.value=(days*price)||0;
+}
+function ctRevTypeChange(){
+  const t=document.getElementById('ct-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('ct-rev-monthly-wrap', t==='monthly');
+  show('ct-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('ct-rev-days-wrap', t==='daily');
+  show('ct-rev-day-price-wrap', t==='daily');
+  show('ct-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+// دوال المتوقع
+function ptDurationChange(){
+  const t=document.getElementById('pt-duration-type').value;
+  const w=document.getElementById('pt-duration-days-wrap');
+  if(w)w.style.display=t==='days'?'block':'none';
+}
+function ptRevTypeChange(){
+  const t=document.getElementById('pt-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('pt-rev-monthly-wrap', t==='monthly');
+  show('pt-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('pt-rev-days-wrap', t==='daily');
+  show('pt-rev-day-price-wrap', t==='daily');
+  show('pt-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const a=document.getElementById('pt-rev-annual');
+  if(a)a.value=m*12;
+}
+function ptCalcRevDaily(){
+  const days=parseFloat(document.getElementById('pt-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('pt-rev-day-price').value)||0;
+  const el=document.getElementById('pt-rev-daily-total');
+  if(el)el.value=(days*price)||0;
 }
 // دوال قسم المتوقع التعاقد
 function ptCalc(){
@@ -4902,20 +5161,33 @@ function ptCalcRev(){
 function potentialReset(){
   potentialEditId=null;
   ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
-  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual','pt-rev-days','pt-rev-day-price','pt-rev-daily-total','pt-duration-days'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pt-priority').value='high';
+  const prt=document.getElementById('pt-rev-type');if(prt)prt.value='';
+  const pdt=document.getElementById('pt-duration-type');if(pdt)pdt.value='annual';
+  ptRevTypeChange();ptDurationChange();
 }
 function potentialSave(){
   const vendor=document.getElementById('pt-vendor').value.trim();
   const type=document.getElementById('pt-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const annualVal=parseFloat(document.getElementById('pt-annual').value)||monthly*12;
+  const durationType=document.getElementById('pt-duration-type').value;
+  const durationDays=parseFloat(document.getElementById('pt-duration-days')?.value)||0;
+  const revType=document.getElementById('pt-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('pt-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('pt-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('pt-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('pt-rev-daily-total')?.value)||0;
   const rec={
     id:potentialEditId||Date.now(),
     vendor,type,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    durationType,durationDays,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -4947,7 +5219,8 @@ function renderPotentials(){
         <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
           <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
           ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
-          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.durationType==='days'&&p.durationDays>0?`<span style="font-size:11px;color:#7C3AED;">مدة: ${p.durationDays} يوم</span>`:p.durationType==='monthly'?`<span style="font-size:11px;color:#7C3AED;">شهري</span>`:`<span style="font-size:11px;color:#7C3AED;">سنوي</span>`}
+          ${p.revAnnual>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${(p.revType==='daily'?p.revAnnual:p.revMonthly||p.revAnnual).toLocaleString('ar-SA')} ر.س${p.revType==='monthly'?'/شهر':p.revType==='daily'?` (${p.revDays} يوم)`:''}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:5px;">
@@ -4964,7 +5237,10 @@ function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-rev-days','ct-rev-day-price','ct-rev-daily-total','ct-total','ct-saving'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const revType=document.getElementById('ct-rev-type');if(revType)revType.value='';
+  ctRevTypeChange();
+  const annualEl=document.getElementById('ct-annual');if(annualEl)annualEl.dataset.auto='';
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -4980,14 +5256,21 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  const revType=document.getElementById('ct-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('ct-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -5021,8 +5304,13 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
-  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
-  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
+  const revTypeEl=document.getElementById('ct-rev-type');
+  if(revTypeEl){revTypeEl.value=c.revType||'';ctRevTypeChange();}
+  const rme=document.getElementById('ct-rev-monthly');if(rme)rme.value=c.revMonthly||0;
+  const rae=document.getElementById('ct-rev-annual');if(rae)rae.value=c.revAnnual||0;
+  const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
+  const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
+  const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -6133,11 +6421,68 @@ function exportAnnualExcel(){
 
 function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
-  document.getElementById('ct-annual').value=m*12;
+  const annualEl=document.getElementById('ct-annual');
+  if(!annualEl.value||annualEl.dataset.auto==='1'){annualEl.value=m*12;annualEl.dataset.auto='1';}
 }
 function ctCalcRev(){
   const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
-  document.getElementById('ct-rev-annual').value=m*12;
+  const a=document.getElementById('ct-rev-annual');
+  if(a)a.value=m*12;
+}
+function ctCalcRevDaily(){
+  const days=parseFloat(document.getElementById('ct-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('ct-rev-day-price').value)||0;
+  const el=document.getElementById('ct-rev-daily-total');
+  if(el)el.value=(days*price)||0;
+}
+function ctRevTypeChange(){
+  const t=document.getElementById('ct-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('ct-rev-monthly-wrap', t==='monthly');
+  show('ct-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('ct-rev-days-wrap', t==='daily');
+  show('ct-rev-day-price-wrap', t==='daily');
+  show('ct-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('ct-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+// دوال المتوقع
+function ptDurationChange(){
+  const t=document.getElementById('pt-duration-type').value;
+  const w=document.getElementById('pt-duration-days-wrap');
+  if(w)w.style.display=t==='days'?'block':'none';
+}
+function ptRevTypeChange(){
+  const t=document.getElementById('pt-rev-type').value;
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'block':'none';};
+  show('pt-rev-monthly-wrap', t==='monthly');
+  show('pt-rev-annual-wrap', t==='monthly'||t==='fixed');
+  show('pt-rev-days-wrap', t==='daily');
+  show('pt-rev-day-price-wrap', t==='daily');
+  show('pt-rev-daily-total-wrap', t==='daily');
+  if(t==='fixed'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.removeAttribute('readonly');a.style.background='';}
+  } else if(t==='monthly'){
+    const a=document.getElementById('pt-rev-annual');
+    if(a){a.setAttribute('readonly','');a.style.background='#f5f5f5';}
+  }
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const a=document.getElementById('pt-rev-annual');
+  if(a)a.value=m*12;
+}
+function ptCalcRevDaily(){
+  const days=parseFloat(document.getElementById('pt-rev-days').value)||0;
+  const price=parseFloat(document.getElementById('pt-rev-day-price').value)||0;
+  const el=document.getElementById('pt-rev-daily-total');
+  if(el)el.value=(days*price)||0;
 }
 // دوال قسم المتوقع التعاقد
 function ptCalc(){
@@ -6151,20 +6496,33 @@ function ptCalcRev(){
 function potentialReset(){
   potentialEditId=null;
   ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
-  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual','pt-rev-days','pt-rev-day-price','pt-rev-daily-total','pt-duration-days'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pt-priority').value='high';
+  const prt=document.getElementById('pt-rev-type');if(prt)prt.value='';
+  const pdt=document.getElementById('pt-duration-type');if(pdt)pdt.value='annual';
+  ptRevTypeChange();ptDurationChange();
 }
 function potentialSave(){
   const vendor=document.getElementById('pt-vendor').value.trim();
   const type=document.getElementById('pt-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const annualVal=parseFloat(document.getElementById('pt-annual').value)||monthly*12;
+  const durationType=document.getElementById('pt-duration-type').value;
+  const durationDays=parseFloat(document.getElementById('pt-duration-days')?.value)||0;
+  const revType=document.getElementById('pt-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('pt-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('pt-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('pt-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('pt-rev-daily-total')?.value)||0;
   const rec={
     id:potentialEditId||Date.now(),
     vendor,type,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    durationType,durationDays,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -6196,7 +6554,8 @@ function renderPotentials(){
         <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
           <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
           ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
-          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.durationType==='days'&&p.durationDays>0?`<span style="font-size:11px;color:#7C3AED;">مدة: ${p.durationDays} يوم</span>`:p.durationType==='monthly'?`<span style="font-size:11px;color:#7C3AED;">شهري</span>`:`<span style="font-size:11px;color:#7C3AED;">سنوي</span>`}
+          ${p.revAnnual>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${(p.revType==='daily'?p.revAnnual:p.revMonthly||p.revAnnual).toLocaleString('ar-SA')} ر.س${p.revType==='monthly'?'/شهر':p.revType==='daily'?` (${p.revDays} يوم)`:''}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:5px;">
@@ -6213,7 +6572,10 @@ function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-rev-days','ct-rev-day-price','ct-rev-daily-total','ct-total','ct-saving'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const revType=document.getElementById('ct-rev-type');if(revType)revType.value='';
+  ctRevTypeChange();
+  const annualEl=document.getElementById('ct-annual');if(annualEl)annualEl.dataset.auto='';
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -6229,14 +6591,21 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
-  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  const revType=document.getElementById('ct-rev-type').value;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly')?.value)||0;
+  const revAnnualEl=parseFloat(document.getElementById('ct-rev-annual')?.value)||0;
+  const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
+  const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
+  const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
-    monthly,annual:monthly*12,
-    revMonthly,revAnnual:revMonthly*12,
+    monthly,annual:annualVal,
+    revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
+    revDays,revDayPrice,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -6270,8 +6639,13 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
-  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
-  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
+  const revTypeEl=document.getElementById('ct-rev-type');
+  if(revTypeEl){revTypeEl.value=c.revType||'';ctRevTypeChange();}
+  const rme=document.getElementById('ct-rev-monthly');if(rme)rme.value=c.revMonthly||0;
+  const rae=document.getElementById('ct-rev-annual');if(rae)rae.value=c.revAnnual||0;
+  const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
+  const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
+  const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
