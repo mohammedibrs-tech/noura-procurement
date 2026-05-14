@@ -877,6 +877,8 @@ function numToWords(n){
         <div class="field"><label>تاريخ انتهاء العقد</label><input id="ct-end" type="date"></div>
         <div class="field"><label>القيمة الشهرية (ر.س)</label><input id="ct-monthly" type="number" placeholder="0" oninput="ctCalc()"></div>
         <div class="field"><label>القيمة السنوية (ر.س)</label><input id="ct-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field"><label>الإيراد الشهري (ر.س)</label><input id="ct-rev-monthly" type="number" placeholder="0 — اتركه فارغاً إذا لا يوجد" oninput="ctCalcRev()"></div>
+        <div class="field"><label>الإيراد السنوي (ر.س)</label><input id="ct-rev-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
         <div class="field"><label>قيمة العقد الكلية (ر.س)</label><input id="ct-total" type="number" placeholder="0"></div>
         <div class="field"><label>الحالة</label>
           <select id="ct-status">
@@ -901,6 +903,38 @@ function numToWords(n){
       </div>
     </div>
     <div class="card-body" id="contracts-list"><div style="text-align:center;color:#aaa;padding:20px;">لا توجد عقود</div></div>
+  </div>
+</div>
+
+  <!-- قسم المتوقع التعاقد معهم -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header">
+      <h3>🔮 شركات متوقع التعاقد معهم</h3>
+      <button class="btn btn-gray btn-sm" onclick="potentialReset()">🔄 جديد</button>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>اسم الشركة</label><input id="pt-vendor" placeholder="اسم الشركة المتوقعة"></div>
+        <div class="field"><label>نوع الخدمة / العقد</label><input id="pt-type" placeholder="مثال: عقد نظافة، صيانة"></div>
+        <div class="field"><label>القيمة الشهرية المتوقعة (ر.س)</label><input id="pt-monthly" type="number" placeholder="0" oninput="ptCalc()"></div>
+        <div class="field"><label>القيمة السنوية المتوقعة (ر.س)</label><input id="pt-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field"><label>الإيراد الشهري المتوقع (ر.س)</label><input id="pt-rev-monthly" type="number" placeholder="0 — اتركه فارغاً إذا لا يوجد" oninput="ptCalcRev()"></div>
+        <div class="field"><label>الإيراد السنوي المتوقع (ر.س)</label><input id="pt-rev-annual" type="number" placeholder="0" readonly style="background:#f5f5f5;"></div>
+        <div class="field"><label>الأولوية</label>
+          <select id="pt-priority">
+            <option value="high">عالية</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:8px;"><label>ملاحظات</label><textarea id="pt-notes" placeholder="تفاصيل أو ملاحظات..."></textarea></div>
+      <button class="btn btn-primary" onclick="potentialSave()" style="margin-top:12px;">حفظ</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>قائمة المتوقع التعاقد معهم</h3></div>
+    <div class="card-body" id="potential-list"><div style="text-align:center;color:#aaa;padding:20px;">لا توجد شركات مضافة</div></div>
   </div>
 </div>
 
@@ -3665,12 +3699,88 @@ function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
   document.getElementById('ct-annual').value=m*12;
 }
+function ctCalcRev(){
+  const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  document.getElementById('ct-rev-annual').value=m*12;
+}
+// دوال قسم المتوقع التعاقد
+let potentials=JSON.parse(localStorage.getItem('potentials')||'[]');
+let potentialEditId=null;
+const PT_PRIORITY={high:'عالية 🔴',medium:'متوسطة 🟡',low:'منخفضة 🟢'};
+function ptCalc(){
+  const m=parseFloat(document.getElementById('pt-monthly').value)||0;
+  document.getElementById('pt-annual').value=m*12;
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  document.getElementById('pt-rev-annual').value=m*12;
+}
+function potentialReset(){
+  potentialEditId=null;
+  ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pt-priority').value='high';
+}
+function potentialSave(){
+  const vendor=document.getElementById('pt-vendor').value.trim();
+  const type=document.getElementById('pt-type').value.trim();
+  if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
+  const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const rec={
+    id:potentialEditId||Date.now(),
+    vendor,type,
+    monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
+    priority:document.getElementById('pt-priority').value,
+    notes:document.getElementById('pt-notes').value,
+    created_at:new Date().toISOString()
+  };
+  if(potentialEditId){
+    const idx=potentials.findIndex(p=>p.id===potentialEditId);
+    if(idx!==-1)potentials[idx]=rec;
+  }else{
+    potentials.unshift(rec);
+  }
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  potentialReset();renderPotentials();toast('تم الحفظ ✅');
+}
+function potentialDelete(id){
+  if(!confirm('حذف هذا السجل؟'))return;
+  potentials=potentials.filter(p=>p.id!==id);
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  renderPotentials();toast('تم الحذف');
+}
+function renderPotentials(){
+  const el=document.getElementById('potential-list');if(!el)return;
+  if(!potentials.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد شركات مضافة</div>';return;}
+  const clrMap={high:'#C53030',medium:'#D97706',low:'#276749'};
+  el.innerHTML=potentials.map(p=>`<div style="border:1px solid #E2E8F0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:#FAFAFA;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${p.vendor}</div>
+        <div style="font-size:11px;color:#64748B;margin:2px 0;">${p.type}</div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
+          ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-red btn-sm" onclick="potentialDelete(${p.id})">×</button>
+      </div>
+    </div>
+    ${p.notes?`<div style="padding:8px 16px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;">${p.notes}</div>`:''}
+  </div>`).join('');
+}
+// تشغيل عند التحميل
+setTimeout(()=>renderPotentials(),500);
 
 function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -3686,12 +3796,14 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
     monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -3725,6 +3837,8 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
+  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
+  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -3759,6 +3873,7 @@ function renderContracts(){
             <span style="background:${clr}22;color:${clr};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${STATUS_LABELS[c.status]||c.status}</span>
             ${c.end?`<span style="font-size:11px;color:#64748B;">ينتهي: ${c.end} | ${daysText}</span>`:''}
             <span style="font-size:11px;color:#1DA9BD;font-weight:700;">${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span>
+            ${c.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${c.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
             ${c.saving>0?`<span style="font-size:11px;color:#276749;">توفير تفاوضي: ${c.saving.toLocaleString('ar-SA')} ر.س</span>`:''}
           </div>
         </div>
@@ -3805,6 +3920,7 @@ function buildMonthlyReport(){
   const deptMap={};
   monthExp.forEach(e=>{
     const d=e.department||'أخرى';
+    if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
     deptMap[d].total+=parseFloat(e.amount)||0;
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
@@ -4063,12 +4179,85 @@ function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
   document.getElementById('ct-annual').value=m*12;
 }
+function ctCalcRev(){
+  const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  document.getElementById('ct-rev-annual').value=m*12;
+}
+// دوال قسم المتوقع التعاقد
+function ptCalc(){
+  const m=parseFloat(document.getElementById('pt-monthly').value)||0;
+  document.getElementById('pt-annual').value=m*12;
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  document.getElementById('pt-rev-annual').value=m*12;
+}
+function potentialReset(){
+  potentialEditId=null;
+  ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pt-priority').value='high';
+}
+function potentialSave(){
+  const vendor=document.getElementById('pt-vendor').value.trim();
+  const type=document.getElementById('pt-type').value.trim();
+  if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
+  const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const rec={
+    id:potentialEditId||Date.now(),
+    vendor,type,
+    monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
+    priority:document.getElementById('pt-priority').value,
+    notes:document.getElementById('pt-notes').value,
+    created_at:new Date().toISOString()
+  };
+  if(potentialEditId){
+    const idx=potentials.findIndex(p=>p.id===potentialEditId);
+    if(idx!==-1)potentials[idx]=rec;
+  }else{
+    potentials.unshift(rec);
+  }
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  potentialReset();renderPotentials();toast('تم الحفظ ✅');
+}
+function potentialDelete(id){
+  if(!confirm('حذف هذا السجل؟'))return;
+  potentials=potentials.filter(p=>p.id!==id);
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  renderPotentials();toast('تم الحذف');
+}
+function renderPotentials(){
+  const el=document.getElementById('potential-list');if(!el)return;
+  if(!potentials.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد شركات مضافة</div>';return;}
+  const clrMap={high:'#C53030',medium:'#D97706',low:'#276749'};
+  el.innerHTML=potentials.map(p=>`<div style="border:1px solid #E2E8F0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:#FAFAFA;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${p.vendor}</div>
+        <div style="font-size:11px;color:#64748B;margin:2px 0;">${p.type}</div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
+          ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-red btn-sm" onclick="potentialDelete(${p.id})">×</button>
+      </div>
+    </div>
+    ${p.notes?`<div style="padding:8px 16px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;">${p.notes}</div>`:''}
+  </div>`).join('');
+}
+// تشغيل عند التحميل
+setTimeout(()=>renderPotentials(),500);
 
 function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -4084,12 +4273,14 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
     monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -4123,6 +4314,8 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
+  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
+  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -4157,6 +4350,7 @@ function renderContracts(){
             <span style="background:${clr}22;color:${clr};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${STATUS_LABELS[c.status]||c.status}</span>
             ${c.end?`<span style="font-size:11px;color:#64748B;">ينتهي: ${c.end} | ${daysText}</span>`:''}
             <span style="font-size:11px;color:#1DA9BD;font-weight:700;">${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span>
+            ${c.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${c.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
             ${c.saving>0?`<span style="font-size:11px;color:#276749;">توفير تفاوضي: ${c.saving.toLocaleString('ar-SA')} ر.س</span>`:''}
           </div>
         </div>
@@ -4203,6 +4397,7 @@ function buildMonthlyReport(){
   const deptMap={};
   monthExp.forEach(e=>{
     const d=e.department||'أخرى';
+    if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
     deptMap[d].total+=parseFloat(e.amount)||0;
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
@@ -4484,14 +4679,16 @@ function exportContractsPDF(){
   const today=new Date().toLocaleDateString('ar-SA');
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
+  const totalRevMonthly=activeC.reduce((s,c)=>s+(c.revMonthly||0),0);
+  const totalRevAnnual=activeC.reduce((s,c)=>s+(c.revAnnual||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const rows=contracts.map(c=>{
     const days=contractDaysLeft(c.end);
     const endClr=days!==null&&days<=30&&days>=0?'#C53030':'#64748B';
     const stClr=c.status==='expired'?'#64748B':c.status==='expiring'?'#C53030':'#276749';
-    return`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td class="muted" style="text-align:center;">${c.start||'—'}</td><td style="text-align:center;color:${endClr};">${c.end||'—'}</td><td style="text-align:center;color:${stClr};font-weight:600;">${STATUS_LABELS[c.status]||c.status}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`;
+    return`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td style="text-align:right;color:#276749;">${c.revMonthly>0?c.revMonthly.toLocaleString('ar-SA'):'—'}</td><td style="text-align:right;color:#276749;">${c.revAnnual>0?c.revAnnual.toLocaleString('ar-SA'):'—'}</td><td class="muted" style="text-align:center;">${c.start||'—'}</td><td style="text-align:center;color:${endClr};">${c.end||'—'}</td><td style="text-align:center;color:${stClr};font-weight:600;">${STATUS_LABELS[c.status]||c.status}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`;
   }).join('');
-  const CSS=`@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:10px 14px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:9px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:4px;margin-bottom:8px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:24px;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
+  const CSS=`@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:4px;margin-bottom:8px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:24px;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <div class="page"><img class="bg" src="${BG}"><div class="content">
@@ -4501,12 +4698,14 @@ function exportContractsPDF(){
   <div class="kpi-box"><div class="kpi-label">إجمالي العقود</div><div class="kpi-val">${contracts.length}</div><div class="kpi-unit">عقد</div></div>
   <div class="kpi-box"><div class="kpi-label">العقود الفعالة</div><div class="kpi-val">${activeC.length}</div><div class="kpi-unit">عقد فعّال</div></div>
   <div class="kpi-box"><div class="kpi-label">الإجمالي الشهري</div><div class="kpi-val">${totalMonthly.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال / شهر</div></div>
+  <div class="kpi-box"><div class="kpi-label">إجمالي إيراد شهري</div><div class="kpi-val" style="color:#276749;">${totalRevMonthly.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال / شهر</div></div>
+  <div class="kpi-box"><div class="kpi-label">إجمالي إيراد سنوي</div><div class="kpi-val" style="color:#276749;">${totalRevAnnual.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال / سنة</div></div>
   <div class="kpi-box"><div class="kpi-label">وفر التفاوض</div><div class="kpi-val">${totalSaving.toLocaleString('ar-SA')}</div><div class="kpi-unit">ريال</div></div>
 </div>
 <div class="section-title">تفاصيل العقود</div>
-<table><thead><tr><th>الشركة</th><th>نوع الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">السنوي</th><th style="text-align:center;">بداية</th><th style="text-align:center;">نهاية</th><th style="text-align:center;">الحالة</th><th style="text-align:right;">وفر التفاوض</th></tr></thead>
+<table><thead><tr><th>الشركة</th><th>نوع الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">السنوي</th><th style="text-align:right;color:#276749;">إيراد شهري</th><th style="text-align:right;color:#276749;">إيراد سنوي</th><th style="text-align:center;">بداية</th><th style="text-align:center;">نهاية</th><th style="text-align:center;">الحالة</th><th style="text-align:right;">وفر التفاوض</th></tr></thead>
 <tbody>${rows}
-<tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')}</td><td style="text-align:right;">${(totalMonthly*12).toLocaleString('ar-SA')}</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')}</td></tr>
+<tr style="border-top:2px solid #244062;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
 </tbody></table>
 
 </div></div></body></html>`);
@@ -4687,12 +4886,85 @@ function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
   document.getElementById('ct-annual').value=m*12;
 }
+function ctCalcRev(){
+  const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  document.getElementById('ct-rev-annual').value=m*12;
+}
+// دوال قسم المتوقع التعاقد
+function ptCalc(){
+  const m=parseFloat(document.getElementById('pt-monthly').value)||0;
+  document.getElementById('pt-annual').value=m*12;
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  document.getElementById('pt-rev-annual').value=m*12;
+}
+function potentialReset(){
+  potentialEditId=null;
+  ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pt-priority').value='high';
+}
+function potentialSave(){
+  const vendor=document.getElementById('pt-vendor').value.trim();
+  const type=document.getElementById('pt-type').value.trim();
+  if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
+  const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const rec={
+    id:potentialEditId||Date.now(),
+    vendor,type,
+    monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
+    priority:document.getElementById('pt-priority').value,
+    notes:document.getElementById('pt-notes').value,
+    created_at:new Date().toISOString()
+  };
+  if(potentialEditId){
+    const idx=potentials.findIndex(p=>p.id===potentialEditId);
+    if(idx!==-1)potentials[idx]=rec;
+  }else{
+    potentials.unshift(rec);
+  }
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  potentialReset();renderPotentials();toast('تم الحفظ ✅');
+}
+function potentialDelete(id){
+  if(!confirm('حذف هذا السجل؟'))return;
+  potentials=potentials.filter(p=>p.id!==id);
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  renderPotentials();toast('تم الحذف');
+}
+function renderPotentials(){
+  const el=document.getElementById('potential-list');if(!el)return;
+  if(!potentials.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد شركات مضافة</div>';return;}
+  const clrMap={high:'#C53030',medium:'#D97706',low:'#276749'};
+  el.innerHTML=potentials.map(p=>`<div style="border:1px solid #E2E8F0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:#FAFAFA;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${p.vendor}</div>
+        <div style="font-size:11px;color:#64748B;margin:2px 0;">${p.type}</div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
+          ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-red btn-sm" onclick="potentialDelete(${p.id})">×</button>
+      </div>
+    </div>
+    ${p.notes?`<div style="padding:8px 16px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;">${p.notes}</div>`:''}
+  </div>`).join('');
+}
+// تشغيل عند التحميل
+setTimeout(()=>renderPotentials(),500);
 
 function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -4708,12 +4980,14 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
     monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -4747,6 +5021,8 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
+  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
+  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -4781,6 +5057,7 @@ function renderContracts(){
             <span style="background:${clr}22;color:${clr};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${STATUS_LABELS[c.status]||c.status}</span>
             ${c.end?`<span style="font-size:11px;color:#64748B;">ينتهي: ${c.end} | ${daysText}</span>`:''}
             <span style="font-size:11px;color:#1DA9BD;font-weight:700;">${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span>
+            ${c.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${c.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
             ${c.saving>0?`<span style="font-size:11px;color:#276749;">توفير تفاوضي: ${c.saving.toLocaleString('ar-SA')} ر.س</span>`:''}
           </div>
         </div>
@@ -4827,6 +5104,7 @@ function buildMonthlyReport(){
   const deptMap={};
   monthExp.forEach(e=>{
     const d=e.department||'أخرى';
+    if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
     deptMap[d].total+=parseFloat(e.amount)||0;
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
@@ -5857,12 +6135,85 @@ function ctCalc(){
   const m=parseFloat(document.getElementById('ct-monthly').value)||0;
   document.getElementById('ct-annual').value=m*12;
 }
+function ctCalcRev(){
+  const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
+  document.getElementById('ct-rev-annual').value=m*12;
+}
+// دوال قسم المتوقع التعاقد
+function ptCalc(){
+  const m=parseFloat(document.getElementById('pt-monthly').value)||0;
+  document.getElementById('pt-annual').value=m*12;
+}
+function ptCalcRev(){
+  const m=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  document.getElementById('pt-rev-annual').value=m*12;
+}
+function potentialReset(){
+  potentialEditId=null;
+  ['pt-vendor','pt-type','pt-notes'].forEach(id=>document.getElementById(id).value='');
+  ['pt-monthly','pt-annual','pt-rev-monthly','pt-rev-annual'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pt-priority').value='high';
+}
+function potentialSave(){
+  const vendor=document.getElementById('pt-vendor').value.trim();
+  const type=document.getElementById('pt-type').value.trim();
+  if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
+  const monthly=parseFloat(document.getElementById('pt-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('pt-rev-monthly').value)||0;
+  const rec={
+    id:potentialEditId||Date.now(),
+    vendor,type,
+    monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
+    priority:document.getElementById('pt-priority').value,
+    notes:document.getElementById('pt-notes').value,
+    created_at:new Date().toISOString()
+  };
+  if(potentialEditId){
+    const idx=potentials.findIndex(p=>p.id===potentialEditId);
+    if(idx!==-1)potentials[idx]=rec;
+  }else{
+    potentials.unshift(rec);
+  }
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  potentialReset();renderPotentials();toast('تم الحفظ ✅');
+}
+function potentialDelete(id){
+  if(!confirm('حذف هذا السجل؟'))return;
+  potentials=potentials.filter(p=>p.id!==id);
+  localStorage.setItem('potentials',JSON.stringify(potentials));
+  renderPotentials();toast('تم الحذف');
+}
+function renderPotentials(){
+  const el=document.getElementById('potential-list');if(!el)return;
+  if(!potentials.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد شركات مضافة</div>';return;}
+  const clrMap={high:'#C53030',medium:'#D97706',low:'#276749'};
+  el.innerHTML=potentials.map(p=>`<div style="border:1px solid #E2E8F0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:#FAFAFA;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${p.vendor}</div>
+        <div style="font-size:11px;color:#64748B;margin:2px 0;">${p.type}</div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:${clrMap[p.priority]||'#64748B'}22;color:${clrMap[p.priority]||'#64748B'};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${PT_PRIORITY[p.priority]||p.priority}</span>
+          ${p.monthly>0?`<span style="font-size:11px;color:#1DA9BD;font-weight:700;">${p.monthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+          ${p.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${p.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-red btn-sm" onclick="potentialDelete(${p.id})">×</button>
+      </div>
+    </div>
+    ${p.notes?`<div style="padding:8px 16px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;">${p.notes}</div>`:''}
+  </div>`).join('');
+}
+// تشغيل عند التحميل
+setTimeout(()=>renderPotentials(),500);
 
 function contractReset(){
   contractEditId=null;
   document.getElementById('contract-form-title').textContent='إضافة عقد جديد';
   ['ct-vendor','ct-type','ct-notes'].forEach(id=>document.getElementById(id).value='');
-  ['ct-monthly','ct-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
+  ['ct-monthly','ct-annual','ct-rev-monthly','ct-rev-annual','ct-total','ct-saving'].forEach(id=>document.getElementById(id).value='');
   ['ct-start','ct-end'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ct-status').value='active';
 }
@@ -5878,12 +6229,14 @@ async function contractSave(){
   const type=document.getElementById('ct-type').value.trim();
   if(!vendor||!type){toast('أدخل اسم الشركة ونوع العقد',true);return;}
   const monthly=parseFloat(document.getElementById('ct-monthly').value)||0;
+  const revMonthly=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
   const contract={
     id:contractEditId||Date.now(),
     vendor,type,
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
     monthly,annual:monthly*12,
+    revMonthly,revAnnual:revMonthly*12,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -5917,6 +6270,8 @@ function contractEdit(id){
   document.getElementById('ct-end').value=c.end||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
+  document.getElementById('ct-rev-monthly').value=c.revMonthly||0;
+  document.getElementById('ct-rev-annual').value=c.revAnnual||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -5951,6 +6306,7 @@ function renderContracts(){
             <span style="background:${clr}22;color:${clr};padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${STATUS_LABELS[c.status]||c.status}</span>
             ${c.end?`<span style="font-size:11px;color:#64748B;">ينتهي: ${c.end} | ${daysText}</span>`:''}
             <span style="font-size:11px;color:#1DA9BD;font-weight:700;">${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span>
+            ${c.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${c.revMonthly.toLocaleString('ar-SA')} ر.س/شهر</span>`:''}
             ${c.saving>0?`<span style="font-size:11px;color:#276749;">توفير تفاوضي: ${c.saving.toLocaleString('ar-SA')} ر.س</span>`:''}
           </div>
         </div>
@@ -5997,6 +6353,7 @@ function buildMonthlyReport(){
   const deptMap={};
   monthExp.forEach(e=>{
     const d=e.department||'أخرى';
+    if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
     deptMap[d].total+=parseFloat(e.amount)||0;
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
