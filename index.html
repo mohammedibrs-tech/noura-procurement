@@ -645,27 +645,54 @@ function numToWords(n){
           <div class="field"><label>ملاحظات</label><input id="qt-notes" placeholder="أي ملاحظات..."></div>
         </div>
 
-        <div class="section-title">بنود الكوتيشن</div>
-        <table class="tbl" style="margin-bottom:8px;">
-          <thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة (ر.س)</th><th>الإجمالي (ر.س)</th><th>ملاحظات</th><th></th></tr></thead>
+        <div class="section-title" style="font-size:14px;font-weight:700;color:var(--navy);margin-top:16px;">
+          💰 بنود الكوتيشن والأسعار
+          <span style="font-size:11px;font-weight:400;color:var(--sub);margin-right:8px;">— تُملأ تلقائياً عند رفع PDF، أو أدخلها يدوياً</span>
+        </div>
+        <div style="overflow-x:auto;border:1.5px solid var(--primary);border-radius:10px;margin-bottom:8px;">
+        <table class="tbl" style="margin:0;min-width:600px;">
+          <thead>
+            <tr style="background:#1DA9BD;">
+              <th style="color:#fff;width:32px;">م</th>
+              <th style="color:#fff;">الصنف / الخدمة</th>
+              <th style="color:#fff;width:65px;">الكمية</th>
+              <th style="color:#fff;width:70px;">الوحدة</th>
+              <th style="color:#fff;width:110px;">سعر الوحدة (ر.س)</th>
+              <th style="color:#fff;width:110px;background:#0D7A8A;">الإجمالي (ر.س)</th>
+              <th style="color:#fff;">ملاحظات</th>
+              <th style="color:#fff;width:30px;"></th>
+            </tr>
+          </thead>
           <tbody id="qt-tbody">
             <tr>
-              <td>1</td>
-              <td><input class="qt-item" placeholder="الصنف"></td>
-              <td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;"></td>
-              <td><input class="qt-uom" placeholder="جهاز" style="width:60px;"></td>
-              <td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:90px;"></td>
-              <td class="qt-total" style="font-weight:700;color:var(--primary);">0</td>
-              <td><input class="qt-note" placeholder=""></td>
-              <td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+              <td style="text-align:center;color:var(--sub);">1</td>
+              <td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td>
+              <td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td>
+              <td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td>
+              <td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td>
+              <td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td>
+              <td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td>
+              <td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>
             </tr>
           </tbody>
         </table>
+        </div>
         <button class="btn btn-gray btn-sm" onclick="qtAddRow()">+ إضافة صف</button>
-        <div style="text-align:left;margin-top:10px;font-size:13px;">
-          <div>المجموع: <strong id="qt-sub">0</strong> ر.س</div>
-          <div>VAT 15%: <strong id="qt-tax">0</strong> ر.س</div>
-          <div style="font-size:15px;font-weight:900;color:var(--primary);">الإجمالي: <strong id="qt-tot">0</strong> ر.س</div>
+
+        <!-- ملخص المبالغ -->
+        <div style="background:linear-gradient(135deg,#F0FAFC,#EBF8FA);border:1.5px solid var(--primary);border-radius:10px;padding:14px 18px;margin-top:12px;display:flex;justify-content:flex-end;gap:32px;align-items:center;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:var(--sub);margin-bottom:2px;">المجموع قبل VAT</div>
+            <div style="font-size:16px;font-weight:700;color:var(--navy);"><span id="qt-sub">0.00</span> <span style="font-size:11px;">ر.س</span></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:var(--sub);margin-bottom:2px;">VAT 15%</div>
+            <div style="font-size:16px;font-weight:700;color:#B7791F;"><span id="qt-tax">0.00</span> <span style="font-size:11px;">ر.س</span></div>
+          </div>
+          <div style="text-align:center;background:var(--primary);border-radius:8px;padding:8px 20px;">
+            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-bottom:2px;">الإجمالي شامل VAT</div>
+            <div style="font-size:20px;font-weight:900;color:#fff;"><span id="qt-tot">0.00</span> <span style="font-size:12px;">ر.س</span></div>
+          </div>
         </div>
         <div class="actions">
           <button class="btn btn-primary" onclick="qtSave()">💾 حفظ الكوتيشن</button>
@@ -3063,7 +3090,7 @@ function qtFillForm(d){
       const qty=parseFloat(item.qty)||1;
       const price=parseFloat(item.price)||0;
       const total=(qty*price).toFixed(2);
-      tr.innerHTML=`<td>${i+1}</td><td><input class="qt-item" value="${item.item||''}"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:60px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">${total}</td><td><input class="qt-note" value="${item.note||''}"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+      tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${total}</td><td><input class="qt-note" value="${item.note||''}" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
       tbody.appendChild(tr);
     });
     qtCalcTotal();
@@ -3080,7 +3107,7 @@ function qtRemovePDF(){
 function qtResetForm(){
   qtRemovePDF();
   ['qt-vendor','qt-vendor-vat','qt-vendor-addr','qt-vendor-phone','qt-vendor-email','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('qt-tbody').innerHTML='<tr><td>1</td><td><input class="qt-item" placeholder="الصنف"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">0</td><td><input class="qt-note" placeholder=""></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
+  document.getElementById('qt-tbody').innerHTML='<tr><td style="text-align:center;color:var(--sub);">1</td><td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td></tr>';
   qtCalcTotal();
   document.getElementById('qt-ai-status').style.display='none';
   toast('تم مسح الفورم');
@@ -3090,7 +3117,7 @@ function qtAddRow(){
   const tbody=document.getElementById('qt-tbody');
   const n=tbody.querySelectorAll('tr').length+1;
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${n}</td><td><input class="qt-item" placeholder="الصنف"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">0</td><td><input class="qt-note" placeholder=""></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${n}</td><td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
   tbody.appendChild(tr);
 }
 function qtDelRow(btn){btn.closest('tr').remove();qtCalcTotal();}
@@ -3106,9 +3133,10 @@ function qtCalcTotal(){
   let sub=0;
   document.querySelectorAll('#qt-tbody .qt-total').forEach(td=>sub+=parseFloat(td.textContent)||0);
   const tax=sub*0.15;const tot=sub+tax;
-  document.getElementById('qt-sub').textContent=sub.toFixed(2);
-  document.getElementById('qt-tax').textContent=tax.toFixed(2);
-  document.getElementById('qt-tot').textContent=tot.toFixed(2);
+  const s=document.getElementById('qt-sub');const tx=document.getElementById('qt-tax');const t=document.getElementById('qt-tot');
+  if(s)s.textContent=sub.toFixed(2);
+  if(tx)tx.textContent=tax.toFixed(2);
+  if(t)t.textContent=tot.toFixed(2);
 }
 function qtGetRows(){
   return Array.from(document.querySelectorAll('#qt-tbody tr')).map((tr,i)=>{
