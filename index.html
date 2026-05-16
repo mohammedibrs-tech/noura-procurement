@@ -221,6 +221,17 @@ function numToWords(n){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       تقارير الموردين
     </div>
+    <div class="sb-sep"></div>
+    <div style="padding:10px 16px;">
+      <button onclick="backupData()" style="width:100%;background:rgba(29,169,189,.15);color:#7DD3E0;border:1px solid rgba(29,169,189,.3);border-radius:8px;padding:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        حفظ نسخة احتياطية
+      </button>
+      <button onclick="restoreData()" style="width:100%;background:rgba(197,48,48,.1);color:#FC8181;border:1px solid rgba(197,48,48,.3);border-radius:8px;padding:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        استعادة نسخة سابقة
+      </button>
+    </div>
   </div>
 </div>
 
@@ -580,9 +591,36 @@ function numToWords(n){
     <div class="card">
       <div class="card-header">
         <h3>تسجيل كوتيشن وارد</h3>
-        <div style="font-size:11px;color:var(--sub);">سجّل كل عرض سعر وصلك من مورّد</div>
+        <div style="font-size:11px;color:var(--sub);">ارفع PDF الكوتيشن وسيقرأه الذكاء الاصطناعي تلقائياً</div>
       </div>
       <div class="card-body">
+
+        <!-- منطقة رفع PDF -->
+        <div id="qt-pdf-zone" style="border:2px dashed var(--primary);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;cursor:pointer;background:#F0FAFC;transition:.2s;" onclick="document.getElementById('qt-pdf-input').click()" ondragover="event.preventDefault();this.style.background='#D0F0F8'" ondragleave="this.style.background='#F0FAFC'" ondrop="qtHandleDrop(event)">
+          <div style="font-size:32px;margin-bottom:8px;">📄</div>
+          <div style="font-weight:700;color:var(--primary);font-size:14px;">اسحب ملف PDF هنا أو اضغط للرفع</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px;">سيقرأ الذكاء الاصطناعي بيانات المورد، البنود، الأسعار تلقائياً</div>
+          <input type="file" id="qt-pdf-input" accept=".pdf" style="display:none;" onchange="qtExtractFromPDF(this.files[0])">
+        </div>
+
+        <!-- حالة الاستخراج -->
+        <div id="qt-ai-status" style="display:none;background:#EBF8FA;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#0D7A8A;">
+          <div id="qt-ai-status-text">⏳ جاري قراءة الـ PDF...</div>
+          <div style="height:4px;background:#D0F0F8;border-radius:2px;margin-top:8px;overflow:hidden;">
+            <div id="qt-ai-progress" style="height:100%;background:var(--primary);width:0%;transition:width .5s;border-radius:2px;"></div>
+          </div>
+        </div>
+
+        <!-- ملف PDF المرفق -->
+        <div id="qt-pdf-attached" style="display:none;background:#F0FFF4;border:1px solid #276749;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">📎</span>
+            <div><div id="qt-pdf-name" style="font-size:12px;font-weight:700;color:#276749;"></div><div style="font-size:10px;color:var(--sub);">PDF محفوظ مع الكوتيشن</div></div>
+          </div>
+          <button onclick="qtRemovePDF()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button>
+        </div>
+
+        <div class="section-title">بيانات المورد</div>
         <div class="form-grid">
           <div class="field">
             <label>ربط بطلب RFQ</label>
@@ -590,7 +628,15 @@ function numToWords(n){
               <option value="">— اختر الطلب —</option>
             </select>
           </div>
-          <div class="field"><label>اسم المورد / الشركة</label><input id="qt-vendor" list="suppliers-datalist" placeholder="اسم الشركة" oninput="buildSupplierDatalist()"></div>
+          <div class="field"><label>اسم الشركة / المورد</label><input id="qt-vendor" list="suppliers-datalist" placeholder="اسم الشركة" oninput="buildSupplierDatalist()"></div>
+          <div class="field"><label>الرقم الضريبي للمورد</label><input id="qt-vendor-vat" placeholder="مثال: 3xxxxxxxxxx"></div>
+          <div class="field"><label>عنوان المورد</label><input id="qt-vendor-addr" placeholder="المدينة، الحي..."></div>
+          <div class="field"><label>هاتف المورد</label><input id="qt-vendor-phone" placeholder="+966xxxxxxxxx"></div>
+          <div class="field"><label>إيميل المورد</label><input id="qt-vendor-email" placeholder="info@vendor.com"></div>
+        </div>
+
+        <div class="section-title">تفاصيل العرض</div>
+        <div class="form-grid">
           <div class="field"><label>تاريخ الاستلام</label><input id="qt-date" type="date"></div>
           <div class="field"><label>رقم العرض (من المورد)</label><input id="qt-ref" placeholder="Q-2026-001"></div>
           <div class="field"><label>صلاحية العرض</label><input id="qt-validity" placeholder="مثال: 30 يوم"></div>
@@ -598,6 +644,7 @@ function numToWords(n){
           <div class="field"><label>شروط الدفع</label><input id="qt-payment" placeholder="مثال: 30 يوم بعد الاستلام"></div>
           <div class="field"><label>ملاحظات</label><input id="qt-notes" placeholder="أي ملاحظات..."></div>
         </div>
+
         <div class="section-title">بنود الكوتيشن</div>
         <table class="tbl" style="margin-bottom:8px;">
           <thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة (ر.س)</th><th>الإجمالي (ر.س)</th><th>ملاحظات</th><th></th></tr></thead>
@@ -622,6 +669,7 @@ function numToWords(n){
         </div>
         <div class="actions">
           <button class="btn btn-primary" onclick="qtSave()">💾 حفظ الكوتيشن</button>
+          <button class="btn btn-gray" onclick="qtResetForm()">🔄 مسح الفورم</button>
         </div>
       </div>
     </div>
@@ -2792,6 +2840,142 @@ function rfqPopulateLinks(){
     sel.value=cur;
   });
 }
+/* ── PDF Extraction via Claude AI ── */
+let qtCurrentPDFb64=null;
+let qtCurrentPDFname=null;
+
+function qtHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('qt-pdf-zone').style.background='#F0FAFC';
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type==='application/pdf') qtExtractFromPDF(f);
+  else toast('يرجى رفع ملف PDF فقط',true);
+}
+
+async function qtExtractFromPDF(file){
+  if(!file) return;
+  qtCurrentPDFname=file.name;
+  // تحويل PDF إلى base64
+  const b64=await new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+  qtCurrentPDFb64=b64;
+  // إظهار حالة المعالجة
+  const statusEl=document.getElementById('qt-ai-status');
+  const statusText=document.getElementById('qt-ai-status-text');
+  const progressEl=document.getElementById('qt-ai-progress');
+  statusEl.style.display='block';
+  statusText.textContent='⏳ جاري إرسال الملف للذكاء الاصطناعي...';
+  progressEl.style.width='20%';
+  try{
+    progressEl.style.width='50%';
+    statusText.textContent='🔍 Claude يقرأ بيانات الكوتيشن...';
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+            {type:'text',text:`استخرج بيانات عرض السعر (الكوتيشن) من هذا الملف وأرجعها JSON فقط بهذا الشكل بدون أي نص إضافي:
+{
+  "vendor_name": "اسم الشركة",
+  "vendor_vat": "الرقم الضريبي",
+  "vendor_address": "العنوان",
+  "vendor_phone": "رقم الهاتف",
+  "vendor_email": "الإيميل",
+  "quote_ref": "رقم العرض",
+  "quote_date": "التاريخ بصيغة YYYY-MM-DD",
+  "validity": "صلاحية العرض",
+  "delivery": "مدة التسليم",
+  "payment": "شروط الدفع",
+  "notes": "ملاحظات عامة",
+  "items": [
+    {"item": "اسم الصنف", "qty": 1, "uom": "الوحدة", "price": 0, "note": "ملاحظة"}
+  ]
+}
+إذا لم تجد قيمة ضع "" للنصوص و0 للأرقام.`}
+          ]
+        }]
+      })
+    });
+    progressEl.style.width='80%';
+    const data=await resp.json();
+    let raw=data.content?.filter(c=>c.type==='text').map(c=>c.text).join('')||'';
+    // تنظيف JSON
+    raw=raw.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+    progressEl.style.width='100%';
+    statusText.textContent='✅ تم استخراج البيانات بنجاح! راجع الحقول وعدّل إذا لزم.';
+    statusEl.style.background='#F0FFF4';
+    statusEl.style.color='#276749';
+    // ملء الفورم
+    qtFillForm(parsed);
+    // إظهار الملف المرفق
+    const attached=document.getElementById('qt-pdf-attached');
+    document.getElementById('qt-pdf-name').textContent=file.name;
+    attached.style.display='flex';
+    toast('✅ استخرج Claude البيانات — راجعها وعدّل إذا احتجت');
+  }catch(err){
+    progressEl.style.width='100%';
+    statusText.textContent='⚠️ تعذّر الاستخراج التلقائي — يمكنك الإدخال اليدوي';
+    statusEl.style.background='#FFF5F5';
+    statusEl.style.color='#C53030';
+    console.error('AI extract error:',err);
+    toast('لم يتمكن الذكاء الاصطناعي من قراءة الملف — يمكنك الإدخال يدوياً',true);
+  }
+}
+
+function qtFillForm(d){
+  if(d.vendor_name) document.getElementById('qt-vendor').value=d.vendor_name;
+  if(d.vendor_vat)  document.getElementById('qt-vendor-vat').value=d.vendor_vat;
+  if(d.vendor_address) document.getElementById('qt-vendor-addr').value=d.vendor_address;
+  if(d.vendor_phone)   document.getElementById('qt-vendor-phone').value=d.vendor_phone;
+  if(d.vendor_email)   document.getElementById('qt-vendor-email').value=d.vendor_email;
+  if(d.quote_ref)  document.getElementById('qt-ref').value=d.quote_ref;
+  if(d.quote_date) document.getElementById('qt-date').value=d.quote_date;
+  if(d.validity)   document.getElementById('qt-validity').value=d.validity;
+  if(d.delivery)   document.getElementById('qt-delivery').value=d.delivery;
+  if(d.payment)    document.getElementById('qt-payment').value=d.payment;
+  if(d.notes)      document.getElementById('qt-notes').value=d.notes;
+  // ملء البنود
+  if(d.items&&d.items.length){
+    const tbody=document.getElementById('qt-tbody');
+    tbody.innerHTML='';
+    d.items.forEach((item,i)=>{
+      const tr=document.createElement('tr');
+      const qty=parseFloat(item.qty)||1;
+      const price=parseFloat(item.price)||0;
+      const total=(qty*price).toFixed(2);
+      tr.innerHTML=`<td>${i+1}</td><td><input class="qt-item" value="${item.item||''}"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:60px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">${total}</td><td><input class="qt-note" value="${item.note||''}"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+      tbody.appendChild(tr);
+    });
+    qtCalcTotal();
+  }
+}
+
+function qtRemovePDF(){
+  qtCurrentPDFb64=null;qtCurrentPDFname=null;
+  document.getElementById('qt-pdf-attached').style.display='none';
+  document.getElementById('qt-ai-status').style.display='none';
+  document.getElementById('qt-pdf-input').value='';
+}
+
+function qtResetForm(){
+  qtRemovePDF();
+  ['qt-vendor','qt-vendor-vat','qt-vendor-addr','qt-vendor-phone','qt-vendor-email','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('qt-tbody').innerHTML='<tr><td>1</td><td><input class="qt-item" placeholder="الصنف"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">0</td><td><input class="qt-note" placeholder=""></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
+  qtCalcTotal();
+  document.getElementById('qt-ai-status').style.display='none';
+  toast('تم مسح الفورم');
+}
+
 function qtAddRow(){
   const tbody=document.getElementById('qt-tbody');
   const n=tbody.querySelectorAll('tr').length+1;
@@ -2832,12 +3016,18 @@ function qtSave(){
   const sub=rows.reduce((s,r)=>s+r.total,0);
   const data={
     id:Date.now(),rfqId:rfqId,vendor,
+    vendorVat:document.getElementById('qt-vendor-vat').value,
+    vendorAddr:document.getElementById('qt-vendor-addr').value,
+    vendorPhone:document.getElementById('qt-vendor-phone').value,
+    vendorEmail:document.getElementById('qt-vendor-email').value,
     date:document.getElementById('qt-date').value,
     ref:document.getElementById('qt-ref').value,
     validity:document.getElementById('qt-validity').value,
     delivery:document.getElementById('qt-delivery').value,
     payment:document.getElementById('qt-payment').value,
     notes:document.getElementById('qt-notes').value,
+    pdfName:qtCurrentPDFname||null,
+    pdfb64:qtCurrentPDFb64||null,
     rows,subtotal:sub,vat:sub*0.15,total:sub*1.15
   };
   autoAddSupplier(vendor);
@@ -2845,10 +3035,8 @@ function qtSave(){
   localStorage.setItem('qt_saved',JSON.stringify(qtSaved));
   renderQuotations();renderRfqSaved();
   toast('✅ تم حفظ الكوتيشن — '+vendor);
-  // مسح الفورم
-  ['qt-vendor','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('qt-tbody').innerHTML='<tr><td>1</td><td><input class="qt-item" placeholder="الصنف"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:90px;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);">0</td><td><input class="qt-note" placeholder=""></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
-  qtCalcTotal();
+  qtResetForm();
+  document.getElementById('qt-rfq-link').value=rfqId;
 }
 function renderQuotations(){
   const el=document.getElementById('qt-list');if(!el)return;
@@ -2888,13 +3076,31 @@ function renderQuotations(){
 function qtViewDetails(idx){
   const q=qtSaved[idx];if(!q)return;
   const rows=(q.rows||[]).map(r=>`<tr><td style="border:1px solid #eee;padding:6px;">${r.num}</td><td style="border:1px solid #eee;padding:6px;">${r.item}</td><td style="border:1px solid #eee;padding:6px;text-align:center;">${r.qty}</td><td style="border:1px solid #eee;padding:6px;">${r.uom||''}</td><td style="border:1px solid #eee;padding:6px;text-align:left;">${r.price.toFixed(2)}</td><td style="border:1px solid #eee;padding:6px;text-align:left;font-weight:700;color:#1DA9BD;">${r.total.toFixed(2)}</td><td style="border:1px solid #eee;padding:6px;">${r.note||''}</td></tr>`).join('');
-  const w=window.open('','_blank','width=800,height=600');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;}table{border-collapse:collapse;width:100%;}th{background:#244062;color:#fff;padding:6px 8px;}h2{color:#244062;}</style></head><body>
+  const pdfBtn=q.pdfb64?`<div style="margin-top:12px;"><a href="data:application/pdf;base64,${q.pdfb64}" download="${q.pdfName||'quotation.pdf'}" style="display:inline-flex;align-items:center;gap:6px;background:#244062;color:#fff;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:12px;">📥 تحميل PDF الأصلي — ${q.pdfName||''}</a></div>`:'';
+  const w=window.open('','_blank','width=850,height=680');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;direction:rtl;padding:24px;font-size:12px;color:#1A202C;}table{border-collapse:collapse;width:100%;}th{background:#244062;color:#fff;padding:8px 10px;text-align:right;}h2{color:#244062;margin-bottom:4px;}h3{color:#1DA9BD;margin:16px 0 8px;font-size:13px;}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}.info-item{background:#F8FAFB;border-radius:6px;padding:8px 12px;font-size:11px;}.info-label{color:#64748B;margin-bottom:2px;}.info-val{font-weight:700;}</style></head><body>
   <h2>كوتيشن — ${q.vendor}</h2>
-  <p>التاريخ: ${q.date||'—'} | المرجع: ${q.ref||'—'} | الصلاحية: ${q.validity||'—'}</p>
+  <div style="color:#64748B;font-size:11px;margin-bottom:16px;">المرجع: ${q.ref||'—'} | التاريخ: ${q.date||'—'}</div>
+  <h3>بيانات المورد</h3>
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">الشركة</div><div class="info-val">${q.vendor}</div></div>
+    <div class="info-item"><div class="info-label">الرقم الضريبي</div><div class="info-val">${q.vendorVat||'—'}</div></div>
+    <div class="info-item"><div class="info-label">العنوان</div><div class="info-val">${q.vendorAddr||'—'}</div></div>
+    <div class="info-item"><div class="info-label">الهاتف</div><div class="info-val">${q.vendorPhone||'—'}</div></div>
+    <div class="info-item"><div class="info-label">الإيميل</div><div class="info-val">${q.vendorEmail||'—'}</div></div>
+    <div class="info-item"><div class="info-label">صلاحية العرض</div><div class="info-val">${q.validity||'—'}</div></div>
+    <div class="info-item"><div class="info-label">مدة التسليم</div><div class="info-val">${q.delivery||'—'}</div></div>
+    <div class="info-item"><div class="info-label">شروط الدفع</div><div class="info-val">${q.payment||'—'}</div></div>
+  </div>
+  <h3>البنود</h3>
   <table><thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>
-  <div style="margin-top:12px;text-align:left;"><div>المجموع: <strong>${q.subtotal.toFixed(2)}</strong> ر.س</div><div>VAT 15%: <strong>${q.vat.toFixed(2)}</strong> ر.س</div><div style="font-size:15px;font-weight:700;color:#1DA9BD;">الإجمالي: <strong>${q.total.toFixed(2)}</strong> ر.س</div></div>
-  <div style="margin-top:12px;"><b>شروط الدفع:</b> ${q.payment||'—'} | <b>مدة التسليم:</b> ${q.delivery||'—'}</div>
+  <div style="margin-top:12px;text-align:left;background:#F0F9FF;padding:12px;border-radius:8px;">
+    <div>المجموع: <strong>${q.subtotal.toFixed(2)}</strong> ر.س</div>
+    <div>VAT 15%: <strong>${q.vat.toFixed(2)}</strong> ر.س</div>
+    <div style="font-size:16px;font-weight:700;color:#1DA9BD;">الإجمالي: <strong>${q.total.toFixed(2)}</strong> ر.س</div>
+  </div>
+  ${q.notes?`<div style="margin-top:10px;font-size:11px;color:#64748B;">ملاحظات: ${q.notes}</div>`:''}
+  ${pdfBtn}
   </body></html>`);
   w.document.close();
 }
@@ -7710,6 +7916,38 @@ async function loadFromSupabase(){
       if(ti2) ti2.value = budgetTarget || '';
     }
   }
+}
+
+/* ══════════════ النسخ الاحتياطي والاستعادة ══════════════ */
+const BACKUP_KEYS=['po_saved_local','rfq_saved','qt_saved','aw_saved','dn_saved','cmp_saved','expenses_local','contracts','suppliers','committees','taameeds','pc_groups','budget_cfg','potentials','sr_vendors','sr_checks'];
+
+function backupData(){
+  const backup={version:2,date:new Date().toISOString(),data:{}};
+  BACKUP_KEYS.forEach(k=>{try{backup.data[k]=localStorage.getItem(k)||'null';}catch(e){}});
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='نورة_نسخة_احتياطية_'+new Date().toLocaleDateString('ar-SA').replace(/\//g,'-')+'.json';
+  a.click();
+  toast('✅ تم تصدير النسخة الاحتياطية — احفظها في مكان آمن');
+}
+
+function restoreData(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json';
+  inp.onchange=async function(){
+    const f=inp.files[0];if(!f)return;
+    try{
+      const text=await f.text();
+      const backup=JSON.parse(text);
+      if(!backup.data){toast('ملف النسخة غير صحيح',true);return;}
+      if(!confirm(`هل تريد استعادة النسخة المحفوظة بتاريخ:\n${new Date(backup.date).toLocaleString('ar-SA')}؟\n\nسيتم استبدال البيانات الحالية.`))return;
+      Object.entries(backup.data).forEach(([k,v])=>{if(v&&v!=='null')localStorage.setItem(k,v);});
+      toast('✅ تمت الاستعادة — جاري إعادة التحميل...');
+      setTimeout(()=>location.reload(),1200);
+    }catch(e){toast('خطأ في قراءة الملف',true);}
+  };
+  inp.click();
 }
 
 async function init(){
