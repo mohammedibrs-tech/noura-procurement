@@ -2854,82 +2854,192 @@ function qtHandleDrop(e){
 
 async function qtExtractFromPDF(file){
   if(!file) return;
+  // التحقق من نوع الملف
+  if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){
+    toast('يرجى رفع ملف PDF فقط',true); return;
+  }
+  // التحقق من حجم الملف (max 20MB)
+  if(file.size>20*1024*1024){
+    toast('حجم الملف كبير جداً — الحد الأقصى 20MB',true); return;
+  }
   qtCurrentPDFname=file.name;
-  // تحويل PDF إلى base64
-  const b64=await new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=e=>res(e.target.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-  qtCurrentPDFb64=b64;
-  // إظهار حالة المعالجة
+
   const statusEl=document.getElementById('qt-ai-status');
   const statusText=document.getElementById('qt-ai-status-text');
   const progressEl=document.getElementById('qt-ai-progress');
   statusEl.style.display='block';
-  statusText.textContent='⏳ جاري إرسال الملف للذكاء الاصطناعي...';
-  progressEl.style.width='20%';
+  statusEl.style.background='#EBF8FA';
+  statusEl.style.color='#0D7A8A';
+  statusText.textContent='⏳ جاري تحضير الملف...';
+  progressEl.style.width='10%';
+
   try{
-    progressEl.style.width='50%';
-    statusText.textContent='🔍 Claude يقرأ بيانات الكوتيشن...';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-            {type:'text',text:`استخرج بيانات عرض السعر (الكوتيشن) من هذا الملف وأرجعها JSON فقط بهذا الشكل بدون أي نص إضافي:
+    // تحويل PDF إلى base64
+    const b64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(',')[1]);
+      r.onerror=()=>rej(new Error('فشل قراءة الملف'));
+      r.readAsDataURL(file);
+    });
+    qtCurrentPDFb64=b64;
+    progressEl.style.width='30%';
+    statusText.textContent='🔍 Claude يقرأ بيانات الكوتيشن ويطابقها مع طلباتك...';
+
+    // بناء قائمة RFQs للمطابقة الذكية
+    const rfqList=rfqSaved.map(r=>({
+      id:String(r.id),
+      num:r.rfqNum||'',
+      company:r.company||'',
+      items:(r.rows||[]).map(row=>row.item).join('، ')
+    }));
+    const rfqJson=JSON.stringify(rfqList);
+
+    const prompt=`أنت مساعد مشتريات. استخرج بيانات عرض السعر من هذا PDF وأرجع JSON فقط بدون أي نص إضافي أو markdown.
+
+طلبات الشراء الموجودة في النظام:
+${rfqJson}
+
+أرجع هذا الشكل بالضبط:
 {
-  "vendor_name": "اسم الشركة",
+  "vendor_name": "اسم الشركة المورّدة",
   "vendor_vat": "الرقم الضريبي",
   "vendor_address": "العنوان",
   "vendor_phone": "رقم الهاتف",
   "vendor_email": "الإيميل",
   "quote_ref": "رقم العرض",
-  "quote_date": "التاريخ بصيغة YYYY-MM-DD",
+  "quote_date": "YYYY-MM-DD",
   "validity": "صلاحية العرض",
   "delivery": "مدة التسليم",
   "payment": "شروط الدفع",
-  "notes": "ملاحظات عامة",
-  "items": [
-    {"item": "اسم الصنف", "qty": 1, "uom": "الوحدة", "price": 0, "note": "ملاحظة"}
-  ]
+  "notes": "ملاحظات",
+  "items": [{"item": "اسم الصنف", "qty": 1, "uom": "الوحدة", "price": 0, "note": ""}],
+  "rfq_match": {
+    "rfq_id": "id الطلب المطابق أو null",
+    "rfq_num": "رقم الطلب أو null",
+    "confidence": 0,
+    "reason": "سبب المطابقة بالعربي"
+  }
 }
-إذا لم تجد قيمة ضع "" للنصوص و0 للأرقام.`}
+
+قواعد المطابقة مع RFQ:
+- قارن أصناف الكوتيشن مع أصناف كل طلب RFQ
+- إذا تطابق 60% أو أكثر من الأصناف → confidence عالي (80-100)
+- إذا تطابق جزئي → confidence متوسط (40-79)
+- إذا لا يوجد تطابق → rfq_id=null و confidence=0
+- لا تربط بناء على اسم الشركة، بل على محتوى الأصناف
+
+إذا لم تجد قيمة: "" للنصوص، 0 للأرقام.`;
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+            {type:'text',text:prompt}
           ]
         }]
       })
     });
-    progressEl.style.width='80%';
+
+    progressEl.style.width='75%';
+
+    if(!resp.ok){
+      const errData=await resp.json().catch(()=>({}));
+      throw new Error(errData.error?.message||`API Error ${resp.status}`);
+    }
+
     const data=await resp.json();
-    let raw=data.content?.filter(c=>c.type==='text').map(c=>c.text).join('')||'';
-    // تنظيف JSON
-    raw=raw.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(raw);
+    let raw=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('').trim();
+    // تنظيف JSON من أي markdown
+    raw=raw.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
+    // استخراج JSON إذا كان محاطاً بنص
+    const jsonMatch=raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('لم يُرجع الذكاء الاصطناعي JSON صحيح');
+    const parsed=JSON.parse(jsonMatch[0]);
+
     progressEl.style.width='100%';
-    statusText.textContent='✅ تم استخراج البيانات بنجاح! راجع الحقول وعدّل إذا لزم.';
     statusEl.style.background='#F0FFF4';
     statusEl.style.color='#276749';
+
     // ملء الفورم
     qtFillForm(parsed);
+
+    // الربط الذكي بالـ RFQ
+    const match=parsed.rfq_match;
+    if(match&&match.rfq_id&&match.confidence>=60){
+      const sel=document.getElementById('qt-rfq-link');
+      if(sel){
+        sel.value=match.rfq_id;
+        // إذا ما لقاه في الـ select أضفه
+        if(!sel.value) sel.value=match.rfq_id;
+      }
+      statusText.textContent=`✅ استُخرجت البيانات | 🔗 ربط تلقائي بـ ${match.rfq_num||'الطلب'} (تطابق ${match.confidence}%) — ${match.reason}`;
+      // إظهار بانر المطابقة
+      qtShowMatchBanner(match,parsed);
+    } else if(match&&match.confidence>0){
+      statusText.textContent=`✅ استُخرجت البيانات | ⚠️ تطابق جزئي مع ${match.rfq_num||'طلب'} (${match.confidence}%) — اختر الطلب يدوياً`;
+    } else {
+      statusText.textContent='✅ تم استخراج البيانات — اختر طلب RFQ يدوياً';
+    }
+
     // إظهار الملف المرفق
-    const attached=document.getElementById('qt-pdf-attached');
     document.getElementById('qt-pdf-name').textContent=file.name;
-    attached.style.display='flex';
-    toast('✅ استخرج Claude البيانات — راجعها وعدّل إذا احتجت');
+    document.getElementById('qt-pdf-attached').style.display='flex';
+    toast('✅ قرأ Claude الكوتيشن — راجع البيانات وعدّل إذا احتجت');
+
   }catch(err){
     progressEl.style.width='100%';
-    statusText.textContent='⚠️ تعذّر الاستخراج التلقائي — يمكنك الإدخال اليدوي';
     statusEl.style.background='#FFF5F5';
     statusEl.style.color='#C53030';
-    console.error('AI extract error:',err);
-    toast('لم يتمكن الذكاء الاصطناعي من قراءة الملف — يمكنك الإدخال يدوياً',true);
+    console.error('PDF Extract Error:',err);
+    // رسالة خطأ واضحة حسب نوع الخطأ
+    if(err.message.includes('Failed to fetch')||err.message.includes('NetworkError')){
+      statusText.textContent='⚠️ تعذّر الاتصال بالخادم — تحقق من الاتصال بالإنترنت أو جرب مرة أخرى';
+    } else if(err.message.includes('API Error 401')){
+      statusText.textContent='⚠️ مشكلة في المصادقة — تواصل مع الدعم';
+    } else if(err.message.includes('API Error 429')){
+      statusText.textContent='⚠️ تجاوزت الحد المسموح — انتظر دقيقة وأعد المحاولة';
+    } else {
+      statusText.textContent='⚠️ تعذّر الاستخراج التلقائي — يمكنك الإدخال يدوياً';
+    }
+    toast('تعذّر قراءة الـ PDF — يمكنك إدخال البيانات يدوياً',true);
   }
+}
+
+function qtShowMatchBanner(match,parsed){
+  // إزالة بانر سابق إن وجد
+  const old=document.getElementById('qt-match-banner');
+  if(old)old.remove();
+  const rfq=rfqSaved.find(r=>String(r.id)===String(match.rfq_id));
+  if(!rfq)return;
+  const banner=document.createElement('div');
+  banner.id='qt-match-banner';
+  banner.style.cssText='background:linear-gradient(135deg,#F0FFF4,#E6FFED);border:1.5px solid #276749;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;';
+  banner.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:28px;">🎯</div>
+      <div>
+        <div style="font-weight:700;color:#276749;font-size:13px;">تم الربط التلقائي بطلب RFQ</div>
+        <div style="font-size:12px;color:#1A2B4A;margin-top:2px;"><strong>${rfq.rfqNum||'RFQ'}</strong> — ${rfq.company}</div>
+        <div style="font-size:11px;color:#64748B;margin-top:2px;">${match.reason} | نسبة التطابق: <strong style="color:#276749;">${match.confidence}%</strong></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="this.closest('#qt-match-banner').remove()" style="background:#276749;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer;">✅ تأكيد</button>
+      <button onclick="document.getElementById('qt-rfq-link').value='';this.closest('#qt-match-banner').remove()" style="background:#FEE2E2;color:#C53030;border:none;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer;">تغيير</button>
+    </div>`;
+  // أضفه فوق الفورم
+  const statusEl=document.getElementById('qt-ai-status');
+  statusEl.parentNode.insertBefore(banner,statusEl.nextSibling);
 }
 
 function qtFillForm(d){
