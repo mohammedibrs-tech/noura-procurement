@@ -788,50 +788,6 @@ function numToWords(n){
 </div>
 
 <!-- ══ مقارنة الأسعار ══ -->
-<div class="page" id="page-cmp">
-  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
-
-  <!-- معلومات المقارنة -->
-  <div class="card">
-    <div class="card-header"><h3>معلومات المقارنة</h3></div>
-    <div class="card-body">
-      <div class="form-grid">
-        <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
-        <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- الشركات -->
-  <div class="card">
-    <div class="card-header">
-      <h3>الشركات والبنود</h3>
-      <div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="cmpAddCompany()">+ إضافة شركة</button><button class="btn btn-gray btn-sm" onclick="cmpReset()">🔄 مقارنة جديدة</button></div>
-    </div>
-    <div class="card-body" id="cmp-companies-body">
-      <!-- تُضاف الشركات ديناميكياً -->
-    </div>
-  </div>
-
-  <!-- تصدير وحفظ -->
-  <div class="actions">
-    <button class="btn btn-primary" onclick="cmpSaveData()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
-      حفظ المقارنة
-    </button>
-    <button class="btn btn-green" onclick="cmpExcel()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
-      تصدير Excel
-    </button>
-  </div>
-
-  <!-- المقارنات المحفوظة -->
-  <div class="card" style="margin-top:16px;">
-    <div class="card-header"><h3>المقارنات المحفوظة</h3></div>
-    <div class="card-body"><div class="saved-list" id="cmp-saved-list"></div></div>
-  </div>
-</div>
-
 <!-- ══ Petty Cash ══ -->
 <div class="page" id="page-pc">
   <div class="page-header"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div>
@@ -874,9 +830,30 @@ function numToWords(n){
 <div class="page" id="page-cmp">
   <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
 
-  <!-- عنوان المقارنة -->
-  <div class="card">
-    <div class="card-header"><h3>معلومات المقارنة</h3></div>
+  <!-- كوتيشنات مرتبطة تلقائياً -->
+  <div class="card" style="border:2px solid #1DA9BD;">
+    <div class="card-header" style="background:#EBF8FA;">
+      <h3 style="color:#0D7A8A;">⚡ استيراد من الكوتيشنات الواردة</h3>
+      <span style="font-size:11px;color:var(--sub);">اختر طلب RFQ وستُملأ بيانات الشركات تلقائياً</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="flex:1;min-width:220px;margin:0;">
+          <label>اختر طلب RFQ</label>
+          <select id="cmp-import-rfq" style="width:100%;padding:10px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;">
+            <option value="">— اختر لاستيراد كوتيشناته —</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="cmpImportFromRFQ()" style="padding:10px 20px;">
+          ⚡ استيراد تلقائي
+        </button>
+        <button class="btn btn-gray" onclick="cmpReset()" style="padding:10px 16px;">
+          🔄 مسح وبداية جديدة
+        </button>
+      </div>
+      <div id="cmp-import-preview" style="margin-top:10px;"></div>
+    </div>
+  </div>
     <div class="card-body">
       <div class="form-grid">
         <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
@@ -1220,6 +1197,28 @@ function numToWords(n){
 <!-- ══ لجنة فحص العروض ══ -->
 <div class="page" id="page-committee">
   <div class="page-header"><h1>لجنة فحص العروض</h1><p>إنشاء محاضر لجنة فحص العروض وتصديرها</p></div>
+
+  <!-- استيراد من الكوتيشنات -->
+  <div class="card" style="border:2px solid #1DA9BD;margin-bottom:16px;">
+    <div class="card-header" style="background:#EBF8FA;">
+      <h3 style="color:#0D7A8A;">⚡ استيراد العروض من الكوتيشنات</h3>
+      <span style="font-size:11px;color:var(--sub);">اختر طلب RFQ وستُضاف شركاته وعروضها للمحضر تلقائياً</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="flex:1;min-width:220px;margin:0;">
+          <label>اختر طلب RFQ</label>
+          <select id="cm-import-rfq" style="width:100%;padding:10px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;">
+            <option value="">— اختر لاستيراد عروضه —</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="cmImportFromRFQ()" style="padding:10px 20px;">
+          ⚡ استيراد للمحضر
+        </button>
+      </div>
+      <div id="cm-import-preview" style="margin-top:10px;font-size:12px;color:var(--sub);"></div>
+    </div>
+  </div>
 
   <!-- فورم إنشاء/تعديل محضر -->
   <div class="card" id="committee-form-card">
@@ -1624,6 +1623,8 @@ function nav(page){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   event.currentTarget.classList.add('active');
+  // استيراد تلقائي عند فتح الصفحات المرتبطة
+  if(page==='cmp'||page==='committee') setTimeout(cmpPopulateRFQSelect,50);
 }
 
 /* ── INDEXEDDB FOR PETTY CASH ── */
@@ -3484,6 +3485,131 @@ let cmpSaved = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
 let cmpEditId = null; // للتعديل
 
 function escH(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+/* ══ استيراد الكوتيشنات لمقارنة الأسعار ══ */
+function cmpPopulateRFQSelect(){
+  ['cmp-import-rfq','cm-import-rfq'].forEach(selId=>{
+    const sel=document.getElementById(selId);if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— اختر لاستيراد عروضه —</option>';
+    rfqSaved.forEach(r=>{
+      const count=qtSaved.filter(q=>String(q.rfqId)===String(r.id)).length;
+      if(count>0)
+        sel.innerHTML+=`<option value="${r.id}">${r.rfqNum||'RFQ'} — ${r.company} (${count} عروض)</option>`;
+    });
+    if(cur)sel.value=cur;
+  });
+}
+
+function cmpImportFromRFQ(){
+  const rfqId=document.getElementById('cmp-import-rfq').value;
+  if(!rfqId){toast('اختر طلب RFQ أولاً',true);return;}
+  const rfq=rfqSaved.find(r=>String(r.id)===rfqId);
+  const quotes=qtSaved.filter(q=>String(q.rfqId)===rfqId);
+  if(!quotes.length){toast('لا توجد كوتيشنات لهذا الطلب',true);return;}
+
+  // ملء عنوان المقارنة والتاريخ
+  const titleEl=document.getElementById('cmp-title');
+  const dateEl=document.getElementById('cmp-date');
+  if(titleEl&&rfq) titleEl.value=`مقارنة أسعار — ${rfq.rfqNum||''} — ${rfq.company}`;
+  if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+
+  // مسح صفوف الجدول وإعادة البناء من الكوتيشنات
+  const tbody=document.getElementById('cmp-tbody');
+  if(tbody){
+    tbody.innerHTML='';
+    const minTotal=Math.min(...quotes.map(q=>q.total));
+    quotes.forEach((q,i)=>{
+      const isMin=q.total===minTotal;
+      const monthly=q.subtotal; // بدون VAT شهري تقريبي
+      const tr=document.createElement('tr');
+      tr.style.background=isMin?'#F0FFF4':'';
+      tr.innerHTML=`
+        <td>${i+1}</td>
+        <td><input class="cmp-name" value="${q.vendor}" style="min-width:120px;">${isMin?'<span style="font-size:10px;background:#276749;color:#fff;border-radius:6px;padding:1px 5px;margin-right:4px;">🏆</span>':''}</td>
+        <td><input class="cmp-services" value="${(q.rows||[]).map(r=>r.item).join('، ')}" style="min-width:150px;"></td>
+        <td><input class="cmp-monthly" type="number" value="${monthly.toFixed(2)}" oninput="cmpCalc()" style="width:110px;"></td>
+        <td class="cmp-annual" style="font-weight:700;">${(monthly*12).toFixed(2)}</td>
+        <td class="cmp-diff" style="color:${isMin?'var(--green)':'var(--red)'};">${isMin?'الأقل':'+'+((q.total-minTotal).toFixed(2))}</td>
+        <td class="cmp-pct" style="color:var(--sub);">${isMin?'—':'+'+((q.total-minTotal)/minTotal*100).toFixed(1)+'%'}</td>
+        <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+      tbody.appendChild(tr);
+    });
+    cmpCalc();
+  }
+
+  // معاينة
+  const preview=document.getElementById('cmp-import-preview');
+  if(preview){
+    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
+    preview.innerHTML=`<div style="background:#F0FFF4;border-radius:8px;padding:10px 14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+      <span style="color:#276749;font-weight:700;">✅ تم استيراد ${quotes.length} كوتيشن</span>
+      <span style="color:var(--sub);font-size:11px;">أقل سعر: <strong style="color:#276749;">${minQ.vendor}</strong> — ${minQ.total.toLocaleString('ar-SA',{maximumFractionDigits:0})} ر.س</span>
+    </div>`;
+  }
+  toast(`✅ تم استيراد ${quotes.length} كوتيشن من ${rfq?.rfqNum||'RFQ'}`);
+}
+
+function cmImportFromRFQ(){
+  const rfqId=document.getElementById('cm-import-rfq').value;
+  if(!rfqId){toast('اختر طلب RFQ أولاً',true);return;}
+  const rfq=rfqSaved.find(r=>String(r.id)===rfqId);
+  const quotes=qtSaved.filter(q=>String(q.rfqId)===rfqId);
+  if(!quotes.length){toast('لا توجد كوتيشنات لهذا الطلب',true);return;}
+
+  // ملء موضوع المحضر تلقائياً
+  const subjEl=document.getElementById('cm-subject');
+  if(subjEl&&rfq&&!subjEl.value) subjEl.value=rfq.company+(rfq.rows?.length?` — ${rfq.rows[0].item}`:'');
+
+  // مسح العروض الحالية وإعادة البناء
+  const offersList=document.getElementById('cm-offers-list');
+  if(offersList){
+    offersList.innerHTML='';
+    const minTotal=Math.min(...quotes.map(q=>q.total));
+    quotes.forEach((q,i)=>{
+      const isMin=q.total===minTotal;
+      const div=document.createElement('div');
+      div.className='form-grid';
+      div.style.marginBottom='10px';
+      div.style.padding='10px';
+      div.style.borderRadius='8px';
+      div.style.background=isMin?'#F0FFF4':'#F8FAFB';
+      div.style.border=isMin?'1.5px solid #276749':'1px solid var(--border)';
+      div.innerHTML=`
+        <div class="field">
+          <label>الشركة ${i+1}${isMin?' 🏆':''}</label>
+          <input class="cm-offer-company" value="${q.vendor}" placeholder="اسم الشركة">
+        </div>
+        <div class="field">
+          <label>المبلغ الإجمالي (ر.س)</label>
+          <input class="cm-offer-amount" type="number" value="${q.total.toFixed(2)}" placeholder="0">
+        </div>
+        <div class="field">
+          <label>ملاحظات العرض</label>
+          <input class="cm-offer-notes" value="صلاحية: ${q.validity||'—'} | تسليم: ${q.delivery||'—'} | دفع: ${q.payment||'—'}" placeholder="ملاحظات">
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end;">
+          <button onclick="this.closest('.form-grid').remove()" style="background:#FEE2E2;color:#C53030;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;">× حذف</button>
+        </div>`;
+      offersList.appendChild(div);
+    });
+
+    // الشركة الفائزة تلقائياً
+    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
+    const winnerEl=document.getElementById('cm-winner');
+    const amtEl=document.getElementById('cm-winner-amount');
+    if(winnerEl&&!winnerEl.value) winnerEl.value=minQ.vendor;
+    if(amtEl&&!amtEl.value){amtEl.value=minQ.total.toFixed(2);cmUpdateAmountWords();}
+  }
+
+  // معاينة
+  const preview=document.getElementById('cm-import-preview');
+  if(preview){
+    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
+    preview.innerHTML=`✅ تم استيراد ${quotes.length} عرض — الفائز المقترح: <strong style="color:#276749;">${minQ.vendor}</strong> (${minQ.total.toLocaleString('ar-SA',{maximumFractionDigits:0})} ر.س)`;
+  }
+  toast(`✅ تم استيراد ${quotes.length} عرض — راجع بيانات المحضر`);
+}
+
 function cmpAddCompany(){
   cmpSyncAllInputs();
   const id = Date.now();
