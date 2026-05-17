@@ -2930,6 +2930,9 @@ function rfqSetType(type){
           <button class="btn btn-green" onclick="rfqSendToPriceCmp()" style="gap:6px;">
             📊 إرسال لمقارنة الأسعار
           </button>
+          <button class="btn" onclick="rfqSendToPO()" style="background:#7C3AED;color:#fff;gap:6px;">
+            📄 إرسال إلى التعميد PO
+          </button>
         </div>`
       :`<div style="background:#F0FFF4;border-radius:8px;padding:12px 16px;color:#276749;font-size:13px;">✅ مُصنّف كـ <strong>شراء داخلي</strong> — لن يُربط بلجنة أو مقارنة رسمية</div>`;
   }
@@ -2994,6 +2997,41 @@ function rfqSendToPriceCmp(){
   });
   renderCmpCompanies();
   toast('تم نقل '+quotes.length+' شركات لمقارنة الأسعار');
+}
+
+
+function rfqSendToPO(){
+  if(!rfqActiveId){toast('افتح طلباً أولاً',true);return;}
+  var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqActiveId);});
+  if(!rfq){toast('لم يُوجد الطلب',true);return;}
+  var quotes=rfq.quotes||[];
+
+  // انتقل لصفحة التعاميد
+  nav('taameeds');
+
+  // مسح الفورم أولاً
+  taameedResetForm();
+
+  // نقل البيانات الأساسية
+  var numEl=document.getElementById('tm-num');
+  var descEl=document.getElementById('tm-desc');
+  var vendorEl=document.getElementById('tm-vendor');
+
+  if(numEl)  numEl.value=rfq.refNum||'';
+  if(descEl) descEl.value=(rfq.company||'')+(rfq.notes?' — '+rfq.notes:'');
+
+  // أفضل عرض (الأقل سعراً) → يملأ اسم المورد تلقائياً
+  if(quotes.length>0){
+    var best=quotes.slice().sort(function(a,b){
+      var ta=0,tb=0;
+      (a.items||[]).forEach(function(it){ta+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
+      (b.items||[]).forEach(function(it){tb+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
+      return ta-tb;
+    })[0];
+    if(vendorEl) vendorEl.value=best.vendor_name||best.vendorName||'';
+  }
+
+  toast('✅ تم نقل البيانات إلى التعميد — راجع الحقول وأكمل');
 }
 
 function renderRfqSaved(){
