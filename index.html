@@ -3202,6 +3202,7 @@ function renderQuotations(){
           <span style="font-size:10px;color:var(--sub);">صلاحية: ${q.validity||'—'} | تسليم: ${q.delivery||'—'} | دفع: ${q.payment||'—'}</span>
         </div>
         <div class="saved-item-actions">
+          <button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #C3D8F5;" onclick="qtEdit(${idx})">✏️ تعديل</button>
           <button class="btn btn-sm btn-gray" onclick="qtViewDetails(${idx})">🔍 تفاصيل</button>
           <button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;" onclick="qtDel(${idx})">×</button>
         </div>
@@ -3210,6 +3211,64 @@ function renderQuotations(){
     html+='</div>';
   });
   el.innerHTML=html;
+}
+function qtEdit(idx){
+  const q=qtSaved[idx];if(!q)return;
+  // الانتقال لتاب الكوتيشنات
+  rfqShowTab(2);
+  setTimeout(()=>{
+    rfqPopulateLinks();
+    // ملء بيانات المورد
+    ['qt-rfq-link','qt-vendor','qt-vendor-vat','qt-vendor-addr','qt-vendor-phone','qt-vendor-email','qt-date','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;
+      if(id==='qt-rfq-link') el.value=String(q.rfqId||'');
+      else if(id==='qt-vendor') el.value=q.vendor||'';
+      else if(id==='qt-vendor-vat') el.value=q.vendorVat||'';
+      else if(id==='qt-vendor-addr') el.value=q.vendorAddr||'';
+      else if(id==='qt-vendor-phone') el.value=q.vendorPhone||'';
+      else if(id==='qt-vendor-email') el.value=q.vendorEmail||'';
+      else if(id==='qt-date') el.value=q.date||'';
+      else if(id==='qt-ref') el.value=q.ref||'';
+      else if(id==='qt-validity') el.value=q.validity||'';
+      else if(id==='qt-delivery') el.value=q.delivery||'';
+      else if(id==='qt-payment') el.value=q.payment||'';
+      else if(id==='qt-notes') el.value=q.notes||'';
+    });
+    // ملء البنود
+    const tbody=document.getElementById('qt-tbody');
+    if(tbody&&q.rows&&q.rows.length){
+      tbody.innerHTML='';
+      q.rows.forEach((item,i)=>{
+        const qty=parseFloat(item.qty)||1;
+        const price=parseFloat(item.price)||0;
+        const total=(qty*price).toFixed(2);
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${total}</td><td><input class="qt-note" value="${item.note||''}" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+        tbody.appendChild(tr);
+      });
+      qtCalcTotal();
+    }
+    // استعادة PDF إن وجد
+    if(q.pdfb64){
+      qtCurrentPDFb64=q.pdfb64;qtCurrentPDFname=q.pdfName||'quotation.pdf';
+      document.getElementById('qt-pdf-name').textContent=qtCurrentPDFname;
+      document.getElementById('qt-pdf-attached').style.display='flex';
+    }
+    // حذف القديم ليُعاد حفظه
+    qtSaved.splice(idx,1);
+    localStorage.setItem('qt_saved',JSON.stringify(qtSaved));
+    renderQuotations();renderRfqSaved();
+    // إظهار بانر التعديل
+    const old=document.getElementById('qt-edit-banner');if(old)old.remove();
+    const banner=document.createElement('div');
+    banner.id='qt-edit-banner';
+    banner.style.cssText='background:#FFF8E1;border:1.5px solid #B7791F;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;';
+    banner.innerHTML=`<span style="color:#B7791F;font-weight:700;font-size:13px;">✏️ وضع التعديل — عدّل الأسعار أو البيانات ثم اضغط حفظ</span><button onclick="document.getElementById('qt-edit-banner').remove()" style="background:none;border:none;color:#B7791F;cursor:pointer;font-size:18px;">×</button>`;
+    const statusEl=document.getElementById('qt-ai-status');
+    if(statusEl)statusEl.parentNode.insertBefore(banner,statusEl);
+    document.getElementById('qt-vendor')?.scrollIntoView({behavior:'smooth',block:'center'});
+    toast('✏️ وضع التعديل — عدّل ثم اضغط حفظ');
+  },80);
 }
 function qtViewDetails(idx){
   const q=qtSaved[idx];if(!q)return;
