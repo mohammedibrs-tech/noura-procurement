@@ -15,23 +15,6 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);direction:rtl;display:flex;min-height:100vh;}
 
-
-function numToWords(n){
-  if(n===0)return'Zero';
-  const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  function h(n){
-    if(n<20)return ones[n];
-    if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');
-    return ones[Math.floor(n/100)]+' Hundred'+(n%100?' '+h(n%100):'');
-  }
-  var parts=[];
-  if(Math.floor(n/1000000)>0){parts.push(h(Math.floor(n/1000000))+' Million');n%=1000000;}
-  if(Math.floor(n/1000)>0){parts.push(h(Math.floor(n/1000))+' Thousand');n%=1000;}
-  if(n>0)parts.push(h(n));
-  return parts.join(' ');
-}
-
 /* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999;}
 .login-box{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
@@ -1597,14 +1580,6 @@ function toast(msg,err=false){
   const t=document.getElementById('toast');
   t.textContent=msg;t.style.background=err?'#C53030':'#1A202C';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
-}
-
-/* ── NAV ── */
-function nav(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  event.currentTarget.classList.add('active');
 }
 
 /* ── INDEXEDDB FOR PETTY CASH ── */
