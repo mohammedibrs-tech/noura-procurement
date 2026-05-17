@@ -2957,9 +2957,11 @@ function rfqSendToCommittee(){
       var div=document.createElement('div');
       div.className='cm-offer-row';
       div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
+      var uid='cpt_'+Date.now()+'_'+Math.random().toString(36).slice(2);
       div.innerHTML='<div class="form-grid">'
         +'<div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="'+(q.vendor_name||q.vendorName||'')+'" placeholder="اسم الشركة"></div>'
         +'<div class="field"><label>المبلغ شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="'+(total||0)+'" placeholder="0"></div>'
+        +'<div class="field" style="grid-column:span 2;"><label style="display:block;margin-bottom:6px;">نوع المبلغ</label><div style="display:flex;gap:20px;"><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer;"><input type="radio" name="'+uid+'" class="cm-pay-type" value="total" checked> إجمالي مرة واحدة</label><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;cursor:pointer;"><input type="radio" name="'+uid+'" class="cm-pay-type" value="monthly"> شهري (عقد)</label></div></div>'
         +'<div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option value="مقبول ومطابق فنياً" selected>مقبول ومطابق فنياً</option><option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option><option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option></select></div>'
         +'<div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="'+(q.validity||'')+'" placeholder="ملاحظات..."></div>'
         +'<div style="display:flex;align-items:flex-end;"><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">x</button></div>'
@@ -2988,7 +2990,7 @@ function rfqSendToPriceCmp(){
     var rows=items.length>0
       ?items.map(function(it){return{cat:it.item||it.cat||'',nat:it.uom||'',count:parseFloat(it.qty)||1,unitPrice:parseFloat(it.price)||0,vatType:'none'};})
       :[{cat:'',nat:'',count:1,unitPrice:0,vatType:'none'}];
-    cmpCompanies.push({id:Date.now()+Math.random(),name:q.vendor_name||q.vendorName||'شركة',rows:rows,terms:['']});
+    cmpCompanies.push({id:Date.now()+Math.random(),name:q.vendor_name||q.vendorName||'شركة',rows:rows,terms:[''],paymentType:'total'});
   });
   renderCmpCompanies();
   toast('تم نقل '+quotes.length+' شركات لمقارنة الأسعار');
@@ -3169,7 +3171,13 @@ function escH(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").r
 function cmpAddCompany(){
   cmpSyncAllInputs();
   const id = Date.now();
-  cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0,vatType:'none'}], terms:['']});
+  cmpCompanies.push({id, name:'', rows:[{cat:'',nat:'',count:1,unitPrice:0,vatType:'none'}], terms:[''], paymentType:'total'});
+  renderCmpCompanies();
+}
+function cmpSetPayType(id, val){
+  cmpSyncAllInputs();
+  var co=cmpCompanies.find(function(c){return c.id===id;});
+  if(co){co.paymentType=val;}
   renderCmpCompanies();
 }
 
@@ -3192,7 +3200,8 @@ function renderCmpCompanies(){
       var rr=co.rows[ri];var rb=(rr.count||0)*(parseFloat(String(rr.unitPrice||0).replace(/,/g,''))||0);
       var vt=rr.vatType||'none';monthly+=vt==='added'?rb*1.15:rb;
     }
-    var annual=monthly*12;
+    var payType=co.paymentType||'total';
+    var annual=payType==='monthly'?monthly*12:monthly;
     var rowsHTML='';
     for(var ri2=0;ri2<co.rows.length;ri2++){
       var row=co.rows[ri2];
@@ -3212,7 +3221,7 @@ function renderCmpCompanies(){
         +'<option value="added"'+(vatType==='added'?' selected':'')+'>+ VAT 15%</option>'
         +'</select></td>';
       rowsHTML+='<td style="text-align:right;color:#C53030;">'+(rVat>0?rVat.toLocaleString('ar-SA',{minimumFractionDigits:2}):'—')+'</td>';
-      rowsHTML+='<td style="text-align:right;font-weight:700;color:#244062;">'+( rTot*12).toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
+      rowsHTML+='<td style="text-align:right;font-weight:700;color:#244062;">'+(payType==='monthly'?rTot*12:rTot).toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
       rowsHTML+='<td><button onclick="cmpDelRow('+co.id+','+ri2+')" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
       rowsHTML+='</tr>';
     }
@@ -3227,13 +3236,14 @@ function renderCmpCompanies(){
     html+='<div style="border:2px solid #244062;border-radius:10px;margin-bottom:16px;overflow:hidden;">';
     html+='<div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
     html+='<input data-cid="'+co.id+'" data-field="name" value="'+(co.name||'')+'" oninput="cmpUpdateName('+co.id+',this.value)" placeholder="اسم الشركة" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:300px;">';
-    html+='<button onclick="cmpDelCompany('+co.id+')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف</button>';
+    var ptUid='cmppt_'+co.id;
+    html+='<div style="display:flex;align-items:center;gap:12px;"><label style="display:flex;align-items:center;gap:5px;color:rgba(255,255,255,0.85);font-size:12px;cursor:pointer;"><input type="radio" name="'+ptUid+'" value="total" '+(payType==='total'?'checked':'')+' onchange="cmpSetPayType('+co.id+',this.value)"> إجمالي</label><label style="display:flex;align-items:center;gap:5px;color:rgba(255,255,255,0.85);font-size:12px;cursor:pointer;"><input type="radio" name="'+ptUid+'" value="monthly" '+(payType==='monthly'?'checked':'')+' onchange="cmpSetPayType('+co.id+',this.value)"> شهري (عقد)</label><button onclick="cmpDelCompany('+co.id+')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف</button></div>';
     html+='</div><div style="padding:14px;">';
     html+='<div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود الخدمة</div>';
-    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية (ر.س)</th><th style="background:#F0FFF4;color:#276749;">الإجمالي الشهري</th><th>الضريبة</th><th>مبلغ VAT (ر.س)</th><th>الإجمالي السنوي الكلي (ر.س)</th><th></th></tr></thead><tbody>'+rowsHTML+'</tbody></table>';
+    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية (ر.س)</th><th style="background:#F0FFF4;color:#276749;">الإجمالي</th><th>الضريبة</th><th>مبلغ VAT (ر.س)</th><th>'+(payType==='monthly'?'الإجمالي السنوي الكلي (ر.س)':'الإجمالي الكلي (ر.س)')+'</th><th></th></tr></thead><tbody>'+rowsHTML+'</tbody></table>';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddRow('+co.id+')">+ إضافة صف</button>';
-    html+='<span style="font-size:12px;font-weight:700;">الشهري: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b> | السنوي: <b style="color:#244062;">'+annual.toLocaleString('ar-SA')+' ر.س</b></span>';
+    html+='<span style="font-size:12px;font-weight:700;">'+(payType==='monthly'?'الشهري: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b> | السنوي: <b style="color:#244062;">'+annual.toLocaleString('ar-SA')+' ر.س</b>':'الإجمالي: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b>')+'</span>';
     html+='</div><div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود العقد</div>';
     html+='<div>'+termsHTML+'</div>';
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddTerm('+co.id+')" style="margin-top:4px;">+ إضافة بند</button>';
@@ -3245,7 +3255,7 @@ function renderCmpCompanies(){
     var tots2=cmpCompanies.map(function(co2){
       var m=0;
       co2.rows.forEach(function(r){var b=(r.count||0)*(parseFloat(String(r.unitPrice||0).replace(/,/g,''))||0);m+=r.vatType==='added'?b*1.15:b;});
-      return{name:co2.name||'—',total:m};
+      return{name:co2.name||'—',total:m,payType:co2.paymentType||'total'};
     });
     var min2=Math.min.apply(null,tots2.map(function(t){return t.total;}).filter(function(v){return v>0;}));
     var summHTML='<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">';
@@ -3254,7 +3264,7 @@ function renderCmpCompanies(){
       var isBest=t.total===min2&&min2>0;
       summHTML+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">';
       summHTML+='<span>'+t.name+'</span>';
-      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':'#C53030')+';">'+t.total.toLocaleString('ar-SA')+' ر.س/شهر'+(isBest?' ★ الأفضل':'')+'</span>';
+      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':'#C53030')+';">'+t.total.toLocaleString('ar-SA')+' ر.س'+(t.payType==='monthly'?' / شهر':' إجمالي')+(isBest?' ★ الأفضل':'')+'</span>';
       summHTML+='</div>';
     });
     summHTML+='</div>';
@@ -3482,15 +3492,18 @@ function cmpExcelFromData(title,date,companies){
     });
 
     // إجمالي الشركة
-    sc('F'+(curRow+1),'الإجمالي الشهري',hdr(C));
+    var exPayType=co.paymentType||'total';
+    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري':'الإجمالي الكلي',hdr(C));
     sc('G'+(curRow+1),monthly,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:C},alignment:{horizontal:'right'}});
     merge(curRow,0,curRow,5);
     curRow++;
 
-    sc('F'+(curRow+1),'الإجمالي السنوي',hdr(NK));
-    sc('G'+(curRow+1),monthly*12,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'right'}});
-    merge(curRow,0,curRow,5);
-    curRow++;
+    if(exPayType==='monthly'){
+      sc('F'+(curRow+1),'الإجمالي السنوي',hdr(NK));
+      sc('G'+(curRow+1),monthly*12,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'right'}});
+      merge(curRow,0,curRow,5);
+      curRow++;
+    }
 
     // بنود العقد
     if(co.terms&&co.terms.length&&co.terms[0]){
@@ -3506,7 +3519,7 @@ function cmpExcelFromData(title,date,companies){
       });
     }
 
-    totals.push({name:co.name||'شركة '+(ci+1),monthly:monthly,annual:monthly*12});
+    totals.push({name:co.name||'شركة '+(ci+1),monthly:monthly,annual:exPayType==='monthly'?monthly*12:monthly,payType:exPayType});
     curRow+=2; // مسافة بين الشركات
   });
 
@@ -3517,7 +3530,7 @@ function cmpExcelFromData(title,date,companies){
   curRow++;
 
   // هيدر المقارنة
-  ['الشركة','الإجمالي الشهري (ر.س)','الإجمالي السنوي (ر.س)','الفرق الشهري (ر.س)','الفرق السنوي (ر.س)','نسبة الفرق','التقييم'].forEach(function(h,i){
+  ['الشركة','الإجمالي','الإجمالي السنوي / الكلي (ر.س)','الفرق','نسبة الفرق','التقييم'].forEach(function(h,i){
     sc(CL[i]+(curRow+1),h,hdr(C));
   });
   curRow++;
@@ -6308,9 +6321,12 @@ function cmGetData(){
   document.querySelectorAll('.cm-offer-row').forEach(row=>{
     const name=row.querySelector('.cm-offer-name')?.value?.trim();
     const amount=parseFloat(row.querySelector('.cm-offer-amount')?.value)||0;
+    const payTypeEl=row.querySelector('.cm-pay-type:checked');
+    const paymentType=payTypeEl?payTypeEl.value:'total';
+    const displayAmount=paymentType==='monthly'?amount+' ر.س / شهر (سنوي: '+(amount*12).toLocaleString('ar-SA')+' ر.س)':amount+' ر.س إجمالي';
     const status=row.querySelector('.cm-offer-status')?.value||'';
     const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
-    if(name)offers.push({name,amount,status,notes});
+    if(name)offers.push({name,amount,paymentType,displayAmount,status,notes});
   });
   return{
     num:document.getElementById('cm-num').value.trim(),
@@ -6546,12 +6562,14 @@ async function committeeExportWordData(c){
   toast('جاري إنشاء ملف Word...');
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   // بناء محتوى Word باستخدام HTML داخل blob
-  const offersRows=(c.offers||[]).sort((a,b)=>a.amount-b.amount).map(o=>`
+  const offersRows=(c.offers||[]).sort((a,b)=>a.amount-b.amount).map(o=>{
+    const dispAmt=o.displayAmount||(o.paymentType==='monthly'?(o.amount||0)+' ر.س / شهر (سنوي: '+((o.amount||0)*12).toLocaleString('ar-SA')+' ر.س)':((o.amount||0).toLocaleString('ar-SA'))+' ر.س إجمالي');
+    return `
     <tr>
       <td style="border:1px solid black;padding:4px 8px;">${o.name}</td>
-      <td style="border:1px solid black;padding:4px 8px;text-align:center;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>
+      <td style="border:1px solid black;padding:4px 8px;text-align:center;">${dispAmt}</td>
       <td style="border:1px solid black;padding:4px 8px;">${o.notes||''}</td>
-    </tr>`).join('');
+    </tr>`;}).join('');
   const membersText=(c.members||[]).map(m=>`<p style="margin-right:20px;">- ${m.name}</p>`).join('');
   const techReview=(c.offers||[]).map(o=>`<p style="margin-right:20px;">- <b>${o.name}</b> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</p>`).join('');
 
