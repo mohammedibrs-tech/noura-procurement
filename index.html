@@ -221,17 +221,6 @@ function numToWords(n){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       تقارير الموردين
     </div>
-    <div class="sb-sep"></div>
-    <div style="padding:10px 16px;">
-      <button onclick="backupData()" style="width:100%;background:rgba(29,169,189,.15);color:#7DD3E0;border:1px solid rgba(29,169,189,.3);border-radius:8px;padding:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:6px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        حفظ نسخة احتياطية
-      </button>
-      <button onclick="restoreData()" style="width:100%;background:rgba(197,48,48,.1);color:#FC8181;border:1px solid rgba(197,48,48,.3);border-radius:8px;padding:8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-        استعادة نسخة سابقة
-      </button>
-    </div>
   </div>
 </div>
 
@@ -521,255 +510,41 @@ function numToWords(n){
   </div>
 </div>
 
-<!-- ══ RFQ — دورة متكاملة ══ -->
+<!-- ══ RFQ ══ -->
 <div class="page" id="page-rfq">
-  <div class="page-header">
-    <h1>دورة عروض الأسعار (RFQ)</h1>
-    <p>من إرسال الطلب ← استلام الكوتيشن ← مقارنة الأسعار ← الترسية ← PO</p>
-  </div>
-
-  <!-- خطوات الدورة -->
-  <div style="display:flex;gap:0;margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border);">
-    <div class="rfq-step active" id="rfq-step-1" onclick="rfqShowTab(1)" style="flex:1;padding:12px 10px;text-align:center;cursor:pointer;background:#1DA9BD;color:#fff;font-size:12px;font-weight:700;border-left:1px solid rgba(255,255,255,.2);">
-      <div style="font-size:18px;margin-bottom:2px;">📋</div>١. طلبات RFQ
-    </div>
-    <div class="rfq-step" id="rfq-step-2" onclick="rfqShowTab(2)" style="flex:1;padding:12px 10px;text-align:center;cursor:pointer;background:#EBF8FA;color:#0D7A8A;font-size:12px;font-weight:700;border-left:1px solid var(--border);">
-      <div style="font-size:18px;margin-bottom:2px;">📥</div>٢. الكوتيشنات الواردة
-    </div>
-    <div class="rfq-step" id="rfq-step-3" onclick="rfqShowTab(3)" style="flex:1;padding:12px 10px;text-align:center;cursor:pointer;background:#EBF8FA;color:#0D7A8A;font-size:12px;font-weight:700;border-left:1px solid var(--border);">
-      <div style="font-size:18px;margin-bottom:2px;">⚖️</div>٣. مقارنة الأسعار
-    </div>
-    <div class="rfq-step" id="rfq-step-4" onclick="rfqShowTab(4)" style="flex:1;padding:12px 10px;text-align:center;cursor:pointer;background:#EBF8FA;color:#0D7A8A;font-size:12px;font-weight:700;">
-      <div style="font-size:18px;margin-bottom:2px;">🏆</div>٤. الترسية والـ PO
-    </div>
-  </div>
-
-  <!-- ══ التاب ١: طلبات RFQ ══ -->
-  <div id="rfq-tab-1">
-    <div class="card">
-      <div class="card-header"><h3>إنشاء طلب عرض سعر جديد</h3></div>
-      <div class="card-body">
-        <div class="form-grid">
-          <div class="field"><label>رقم الطلب (RFQ#)</label><input id="rfq-num" placeholder="RFQ-2026-001"></div>
-          <div class="field"><label>التاريخ</label><input id="rfq-date" type="date"></div>
-          <div class="field"><label>اسم الشركة / السادة</label><input id="rfq-co" placeholder="اسم الشركة المستلمة"></div>
-          <div class="field"><label>الإدارة الطالبة</label><input id="rfq-dept" placeholder="مثال: إدارة التشغيل"></div>
-        </div>
-        <div class="field" style="margin-top:12px;"><label>تفاصيل أخرى / ملاحظات</label><textarea id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
-        <div class="section-title">الأصناف المطلوبة</div>
-        <table class="tbl" style="margin-bottom:8px;">
-          <thead><tr><th>م</th><th>الصنف / الخدمة</th><th>الكمية</th><th>الوحدة</th><th>المواصفات</th><th></th></tr></thead>
-          <tbody id="rfq-tbody">
-            <tr>
-              <td>1</td>
-              <td><input class="rfq-item" placeholder="اسم الصنف أو الخدمة"></td>
-              <td><input class="rfq-qty" placeholder="1" style="width:55px;"></td>
-              <td><input class="rfq-uom" placeholder="جهاز" style="width:65px;"></td>
-              <td><input class="rfq-spec" placeholder="المواصفات..."></td>
-              <td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
-            </tr>
-          </tbody>
-        </table>
-        <button class="btn btn-gray btn-sm" onclick="rfqAddRow()">+ إضافة صف</button>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="rfqSave()">💾 حفظ الطلب</button>
-          <button class="btn btn-red" onclick="rfqPrint()">🖨️ طباعة / PDF</button>
-        </div>
+  <div class="page-header"><h1>طلبات عرض السعر (RFQ)</h1><p>Request For Quotation</p></div>
+  <div class="card">
+    <div class="card-header"><h3>إنشاء طلب عرض سعر</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>اسم الشركة / السادة</label><input id="rfq-co" placeholder="اسم الشركة المستلمة"></div>
+        <div class="field"><label>التاريخ</label><input id="rfq-date" type="date"></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h3>طلبات RFQ المحفوظة</h3>
-        <span style="font-size:11px;color:var(--sub);">اضغط "إضافة كوتيشن" لتسجيل عروض الأسعار الواردة</span>
-      </div>
-      <div class="card-body"><div class="saved-list" id="rfq-saved"></div></div>
-    </div>
-  </div>
-
-  <!-- ══ التاب ٢: الكوتيشنات الواردة ══ -->
-  <div id="rfq-tab-2" style="display:none;">
-    <div class="card">
-      <div class="card-header">
-        <h3>تسجيل كوتيشن وارد</h3>
-        <div style="font-size:11px;color:var(--sub);">ارفع PDF الكوتيشن وسيقرأه الذكاء الاصطناعي تلقائياً</div>
-      </div>
-      <div class="card-body">
-
-        <!-- منطقة رفع PDF -->
-        <div id="qt-pdf-zone" style="border:2px dashed var(--primary);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;cursor:pointer;background:#F0FAFC;transition:.2s;" onclick="document.getElementById('qt-pdf-input').click()" ondragover="event.preventDefault();this.style.background='#D0F0F8'" ondragleave="this.style.background='#F0FAFC'" ondrop="qtHandleDrop(event)">
-          <div style="font-size:32px;margin-bottom:8px;">📄</div>
-          <div style="font-weight:700;color:var(--primary);font-size:14px;">اسحب ملف PDF هنا أو اضغط للرفع</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:4px;">سيقرأ الذكاء الاصطناعي بيانات المورد، البنود، الأسعار تلقائياً</div>
-          <input type="file" id="qt-pdf-input" accept=".pdf" style="display:none;" onchange="qtExtractFromPDF(this.files[0])">
-        </div>
-
-        <!-- حالة الاستخراج -->
-        <div id="qt-ai-status" style="display:none;background:#EBF8FA;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#0D7A8A;">
-          <div id="qt-ai-status-text">⏳ جاري قراءة الـ PDF...</div>
-          <div style="height:4px;background:#D0F0F8;border-radius:2px;margin-top:8px;overflow:hidden;">
-            <div id="qt-ai-progress" style="height:100%;background:var(--primary);width:0%;transition:width .5s;border-radius:2px;"></div>
-          </div>
-        </div>
-
-        <!-- ملف PDF المرفق -->
-        <div id="qt-pdf-attached" style="display:none;background:#F0FFF4;border:1px solid #276749;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:20px;">📎</span>
-            <div><div id="qt-pdf-name" style="font-size:12px;font-weight:700;color:#276749;"></div><div style="font-size:10px;color:var(--sub);">PDF محفوظ مع الكوتيشن</div></div>
-          </div>
-          <button onclick="qtRemovePDF()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button>
-        </div>
-
-        <div class="section-title">بيانات المورد</div>
-        <div class="form-grid">
-          <div class="field">
-            <label>ربط بطلب RFQ</label>
-            <select id="qt-rfq-link">
-              <option value="">— اختر الطلب —</option>
-            </select>
-          </div>
-          <div class="field"><label>اسم الشركة / المورد</label><input id="qt-vendor" list="suppliers-datalist" placeholder="اسم الشركة" oninput="buildSupplierDatalist()"></div>
-          <div class="field"><label>الرقم الضريبي للمورد</label><input id="qt-vendor-vat" placeholder="مثال: 3xxxxxxxxxx"></div>
-          <div class="field"><label>عنوان المورد</label><input id="qt-vendor-addr" placeholder="المدينة، الحي..."></div>
-          <div class="field"><label>هاتف المورد</label><input id="qt-vendor-phone" placeholder="+966xxxxxxxxx"></div>
-          <div class="field"><label>إيميل المورد</label><input id="qt-vendor-email" placeholder="info@vendor.com"></div>
-        </div>
-
-        <div class="section-title">تفاصيل العرض</div>
-        <div class="form-grid">
-          <div class="field"><label>تاريخ الاستلام</label><input id="qt-date" type="date"></div>
-          <div class="field"><label>رقم العرض (من المورد)</label><input id="qt-ref" placeholder="Q-2026-001"></div>
-          <div class="field"><label>صلاحية العرض</label><input id="qt-validity" placeholder="مثال: 30 يوم"></div>
-          <div class="field"><label>مدة التسليم</label><input id="qt-delivery" placeholder="مثال: 7 أيام عمل"></div>
-          <div class="field"><label>شروط الدفع</label><input id="qt-payment" placeholder="مثال: 30 يوم بعد الاستلام"></div>
-          <div class="field"><label>ملاحظات</label><input id="qt-notes" placeholder="أي ملاحظات..."></div>
-        </div>
-
-        <div class="section-title" style="font-size:14px;font-weight:700;color:var(--navy);margin-top:16px;">
-          💰 بنود الكوتيشن والأسعار
-          <span style="font-size:11px;font-weight:400;color:var(--sub);margin-right:8px;">— تُملأ تلقائياً عند رفع PDF، أو أدخلها يدوياً</span>
-        </div>
-        <div style="overflow-x:auto;border:1.5px solid var(--primary);border-radius:10px;margin-bottom:8px;">
-        <table class="tbl" style="margin:0;min-width:600px;">
-          <thead>
-            <tr style="background:#1DA9BD;">
-              <th style="color:#fff;width:32px;">م</th>
-              <th style="color:#fff;">الصنف / الخدمة</th>
-              <th style="color:#fff;width:65px;">الكمية</th>
-              <th style="color:#fff;width:70px;">الوحدة</th>
-              <th style="color:#fff;width:110px;">سعر الوحدة (ر.س)</th>
-              <th style="color:#fff;width:110px;background:#0D7A8A;">الإجمالي (ر.س)</th>
-              <th style="color:#fff;">ملاحظات</th>
-              <th style="color:#fff;width:30px;"></th>
-            </tr>
-          </thead>
-          <tbody id="qt-tbody">
-            <tr>
-              <td style="text-align:center;color:var(--sub);">1</td>
-              <td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td>
-              <td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td>
-              <td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td>
-              <td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td>
-              <td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td>
-              <td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td>
-              <td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-        <button class="btn btn-gray btn-sm" onclick="qtAddRow()">+ إضافة صف</button>
-
-        <!-- ملخص المبالغ -->
-        <div style="background:linear-gradient(135deg,#F0FAFC,#EBF8FA);border:1.5px solid var(--primary);border-radius:10px;padding:14px 18px;margin-top:12px;display:flex;justify-content:flex-end;gap:32px;align-items:center;flex-wrap:wrap;">
-          <div style="text-align:center;">
-            <div style="font-size:11px;color:var(--sub);margin-bottom:2px;">المجموع قبل VAT</div>
-            <div style="font-size:16px;font-weight:700;color:var(--navy);"><span id="qt-sub">0.00</span> <span style="font-size:11px;">ر.س</span></div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:11px;color:var(--sub);margin-bottom:2px;">VAT 15%</div>
-            <div style="font-size:16px;font-weight:700;color:#B7791F;"><span id="qt-tax">0.00</span> <span style="font-size:11px;">ر.س</span></div>
-          </div>
-          <div style="text-align:center;background:var(--primary);border-radius:8px;padding:8px 20px;">
-            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-bottom:2px;">الإجمالي شامل VAT</div>
-            <div style="font-size:20px;font-weight:900;color:#fff;"><span id="qt-tot">0.00</span> <span style="font-size:12px;">ر.س</span></div>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="qtSave()">💾 حفظ الكوتيشن</button>
-          <button class="btn btn-gray" onclick="qtResetForm()">🔄 مسح الفورم</button>
-        </div>
-      </div>
-    </div>
-    <!-- قائمة الكوتيشنات -->
-    <div class="card">
-      <div class="card-header">
-        <h3>الكوتيشنات المسجّلة</h3>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <label style="font-size:11px;color:var(--sub);">فلتر حسب الطلب:</label>
-          <select id="qt-filter-rfq" onchange="renderQuotations()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
-            <option value="">الكل</option>
-          </select>
-        </div>
-      </div>
-      <div class="card-body"><div id="qt-list">لا توجد كوتيشنات</div></div>
-    </div>
-  </div>
-
-  <!-- ══ التاب ٣: مقارنة الأسعار ══ -->
-  <div id="rfq-tab-3" style="display:none;">
-    <div class="card">
-      <div class="card-header"><h3>مقارنة عروض الأسعار</h3></div>
-      <div class="card-body">
-        <div class="field" style="max-width:400px;margin-bottom:16px;">
-          <label>اختر طلب RFQ للمقارنة</label>
-          <select id="cmp-rfq-select" onchange="rfqBuildComparison()" style="width:100%;padding:10px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);">
-            <option value="">— اختر الطلب —</option>
-          </select>
-        </div>
-        <div id="rfq-cmp-result"></div>
+      <div class="field" style="margin-top:12px;"><label>تفاصيل أخرى</label><textarea id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+      <div class="section-title">الأصناف المطلوبة</div>
+      <table class="tbl" style="margin-bottom:8px;">
+        <thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
+        <tbody id="rfq-tbody">
+          <tr>
+            <td>1</td>
+            <td><input class="rfq-item" placeholder="اسم الصنف"></td>
+            <td><input class="rfq-qty" placeholder="1" style="width:60px;"></td>
+            <td><input class="rfq-notes" placeholder=""></td>
+            <td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-gray btn-sm" onclick="rfqAddRow()">+ إضافة صف</button>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="rfqSave()">حفظ</button>
+        <button class="btn btn-red" onclick="rfqPrint()">طباعة / PDF</button>
       </div>
     </div>
   </div>
-
-  <!-- ══ التاب ٤: الترسية والـ PO ══ -->
-  <div id="rfq-tab-4" style="display:none;">
-    <div class="card" style="border:2px solid var(--green);">
-      <div class="card-header" style="background:#F0FFF4;">
-        <h3 style="color:var(--green);">🏆 قرار الترسية وإصدار أمر الشراء</h3>
-      </div>
-      <div class="card-body">
-        <div style="background:#EBF8FA;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#0D7A8A;">
-          💡 بعد اختيار الفائز من خطوة المقارنة، ستظهر بياناته هنا جاهزة للتحويل إلى أمر شراء PO بدون إعادة إدخال
-        </div>
-        <div id="rfq-award-form" style="display:none;">
-          <div class="form-grid">
-            <div class="field"><label>الطلب المرتبط</label><input id="aw-rfq-title" readonly style="background:#f5f5f5;"></div>
-            <div class="field"><label>المورد الفائز</label><input id="aw-vendor" readonly style="background:#f5f5f5;color:var(--green);font-weight:700;"></div>
-            <div class="field"><label>إجمالي العرض (مع VAT)</label><input id="aw-total" readonly style="background:#f5f5f5;color:var(--primary);font-weight:700;"></div>
-            <div class="field"><label>مسوّغ الاختيار</label><input id="aw-reason" placeholder="مثال: الأقل سعراً والأكثر مطابقة للمواصفات"></div>
-          </div>
-          <div class="section-title">بنود أمر الشراء (مأخوذة من الكوتيشن)</div>
-          <div id="aw-items-preview" style="overflow-x:auto;"></div>
-          <div class="actions">
-            <button class="btn btn-green" onclick="rfqConvertToPO()" style="font-size:14px;padding:12px 24px;">
-              🚀 تحويل إلى أمر شراء (PO)
-            </button>
-            <button class="btn btn-gray" onclick="rfqClearAward()">إلغاء</button>
-          </div>
-        </div>
-        <div id="rfq-award-empty" style="text-align:center;padding:40px;color:#aaa;">
-          <div style="font-size:48px;margin-bottom:12px;">🎯</div>
-          <p>اذهب إلى خطوة <strong>مقارنة الأسعار</strong> واضغط "ترسية" على المورد الفائز</p>
-        </div>
-      </div>
-    </div>
-    <!-- سجل الترسيات -->
-    <div class="card">
-      <div class="card-header"><h3>سجل قرارات الترسية</h3></div>
-      <div class="card-body"><div id="aw-history-list">لا توجد ترسيات مسجّلة</div></div>
-    </div>
+  <div class="card">
+    <div class="card-header"><h3>الطلبات المحفوظة</h3></div>
+    <div class="card-body"><div class="saved-list" id="rfq-saved"></div></div>
   </div>
-
 </div>
 
 <!-- ══ DN ══ -->
@@ -815,6 +590,50 @@ function numToWords(n){
 </div>
 
 <!-- ══ مقارنة الأسعار ══ -->
+<div class="page" id="page-cmp">
+  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
+
+  <!-- معلومات المقارنة -->
+  <div class="card">
+    <div class="card-header"><h3>معلومات المقارنة</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
+        <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- الشركات -->
+  <div class="card">
+    <div class="card-header">
+      <h3>الشركات والبنود</h3>
+      <div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="cmpAddCompany()">+ إضافة شركة</button><button class="btn btn-gray btn-sm" onclick="cmpReset()">🔄 مقارنة جديدة</button></div>
+    </div>
+    <div class="card-body" id="cmp-companies-body">
+      <!-- تُضاف الشركات ديناميكياً -->
+    </div>
+  </div>
+
+  <!-- تصدير وحفظ -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="cmpSaveData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
+      حفظ المقارنة
+    </button>
+    <button class="btn btn-green" onclick="cmpExcel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+      تصدير Excel
+    </button>
+  </div>
+
+  <!-- المقارنات المحفوظة -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>المقارنات المحفوظة</h3></div>
+    <div class="card-body"><div class="saved-list" id="cmp-saved-list"></div></div>
+  </div>
+</div>
+
 <!-- ══ Petty Cash ══ -->
 <div class="page" id="page-pc">
   <div class="page-header"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div>
@@ -857,30 +676,9 @@ function numToWords(n){
 <div class="page" id="page-cmp">
   <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
 
-  <!-- كوتيشنات مرتبطة تلقائياً -->
-  <div class="card" style="border:2px solid #1DA9BD;">
-    <div class="card-header" style="background:#EBF8FA;">
-      <h3 style="color:#0D7A8A;">⚡ استيراد من الكوتيشنات الواردة</h3>
-      <span style="font-size:11px;color:var(--sub);">اختر طلب RFQ وستُملأ بيانات الشركات تلقائياً</span>
-    </div>
-    <div class="card-body">
-      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="field" style="flex:1;min-width:220px;margin:0;">
-          <label>اختر طلب RFQ</label>
-          <select id="cmp-import-rfq" style="width:100%;padding:10px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;">
-            <option value="">— اختر لاستيراد كوتيشناته —</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="cmpImportFromRFQ()" style="padding:10px 20px;">
-          ⚡ استيراد تلقائي
-        </button>
-        <button class="btn btn-gray" onclick="cmpReset()" style="padding:10px 16px;">
-          🔄 مسح وبداية جديدة
-        </button>
-      </div>
-      <div id="cmp-import-preview" style="margin-top:10px;"></div>
-    </div>
-  </div>
+  <!-- عنوان المقارنة -->
+  <div class="card">
+    <div class="card-header"><h3>معلومات المقارنة</h3></div>
     <div class="card-body">
       <div class="form-grid">
         <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
@@ -1117,8 +915,9 @@ function numToWords(n){
     </div>
     <div class="card-body" id="contracts-list"><div style="text-align:center;color:#aaa;padding:20px;">لا توجد عقود</div></div>
   </div>
+</div>
 
-  <!-- قسم المتوقع التعاقد معهم — داخل صفحة العقود فقط -->
+  <!-- قسم المتوقع التعاقد معهم -->
   <div class="card" style="margin-top:16px;">
     <div class="card-header">
       <h3>🔮 شركات متوقع التعاقد معهم</h3>
@@ -1224,28 +1023,6 @@ function numToWords(n){
 <!-- ══ لجنة فحص العروض ══ -->
 <div class="page" id="page-committee">
   <div class="page-header"><h1>لجنة فحص العروض</h1><p>إنشاء محاضر لجنة فحص العروض وتصديرها</p></div>
-
-  <!-- استيراد من الكوتيشنات -->
-  <div class="card" style="border:2px solid #1DA9BD;margin-bottom:16px;">
-    <div class="card-header" style="background:#EBF8FA;">
-      <h3 style="color:#0D7A8A;">⚡ استيراد العروض من الكوتيشنات</h3>
-      <span style="font-size:11px;color:var(--sub);">اختر طلب RFQ وستُضاف شركاته وعروضها للمحضر تلقائياً</span>
-    </div>
-    <div class="card-body">
-      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="field" style="flex:1;min-width:220px;margin:0;">
-          <label>اختر طلب RFQ</label>
-          <select id="cm-import-rfq" style="width:100%;padding:10px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;">
-            <option value="">— اختر لاستيراد عروضه —</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="cmImportFromRFQ()" style="padding:10px 20px;">
-          ⚡ استيراد للمحضر
-        </button>
-      </div>
-      <div id="cm-import-preview" style="margin-top:10px;font-size:12px;color:var(--sub);"></div>
-    </div>
-  </div>
 
   <!-- فورم إنشاء/تعديل محضر -->
   <div class="card" id="committee-form-card">
@@ -1650,8 +1427,6 @@ function nav(page){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   event.currentTarget.classList.add('active');
-  // استيراد تلقائي عند فتح الصفحات المرتبطة
-  if(page==='cmp'||page==='committee') setTimeout(cmpPopulateRFQSelect,50);
 }
 
 /* ── INDEXEDDB FOR PETTY CASH ── */
@@ -2696,766 +2471,108 @@ table{border-collapse:collapse;width:100%;}
   w.onload=()=>{w.focus();w.print();};
 }
 
-/* ══════════════ RFQ — دورة متكاملة ══════════════ */
+/* ══════════════ RFQ ══════════════ */
 let rfqRows=1;
 let rfqSaved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
-// قاعدة الكوتيشنات الواردة
-let qtSaved=JSON.parse(localStorage.getItem('qt_saved')||'[]');
-// سجل الترسيات
-let awSaved=JSON.parse(localStorage.getItem('aw_saved')||'[]');
-// الكوتيشن المختار للترسية
-let rfqPendingAward=null;
 
-/* ── نظام الـ Tabs ── */
-function rfqShowTab(n){
-  [1,2,3,4].forEach(i=>{
-    const tab=document.getElementById('rfq-tab-'+i);
-    const step=document.getElementById('rfq-step-'+i);
-    if(tab) tab.style.display=i===n?'block':'none';
-    if(step){
-      step.style.background=i===n?'#1DA9BD':'#EBF8FA';
-      step.style.color=i===n?'#fff':'#0D7A8A';
-    }
-  });
-  if(n===2){rfqPopulateLinks();renderQuotations();}
-  if(n===3){rfqPopulateCmpSelect();rfqBuildComparison();}
-  if(n===4){renderAwardHistory();}
-}
-
-/* ── طلبات RFQ ── */
 function rfqAddRow(){
   rfqRows++;
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" placeholder="اسم الصنف أو الخدمة"></td><td><input class="rfq-qty" placeholder="1" style="width:55px;"></td><td><input class="rfq-uom" placeholder="جهاز" style="width:65px;"></td><td><input class="rfq-spec" placeholder="المواصفات..."></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" placeholder="اسم الصنف"></td><td><input class="rfq-qty" placeholder="1" style="width:60px;"></td><td><input class="rfq-notes" placeholder=""></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
   document.getElementById('rfq-tbody').appendChild(tr);
 }
 function rfqDelRow(btn){btn.closest('tr').remove();}
 function rfqGetRows(){
   return Array.from(document.querySelectorAll('#rfq-tbody tr')).map((tr,i)=>({
-    num:i+1,
-    item:tr.querySelector('.rfq-item')?.value||'',
+    num:i+1,item:tr.querySelector('.rfq-item')?.value||'',
     qty:tr.querySelector('.rfq-qty')?.value||'',
-    uom:tr.querySelector('.rfq-uom')?.value||'',
-    spec:tr.querySelector('.rfq-spec')?.value||''
+    notes:tr.querySelector('.rfq-notes')?.value||''
   }));
 }
-async function rfqSave(){
+function rfqSave(){
   const co=document.getElementById('rfq-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
-  const num=document.getElementById('rfq-num').value.trim()||('RFQ-'+Date.now());
-  const data={
-    id:Date.now(),rfqNum:num,company:co,
-    dept:document.getElementById('rfq-dept').value.trim(),
-    date:document.getElementById('rfq-date').value,
-    notes:document.getElementById('rfq-notes').value,
-    rows:rfqGetRows(),
-    status:'open'
-  };
-  try{await sbInsert('procurement_rfq',{...data,rows:JSON.stringify(data.rows)});}catch(e){}
+  const data={id:Date.now(),company:co,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()};
   rfqSaved.unshift(data);
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
-  renderRfqSaved();
-  toast('✅ تم حفظ الطلب '+num);
+  renderRfqSaved();toast('تم الحفظ');
 }
 function renderRfqSaved(){
   var el=document.getElementById('rfq-saved');if(!el)return;
-  if(!rfqSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد طلبات محفوظة</div>';return;}
+  if(!rfqSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
   var html='';
   for(var i=0;i<rfqSaved.length;i++){
     var s=rfqSaved[i];
-    // عدد الكوتيشنات المرتبطة
-    var qtCount=qtSaved.filter(q=>String(q.rfqId)===String(s.id)).length;
-    var statusBadge=s.status==='awarded'
-      ? '<span style="background:#F0FFF4;color:#276749;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;">✅ مُرسى</span>'
-      : qtCount>0
-        ? '<span style="background:#EBF8FA;color:#1DA9BD;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;">📥 '+qtCount+' كوتيشن</span>'
-        : '<span style="background:#FFF8E1;color:#B7791F;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;">⏳ بانتظار العروض</span>';
-    html+='<div class="saved-item" style="border-right:3px solid #1DA9BD;">'+
-      '<div class="saved-item-info">'+
-        '<strong style="color:var(--navy);">'+(s.rfqNum||'RFQ')+'</strong> — <strong>'+(s.company||'')+'</strong>'+
-        ' '+statusBadge+
-        '<span style="color:var(--sub);font-size:11px;display:block;margin-top:2px;">'+(s.dept?s.dept+' | ':'')+' '+(s.date||'')+(s.rows&&s.rows.length?' | '+s.rows.length+' بند':'')+' </span>'+
-      '</div>'+
-      '<div class="saved-item-actions" style="flex-wrap:wrap;gap:4px;">'+
-        '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="rfqEdit('+i+')">✏️ تعديل</button>'+
-        '<button class="btn btn-primary btn-sm" onclick="rfqQuickAddQt('+i+')">📥 إضافة كوتيشن</button>'+
-        '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">🖨️ PDF</button>'+
-        '<button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;" onclick="rfqDel('+i+')">×</button>'+
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info"><strong>السادة / '+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+'</span></div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-primary btn-sm" onclick="rfqEdit('+i+')">تعديل</button>'+
+        '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">PDF</button>'+
+        '<button class="btn btn-gray btn-sm" onclick="rfqDel('+i+')">×</button>'+
       '</div></div>';
   }
   el.innerHTML=html;
 }
-function rfqQuickAddQt(i){
-  // انتقل للتاب ٢ وحدد الطلب تلقائياً
-  rfqShowTab(2);
-  setTimeout(()=>{
-    rfqPopulateLinks();
-    const sel=document.getElementById('qt-rfq-link');
-    if(sel) sel.value=String(rfqSaved[i].id);
-  },100);
-  toast('اختر المورد وأدخل بنود الكوتيشن');
-}
 function rfqEdit(i){
   const s=rfqSaved[i];if(!s)return;
-  document.getElementById('rfq-num').value=s.rfqNum||'';
   document.getElementById('rfq-co').value=s.company||'';
   document.getElementById('rfq-date').value=s.date||'';
-  document.getElementById('rfq-dept').value=s.dept||'';
   document.getElementById('rfq-notes').value=s.notes||'';
+  // امسح الصفوف الحالية وأعد بناءها
   const tbody=document.getElementById('rfq-tbody');
   if(tbody){
-    tbody.innerHTML='';rfqRows=0;
+    tbody.innerHTML='';
+    rfqRows=0;
     (s.rows||[]).forEach(r=>{
       rfqRows++;
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:55px;"></td><td><input class="rfq-uom" value="${r.uom||''}" style="width:65px;"></td><td><input class="rfq-spec" value="${r.spec||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+      tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:60px;"></td><td><input class="rfq-notes" value="${r.notes||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
       tbody.appendChild(tr);
     });
   }
+  // احذفه من المحفوظات ليُعاد حفظه بعد التعديل
   rfqSaved.splice(i,1);
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
   renderRfqSaved();
   document.getElementById('rfq-co').scrollIntoView({behavior:'smooth'});
-  toast('وضع التعديل — عدّل ثم اضغط حفظ');
+  toast('تم تحميل RFQ للتعديل ✅');
 }
-function rfqDel(i){
-  if(!confirm('حذف هذا الطلب؟'))return;
-  rfqSaved.splice(i,1);
-  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
-  renderRfqSaved();
-  toast('تم الحذف');
-}
-function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,rfqNum:document.getElementById('rfq-num').value,date:document.getElementById('rfq-date').value,dept:document.getElementById('rfq-dept').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
+function rfqDel(i){rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();}
+function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
 function rfqPrintById(i){const s=rfqSaved[i];if(s)rfqPrintData(s);}
 function rfqPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
-  const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.uom||''}</td><td style="border:1px solid #bbb;padding:5px;">${r.spec||''}</td></tr>`).join('');
+  const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
+  const SIG=SIG_URL;
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
 <div class="page"><img class="bg" src="${FORM_BG}">
 <div class="content">
-<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:2px;">Request For Quotation (RFQ)</div>
-<div style="font-size:12px;color:#244062;margin-bottom:12px;">خطاب طلب عرض سعر — ${d.rfqNum||''}</div>
+<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div>
+<div style="font-size:12px;color:#244062;margin-bottom:12px;">خطاب طلب عرض سعر</div>
 <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;">
-  <div><strong>السادة / ${d.company||'___'}</strong>${d.dept?'<br><span style="color:#64748B;">الإدارة الطالبة: '+d.dept+'</span>':''}</div>
+  <div><strong>السادة / ${d.company||'___'}</strong></div>
   <div>التاريخ: ${ds}</div>
 </div>
 <p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p>
 <table style="margin-bottom:10px;">
-  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:6%;">م</th><th style="border:1px solid #bbb;padding:6px;">الصنف / الخدمة</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">الوحدة</th><th style="border:1px solid #bbb;padding:6px;width:28%;">المواصفات</th></tr></thead>
+  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">الرقم</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 <table style="margin-bottom:10px;">
   <tr><td class="blue" colspan="2">Terms & Conditions / الشروط والأحكام</td></tr>
   <tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr>
   <tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr>
+  <tr><td class="lbl">الضمان</td><td class="val">-</td></tr>
   <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
 </table>
+
 </div></div></body></html>`;
   const w=window.open('','_blank');
-  if(!w){toast('يرجى السماح بالنوافذ المنبثقة',true);return;}
-  w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
-}
-
-/* ── الكوتيشنات الواردة ── */
-function rfqPopulateLinks(){
-  ['qt-rfq-link','qt-filter-rfq'].forEach(selId=>{
-    const sel=document.getElementById(selId);if(!sel)return;
-    const cur=sel.value;
-    sel.innerHTML='<option value="">'+(selId==='qt-filter-rfq'?'الكل':'— اختر الطلب —')+'</option>';
-    rfqSaved.forEach(r=>{sel.innerHTML+=`<option value="${r.id}">${r.rfqNum||r.id} — ${r.company}</option>`;});
-    sel.value=cur;
-  });
-}
-/* ── PDF Extraction via Claude AI ── */
-let qtCurrentPDFb64=null;
-let qtCurrentPDFname=null;
-
-function qtHandleDrop(e){
-  e.preventDefault();
-  document.getElementById('qt-pdf-zone').style.background='#F0FAFC';
-  const f=e.dataTransfer.files[0];
-  if(f&&f.type==='application/pdf') qtExtractFromPDF(f);
-  else toast('يرجى رفع ملف PDF فقط',true);
-}
-
-async function qtExtractFromPDF(file){
-  if(!file) return;
-  // التحقق من نوع الملف
-  if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){
-    toast('يرجى رفع ملف PDF فقط',true); return;
-  }
-  // التحقق من حجم الملف (max 20MB)
-  if(file.size>20*1024*1024){
-    toast('حجم الملف كبير جداً — الحد الأقصى 20MB',true); return;
-  }
-  qtCurrentPDFname=file.name;
-
-  const statusEl=document.getElementById('qt-ai-status');
-  const statusText=document.getElementById('qt-ai-status-text');
-  const progressEl=document.getElementById('qt-ai-progress');
-  statusEl.style.display='block';
-  statusEl.style.background='#EBF8FA';
-  statusEl.style.color='#0D7A8A';
-  statusText.textContent='⏳ جاري تحضير الملف...';
-  progressEl.style.width='10%';
-
-  try{
-    // تحويل PDF إلى base64
-    const b64=await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=e=>res(e.target.result.split(',')[1]);
-      r.onerror=()=>rej(new Error('فشل قراءة الملف'));
-      r.readAsDataURL(file);
-    });
-    qtCurrentPDFb64=b64;
-    progressEl.style.width='30%';
-    statusText.textContent='🔍 Claude يقرأ بيانات الكوتيشن ويطابقها مع طلباتك...';
-
-    // بناء قائمة RFQs للمطابقة الذكية
-    const rfqList=rfqSaved.map(r=>({
-      id:String(r.id),
-      num:r.rfqNum||'',
-      company:r.company||'',
-      items:(r.rows||[]).map(row=>row.item).join('، ')
-    }));
-    const rfqJson=JSON.stringify(rfqList);
-
-    const prompt=`أنت مساعد مشتريات. استخرج بيانات عرض السعر من هذا PDF وأرجع JSON فقط بدون أي نص إضافي أو markdown.
-
-طلبات الشراء الموجودة في النظام:
-${rfqJson}
-
-أرجع هذا الشكل بالضبط:
-{
-  "vendor_name": "اسم الشركة المورّدة",
-  "vendor_vat": "الرقم الضريبي",
-  "vendor_address": "العنوان",
-  "vendor_phone": "رقم الهاتف",
-  "vendor_email": "الإيميل",
-  "quote_ref": "رقم العرض",
-  "quote_date": "YYYY-MM-DD",
-  "validity": "صلاحية العرض",
-  "delivery": "مدة التسليم",
-  "payment": "شروط الدفع",
-  "notes": "ملاحظات",
-  "items": [{"item": "اسم الصنف", "qty": 1, "uom": "الوحدة", "price": 0, "note": ""}],
-  "rfq_match": {
-    "rfq_id": "id الطلب المطابق أو null",
-    "rfq_num": "رقم الطلب أو null",
-    "confidence": 0,
-    "reason": "سبب المطابقة بالعربي"
-  }
-}
-
-قواعد المطابقة مع RFQ:
-- قارن أصناف الكوتيشن مع أصناف كل طلب RFQ
-- إذا تطابق 60% أو أكثر من الأصناف → confidence عالي (80-100)
-- إذا تطابق جزئي → confidence متوسط (40-79)
-- إذا لا يوجد تطابق → rfq_id=null و confidence=0
-- لا تربط بناء على اسم الشركة، بل على محتوى الأصناف
-
-إذا لم تجد قيمة: "" للنصوص، 0 للأرقام.`;
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:2000,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-            {type:'text',text:prompt}
-          ]
-        }]
-      })
-    });
-
-    progressEl.style.width='75%';
-
-    if(!resp.ok){
-      const errData=await resp.json().catch(()=>({}));
-      throw new Error(errData.error?.message||`API Error ${resp.status}`);
-    }
-
-    const data=await resp.json();
-    let raw=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('').trim();
-    // تنظيف JSON من أي markdown
-    raw=raw.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
-    // استخراج JSON إذا كان محاطاً بنص
-    const jsonMatch=raw.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('لم يُرجع الذكاء الاصطناعي JSON صحيح');
-    const parsed=JSON.parse(jsonMatch[0]);
-
-    progressEl.style.width='100%';
-    statusEl.style.background='#F0FFF4';
-    statusEl.style.color='#276749';
-
-    // ملء الفورم
-    qtFillForm(parsed);
-
-    // الربط الذكي بالـ RFQ
-    const match=parsed.rfq_match;
-    if(match&&match.rfq_id&&match.confidence>=60){
-      const sel=document.getElementById('qt-rfq-link');
-      if(sel){
-        sel.value=match.rfq_id;
-        // إذا ما لقاه في الـ select أضفه
-        if(!sel.value) sel.value=match.rfq_id;
-      }
-      statusText.textContent=`✅ استُخرجت البيانات | 🔗 ربط تلقائي بـ ${match.rfq_num||'الطلب'} (تطابق ${match.confidence}%) — ${match.reason}`;
-      // إظهار بانر المطابقة
-      qtShowMatchBanner(match,parsed);
-    } else if(match&&match.confidence>0){
-      statusText.textContent=`✅ استُخرجت البيانات | ⚠️ تطابق جزئي مع ${match.rfq_num||'طلب'} (${match.confidence}%) — اختر الطلب يدوياً`;
-    } else {
-      statusText.textContent='✅ تم استخراج البيانات — اختر طلب RFQ يدوياً';
-    }
-
-    // إظهار الملف المرفق
-    document.getElementById('qt-pdf-name').textContent=file.name;
-    document.getElementById('qt-pdf-attached').style.display='flex';
-    toast('✅ قرأ Claude الكوتيشن — راجع البيانات وعدّل إذا احتجت');
-
-  }catch(err){
-    progressEl.style.width='100%';
-    statusEl.style.background='#FFF5F5';
-    statusEl.style.color='#C53030';
-    console.error('PDF Extract Error:',err);
-    // رسالة خطأ واضحة حسب نوع الخطأ
-    if(err.message.includes('Failed to fetch')||err.message.includes('NetworkError')){
-      statusText.textContent='⚠️ تعذّر الاتصال بالخادم — تحقق من الاتصال بالإنترنت أو جرب مرة أخرى';
-    } else if(err.message.includes('API Error 401')){
-      statusText.textContent='⚠️ مشكلة في المصادقة — تواصل مع الدعم';
-    } else if(err.message.includes('API Error 429')){
-      statusText.textContent='⚠️ تجاوزت الحد المسموح — انتظر دقيقة وأعد المحاولة';
-    } else {
-      statusText.textContent='⚠️ تعذّر الاستخراج التلقائي — يمكنك الإدخال يدوياً';
-    }
-    toast('تعذّر قراءة الـ PDF — يمكنك إدخال البيانات يدوياً',true);
-  }
-}
-
-function qtShowMatchBanner(match,parsed){
-  // إزالة بانر سابق إن وجد
-  const old=document.getElementById('qt-match-banner');
-  if(old)old.remove();
-  const rfq=rfqSaved.find(r=>String(r.id)===String(match.rfq_id));
-  if(!rfq)return;
-  const banner=document.createElement('div');
-  banner.id='qt-match-banner';
-  banner.style.cssText='background:linear-gradient(135deg,#F0FFF4,#E6FFED);border:1.5px solid #276749;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;';
-  banner.innerHTML=`
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div style="font-size:28px;">🎯</div>
-      <div>
-        <div style="font-weight:700;color:#276749;font-size:13px;">تم الربط التلقائي بطلب RFQ</div>
-        <div style="font-size:12px;color:#1A2B4A;margin-top:2px;"><strong>${rfq.rfqNum||'RFQ'}</strong> — ${rfq.company}</div>
-        <div style="font-size:11px;color:#64748B;margin-top:2px;">${match.reason} | نسبة التطابق: <strong style="color:#276749;">${match.confidence}%</strong></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:6px;">
-      <button onclick="this.closest('#qt-match-banner').remove()" style="background:#276749;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer;">✅ تأكيد</button>
-      <button onclick="document.getElementById('qt-rfq-link').value='';this.closest('#qt-match-banner').remove()" style="background:#FEE2E2;color:#C53030;border:none;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer;">تغيير</button>
-    </div>`;
-  // أضفه فوق الفورم
-  const statusEl=document.getElementById('qt-ai-status');
-  statusEl.parentNode.insertBefore(banner,statusEl.nextSibling);
-}
-
-function qtFillForm(d){
-  if(d.vendor_name) document.getElementById('qt-vendor').value=d.vendor_name;
-  if(d.vendor_vat)  document.getElementById('qt-vendor-vat').value=d.vendor_vat;
-  if(d.vendor_address) document.getElementById('qt-vendor-addr').value=d.vendor_address;
-  if(d.vendor_phone)   document.getElementById('qt-vendor-phone').value=d.vendor_phone;
-  if(d.vendor_email)   document.getElementById('qt-vendor-email').value=d.vendor_email;
-  if(d.quote_ref)  document.getElementById('qt-ref').value=d.quote_ref;
-  if(d.quote_date) document.getElementById('qt-date').value=d.quote_date;
-  if(d.validity)   document.getElementById('qt-validity').value=d.validity;
-  if(d.delivery)   document.getElementById('qt-delivery').value=d.delivery;
-  if(d.payment)    document.getElementById('qt-payment').value=d.payment;
-  if(d.notes)      document.getElementById('qt-notes').value=d.notes;
-  // ملء البنود
-  if(d.items&&d.items.length){
-    const tbody=document.getElementById('qt-tbody');
-    tbody.innerHTML='';
-    d.items.forEach((item,i)=>{
-      const tr=document.createElement('tr');
-      const qty=parseFloat(item.qty)||1;
-      const price=parseFloat(item.price)||0;
-      const total=(qty*price).toFixed(2);
-      tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${total}</td><td><input class="qt-note" value="${item.note||''}" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-      tbody.appendChild(tr);
-    });
-    qtCalcTotal();
-  }
-}
-
-function qtRemovePDF(){
-  qtCurrentPDFb64=null;qtCurrentPDFname=null;
-  document.getElementById('qt-pdf-attached').style.display='none';
-  document.getElementById('qt-ai-status').style.display='none';
-  document.getElementById('qt-pdf-input').value='';
-}
-
-function qtResetForm(){
-  qtRemovePDF();
-  ['qt-vendor','qt-vendor-vat','qt-vendor-addr','qt-vendor-phone','qt-vendor-email','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('qt-tbody').innerHTML='<tr><td style="text-align:center;color:var(--sub);">1</td><td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td></tr>';
-  qtCalcTotal();
-  document.getElementById('qt-ai-status').style.display='none';
-  toast('تم مسح الفورم');
-}
-
-function qtAddRow(){
-  const tbody=document.getElementById('qt-tbody');
-  const n=tbody.querySelectorAll('tr').length+1;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${n}</td><td><input class="qt-item" placeholder="اسم الصنف أو الخدمة" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" placeholder="0.00" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><input class="qt-note" placeholder="ملاحظة" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-  tbody.appendChild(tr);
-}
-function qtDelRow(btn){btn.closest('tr').remove();qtCalcTotal();}
-function qtCalcRow(inp){
-  const tr=inp.closest('tr');
-  const qty=parseFloat(tr.querySelector('.qt-qty')?.value)||0;
-  const price=parseFloat(tr.querySelector('.qt-price')?.value)||0;
-  const tot=qty*price;
-  tr.querySelector('.qt-total').textContent=tot.toFixed(2);
-  qtCalcTotal();
-}
-function qtCalcTotal(){
-  let sub=0;
-  document.querySelectorAll('#qt-tbody .qt-total').forEach(td=>sub+=parseFloat(td.textContent)||0);
-  const tax=sub*0.15;const tot=sub+tax;
-  const s=document.getElementById('qt-sub');const tx=document.getElementById('qt-tax');const t=document.getElementById('qt-tot');
-  if(s)s.textContent=sub.toFixed(2);
-  if(tx)tx.textContent=tax.toFixed(2);
-  if(t)t.textContent=tot.toFixed(2);
-}
-function qtGetRows(){
-  return Array.from(document.querySelectorAll('#qt-tbody tr')).map((tr,i)=>{
-    const qty=parseFloat(tr.querySelector('.qt-qty')?.value)||0;
-    const price=parseFloat(tr.querySelector('.qt-price')?.value)||0;
-    return{num:i+1,item:tr.querySelector('.qt-item')?.value||'',qty,uom:tr.querySelector('.qt-uom')?.value||'',price,total:qty*price,note:tr.querySelector('.qt-note')?.value||''};
-  });
-}
-function qtSave(){
-  const rfqId=document.getElementById('qt-rfq-link').value;
-  const vendor=document.getElementById('qt-vendor').value.trim();
-  if(!rfqId){toast('اربط الكوتيشن بطلب RFQ',true);return;}
-  if(!vendor){toast('أدخل اسم المورد',true);return;}
-  const rows=qtGetRows();
-  const sub=rows.reduce((s,r)=>s+r.total,0);
-  const data={
-    id:Date.now(),rfqId:rfqId,vendor,
-    vendorVat:document.getElementById('qt-vendor-vat').value,
-    vendorAddr:document.getElementById('qt-vendor-addr').value,
-    vendorPhone:document.getElementById('qt-vendor-phone').value,
-    vendorEmail:document.getElementById('qt-vendor-email').value,
-    date:document.getElementById('qt-date').value,
-    ref:document.getElementById('qt-ref').value,
-    validity:document.getElementById('qt-validity').value,
-    delivery:document.getElementById('qt-delivery').value,
-    payment:document.getElementById('qt-payment').value,
-    notes:document.getElementById('qt-notes').value,
-    pdfName:qtCurrentPDFname||null,
-    pdfb64:qtCurrentPDFb64||null,
-    rows,subtotal:sub,vat:sub*0.15,total:sub*1.15
-  };
-  autoAddSupplier(vendor);
-  qtSaved.unshift(data);
-  localStorage.setItem('qt_saved',JSON.stringify(qtSaved));
-  renderQuotations();renderRfqSaved();
-  toast('✅ تم حفظ الكوتيشن — '+vendor);
-  qtResetForm();
-  document.getElementById('qt-rfq-link').value=rfqId;
-}
-function renderQuotations(){
-  const el=document.getElementById('qt-list');if(!el)return;
-  const filterRfq=document.getElementById('qt-filter-rfq')?.value||'';
-  const filtered=filterRfq?qtSaved.filter(q=>String(q.rfqId)===filterRfq):qtSaved;
-  if(!filtered.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد كوتيشنات مسجّلة</div>';return;}
-  // تجميع حسب الطلب
-  const groups={};
-  filtered.forEach(q=>{
-    const rfq=rfqSaved.find(r=>String(r.id)===String(q.rfqId));
-    const key=q.rfqId;
-    if(!groups[key])groups[key]={rfq,quotes:[]};
-    groups[key].quotes.push(q);
-  });
-  let html='';
-  Object.values(groups).forEach(g=>{
-    const rfqTitle=g.rfq?`${g.rfq.rfqNum||'RFQ'} — ${g.rfq.company}`:'طلب غير موجود';
-    html+=`<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:700;color:var(--navy);background:#F0F4F8;padding:8px 12px;border-radius:8px;margin-bottom:8px;">📋 ${rfqTitle} — ${g.quotes.length} عرض</div>`;
-    g.quotes.forEach((q,qi)=>{
-      const idx=qtSaved.indexOf(q);
-      html+=`<div class="saved-item" style="border-right:3px solid #1DA9BD;">
-        <div class="saved-item-info">
-          <strong>${q.vendor}</strong> <span style="font-size:10px;color:var(--sub);">${q.ref||''} | ${q.date||''}</span>
-          <span style="font-size:12px;color:var(--primary);font-weight:700;display:block;">${q.total.toLocaleString('ar-SA')} ر.س</span>
-          <span style="font-size:10px;color:var(--sub);">صلاحية: ${q.validity||'—'} | تسليم: ${q.delivery||'—'} | دفع: ${q.payment||'—'}</span>
-        </div>
-        <div class="saved-item-actions">
-          <button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #C3D8F5;" onclick="qtEdit(${idx})">✏️ تعديل</button>
-          <button class="btn btn-sm btn-gray" onclick="qtViewDetails(${idx})">🔍 تفاصيل</button>
-          <button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;" onclick="qtDel(${idx})">×</button>
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-  });
-  el.innerHTML=html;
-}
-function qtEdit(idx){
-  const q=qtSaved[idx];if(!q)return;
-  // الانتقال لتاب الكوتيشنات
-  rfqShowTab(2);
-  setTimeout(()=>{
-    rfqPopulateLinks();
-    // ملء بيانات المورد
-    ['qt-rfq-link','qt-vendor','qt-vendor-vat','qt-vendor-addr','qt-vendor-phone','qt-vendor-email','qt-date','qt-ref','qt-validity','qt-delivery','qt-payment','qt-notes'].forEach(id=>{
-      const el=document.getElementById(id);if(!el)return;
-      if(id==='qt-rfq-link') el.value=String(q.rfqId||'');
-      else if(id==='qt-vendor') el.value=q.vendor||'';
-      else if(id==='qt-vendor-vat') el.value=q.vendorVat||'';
-      else if(id==='qt-vendor-addr') el.value=q.vendorAddr||'';
-      else if(id==='qt-vendor-phone') el.value=q.vendorPhone||'';
-      else if(id==='qt-vendor-email') el.value=q.vendorEmail||'';
-      else if(id==='qt-date') el.value=q.date||'';
-      else if(id==='qt-ref') el.value=q.ref||'';
-      else if(id==='qt-validity') el.value=q.validity||'';
-      else if(id==='qt-delivery') el.value=q.delivery||'';
-      else if(id==='qt-payment') el.value=q.payment||'';
-      else if(id==='qt-notes') el.value=q.notes||'';
-    });
-    // ملء البنود
-    const tbody=document.getElementById('qt-tbody');
-    if(tbody&&q.rows&&q.rows.length){
-      tbody.innerHTML='';
-      q.rows.forEach((item,i)=>{
-        const qty=parseFloat(item.qty)||1;
-        const price=parseFloat(item.price)||0;
-        const total=(qty*price).toFixed(2);
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${total}</td><td><input class="qt-note" value="${item.note||''}" style="width:100%;"></td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-        tbody.appendChild(tr);
-      });
-      qtCalcTotal();
-    }
-    // استعادة PDF إن وجد
-    if(q.pdfb64){
-      qtCurrentPDFb64=q.pdfb64;qtCurrentPDFname=q.pdfName||'quotation.pdf';
-      document.getElementById('qt-pdf-name').textContent=qtCurrentPDFname;
-      document.getElementById('qt-pdf-attached').style.display='flex';
-    }
-    // حذف القديم ليُعاد حفظه
-    qtSaved.splice(idx,1);
-    localStorage.setItem('qt_saved',JSON.stringify(qtSaved));
-    renderQuotations();renderRfqSaved();
-    // إظهار بانر التعديل
-    const old=document.getElementById('qt-edit-banner');if(old)old.remove();
-    const banner=document.createElement('div');
-    banner.id='qt-edit-banner';
-    banner.style.cssText='background:#FFF8E1;border:1.5px solid #B7791F;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;';
-    banner.innerHTML=`<span style="color:#B7791F;font-weight:700;font-size:13px;">✏️ وضع التعديل — عدّل الأسعار أو البيانات ثم اضغط حفظ</span><button onclick="document.getElementById('qt-edit-banner').remove()" style="background:none;border:none;color:#B7791F;cursor:pointer;font-size:18px;">×</button>`;
-    const statusEl=document.getElementById('qt-ai-status');
-    if(statusEl)statusEl.parentNode.insertBefore(banner,statusEl);
-    document.getElementById('qt-vendor')?.scrollIntoView({behavior:'smooth',block:'center'});
-    toast('✏️ وضع التعديل — عدّل ثم اضغط حفظ');
-  },80);
-}
-function qtViewDetails(idx){
-  const q=qtSaved[idx];if(!q)return;
-  const rows=(q.rows||[]).map(r=>`<tr><td style="border:1px solid #eee;padding:6px;">${r.num}</td><td style="border:1px solid #eee;padding:6px;">${r.item}</td><td style="border:1px solid #eee;padding:6px;text-align:center;">${r.qty}</td><td style="border:1px solid #eee;padding:6px;">${r.uom||''}</td><td style="border:1px solid #eee;padding:6px;text-align:left;">${r.price.toFixed(2)}</td><td style="border:1px solid #eee;padding:6px;text-align:left;font-weight:700;color:#1DA9BD;">${r.total.toFixed(2)}</td><td style="border:1px solid #eee;padding:6px;">${r.note||''}</td></tr>`).join('');
-  const pdfBtn=q.pdfb64?`<div style="margin-top:12px;"><a href="data:application/pdf;base64,${q.pdfb64}" download="${q.pdfName||'quotation.pdf'}" style="display:inline-flex;align-items:center;gap:6px;background:#244062;color:#fff;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:12px;">📥 تحميل PDF الأصلي — ${q.pdfName||''}</a></div>`:'';
-  const w=window.open('','_blank','width=850,height=680');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;direction:rtl;padding:24px;font-size:12px;color:#1A202C;}table{border-collapse:collapse;width:100%;}th{background:#244062;color:#fff;padding:8px 10px;text-align:right;}h2{color:#244062;margin-bottom:4px;}h3{color:#1DA9BD;margin:16px 0 8px;font-size:13px;}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}.info-item{background:#F8FAFB;border-radius:6px;padding:8px 12px;font-size:11px;}.info-label{color:#64748B;margin-bottom:2px;}.info-val{font-weight:700;}</style></head><body>
-  <h2>كوتيشن — ${q.vendor}</h2>
-  <div style="color:#64748B;font-size:11px;margin-bottom:16px;">المرجع: ${q.ref||'—'} | التاريخ: ${q.date||'—'}</div>
-  <h3>بيانات المورد</h3>
-  <div class="info-grid">
-    <div class="info-item"><div class="info-label">الشركة</div><div class="info-val">${q.vendor}</div></div>
-    <div class="info-item"><div class="info-label">الرقم الضريبي</div><div class="info-val">${q.vendorVat||'—'}</div></div>
-    <div class="info-item"><div class="info-label">العنوان</div><div class="info-val">${q.vendorAddr||'—'}</div></div>
-    <div class="info-item"><div class="info-label">الهاتف</div><div class="info-val">${q.vendorPhone||'—'}</div></div>
-    <div class="info-item"><div class="info-label">الإيميل</div><div class="info-val">${q.vendorEmail||'—'}</div></div>
-    <div class="info-item"><div class="info-label">صلاحية العرض</div><div class="info-val">${q.validity||'—'}</div></div>
-    <div class="info-item"><div class="info-label">مدة التسليم</div><div class="info-val">${q.delivery||'—'}</div></div>
-    <div class="info-item"><div class="info-label">شروط الدفع</div><div class="info-val">${q.payment||'—'}</div></div>
-  </div>
-  <h3>البنود</h3>
-  <table><thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>
-  <div style="margin-top:12px;text-align:left;background:#F0F9FF;padding:12px;border-radius:8px;">
-    <div>المجموع: <strong>${q.subtotal.toFixed(2)}</strong> ر.س</div>
-    <div>VAT 15%: <strong>${q.vat.toFixed(2)}</strong> ر.س</div>
-    <div style="font-size:16px;font-weight:700;color:#1DA9BD;">الإجمالي: <strong>${q.total.toFixed(2)}</strong> ر.س</div>
-  </div>
-  ${q.notes?`<div style="margin-top:10px;font-size:11px;color:#64748B;">ملاحظات: ${q.notes}</div>`:''}
-  ${pdfBtn}
-  </body></html>`);
+  if(!w){toast('يرجى السماح بالنوافذ المنبثقة في المتصفح',true);return;}
+  w.document.write(html);
   w.document.close();
-}
-function qtDel(idx){
-  if(!confirm('حذف هذا الكوتيشن؟'))return;
-  qtSaved.splice(idx,1);
-  localStorage.setItem('qt_saved',JSON.stringify(qtSaved));
-  renderQuotations();renderRfqSaved();toast('تم الحذف');
-}
-
-/* ── مقارنة الأسعار ── */
-function rfqPopulateCmpSelect(){
-  const sel=document.getElementById('cmp-rfq-select');if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML='<option value="">— اختر الطلب —</option>';
-  // فقط الطلبات التي لها كوتيشنات
-  rfqSaved.forEach(r=>{
-    const count=qtSaved.filter(q=>String(q.rfqId)===String(r.id)).length;
-    if(count>0) sel.innerHTML+=`<option value="${r.id}">${r.rfqNum||r.id} — ${r.company} (${count} عروض)</option>`;
-  });
-  if(cur) sel.value=cur;
-}
-function rfqBuildComparison(){
-  const rfqId=document.getElementById('cmp-rfq-select').value;
-  const el=document.getElementById('rfq-cmp-result');
-  if(!rfqId){el.innerHTML='';return;}
-  const rfq=rfqSaved.find(r=>String(r.id)===rfqId);
-  const quotes=qtSaved.filter(q=>String(q.rfqId)===rfqId);
-  if(!quotes.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد كوتيشنات لهذا الطلب — أضفها من خطوة ٢</div>';return;}
-  // إيجاد أقل سعر
-  const minTotal=Math.min(...quotes.map(q=>q.total));
-  // KPI cards
-  let html=`<div class="kpi-grid" style="margin-bottom:16px;">
-    <div class="kpi" style="border-right:4px solid var(--primary);"><div class="kpi-label">عدد العروض</div><div class="kpi-val">${quotes.length}</div><div class="kpi-sub">موردين</div></div>
-    <div class="kpi" style="border-right:4px solid var(--green);"><div class="kpi-label">أقل سعر</div><div class="kpi-val" style="color:var(--green);">${minTotal.toLocaleString('ar-SA',{maximumFractionDigits:0})}</div><div class="kpi-sub">ريال شامل VAT</div></div>
-    <div class="kpi" style="border-right:4px solid var(--red);"><div class="kpi-label">أعلى سعر</div><div class="kpi-val" style="color:var(--red);">${Math.max(...quotes.map(q=>q.total)).toLocaleString('ar-SA',{maximumFractionDigits:0})}</div><div class="kpi-sub">ريال شامل VAT</div></div>
-    <div class="kpi" style="border-right:4px solid var(--purple);"><div class="kpi-label">فرق التوفير</div><div class="kpi-val" style="color:var(--purple);">${(Math.max(...quotes.map(q=>q.total))-minTotal).toLocaleString('ar-SA',{maximumFractionDigits:0})}</div><div class="kpi-sub">ريال</div></div>
-  </div>`;
-  // جدول المقارنة
-  html+=`<div style="overflow-x:auto;"><table class="tbl"><thead><tr>
-    <th>المورد</th><th>تاريخ العرض</th><th>صلاحية</th><th>مدة التسليم</th><th>شروط الدفع</th>
-    <th>المجموع (قبل VAT)</th><th>VAT 15%</th><th style="background:#1A2B4A;">الإجمالي (مع VAT)</th><th>قرار</th>
-  </tr></thead><tbody>`;
-  // ترتيب من الأقل للأعلى
-  const sorted=[...quotes].sort((a,b)=>a.total-b.total);
-  sorted.forEach((q,i)=>{
-    const isMin=q.total===minTotal;
-    const pctDiff=((q.total-minTotal)/minTotal*100).toFixed(1);
-    const rowBg=isMin?'background:#F0FFF4;':'';
-    html+=`<tr style="${rowBg}">
-      <td><strong>${q.vendor}</strong>${isMin?'<span style="font-size:10px;background:#276749;color:#fff;border-radius:8px;padding:1px 6px;margin-right:4px;">🏆 الأقل</span>':''}</td>
-      <td style="color:var(--sub);">${q.date||'—'}</td>
-      <td style="color:var(--sub);">${q.validity||'—'}</td>
-      <td style="color:var(--sub);">${q.delivery||'—'}</td>
-      <td style="color:var(--sub);">${q.payment||'—'}</td>
-      <td style="text-align:left;">${q.subtotal.toLocaleString('ar-SA',{maximumFractionDigits:2})} ر.س</td>
-      <td style="text-align:left;">${q.vat.toLocaleString('ar-SA',{maximumFractionDigits:2})} ر.س</td>
-      <td style="text-align:left;font-weight:900;font-size:14px;color:${isMin?'#276749':'#C53030'};">${q.total.toLocaleString('ar-SA',{maximumFractionDigits:2})} ر.س${!isMin?'<span style="font-size:10px;color:#64748B;display:block;">+'+pctDiff+'%</span>':''}</td>
-      <td><button class="btn btn-green btn-sm" onclick="rfqSelectWinner('${q.id}','${rfqId}')" ${q.id&&awSaved.find(a=>a.qtId===String(q.id))?'disabled style="opacity:.5;"':''}>🏆 ترسية</button></td>
-    </tr>`;
-  });
-  html+='</tbody></table></div>';
-  // مقارنة بنود تفصيلية
-  if(rfq&&rfq.rows&&rfq.rows.length){
-    html+=`<div class="card" style="margin-top:16px;"><div class="card-header"><h3>مقارنة البنود تفصيلياً</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>الصنف</th><th>الكمية</th>`;
-    sorted.forEach(q=>{const isMin2=q.total===minTotal;html+=`<th style="${isMin2?'background:#276749;':'background:#244062;'}color:#fff;">${q.vendor}${isMin2?' 🏆':''}</th>`;});
-    html+=`</tr></thead><tbody>`;
-    rfq.rows.forEach(item=>{
-      html+=`<tr><td><strong>${item.item}</strong></td><td style="text-align:center;">${item.qty}</td>`;
-      sorted.forEach(q=>{
-        const qRow=q.rows.find(r=>r.item.includes(item.item.substring(0,6)));
-        const prices=sorted.map(qq=>{const r=qq.rows.find(r2=>r2.item.includes(item.item.substring(0,6)));return r?r.price:null;}).filter(p=>p!==null);
-        const minP=prices.length?Math.min(...prices):null;
-        const price=qRow?qRow.price:null;
-        const isMinP=price!==null&&price===minP;
-        html+=`<td style="text-align:left;${isMinP?'color:#276749;font-weight:700;background:#F0FFF4;':''}">${price!==null?price.toFixed(2)+' ر.س':'—'}</td>`;
-      });
-      html+='</tr>';
-    });
-    html+='</tbody></table></div></div>';
-  }
-  el.innerHTML=html;
-}
-
-/* ── الترسية ── */
-function rfqSelectWinner(qtId,rfqId){
-  const q=qtSaved.find(x=>String(x.id)===String(qtId));
-  const rfq=rfqSaved.find(x=>String(x.id)===String(rfqId));
-  if(!q||!rfq){toast('خطأ في البيانات',true);return;}
-  rfqPendingAward={q,rfq};
-  rfqShowTab(4);
-  document.getElementById('rfq-award-form').style.display='block';
-  document.getElementById('rfq-award-empty').style.display='none';
-  document.getElementById('aw-rfq-title').value=`${rfq.rfqNum||'RFQ'} — ${rfq.company}`;
-  document.getElementById('aw-vendor').value=q.vendor;
-  document.getElementById('aw-total').value=q.total.toLocaleString('ar-SA',{maximumFractionDigits:2})+' ر.س';
-  // معاينة البنود
-  const rows=(q.rows||[]).map(r=>`<tr><td style="border:1px solid #eee;padding:6px;">${r.num}</td><td style="border:1px solid #eee;padding:6px;font-weight:700;">${r.item}</td><td style="border:1px solid #eee;padding:6px;text-align:center;">${r.qty}</td><td style="border:1px solid #eee;padding:6px;">${r.uom||''}</td><td style="border:1px solid #eee;padding:6px;text-align:left;">${r.price.toFixed(2)}</td><td style="border:1px solid #eee;padding:6px;text-align:left;font-weight:700;color:var(--primary);">${r.total.toFixed(2)}</td></tr>`).join('');
-  document.getElementById('aw-items-preview').innerHTML=`<table class="tbl"><thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:left;margin-top:8px;font-size:13px;"><div>المجموع: <strong>${q.subtotal.toFixed(2)}</strong> ر.س | VAT: <strong>${q.vat.toFixed(2)}</strong> ر.س</div><div style="font-size:16px;font-weight:900;color:var(--primary);">الإجمالي: <strong>${q.total.toFixed(2)}</strong> ر.س</div></div>`;
-  toast('ممتاز! راجع البيانات ثم اضغط تحويل إلى PO');
-}
-function rfqClearAward(){
-  rfqPendingAward=null;
-  document.getElementById('rfq-award-form').style.display='none';
-  document.getElementById('rfq-award-empty').style.display='block';
-}
-async function rfqConvertToPO(){
-  if(!rfqPendingAward){toast('لا يوجد قرار ترسية',true);return;}
-  const {q,rfq}=rfqPendingAward;
-  const reason=document.getElementById('aw-reason').value.trim();
-  if(!reason){toast('أدخل مسوّغ الاختيار',true);return;}
-  // حفظ الترسية
-  const award={id:Date.now(),qtId:String(q.id),rfqId:String(rfq.id),rfqNum:rfq.rfqNum,vendor:q.vendor,total:q.total,reason,date:new Date().toISOString().split('T')[0],poNum:'NDC-'+new Date().getFullYear()+'-O-'+String(Math.floor(Math.random()*9000)+1000)};
-  awSaved.unshift(award);
-  localStorage.setItem('aw_saved',JSON.stringify(awSaved));
-  // تحديث حالة الطلب كـ awarded
-  const rfqIdx=rfqSaved.findIndex(r=>String(r.id)===String(rfq.id));
-  if(rfqIdx!==-1){rfqSaved[rfqIdx].status='awarded';localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));}
-  // إنشاء PO تلقائياً
-  const today=new Date().toISOString().split('T')[0];
-  const poData={
-    id:Date.now()+1,company:q.vendor,num:award.poNum,
-    date:today,quote:q.ref||rfq.rfqNum||'',
-    vat:'',email:'',phone:'',addr:'',
-    del_email:'mialjamaan@nouradriving.sa',del_phone:'+966538549436',
-    del_addr:'Saudi Arabia, Riyadh, King Khaled Intl. Road',del_vat:'314378311300003',
-    rows:JSON.stringify((q.rows||[]).map((r,i)=>({num:i+1,item:r.item,desc:r.note||'',qty:r.qty,uom:r.uom||'',price:r.price,total:r.total,notes:''}))),
-    terms:JSON.stringify({payment:q.payment||'فور الاستلام',delivery:q.delivery||'—',warranty:'—'}),
-    created_at:new Date().toISOString(),fromRFQ:true,rfqRef:rfq.rfqNum
-  };
-  poSaved.unshift(poData);
-  localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-  try{await sbInsert('orders',poData);}catch(e){}
-  renderPoSaved();renderRfqSaved();renderAwardHistory();
-  toast(`🎉 تم إنشاء أمر الشراء ${award.poNum} تلقائياً!`);
-  rfqClearAward();
-  // انتقل لصفحة PO
-  setTimeout(()=>{nav('po');toast('تم إنشاء الـ PO — راجع الطلبات المحفوظة');},1200);
-}
-function renderAwardHistory(){
-  const el=document.getElementById('aw-history-list');if(!el)return;
-  if(!awSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد ترسيات مسجّلة</div>';return;}
-  el.innerHTML=awSaved.map((a,i)=>`<div class="saved-item" style="border-right:3px solid var(--green);">
-    <div class="saved-item-info">
-      <strong style="color:var(--green);">🏆 ${a.poNum}</strong> — <strong>${a.vendor}</strong>
-      <span style="font-size:11px;color:var(--sub);display:block;">الطلب: ${a.rfqNum||'—'} | التاريخ: ${a.date||'—'} | المبلغ: ${(a.total||0).toLocaleString('ar-SA',{maximumFractionDigits:0})} ر.س</span>
-      <span style="font-size:11px;color:var(--sub);">المسوّغ: ${a.reason||'—'}</span>
-    </div>
-    <div class="saved-item-actions">
-      <button class="btn btn-sm btn-gray" onclick="awDel(${i})">×</button>
-    </div>
-  </div>`).join('');
-}
-function awDel(i){
-  if(!confirm('حذف هذا السجل؟'))return;
-  awSaved.splice(i,1);
-  localStorage.setItem('aw_saved',JSON.stringify(awSaved));
-  renderAwardHistory();toast('تم الحذف');
+  w.onload=()=>{w.focus();w.print();};
 }
 
 /* ══════════════ DN ══════════════ */
@@ -3572,131 +2689,6 @@ let cmpSaved = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
 let cmpEditId = null; // للتعديل
 
 function escH(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
-/* ══ استيراد الكوتيشنات لمقارنة الأسعار ══ */
-function cmpPopulateRFQSelect(){
-  ['cmp-import-rfq','cm-import-rfq'].forEach(selId=>{
-    const sel=document.getElementById(selId);if(!sel)return;
-    const cur=sel.value;
-    sel.innerHTML='<option value="">— اختر لاستيراد عروضه —</option>';
-    rfqSaved.forEach(r=>{
-      const count=qtSaved.filter(q=>String(q.rfqId)===String(r.id)).length;
-      if(count>0)
-        sel.innerHTML+=`<option value="${r.id}">${r.rfqNum||'RFQ'} — ${r.company} (${count} عروض)</option>`;
-    });
-    if(cur)sel.value=cur;
-  });
-}
-
-function cmpImportFromRFQ(){
-  const rfqId=document.getElementById('cmp-import-rfq').value;
-  if(!rfqId){toast('اختر طلب RFQ أولاً',true);return;}
-  const rfq=rfqSaved.find(r=>String(r.id)===rfqId);
-  const quotes=qtSaved.filter(q=>String(q.rfqId)===rfqId);
-  if(!quotes.length){toast('لا توجد كوتيشنات لهذا الطلب',true);return;}
-
-  // ملء عنوان المقارنة والتاريخ
-  const titleEl=document.getElementById('cmp-title');
-  const dateEl=document.getElementById('cmp-date');
-  if(titleEl&&rfq) titleEl.value=`مقارنة أسعار — ${rfq.rfqNum||''} — ${rfq.company}`;
-  if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
-
-  // مسح صفوف الجدول وإعادة البناء من الكوتيشنات
-  const tbody=document.getElementById('cmp-tbody');
-  if(tbody){
-    tbody.innerHTML='';
-    const minTotal=Math.min(...quotes.map(q=>q.total));
-    quotes.forEach((q,i)=>{
-      const isMin=q.total===minTotal;
-      const monthly=q.subtotal; // بدون VAT شهري تقريبي
-      const tr=document.createElement('tr');
-      tr.style.background=isMin?'#F0FFF4':'';
-      tr.innerHTML=`
-        <td>${i+1}</td>
-        <td><input class="cmp-name" value="${q.vendor}" style="min-width:120px;">${isMin?'<span style="font-size:10px;background:#276749;color:#fff;border-radius:6px;padding:1px 5px;margin-right:4px;">🏆</span>':''}</td>
-        <td><input class="cmp-services" value="${(q.rows||[]).map(r=>r.item).join('، ')}" style="min-width:150px;"></td>
-        <td><input class="cmp-monthly" type="number" value="${monthly.toFixed(2)}" oninput="cmpCalc()" style="width:110px;"></td>
-        <td class="cmp-annual" style="font-weight:700;">${(monthly*12).toFixed(2)}</td>
-        <td class="cmp-diff" style="color:${isMin?'var(--green)':'var(--red)'};">${isMin?'الأقل':'+'+((q.total-minTotal).toFixed(2))}</td>
-        <td class="cmp-pct" style="color:var(--sub);">${isMin?'—':'+'+((q.total-minTotal)/minTotal*100).toFixed(1)+'%'}</td>
-        <td><button onclick="cmpDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
-      tbody.appendChild(tr);
-    });
-    cmpCalc();
-  }
-
-  // معاينة
-  const preview=document.getElementById('cmp-import-preview');
-  if(preview){
-    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
-    preview.innerHTML=`<div style="background:#F0FFF4;border-radius:8px;padding:10px 14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <span style="color:#276749;font-weight:700;">✅ تم استيراد ${quotes.length} كوتيشن</span>
-      <span style="color:var(--sub);font-size:11px;">أقل سعر: <strong style="color:#276749;">${minQ.vendor}</strong> — ${minQ.total.toLocaleString('ar-SA',{maximumFractionDigits:0})} ر.س</span>
-    </div>`;
-  }
-  toast(`✅ تم استيراد ${quotes.length} كوتيشن من ${rfq?.rfqNum||'RFQ'}`);
-}
-
-function cmImportFromRFQ(){
-  const rfqId=document.getElementById('cm-import-rfq').value;
-  if(!rfqId){toast('اختر طلب RFQ أولاً',true);return;}
-  const rfq=rfqSaved.find(r=>String(r.id)===rfqId);
-  const quotes=qtSaved.filter(q=>String(q.rfqId)===rfqId);
-  if(!quotes.length){toast('لا توجد كوتيشنات لهذا الطلب',true);return;}
-
-  // ملء موضوع المحضر تلقائياً
-  const subjEl=document.getElementById('cm-subject');
-  if(subjEl&&rfq&&!subjEl.value) subjEl.value=rfq.company+(rfq.rows?.length?` — ${rfq.rows[0].item}`:'');
-
-  // مسح العروض الحالية وإعادة البناء
-  const offersList=document.getElementById('cm-offers-list');
-  if(offersList){
-    offersList.innerHTML='';
-    const minTotal=Math.min(...quotes.map(q=>q.total));
-    quotes.forEach((q,i)=>{
-      const isMin=q.total===minTotal;
-      const div=document.createElement('div');
-      div.className='form-grid';
-      div.style.marginBottom='10px';
-      div.style.padding='10px';
-      div.style.borderRadius='8px';
-      div.style.background=isMin?'#F0FFF4':'#F8FAFB';
-      div.style.border=isMin?'1.5px solid #276749':'1px solid var(--border)';
-      div.innerHTML=`
-        <div class="field">
-          <label>الشركة ${i+1}${isMin?' 🏆':''}</label>
-          <input class="cm-offer-company" value="${q.vendor}" placeholder="اسم الشركة">
-        </div>
-        <div class="field">
-          <label>المبلغ الإجمالي (ر.س)</label>
-          <input class="cm-offer-amount" type="number" value="${q.total.toFixed(2)}" placeholder="0">
-        </div>
-        <div class="field">
-          <label>ملاحظات العرض</label>
-          <input class="cm-offer-notes" value="صلاحية: ${q.validity||'—'} | تسليم: ${q.delivery||'—'} | دفع: ${q.payment||'—'}" placeholder="ملاحظات">
-        </div>
-        <div class="field" style="display:flex;align-items:flex-end;">
-          <button onclick="this.closest('.form-grid').remove()" style="background:#FEE2E2;color:#C53030;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;">× حذف</button>
-        </div>`;
-      offersList.appendChild(div);
-    });
-
-    // الشركة الفائزة تلقائياً
-    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
-    const winnerEl=document.getElementById('cm-winner');
-    const amtEl=document.getElementById('cm-winner-amount');
-    if(winnerEl&&!winnerEl.value) winnerEl.value=minQ.vendor;
-    if(amtEl&&!amtEl.value){amtEl.value=minQ.total.toFixed(2);cmUpdateAmountWords();}
-  }
-
-  // معاينة
-  const preview=document.getElementById('cm-import-preview');
-  if(preview){
-    const minQ=quotes.reduce((a,b)=>a.total<b.total?a:b);
-    preview.innerHTML=`✅ تم استيراد ${quotes.length} عرض — الفائز المقترح: <strong style="color:#276749;">${minQ.vendor}</strong> (${minQ.total.toLocaleString('ar-SA',{maximumFractionDigits:0})} ر.س)`;
-  }
-  toast(`✅ تم استيراد ${quotes.length} عرض — راجع بيانات المحضر`);
-}
-
 function cmpAddCompany(){
   cmpSyncAllInputs();
   const id = Date.now();
@@ -8240,44 +7232,9 @@ async function loadFromSupabase(){
   }
 }
 
-/* ══════════════ النسخ الاحتياطي والاستعادة ══════════════ */
-const BACKUP_KEYS=['po_saved_local','rfq_saved','qt_saved','aw_saved','dn_saved','cmp_saved','expenses_local','contracts','suppliers','committees','taameeds','pc_groups','budget_cfg','potentials','sr_vendors','sr_checks'];
-
-function backupData(){
-  const backup={version:2,date:new Date().toISOString(),data:{}};
-  BACKUP_KEYS.forEach(k=>{try{backup.data[k]=localStorage.getItem(k)||'null';}catch(e){}});
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='نورة_نسخة_احتياطية_'+new Date().toLocaleDateString('ar-SA').replace(/\//g,'-')+'.json';
-  a.click();
-  toast('✅ تم تصدير النسخة الاحتياطية — احفظها في مكان آمن');
-}
-
-function restoreData(){
-  const inp=document.createElement('input');
-  inp.type='file';inp.accept='.json';
-  inp.onchange=async function(){
-    const f=inp.files[0];if(!f)return;
-    try{
-      const text=await f.text();
-      const backup=JSON.parse(text);
-      if(!backup.data){toast('ملف النسخة غير صحيح',true);return;}
-      if(!confirm(`هل تريد استعادة النسخة المحفوظة بتاريخ:\n${new Date(backup.date).toLocaleString('ar-SA')}؟\n\nسيتم استبدال البيانات الحالية.`))return;
-      Object.entries(backup.data).forEach(([k,v])=>{if(v&&v!=='null')localStorage.setItem(k,v);});
-      toast('✅ تمت الاستعادة — جاري إعادة التحميل...');
-      setTimeout(()=>location.reload(),1200);
-    }catch(e){toast('خطأ في قراءة الملف',true);}
-  };
-  inp.click();
-}
-
 async function init(){
   const today=new Date().toISOString().split('T')[0];
-  ['po-date','rfq-date','dn-date','pc-from','pc-to','cmp-date','qt-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=today;});
-  // توليد رقم RFQ تلقائي
-  const rfqNumEl=document.getElementById('rfq-num');
-  if(rfqNumEl&&!rfqNumEl.value){const n=rfqSaved.length+1;rfqNumEl.value='RFQ-'+new Date().getFullYear()+'-'+String(n).padStart(3,'0');}
+  ['po-date','rfq-date','dn-date','pc-from','pc-to','cmp-date'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value)el.value=today;});
   document.getElementById('po-del-email').value='mialjamaan@nouradriving.sa';
   document.getElementById('po-del-phone').value='+966538549436';
   document.getElementById('po-del-addr').value='Saudi Arabia, Riyadh, King Khaled Intl. Road';
@@ -8291,8 +7248,6 @@ async function init(){
   if(needsClean){try{localStorage.setItem('pc_groups',JSON.stringify(pcGroups));}catch(e){}}
   poSaved    = JSON.parse(localStorage.getItem('po_saved_local')||'[]');
   rfqSaved   = JSON.parse(localStorage.getItem('rfq_saved')||'[]');
-  qtSaved    = JSON.parse(localStorage.getItem('qt_saved')||'[]');
-  awSaved    = JSON.parse(localStorage.getItem('aw_saved')||'[]');
   dnSaved    = JSON.parse(localStorage.getItem('dn_saved')||'[]');
   cmpSaved   = JSON.parse(localStorage.getItem('cmp_saved')||'[]');
   taameeds   = JSON.parse(localStorage.getItem('taameeds')||'[]');
