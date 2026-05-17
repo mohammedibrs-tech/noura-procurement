@@ -3467,7 +3467,8 @@ function cmpExcelFromData(title,date,companies){
     curRow++;
 
     // هيدر الأعمدة
-    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT (ر.س)','الإجمالي الكلي (ر.س)'].forEach(function(h,i){
+    var lastColHdr=exPayType==='monthly'?'الإجمالي السنوي شاملاً الضريبة (ر.س)':'الإجمالي شاملاً الضريبة (ر.س)';
+    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT (ر.س)',lastColHdr].forEach(function(h,i){
       sc(CL[i]+(curRow+1),h,hdr({rgb:'344E76'}));
     });
     curRow++;
@@ -3487,19 +3488,19 @@ function cmpExcelFromData(title,date,companies){
       sc('D'+(curRow+1),row.unitPrice||0,cell(bg,false,'right'));
       sc('E'+(curRow+1),vatLabel,        cell(bg,false,'center'));
       sc('F'+(curRow+1),vatAmt>0?vatAmt:0,cell(bg,false,'right'));
-      sc('G'+(curRow+1),total,           cell(bg,true,'right'));
+      sc('G'+(curRow+1),exPayType==='monthly'?total*12:total, cell(bg,true,'right'));
       curRow++;
     });
 
     // إجمالي الشركة
     var exPayType=co.paymentType||'total';
-    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري':'الإجمالي الكلي',hdr(C));
+    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري شاملاً الضريبة':'الإجمالي الكلي شاملاً الضريبة',hdr(C));
     sc('G'+(curRow+1),monthly,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:C},alignment:{horizontal:'right'}});
     merge(curRow,0,curRow,5);
     curRow++;
 
     if(exPayType==='monthly'){
-      sc('F'+(curRow+1),'الإجمالي السنوي',hdr(NK));
+      sc('F'+(curRow+1),'الإجمالي السنوي شاملاً الضريبة',hdr(NK));
       sc('G'+(curRow+1),monthly*12,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'right'}});
       merge(curRow,0,curRow,5);
       curRow++;
@@ -3530,7 +3531,10 @@ function cmpExcelFromData(title,date,companies){
   curRow++;
 
   // هيدر المقارنة
-  ['الشركة','الإجمالي','الإجمالي السنوي / الكلي (ر.س)','الفرق','نسبة الفرق','التقييم'].forEach(function(h,i){
+  var hasMixed=totals.some(function(t){return t.payType==='monthly';});
+  var colBHdr=hasMixed?'الإجمالي الشهري شاملاً الضريبة (ر.س)':'الإجمالي الكلي شاملاً الضريبة (ر.س)';
+  var colCHdr=hasMixed?'الإجمالي السنوي شاملاً الضريبة (ر.س)':'—';
+  [hasMixed?'الشركة':'الشركة','الإجمالي شاملاً الضريبة (ر.س)',colCHdr,'الفرق','نسبة الفرق','التقييم'].forEach(function(h,i){
     sc(CL[i]+(curRow+1),h,hdr(C));
   });
   curRow++;
@@ -3546,8 +3550,10 @@ function cmpExcelFromData(title,date,companies){
     var diffPct=minM>0?((diff/t.monthly)*100).toFixed(1)+'%':'—';
     var rating=isBest?'★ الأفضل سعراً':'+'+(diff.toLocaleString('ar-SA'))+' ر.س إضافي';
     sc('A'+(curRow+1),t.name,        {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg}});
-    sc('B'+(curRow+1),t.monthly,     {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
-    sc('C'+(curRow+1),t.annual,      {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    var dispB=t.monthly;
+    var dispC=t.payType==='monthly'?t.annual:'—';
+    sc('B'+(curRow+1),dispB,     {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc('C'+(curRow+1),dispC,      {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc('D'+(curRow+1),diff,          {font:{name:'Calibri',sz:9,color:diff===0?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc('E'+(curRow+1),diff*12,       {font:{name:'Calibri',sz:9,color:diff===0?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc('F'+(curRow+1),diffPct,       {font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
@@ -6508,10 +6514,19 @@ function committeeExportPDF(){
 function committeeExportPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
-  const offersTable=`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
-    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">إجمالي المبلغ السنوي شاملاً الضريبة</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
-    <tbody>${(c.offers||[]).sort((a,b)=>a.amount-b.amount).map((o,i)=>`<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`).join('')}</tbody>
-  </table>`;
+  const offersTable=(()=>{
+    const colLabel=offer=>offer.paymentType==='monthly'?'الإجمالي السنوي شاملاً الضريبة':'الإجمالي شاملاً الضريبة';
+    const firstOffer=(c.offers||[])[0];
+    const thLabel=firstOffer?colLabel(firstOffer):'الإجمالي شاملاً الضريبة';
+    const rows=(c.offers||[]).sort((a,b)=>a.amount-b.amount).map(o=>{
+      const amt=o.paymentType==='monthly'?(o.amount||0)*12:(o.amount||0);
+      return `<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${amt.toLocaleString('ar-SA')} ريال</td><td style="padding:6px 8px;border:1px solid #000;">${o.notes||''}</td></tr>`;
+    }).join('');
+    return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">${thLabel}</th><th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th></tr></thead>
+    <tbody>${rows}</tbody>
+    </table>`;
+  })();
   const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
@@ -6583,7 +6598,7 @@ ${membersText}
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 ${techReview}
 <p><b>اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى:</b></p>
-<table><thead><tr><th>اسم الشركة أو المؤسسة</th><th>إجمالي المبلغ السنوي شاملاً الضريبة</th><th>ملاحظات</th></tr></thead>
+<table><thead><tr><th>اسم الشركة أو المؤسسة</th><th>${(c.offers||[]).some(o=>o.paymentType==='monthly')?'الإجمالي السنوي شاملاً الضريبة':'الإجمالي شاملاً الضريبة'}</th><th>ملاحظات</th></tr></thead>
 <tbody>${offersRows}</tbody></table>
 <p><b>مرئيات لجنة فحص العروض:</b></p>
 <p>${c.views||''}</p>
