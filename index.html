@@ -3005,33 +3005,68 @@ function rfqSendToPO(){
   var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqActiveId);});
   if(!rfq){toast('لم يُوجد الطلب',true);return;}
   var quotes=rfq.quotes||[];
+  if(!quotes.length){toast('لا توجد عروض أسعار في هذا الطلب',true);return;}
 
-  // انتقل لصفحة التعاميد
-  nav('taameeds');
+  // أفضل عرض = الأقل سعراً
+  var best=quotes.slice().sort(function(a,b){
+    var ta=0,tb=0;
+    (a.items||[]).forEach(function(it){ta+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
+    (b.items||[]).forEach(function(it){tb+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
+    return ta-tb;
+  })[0];
 
-  // مسح الفورم أولاً
-  taameedResetForm();
+  // انتقل لصفحة طلبات الشراء PO
+  nav('po');
 
-  // نقل البيانات الأساسية
-  var numEl=document.getElementById('tm-num');
-  var descEl=document.getElementById('tm-desc');
-  var vendorEl=document.getElementById('tm-vendor');
+  // مسح الجدول وإعادة صف واحد فارغ
+  var tbody=document.getElementById('po-tbody');
+  if(tbody) tbody.innerHTML='';
 
-  if(numEl)  numEl.value=rfq.refNum||'';
-  if(descEl) descEl.value=(rfq.company||'')+(rfq.notes?' — '+rfq.notes:'');
+  // — حقول التسليم —
+  var dateEl=document.getElementById('po-date');
+  var quoteEl=document.getElementById('po-quote');
+  if(dateEl && !dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+  // رقم عرض السعر من refNum الطلب (وليس رقم التعميد)
+  if(quoteEl) quoteEl.value=rfq.refNum||'';
 
-  // أفضل عرض (الأقل سعراً) → يملأ اسم المورد تلقائياً
-  if(quotes.length>0){
-    var best=quotes.slice().sort(function(a,b){
-      var ta=0,tb=0;
-      (a.items||[]).forEach(function(it){ta+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
-      (b.items||[]).forEach(function(it){tb+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});
-      return ta-tb;
-    })[0];
-    if(vendorEl) vendorEl.value=best.vendor_name||best.vendorName||'';
+  // — بيانات المورد (من أفضل عرض) —
+  var coEl  =document.getElementById('po-co');
+  var vatEl =document.getElementById('po-vat');
+  var addrEl=document.getElementById('po-addr');
+  var phoneEl=document.getElementById('po-phone');
+  var emailEl=document.getElementById('po-email');
+  if(coEl)   coEl.value   = best.vendor_name||best.vendorName||'';
+  if(vatEl)  vatEl.value  = best.vat_num||best.vatNum||'';
+  if(addrEl) addrEl.value = best.vendor_addr||best.vendorAddr||'';
+  if(phoneEl)phoneEl.value= best.vendor_phone||best.vendorPhone||'';
+  if(emailEl)emailEl.value= best.vendor_email||best.vendorEmail||'';
+
+  // — بنود الجدول (من بنود أفضل عرض) —
+  var items=best.items||[];
+  if(items.length && tbody){
+    items.forEach(function(it,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML=
+        '<td>'+(i+1)+'</td>'+
+        '<td><input class="po-item" value="'+(it.item||it.cat||'')+'" placeholder="الصنف"></td>'+
+        '<td><input class="po-desc" value="'+(it.desc||it.nat||'')+'" placeholder="الوصف"></td>'+
+        '<td><input class="po-qty" type="number" value="'+(it.qty||1)+'" oninput="poCalcRow(this)" style="width:60px;"></td>'+
+        '<td><input class="po-uom" value="'+(it.uom||'')+'" placeholder="وحدة" style="width:60px;"></td>'+
+        '<td><input class="po-price" type="number" value="'+(it.price||0)+'" oninput="poCalcRow(this)" style="width:80px;"></td>'+
+        '<td class="po-total">'+(((parseFloat(it.qty)||1)*(parseFloat(it.price)||0)).toLocaleString('ar-SA'))+'</td>'+
+        '<td><input class="po-notes" value="'+(it.notes||'')+'" placeholder=""></td>'+
+        '<td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
+      tbody.appendChild(tr);
+    });
+  } else if(tbody){
+    // صف فارغ إذا ما في بنود
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
+    tbody.appendChild(tr);
   }
 
-  toast('✅ تم نقل البيانات إلى التعميد — راجع الحقول وأكمل');
+  poCalcAll();
+  toast('✅ تم نقل بيانات أفضل عرض إلى طلب الشراء — أكمل رقم التعميد والشروط');
 }
 
 function renderRfqSaved(){
