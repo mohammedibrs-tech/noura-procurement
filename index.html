@@ -2922,11 +2922,78 @@ function rfqSetType(type){
   if(resultEl){
     resultEl.style.display='block';
     resultEl.innerHTML=type==='taameeds'
-      ?`<div style="background:#EBF8FA;border-radius:8px;padding:12px 16px;color:#0D7A8A;font-size:13px;">✅ مُصنّف كـ <strong>تعميد</strong> — ستجد عروضه في <strong>مقارنة الأسعار</strong> و<strong>لجنة فحص العروض</strong> تلقائياً</div>`
+      ?`<div style="background:#EBF8FA;border-radius:8px;padding:12px 16px;color:#0D7A8A;font-size:13px;margin-bottom:12px;">✅ مُصنّف كـ <strong>تعميد</strong> — استخدم الأزرار أدناه لنقل العروض مباشرةً</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="rfqSendToCommittee()" style="gap:6px;">
+            📋 إرسال للجنة فحص العروض
+          </button>
+          <button class="btn btn-green" onclick="rfqSendToPriceCmp()" style="gap:6px;">
+            📊 إرسال لمقارنة الأسعار
+          </button>
+        </div>`
       :`<div style="background:#F0FFF4;border-radius:8px;padding:12px 16px;color:#276749;font-size:13px;">✅ مُصنّف كـ <strong>شراء داخلي</strong> — لن يُربط بلجنة أو مقارنة رسمية</div>`;
   }
   toast(type==='taameeds'?'✅ مُصنّف كتعميد':'✅ مُصنّف كشراء داخلي');
 }
+
+function rfqSendToCommittee(){
+  if(!rfqActiveId){toast('افتح طلباً أولاً',true);return;}
+  var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqActiveId);});
+  if(!rfq){toast('لم يُوجد الطلب',true);return;}
+  var quotes=rfq.quotes||[];
+  if(!quotes.length){toast('لا توجد عروض لهذا الطلب',true);return;}
+  nav('committee');
+  committeeReset();
+  var subjectEl=document.getElementById('cm-subject');
+  var numEl=document.getElementById('cm-num');
+  if(subjectEl) subjectEl.value=(rfq.company||'')+(rfq.notes?' — '+rfq.notes:'');
+  if(numEl) numEl.value=rfq.refNum||'';
+  var offersList=document.getElementById('cm-offers-list');
+  if(offersList){
+    offersList.innerHTML='';
+    quotes.forEach(function(q){
+      var total=0;
+      if(q.items&&q.items.length){q.items.forEach(function(it){total+=(parseFloat(it.price)||0)*(parseFloat(it.qty)||1);});}
+      var div=document.createElement('div');
+      div.className='cm-offer-row';
+      div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
+      div.innerHTML='<div class="form-grid">'
+        +'<div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="'+(q.vendor_name||q.vendorName||'')+'" placeholder="اسم الشركة"></div>'
+        +'<div class="field"><label>المبلغ شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="'+(total||0)+'" placeholder="0"></div>'
+        +'<div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option value="مقبول ومطابق فنياً" selected>مقبول ومطابق فنياً</option><option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option><option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option></select></div>'
+        +'<div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="'+(q.validity||'')+'" placeholder="ملاحظات..."></div>'
+        +'<div style="display:flex;align-items:flex-end;"><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">x</button></div>'
+        +'</div>';
+      offersList.appendChild(div);
+    });
+  }
+  toast('تم نقل '+quotes.length+' عروض للجنة فحص العروض');
+}
+
+function rfqSendToPriceCmp(){
+  if(!rfqActiveId){toast('افتح طلباً أولاً',true);return;}
+  var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqActiveId);});
+  if(!rfq){toast('لم يُوجد الطلب',true);return;}
+  var quotes=rfq.quotes||[];
+  if(!quotes.length){toast('لا توجد عروض لهذا الطلب',true);return;}
+  nav('cmp');
+  cmpCompanies=[];
+  cmpEditId=null;
+  var titleEl=document.getElementById('cmp-title');
+  var dateEl=document.getElementById('cmp-date');
+  if(titleEl) titleEl.value='مقارنة أسعار — '+(rfq.company||rfq.refNum||'');
+  if(dateEl) dateEl.value=rfq.date||new Date().toISOString().split('T')[0];
+  quotes.forEach(function(q){
+    var items=q.items||[];
+    var rows=items.length>0
+      ?items.map(function(it){return{cat:it.item||it.cat||'',nat:it.uom||'',count:parseFloat(it.qty)||1,unitPrice:parseFloat(it.price)||0,vatType:'none'};})
+      :[{cat:'',nat:'',count:1,unitPrice:0,vatType:'none'}];
+    cmpCompanies.push({id:Date.now()+Math.random(),name:q.vendor_name||q.vendorName||'شركة',rows:rows,terms:['']});
+  });
+  renderCmpCompanies();
+  toast('تم نقل '+quotes.length+' شركات لمقارنة الأسعار');
+}
+
 function renderRfqSaved(){
   var el=document.getElementById('rfq-saved');if(!el)return;
   if(!rfqSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
