@@ -513,14 +513,39 @@ function numToWords(n){
 <!-- ══ RFQ ══ -->
 <div class="page" id="page-rfq">
   <div class="page-header"><h1>طلبات عرض السعر (RFQ)</h1><p>Request For Quotation</p></div>
+
+  <!-- ══ فورم إنشاء الطلب ══ -->
   <div class="card">
-    <div class="card-header"><h3>إنشاء طلب عرض سعر</h3></div>
+    <div class="card-header"><h3>إنشاء طلب عرض سعر جديد</h3></div>
     <div class="card-body">
       <div class="form-grid">
-        <div class="field"><label>اسم الشركة / السادة</label><input id="rfq-co" placeholder="اسم الشركة المستلمة"></div>
-        <div class="field"><label>التاريخ</label><input id="rfq-date" type="date"></div>
+        <div class="field">
+          <label>اسم الشركة / الجهة الطالبة</label>
+          <input id="rfq-co" placeholder="اسم الشركة أو الإدارة">
+        </div>
+        <div class="field">
+          <label>التاريخ</label>
+          <input id="rfq-date" type="date">
+        </div>
+        <div class="field">
+          <label>عدد العروض المتوقعة</label>
+          <select id="rfq-expected-count">
+            <option value="1">١ عرض</option>
+            <option value="2">٢ عروض</option>
+            <option value="3" selected>٣ عروض</option>
+            <option value="4">٤ عروض</option>
+            <option value="5">٥ عروض</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الرقم المرجعي (يتولّد تلقائياً)</label>
+          <input id="rfq-ref-num" readonly style="background:#F0F4F8;font-weight:700;color:var(--primary);letter-spacing:1px;" placeholder="سيظهر بعد الحفظ">
+        </div>
       </div>
-      <div class="field" style="margin-top:12px;"><label>تفاصيل أخرى</label><textarea id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea></div>
+      <div class="field" style="margin-top:8px;">
+        <label>تفاصيل أخرى / ملاحظات</label>
+        <textarea id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea>
+      </div>
       <div class="section-title">الأصناف المطلوبة</div>
       <table class="tbl" style="margin-bottom:8px;">
         <thead><tr><th>م</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
@@ -536,15 +561,168 @@ function numToWords(n){
       </table>
       <button class="btn btn-gray btn-sm" onclick="rfqAddRow()">+ إضافة صف</button>
       <div class="actions">
-        <button class="btn btn-primary" onclick="rfqSave()">حفظ</button>
-        <button class="btn btn-red" onclick="rfqPrint()">طباعة / PDF</button>
+        <button class="btn btn-primary" onclick="rfqSave()">💾 حفظ الطلب</button>
+        <button class="btn btn-red" onclick="rfqPrint()">🖨️ طباعة / PDF</button>
       </div>
     </div>
   </div>
+
+  <!-- ══ الطلبات المحفوظة ══ -->
   <div class="card">
     <div class="card-header"><h3>الطلبات المحفوظة</h3></div>
     <div class="card-body"><div class="saved-list" id="rfq-saved"></div></div>
   </div>
+
+  <!-- ══ منطقة العروض — تظهر بعد اختيار طلب ══ -->
+  <div id="rfq-quotes-section" style="display:none;">
+
+    <!-- رأس القسم -->
+    <div style="background:linear-gradient(135deg,#1A2B4A,#244062);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="color:#7DD3E0;font-size:11px;font-weight:600;margin-bottom:4px;">الطلب المفتوح</div>
+        <div id="rfq-active-title" style="color:#fff;font-size:16px;font-weight:700;"></div>
+        <div id="rfq-active-meta" style="color:#94A3B8;font-size:11px;margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="rfq-progress-badges" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <button onclick="rfqCloseQuotes()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">✕ إغلاق</button>
+      </div>
+    </div>
+
+    <!-- فورم إضافة عرض -->
+    <div class="card" id="rfq-add-quote-card">
+      <div class="card-header">
+        <h3 id="rfq-quote-form-title">إضافة العرض الأول</h3>
+        <span id="rfq-quote-counter" style="font-size:11px;color:var(--sub);"></span>
+      </div>
+      <div class="card-body">
+
+        <!-- رفع PDF -->
+        <div id="rfq-pdf-zone" style="border:2px dashed var(--primary);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;cursor:pointer;background:#F0FAFC;" onclick="document.getElementById('rfq-pdf-input').click()" ondragover="event.preventDefault();this.style.background='#D0F0F8'" ondragleave="this.style.background='#F0FAFC'" ondrop="rfqHandleDrop(event)">
+          <div style="font-size:28px;margin-bottom:6px;">📄</div>
+          <div style="font-weight:700;color:var(--primary);font-size:13px;">ارفع PDF الكوتيشن هنا أو اضغط للاختيار</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px;">Claude سيقرأ البيانات تلقائياً — أو أدخلها يدوياً</div>
+          <input type="file" id="rfq-pdf-input" accept=".pdf" style="display:none;" onchange="rfqExtractPDF(this.files[0])">
+        </div>
+
+        <!-- حالة AI -->
+        <div id="rfq-ai-status" style="display:none;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;">
+          <div id="rfq-ai-text">⏳ جاري القراءة...</div>
+          <div style="height:4px;background:#D0F0F8;border-radius:2px;margin-top:8px;overflow:hidden;">
+            <div id="rfq-ai-bar" style="height:100%;background:var(--primary);width:0%;transition:width .4s;border-radius:2px;"></div>
+          </div>
+        </div>
+
+        <!-- ملف مرفق -->
+        <div id="rfq-pdf-attached" style="display:none;background:#F0FFF4;border:1px solid #276749;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">📎</span>
+            <div><div id="rfq-pdf-name" style="font-size:12px;font-weight:700;color:#276749;"></div><div style="font-size:10px;color:var(--sub);">PDF محفوظ مع العرض</div></div>
+          </div>
+          <button onclick="rfqRemovePDF()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button>
+        </div>
+
+        <!-- بيانات المورد -->
+        <div class="section-title">بيانات المورد</div>
+        <div class="form-grid">
+          <div class="field"><label>اسم الشركة / المورد</label><input id="qt-vendor" list="suppliers-datalist" placeholder="اسم الشركة" oninput="buildSupplierDatalist()"></div>
+          <div class="field"><label>الرقم الضريبي</label><input id="qt-vat" placeholder="3xxxxxxxxxx"></div>
+          <div class="field"><label>رقم العرض (من المورد)</label><input id="qt-ref" placeholder="Q-2026-001"></div>
+          <div class="field"><label>تاريخ العرض</label><input id="qt-date" type="date"></div>
+          <div class="field"><label>صلاحية العرض</label><input id="qt-validity" placeholder="30 يوم"></div>
+          <div class="field"><label>مدة التسليم</label><input id="qt-delivery" placeholder="7 أيام عمل"></div>
+          <div class="field"><label>شروط الدفع</label><input id="qt-payment" placeholder="30 يوم بعد الاستلام"></div>
+          <div class="field"><label>هاتف / إيميل</label><input id="qt-contact" placeholder="phone / email"></div>
+        </div>
+
+        <!-- بنود الأسعار -->
+        <div class="section-title" style="margin-top:12px;">💰 بنود الأسعار</div>
+        <div style="overflow-x:auto;border:1.5px solid var(--primary);border-radius:10px;margin-bottom:8px;">
+          <table class="tbl" style="margin:0;min-width:560px;">
+            <thead>
+              <tr style="background:#1DA9BD;">
+                <th style="color:#fff;width:32px;">م</th>
+                <th style="color:#fff;">الصنف / الخدمة</th>
+                <th style="color:#fff;width:65px;">الكمية</th>
+                <th style="color:#fff;width:70px;">الوحدة</th>
+                <th style="color:#fff;width:110px;">سعر الوحدة (ر.س)</th>
+                <th style="color:#fff;width:110px;background:#0D7A8A;">الإجمالي (ر.س)</th>
+                <th style="color:#fff;width:30px;"></th>
+              </tr>
+            </thead>
+            <tbody id="qt-tbody">
+              <tr>
+                <td style="text-align:center;color:var(--sub);">1</td>
+                <td><input class="qt-item" placeholder="الصنف" style="width:100%;"></td>
+                <td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td>
+                <td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td>
+                <td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td>
+                <td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td>
+                <td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-gray btn-sm" onclick="qtAddRow()">+ إضافة صف</button>
+
+        <!-- ملخص المبالغ -->
+        <div style="background:linear-gradient(135deg,#F0FAFC,#EBF8FA);border:1.5px solid var(--primary);border-radius:10px;padding:14px 18px;margin-top:12px;display:flex;justify-content:flex-end;gap:24px;align-items:center;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:var(--sub);">المجموع قبل VAT</div>
+            <div style="font-size:15px;font-weight:700;color:var(--navy);"><span id="qt-sub">0.00</span> ر.س</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:var(--sub);">VAT 15%</div>
+            <div style="font-size:15px;font-weight:700;color:#B7791F;"><span id="qt-tax">0.00</span> ر.س</div>
+          </div>
+          <div style="background:var(--primary);border-radius:8px;padding:8px 20px;text-align:center;">
+            <div style="font-size:11px;color:rgba(255,255,255,.8);">الإجمالي شامل VAT</div>
+            <div style="font-size:20px;font-weight:900;color:#fff;"><span id="qt-tot">0.00</span> ر.س</div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="rfqSaveQuote()">💾 حفظ العرض</button>
+          <button class="btn btn-gray" onclick="rfqResetQuoteForm()">🔄 مسح</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- العروض المحفوظة لهذا الطلب -->
+    <div class="card">
+      <div class="card-header">
+        <h3>العروض المُضافة لهذا الطلب</h3>
+        <span id="rfq-quotes-count-badge" style="font-size:11px;color:var(--sub);"></span>
+      </div>
+      <div class="card-body"><div id="rfq-quotes-list">لا توجد عروض بعد</div></div>
+    </div>
+
+    <!-- قرار النوع — يظهر بعد اكتمال العروض -->
+    <div id="rfq-decision-card" style="display:none;">
+      <div class="card" style="border:2px solid var(--primary);">
+        <div class="card-header" style="background:#EBF8FA;">
+          <h3 style="color:#0D7A8A;">🎯 اكتملت العروض — ما نوع هذا الطلب؟</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button onclick="rfqSetType('taameeds')" id="rfq-type-taameeds" style="flex:1;min-width:180px;padding:20px;border:2px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='#1DA9BD'" onmouseout="this.style.borderColor=rfqActiveType==='taameeds'?'#1DA9BD':'var(--border)'">
+              <div style="font-size:32px;margin-bottom:8px;">📋</div>
+              <div style="font-weight:700;color:var(--navy);font-size:14px;">تعميد</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:4px;">يُربط بلجنة فحص العروض ومقارنة الأسعار</div>
+            </button>
+            <button onclick="rfqSetType('internal')" id="rfq-type-internal" style="flex:1;min-width:180px;padding:20px;border:2px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='#1DA9BD'" onmouseout="this.style.borderColor=rfqActiveType==='internal'?'#1DA9BD':'var(--border)'">
+              <div style="font-size:32px;margin-bottom:8px;">🏢</div>
+              <div style="font-weight:700;color:var(--navy);font-size:14px;">شراء داخلي</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:4px;">لا يحتاج لجنة أو مقارنة رسمية</div>
+            </button>
+          </div>
+          <div id="rfq-type-result" style="margin-top:14px;display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end rfq-quotes-section -->
+
 </div>
 
 <!-- ══ DN ══ -->
@@ -2471,10 +2649,23 @@ table{border-collapse:collapse;width:100%;}
   w.onload=()=>{w.focus();w.print();};
 }
 
-/* ══════════════ RFQ ══════════════ */
+/* ══════════════ RFQ — النظام الجديد ══════════════ */
 let rfqRows=1;
 let rfqSaved=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
+let rfqActiveId=null;
+let rfqActiveType=null;
+let rfqCurrentPDFb64=null;
+let rfqCurrentPDFname=null;
 
+function rfqGenRef(){
+  const yr=new Date().getFullYear();
+  const n=rfqSaved.length+1;
+  return 'RFQ-'+yr+'-'+String(n).padStart(3,'0');
+}
+function rfqInitRef(){
+  const el=document.getElementById('rfq-ref-num');
+  if(el&&!el.value)el.value=rfqGenRef();
+}
 function rfqAddRow(){
   rfqRows++;
   const tr=document.createElement('tr');
@@ -2492,10 +2683,275 @@ function rfqGetRows(){
 function rfqSave(){
   const co=document.getElementById('rfq-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
-  const data={id:Date.now(),company:co,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()};
-  rfqSaved.unshift(data);
+  const ref=document.getElementById('rfq-ref-num').value||rfqGenRef();
+  const expected=parseInt(document.getElementById('rfq-expected-count').value)||3;
+  const existingIdx=rfqSaved.findIndex(r=>r.refNum===ref);
+  const data={
+    id:existingIdx>=0?rfqSaved[existingIdx].id:Date.now(),
+    refNum:ref,company:co,
+    date:document.getElementById('rfq-date').value,
+    notes:document.getElementById('rfq-notes').value,
+    expectedCount:expected,
+    rows:rfqGetRows(),
+    quotes:existingIdx>=0?(rfqSaved[existingIdx].quotes||[]):[],
+    type:existingIdx>=0?rfqSaved[existingIdx].type:null,
+    status:'open'
+  };
+  if(existingIdx>=0) rfqSaved[existingIdx]=data;
+  else rfqSaved.unshift(data);
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
-  renderRfqSaved();toast('تم الحفظ');
+  renderRfqSaved();
+  toast('تم حفظ الطلب — '+ref);
+  rfqOpenQuotes(data.id);
+  setTimeout(()=>{const el=document.getElementById('rfq-ref-num');if(el)el.value=rfqGenRef();},300);
+}
+function rfqOpenQuotes(id){
+  const rfq=rfqSaved.find(r=>String(r.id)===String(id));
+  if(!rfq)return;
+  rfqActiveId=rfq.id;rfqActiveType=rfq.type||null;
+  document.getElementById('rfq-quotes-section').style.display='block';
+  document.getElementById('rfq-active-title').textContent=rfq.refNum+' — '+rfq.company;
+  document.getElementById('rfq-active-meta').textContent='التاريخ: '+(rfq.date||'—')+' | عدد العروض المتوقع: '+rfq.expectedCount;
+  rfqUpdateProgress(rfq);rfqRenderQuotesList(rfq);rfqUpdateQuoteFormTitle(rfq);
+  document.getElementById('rfq-quotes-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function rfqCloseQuotes(){
+  rfqActiveId=null;
+  document.getElementById('rfq-quotes-section').style.display='none';
+  rfqResetQuoteForm();
+}
+function rfqUpdateProgress(rfq){
+  const done=(rfq.quotes||[]).length,total=rfq.expectedCount||3;
+  const badges=document.getElementById('rfq-progress-badges');
+  if(!badges)return;
+  let html='';
+  for(let i=0;i<total;i++){
+    const f=i<done;
+    html+=`<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:${f?'#1DA9BD':'rgba(255,255,255,.15)'};color:${f?'#fff':'rgba(255,255,255,.5)'};border:2px solid ${f?'#1DA9BD':'rgba(255,255,255,.3)'};">${f?'✓':i+1}</div>`;
+  }
+  badges.innerHTML=html;
+  const dc=document.getElementById('rfq-decision-card');
+  if(dc)dc.style.display=done>=total?'block':'none';
+}
+function rfqUpdateQuoteFormTitle(rfq){
+  const done=(rfq.quotes||[]).length,total=rfq.expectedCount||3;
+  const ord=['الأول','الثاني','الثالث','الرابع','الخامس'];
+  const t=document.getElementById('rfq-quote-form-title');
+  const c=document.getElementById('rfq-quote-counter');
+  const card=document.getElementById('rfq-add-quote-card');
+  if(done>=total){
+    if(t)t.textContent='اكتملت العروض';
+    if(c)c.textContent='تم استلام '+done+' من '+total+' عروض';
+    if(card)card.style.display='none';
+  } else {
+    if(t)t.textContent='إضافة العرض '+(ord[done]||done+1);
+    if(c)c.textContent=done+' من '+total+' عروض مُضافة';
+    if(card)card.style.display='block';
+  }
+}
+function rfqHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('rfq-pdf-zone').style.background='#F0FAFC';
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type==='application/pdf')rfqExtractPDF(f);
+  else toast('يرجى رفع ملف PDF فقط',true);
+}
+async function rfqExtractPDF(file){
+  if(!file)return;
+  if(file.size>20*1024*1024){toast('الملف أكبر من 20MB',true);return;}
+  rfqCurrentPDFname=file.name;
+  const statusEl=document.getElementById('rfq-ai-status');
+  const statusText=document.getElementById('rfq-ai-text');
+  const bar=document.getElementById('rfq-ai-bar');
+  statusEl.style.display='block';statusEl.style.background='#EBF8FA';statusEl.style.color='#0D7A8A';
+  statusText.textContent='⏳ جاري تحضير الملف...';bar.style.width='15%';
+  try{
+    const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=()=>rej(new Error('فشل'));r.readAsDataURL(file);});
+    rfqCurrentPDFb64=b64;bar.style.width='40%';statusText.textContent='🔍 Claude يقرأ بيانات العرض...';
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:[
+        {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+        {type:'text',text:'استخرج بيانات عرض السعر وأرجع JSON فقط بدون أي نص إضافي:\n{\n  "vendor_name":"اسم الشركة",\n  "vendor_vat":"الرقم الضريبي",\n  "vendor_phone":"الهاتف",\n  "vendor_email":"الإيميل",\n  "quote_ref":"رقم العرض",\n  "quote_date":"YYYY-MM-DD",\n  "validity":"صلاحية العرض",\n  "delivery":"مدة التسليم",\n  "payment":"شروط الدفع",\n  "items":[{"item":"الصنف","qty":1,"uom":"الوحدة","price":0}]\n}\nإذا لم تجد قيمة: "" للنصوص، 0 للأرقام.'}
+      ]}]})
+    });
+    bar.style.width='80%';
+    if(!resp.ok)throw new Error('API '+resp.status);
+    const data=await resp.json();
+    let raw=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('').trim();
+    raw=raw.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
+    const m=raw.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('JSON غير صحيح');
+    const p=JSON.parse(m[0]);
+    bar.style.width='100%';statusEl.style.background='#F0FFF4';statusEl.style.color='#276749';
+    statusText.textContent='✅ تم استخراج البيانات — راجع وعدّل إذا لزم';
+    rfqFillQuoteForm(p);
+    document.getElementById('rfq-pdf-name').textContent=file.name;
+    document.getElementById('rfq-pdf-attached').style.display='flex';
+    toast('✅ قرأ Claude العرض');
+  }catch(err){
+    bar.style.width='100%';statusEl.style.background='#FFF5F5';statusEl.style.color='#C53030';
+    statusText.textContent='⚠️ تعذّر الاستخراج — يمكنك الإدخال يدوياً';
+    toast('تعذّر قراءة الـ PDF — أدخل البيانات يدوياً',true);
+  }
+}
+function rfqFillQuoteForm(d){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
+  set('qt-vendor',d.vendor_name);set('qt-vat',d.vendor_vat);set('qt-ref',d.quote_ref);
+  set('qt-date',d.quote_date);set('qt-validity',d.validity);set('qt-delivery',d.delivery);
+  set('qt-payment',d.payment);
+  if(d.vendor_phone||d.vendor_email)set('qt-contact',(d.vendor_phone||'')+( d.vendor_email?' | '+d.vendor_email:''));
+  if(d.items&&d.items.length){
+    const tbody=document.getElementById('qt-tbody');tbody.innerHTML='';
+    d.items.forEach((item,i)=>{
+      const qty=parseFloat(item.qty)||1,price=parseFloat(item.price)||0;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${qty}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${price}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${(qty*price).toFixed(2)}</td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+      tbody.appendChild(tr);
+    });qtCalcTotal();
+  }
+}
+function rfqRemovePDF(){
+  rfqCurrentPDFb64=null;rfqCurrentPDFname=null;
+  document.getElementById('rfq-pdf-attached').style.display='none';
+  document.getElementById('rfq-ai-status').style.display='none';
+  const inp=document.getElementById('rfq-pdf-input');if(inp)inp.value='';
+}
+function qtAddRow(){
+  const tbody=document.getElementById('qt-tbody');
+  const n=tbody.querySelectorAll('tr').length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${n}</td><td><input class="qt-item" placeholder="الصنف" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+  tbody.appendChild(tr);
+}
+function qtDelRow(btn){btn.closest('tr').remove();qtCalcTotal();}
+function qtCalcRow(inp){
+  const tr=inp.closest('tr');
+  const qty=parseFloat(tr.querySelector('.qt-qty')?.value)||0;
+  const price=parseFloat(tr.querySelector('.qt-price')?.value)||0;
+  tr.querySelector('.qt-total').textContent=(qty*price).toFixed(2);
+  qtCalcTotal();
+}
+function qtCalcTotal(){
+  let sub=0;
+  document.querySelectorAll('#qt-tbody .qt-total').forEach(td=>sub+=parseFloat(td.textContent)||0);
+  const tax=sub*.15;
+  const s=document.getElementById('qt-sub'),tx=document.getElementById('qt-tax'),t=document.getElementById('qt-tot');
+  if(s)s.textContent=sub.toFixed(2);if(tx)tx.textContent=tax.toFixed(2);if(t)t.textContent=(sub+tax).toFixed(2);
+}
+function qtGetRows(){
+  return Array.from(document.querySelectorAll('#qt-tbody tr')).map((tr,i)=>{
+    const qty=parseFloat(tr.querySelector('.qt-qty')?.value)||0,price=parseFloat(tr.querySelector('.qt-price')?.value)||0;
+    return{num:i+1,item:tr.querySelector('.qt-item')?.value||'',qty,uom:tr.querySelector('.qt-uom')?.value||'',price,total:qty*price};
+  });
+}
+function rfqSaveQuote(){
+  if(!rfqActiveId){toast('افتح طلباً أولاً',true);return;}
+  const vendor=document.getElementById('qt-vendor').value.trim();
+  if(!vendor){toast('أدخل اسم الشركة / المورد',true);return;}
+  const rows=qtGetRows(),sub=rows.reduce((s,r)=>s+r.total,0);
+  const rfqIdx=rfqSaved.findIndex(r=>String(r.id)===String(rfqActiveId));
+  if(rfqIdx<0){toast('الطلب غير موجود',true);return;}
+  const rfq=rfqSaved[rfqIdx];
+  const editingId=document.getElementById('rfq-add-quote-card').dataset.editingId;
+  if(editingId){const qi=rfq.quotes.findIndex(q=>String(q.id)===String(editingId));if(qi>=0)rfq.quotes.splice(qi,1);delete document.getElementById('rfq-add-quote-card').dataset.editingId;}
+  const quote={
+    id:Date.now(),vendor,
+    vat:document.getElementById('qt-vat').value,
+    ref:document.getElementById('qt-ref').value,
+    date:document.getElementById('qt-date').value,
+    validity:document.getElementById('qt-validity').value,
+    delivery:document.getElementById('qt-delivery').value,
+    payment:document.getElementById('qt-payment').value,
+    contact:document.getElementById('qt-contact').value,
+    rows,subtotal:sub,vat_amount:sub*.15,total:sub*1.15,
+    pdfb64:rfqCurrentPDFb64||null,pdfName:rfqCurrentPDFname||null
+  };
+  rfq.quotes.push(quote);
+  if(vendor&&typeof autoAddSupplier==='function')autoAddSupplier(vendor);
+  rfqSaved[rfqIdx]=rfq;
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+  renderRfqSaved();rfqRenderQuotesList(rfq);rfqUpdateProgress(rfq);rfqUpdateQuoteFormTitle(rfq);rfqResetQuoteForm();
+  toast('✅ تم حفظ العرض — '+vendor);
+}
+function rfqRenderQuotesList(rfq){
+  const el=document.getElementById('rfq-quotes-list');
+  const badge=document.getElementById('rfq-quotes-count-badge');
+  if(!el)return;
+  const quotes=rfq.quotes||[];
+  if(badge)badge.textContent=quotes.length+' من '+rfq.expectedCount+' عروض';
+  if(!quotes.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد عروض بعد</div>';return;}
+  const minTotal=Math.min(...quotes.map(q=>q.total));
+  el.innerHTML=quotes.map((q,i)=>{
+    const isMin=q.total===minTotal&&quotes.length>1;
+    return`<div class="saved-item" style="border-right:3px solid ${isMin?'#276749':'#1DA9BD'};background:${isMin?'#F0FFF4':'#fff'};">
+      <div class="saved-item-info">
+        <strong>${q.vendor}</strong>${isMin?' <span style="font-size:10px;background:#276749;color:#fff;border-radius:8px;padding:1px 6px;">🏆 الأقل</span>':''}
+        <span style="font-size:10px;color:var(--sub);"> | ${q.ref||''} | ${q.date||''}</span>
+        <span style="font-size:13px;color:var(--primary);font-weight:700;display:block;">${q.total.toLocaleString('ar-SA',{maximumFractionDigits:2})} ر.س <span style="font-size:10px;color:var(--sub);">شامل VAT</span></span>
+        <span style="font-size:10px;color:var(--sub);">صلاحية: ${q.validity||'—'} | تسليم: ${q.delivery||'—'}</span>
+      </div>
+      <div class="saved-item-actions">
+        <button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #C3D8F5;" onclick="rfqEditQuote(${i})">✏️ تعديل</button>
+        ${q.pdfb64?`<a href="data:application/pdf;base64,${q.pdfb64}" download="${q.pdfName||'quote.pdf'}" class="btn btn-sm btn-gray">📥 PDF</a>`:''}
+        <button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;" onclick="rfqDelQuote(${i})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function rfqEditQuote(i){
+  const rfq=rfqSaved.find(r=>String(r.id)===String(rfqActiveId));
+  if(!rfq)return;const q=rfq.quotes[i];if(!q)return;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  set('qt-vendor',q.vendor);set('qt-vat',q.vat);set('qt-ref',q.ref);set('qt-date',q.date);
+  set('qt-validity',q.validity);set('qt-delivery',q.delivery);set('qt-payment',q.payment);set('qt-contact',q.contact);
+  const tbody=document.getElementById('qt-tbody');tbody.innerHTML='';
+  (q.rows||[]).forEach((item,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="text-align:center;color:var(--sub);">${i+1}</td><td><input class="qt-item" value="${item.item||''}" style="width:100%;"></td><td><input class="qt-qty" type="number" value="${item.qty||1}" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" value="${item.uom||''}" style="width:62px;"></td><td><input class="qt-price" type="number" value="${item.price||0}" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">${(item.total||0).toFixed(2)}</td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td>`;
+    tbody.appendChild(tr);
+  });qtCalcTotal();
+  if(q.pdfb64){rfqCurrentPDFb64=q.pdfb64;rfqCurrentPDFname=q.pdfName;document.getElementById('rfq-pdf-name').textContent=q.pdfName||'';document.getElementById('rfq-pdf-attached').style.display='flex';}
+  document.getElementById('rfq-add-quote-card').dataset.editingId=String(q.id);
+  document.getElementById('rfq-add-quote-card').style.display='block';
+  document.getElementById('rfq-add-quote-card').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('✏️ وضع التعديل');
+}
+function rfqDelQuote(i){
+  if(!confirm('حذف هذا العرض؟'))return;
+  const rfqIdx=rfqSaved.findIndex(r=>String(r.id)===String(rfqActiveId));if(rfqIdx<0)return;
+  rfqSaved[rfqIdx].quotes.splice(i,1);
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+  const rfq=rfqSaved[rfqIdx];rfqRenderQuotesList(rfq);rfqUpdateProgress(rfq);rfqUpdateQuoteFormTitle(rfq);renderRfqSaved();toast('تم الحذف');
+}
+function rfqResetQuoteForm(){
+  rfqRemovePDF();
+  ['qt-vendor','qt-vat','qt-ref','qt-validity','qt-delivery','qt-payment','qt-contact'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const dt=document.getElementById('qt-date');if(dt)dt.value=new Date().toISOString().split('T')[0];
+  document.getElementById('qt-tbody').innerHTML='<tr><td style="text-align:center;color:var(--sub);">1</td><td><input class="qt-item" placeholder="الصنف" style="width:100%;"></td><td><input class="qt-qty" type="number" value="1" oninput="qtCalcRow(this)" style="width:55px;text-align:center;"></td><td><input class="qt-uom" placeholder="جهاز" style="width:62px;"></td><td><input class="qt-price" type="number" value="0" oninput="qtCalcRow(this)" style="width:100px;text-align:left;font-weight:600;"></td><td class="qt-total" style="font-weight:700;color:var(--primary);text-align:left;padding-right:10px;">0.00</td><td><button onclick="qtDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button></td></tr>';
+  qtCalcTotal();
+  const card=document.getElementById('rfq-add-quote-card');if(card)delete card.dataset.editingId;
+  const st=document.getElementById('rfq-ai-status');if(st)st.style.display='none';
+}
+function rfqSetType(type){
+  if(!rfqActiveId)return;
+  rfqActiveType=type;
+  const rfqIdx=rfqSaved.findIndex(r=>String(r.id)===String(rfqActiveId));if(rfqIdx<0)return;
+  rfqSaved[rfqIdx].type=type;
+  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();
+  ['taameeds','internal'].forEach(t=>{
+    const btn=document.getElementById('rfq-type-'+t);
+    if(btn){btn.style.borderColor=t===type?'#1DA9BD':'var(--border)';btn.style.background=t===type?'#EBF8FA':'#fff';}
+  });
+  const resultEl=document.getElementById('rfq-type-result');
+  if(resultEl){
+    resultEl.style.display='block';
+    resultEl.innerHTML=type==='taameeds'
+      ?`<div style="background:#EBF8FA;border-radius:8px;padding:12px 16px;color:#0D7A8A;font-size:13px;">✅ مُصنّف كـ <strong>تعميد</strong> — ستجد عروضه في <strong>مقارنة الأسعار</strong> و<strong>لجنة فحص العروض</strong> تلقائياً</div>`
+      :`<div style="background:#F0FFF4;border-radius:8px;padding:12px 16px;color:#276749;font-size:13px;">✅ مُصنّف كـ <strong>شراء داخلي</strong> — لن يُربط بلجنة أو مقارنة رسمية</div>`;
+  }
+  toast(type==='taameeds'?'✅ مُصنّف كتعميد':'✅ مُصنّف كشراء داخلي');
 }
 function renderRfqSaved(){
   var el=document.getElementById('rfq-saved');if(!el)return;
@@ -2503,76 +2959,56 @@ function renderRfqSaved(){
   var html='';
   for(var i=0;i<rfqSaved.length;i++){
     var s=rfqSaved[i];
-    html+='<div class="saved-item">'+
-      '<div class="saved-item-info"><strong>السادة / '+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+'</span></div>'+
+    var qDone=(s.quotes||[]).length,qTotal=s.expectedCount||3,isComplete=qDone>=qTotal;
+    var typeBadge=s.type==='taameeds'?'<span style="background:#EBF8FA;color:#0D7A8A;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">📋 تعميد</span>':s.type==='internal'?'<span style="background:#F0FFF4;color:#276749;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">🏢 داخلي</span>':'';
+    var bar='<div style="display:flex;gap:4px;margin-top:4px;">';
+    for(var p=0;p<qTotal;p++)bar+='<div style="width:18px;height:6px;border-radius:3px;background:'+(p<qDone?'#1DA9BD':'#E2E8F0')+'"></div>';
+    bar+='</div>';
+    html+='<div class="saved-item" style="border-right:3px solid '+(isComplete?'#276749':'#1DA9BD')+';">'+
+      '<div class="saved-item-info">'+
+        '<strong style="color:var(--primary);">'+(s.refNum||'RFQ')+'</strong> '+typeBadge+
+        '<strong> — '+(s.company||'')+'</strong>'+
+        '<span style="color:var(--sub);font-size:11px;display:block;">'+(s.date||'')+(s.rows&&s.rows.length?' | '+s.rows.length+' بنود':'')+'</span>'+
+        '<span style="font-size:10px;color:var(--sub);">العروض: '+qDone+'/'+qTotal+'</span>'+bar+
+      '</div>'+
       '<div class="saved-item-actions">'+
-        '<button class="btn btn-primary btn-sm" onclick="rfqEdit('+i+')">تعديل</button>'+
-        '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">PDF</button>'+
+        '<button class="btn btn-primary btn-sm" onclick="rfqOpenQuotes(''+s.id+'')">📥 العروض</button>'+
+        '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #C3D8F5;" onclick="rfqEditHeader('+i+')">✏️ تعديل</button>'+
+        '<button class="btn btn-red btn-sm" onclick="rfqPrintById('+i+')">🖨️ PDF</button>'+
         '<button class="btn btn-gray btn-sm" onclick="rfqDel('+i+')">×</button>'+
       '</div></div>';
   }
   el.innerHTML=html;
 }
-function rfqEdit(i){
+function rfqEditHeader(i){
   const s=rfqSaved[i];if(!s)return;
   document.getElementById('rfq-co').value=s.company||'';
   document.getElementById('rfq-date').value=s.date||'';
   document.getElementById('rfq-notes').value=s.notes||'';
-  // امسح الصفوف الحالية وأعد بناءها
+  document.getElementById('rfq-ref-num').value=s.refNum||'';
+  document.getElementById('rfq-expected-count').value=String(s.expectedCount||3);
   const tbody=document.getElementById('rfq-tbody');
-  if(tbody){
-    tbody.innerHTML='';
-    rfqRows=0;
-    (s.rows||[]).forEach(r=>{
-      rfqRows++;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:60px;"></td><td><input class="rfq-notes" value="${r.notes||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
-      tbody.appendChild(tr);
-    });
-  }
-  // احذفه من المحفوظات ليُعاد حفظه بعد التعديل
-  rfqSaved.splice(i,1);
-  localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
-  renderRfqSaved();
+  if(tbody){tbody.innerHTML='';rfqRows=0;(s.rows||[]).forEach(r=>{rfqRows++;const tr=document.createElement('tr');tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:60px;"></td><td><input class="rfq-notes" value="${r.notes||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;tbody.appendChild(tr);});}
   document.getElementById('rfq-co').scrollIntoView({behavior:'smooth'});
-  toast('تم تحميل RFQ للتعديل ✅');
+  toast('✏️ وضع تعديل بيانات الطلب');
 }
-function rfqDel(i){rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();}
-function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
+function rfqDel(i){if(!confirm('حذف هذا الطلب وعروضه؟'))return;rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();toast('تم الحذف');}
+function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,refNum:document.getElementById('rfq-ref-num').value,date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
 function rfqPrintById(i){const s=rfqSaved[i];if(s)rfqPrintData(s);}
 function rfqPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
-  const SIG=SIG_URL;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
-<div class="page"><img class="bg" src="${FORM_BG}">
-<div class="content">
-<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div>
-<div style="font-size:12px;color:#244062;margin-bottom:12px;">خطاب طلب عرض سعر</div>
-<div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;">
-  <div><strong>السادة / ${d.company||'___'}</strong></div>
-  <div>التاريخ: ${ds}</div>
-</div>
-<p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p>
-<table style="margin-bottom:10px;">
-  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">الرقم</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<table style="margin-bottom:10px;">
-  <tr><td class="blue" colspan="2">Terms & Conditions / الشروط والأحكام</td></tr>
-  <tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr>
-  <tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr>
-  <tr><td class="lbl">الضمان</td><td class="val">-</td></tr>
-  <tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr>
-</table>
-
-</div></div></body></html>`;
-  const w=window.open('','_blank');
-  if(!w){toast('يرجى السماح بالنوافذ المنبثقة في المتصفح',true);return;}
-  w.document.write(html);
-  w.document.close();
-  w.onload=()=>{w.focus();w.print();};
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body><div class="page"><img class="bg" src="${FORM_BG}"><div class="content"><div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div><div style="font-size:12px;color:#244062;margin-bottom:12px;">الرقم المرجعي: ${d.refNum||'—'}</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;"><div><strong>السادة / ${d.company||'___'}</strong></div><div>التاريخ: ${ds}</div></div><p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p><table style="margin-bottom:10px;"><thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead><tbody>${rows}</tbody></table><table style="margin-bottom:10px;"><tr><td class="blue" colspan="2">Terms & Conditions</td></tr><tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr><tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr><tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr></table></div></div></body></html>`;
+  const w=window.open('','_blank');if(!w){toast('يرجى السماح بالنوافذ المنبثقة',true);return;}
+  w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
+}
+function rfqGetTaameedsRFQs(){return rfqSaved.filter(r=>r.type==='taameeds'&&(r.quotes||[]).length>0);}
+function rfqInit(){
+  rfqInitRef();
+  const today=new Date().toISOString().split('T')[0];
+  const d=document.getElementById('rfq-date');if(d&&!d.value)d.value=today;
+  const q=document.getElementById('qt-date');if(q&&!q.value)q.value=today;
 }
 
 /* ══════════════ DN ══════════════ */
@@ -7265,7 +7701,7 @@ async function init(){
 
   // اعرض كل شيء فوراً
   budgetCalc();renderExpenses();
-  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
+  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();rfqInit();
   renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
   if(typeof renderPCGroups==='function')renderPCGroups();
   if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
