@@ -37,9 +37,13 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 /* ── MAIN ── */
 #main{margin-right:var(--sidebar-w);flex:1;padding:24px;min-height:100vh;}
-.page-header{margin-bottom:20px;}
+.page-header{margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;}
+.page-header-text{flex:1;}
 .page-header h1{font-size:20px;color:var(--text);}
 .page-header p{font-size:12px;color:var(--sub);margin-top:2px;}
+.back-btn{display:none;align-items:center;gap:6px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.2s;margin-top:2px;}
+.back-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.back-btn.visible{display:flex;}
 
 /* ── CARDS ── */
 .card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
@@ -104,6 +108,8 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
   .form-grid,.form-grid-3{grid-template-columns:1fr!important;}
   .kpi-grid{grid-template-columns:1fr 1fr!important;}
   .page-header h1{font-size:16px;}
+  .page-header{flex-wrap:wrap;}
+  .back-btn{font-size:11px;padding:5px 10px;}
   .card-header{flex-direction:column;align-items:flex-start;gap:8px;}
   .actions{flex-wrap:wrap;}
   .tbl{font-size:11px;}
@@ -215,10 +221,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ العهدة المالية ══ -->
 <div class="page active" id="page-budget">
-  <div class="page-header">
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text">
     <h1>العهدة المالية لإدارة المشتريات</h1>
     <p>متابعة الميزانية والمصروفات</p>
-  </div>
+  </div></div>
 
   <!-- فلتر الشهر المركزي -->
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
@@ -391,7 +397,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ PO ══ -->
 <div class="page" id="page-po">
-  <div class="page-header"><h1>طلبات الشراء (PO)</h1><p>Local Purchase Order</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>طلبات الشراء (PO)</h1><p>Local Purchase Order</p></div></div>
   <div class="card">
     <div class="card-header"><h3>إنشاء طلب شراء جديد</h3></div>
     <div class="card-body">
@@ -495,7 +501,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ RFQ ══ -->
 <div class="page" id="page-rfq">
-  <div class="page-header"><h1>طلبات عرض السعر (RFQ)</h1><p>Request For Quotation</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>طلبات عرض السعر (RFQ)</h1><p>Request For Quotation</p></div></div>
 
   <!-- ══ فورم إنشاء الطلب ══ -->
   <div class="card">
@@ -710,7 +716,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ DN ══ -->
 <div class="page" id="page-dn">
-  <div class="page-header"><h1>سند الاستلام (Delivery Note)</h1></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>سند الاستلام (Delivery Note)</h1></div></div>
   <div class="card">
     <div class="card-header"><h3>إنشاء سند استلام</h3></div>
     <div class="card-body">
@@ -752,7 +758,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ مقارنة الأسعار ══ -->
 <div class="page" id="page-cmp">
-  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div></div>
 
   <!-- معلومات المقارنة -->
   <div class="card">
@@ -797,7 +803,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ Petty Cash ══ -->
 <div class="page" id="page-pc">
-  <div class="page-header"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div></div>
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
       <h3>إضافة فاتورة جديدة</h3>
@@ -835,7 +841,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ مقارنة الأسعار ══ -->
 <div class="page" id="page-cmp">
-  <div class="page-header"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>مقارنة الأسعار</h1><p>مقارنة عروض الشركات وتحليل التوفير</p></div></div>
 
   <!-- عنوان المقارنة -->
   <div class="card">
@@ -953,10 +959,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ التعاميد ══ -->
 <div class="page" id="page-taameeds">
-  <div class="page-header">
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text">
     <h1>التعاميد</h1>
     <p>حفظ وإدارة ملفات التعاميد والموردين</p>
-  </div>
+  </div></div>
 
   <!-- فورم إضافة/تعديل تعميد -->
   <div class="card" id="taameed-form-card">
@@ -1027,7 +1033,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ العقود ══ -->
 <div class="page" id="page-contracts">
-  <div class="page-header"><h1>العقود</h1><p>إدارة عقود الموردين والخدمات</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>العقود</h1><p>إدارة عقود الموردين والخدمات</p></div></div>
   <div class="card">
     <div class="card-header"><h3 id="contract-form-title">إضافة عقد جديد</h3><button class="btn btn-gray btn-sm" onclick="contractReset()">🔄 جديد</button></div>
     <div class="card-body">
@@ -1130,7 +1136,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ التقرير الشهري ══ -->
 <div class="page" id="page-report-monthly">
-  <div class="page-header"><h1>التقرير الشهري</h1><p>تحليل شامل لأداء المشتريات شهرياً</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>التقرير الشهري</h1><p>تحليل شامل لأداء المشتريات شهرياً</p></div></div>
   <div class="card">
     <div class="card-header"><h3>اختر الشهر</h3></div>
     <div class="card-body">
@@ -1157,7 +1163,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ التقرير النصف سنوي ══ -->
 <div class="page" id="page-report-semi">
-  <div class="page-header"><h1>التقرير النصف سنوي</h1><p>تحليل أداء المشتريات على مدى 6 أشهر</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>التقرير النصف سنوي</h1><p>تحليل أداء المشتريات على مدى 6 أشهر</p></div></div>
   <div class="card">
     <div class="card-header"><h3>اختر النصف</h3></div>
     <div class="card-body">
@@ -1182,7 +1188,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ لجنة فحص العروض ══ -->
 <div class="page" id="page-committee">
-  <div class="page-header"><h1>لجنة فحص العروض</h1><p>إنشاء محاضر لجنة فحص العروض وتصديرها</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>لجنة فحص العروض</h1><p>إنشاء محاضر لجنة فحص العروض وتصديرها</p></div></div>
 
   <!-- فورم إنشاء/تعديل محضر -->
   <div class="card" id="committee-form-card">
@@ -1436,7 +1442,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 </div>
 
 <div class="page" id="page-suppliers">
-  <div class="page-header"><h1>الموردون</h1><p>إدارة بيانات الموردين والخدمات المقدمة</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>الموردون</h1><p>إدارة بيانات الموردين والخدمات المقدمة</p></div></div>
   <div class="card">
     <div class="card-header"><h3 id="supplier-form-title">إضافة مورد جديد</h3><div style="display:flex;gap:6px;"><button class="btn btn-gray btn-sm" onclick="importSuppliersFromExpenses()">📥 استيراد من المصروفات</button><button class="btn btn-gray btn-sm" onclick="supplierReset()">🔄 جديد</button></div></div>
     <div class="card-body">
@@ -1470,7 +1476,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 <!-- ══ التقرير السنوي ══ -->
 
 <div class="page" id="page-report-annual">
-  <div class="page-header"><h1>التقرير السنوي</h1><p>تحليل شامل لأداء المشتريات على مدار السنة</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>التقرير السنوي</h1><p>تحليل شامل لأداء المشتريات على مدار السنة</p></div></div>
   <div class="card">
     <div class="card-header"><h3>اختر السنة</h3></div>
     <div class="card-body">
@@ -1489,7 +1495,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 
 <div class="page" id="page-report-quarterly">
-  <div class="page-header"><h1>التقرير الربع سنوي</h1><p>تحليل الأداء على مدى 3 أشهر</p></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>التقرير الربع سنوي</h1><p>تحليل الأداء على مدى 3 أشهر</p></div></div>
   <div class="card">
     <div class="card-header"><h3>اختر الربع</h3></div>
     <div class="card-body">
@@ -1554,12 +1560,40 @@ function closeSidebar(){
 }
 // إغلاق القائمة عند اختيار صفحة بالجوال
 const origNav=window.nav;
+var navHistory=[];
+var navCurrent='budget';
 function nav(page){
   if(window.innerWidth<=768)closeSidebar();
+  // حفظ الصفحة الحالية في التاريخ (بس لو مختلفة)
+  if(navCurrent && navCurrent!==page) navHistory.push(navCurrent);
+  navCurrent=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  // تحديث زر الرجوع
+  document.querySelectorAll('.back-btn').forEach(function(btn){
+    if(navHistory.length>0){ btn.classList.add('visible'); }
+    else{ btn.classList.remove('visible'); }
+  });
+  // لو جاء من السايدبار → نمسح التاريخ (بداية جديدة)
+  if(event&&event.currentTarget&&event.currentTarget.classList.contains('sb-item')){
+    navHistory=[];
+    document.querySelectorAll('.back-btn').forEach(function(btn){btn.classList.remove('visible');});
+  }
+}
+function navBack(){
+  if(!navHistory.length) return;
+  var prev=navHistory.pop();
+  navCurrent=prev;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('page-'+prev).classList.add('active');
+  // تحديث زر الرجوع
+  document.querySelectorAll('.back-btn').forEach(function(btn){
+    if(navHistory.length>0){ btn.classList.add('visible'); }
+    else{ btn.classList.remove('visible'); }
+  });
 }
 
 async function doLogin(){
