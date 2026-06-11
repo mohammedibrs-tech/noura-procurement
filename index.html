@@ -3546,132 +3546,147 @@ function cmpExcelFromData(title,date,companies){
 
   function sc(cell,v,s){ws[cell]={v:v,t:typeof v==='number'?'n':'s',w:String(v)};if(s)ws[cell].s=s;}
   function merge(r1,c1,r2,c2){ws['!merges'].push({s:{r:r1,c:c1},e:{r:r2,c:c2}});}
-  function hdr(c,v){return{font:{name:'Calibri',sz:9,bold:true,color:W},fill:{patternType:'solid',fgColor:c||C},alignment:{horizontal:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'244062'}},bottom:{style:'thin',color:{rgb:'244062'}},left:{style:'thin',color:{rgb:'244062'}},right:{style:'thin',color:{rgb:'244062'}}}};}
+  function hdr(c,sz){return{font:{name:'Calibri',sz:sz||9,bold:true,color:W},fill:{patternType:'solid',fgColor:c||C},alignment:{horizontal:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'244062'}},bottom:{style:'thin',color:{rgb:'244062'}},left:{style:'thin',color:{rgb:'244062'}},right:{style:'thin',color:{rgb:'244062'}}}};}
   function cell(bg,bold,align){return{font:{name:'Calibri',sz:9,bold:!!bold},fill:{patternType:'solid',fgColor:bg||{rgb:'FFFFFF'}},alignment:{horizontal:align||'center'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}};}
+  function num(v){return{font:{name:'Calibri',sz:9,bold:false},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}},numFmt:'#,##0.00'};}
+  function numBold(bg,color){return{font:{name:'Calibri',sz:10,bold:true,color:color||W},fill:{patternType:'solid',fgColor:bg||C},alignment:{horizontal:'right'},numFmt:'#,##0.00'};}
 
-  // أعمدة ثابتة: الفئة(A) الوصف(B) العدد(C) القيمة الإفرادية(D) الضريبة(E) مبلغ VAT(F) الإجمالي(G)
   var NCOLS=7;
   var CL=['A','B','C','D','E','F','G'];
   var curRow=0;
 
-  // ── عنوان التقرير ──
-  sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
-  merge(curRow,0,curRow,NCOLS-1);
-  curRow++;
-
-  sc('A'+(curRow+1),(date||new Date().toISOString().split('T')[0]),{font:{name:'Calibri',sz:9,color:{rgb:'64748B'}},alignment:{horizontal:'center'}});
-  merge(curRow,0,curRow,NCOLS-1);
-  curRow+=2;
-
-  // ── كل شركة تحت بعض ──
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // الخطوة 1: احسب إجماليات كل شركة
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   var totals=[];
   companies.forEach(function(co,ci){
     var monthly=0;
+    var exPayType=co.paymentType||'total';
+    co.rows.forEach(function(row){
+      var base=(row.count||0)*(row.unitPrice||0);
+      var vt=row.vatType||'none';
+      var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
+      monthly+=(vt==='added'?base+vatAmt:base);
+    });
+    var annual=exPayType==='monthly'?monthly*12:monthly;
+    totals.push({name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,payType:exPayType,rows:co.rows,terms:co.terms||[]});
+  });
+
+  // ترتيب من الأقل للأعلى (بالإجمالي السنوي)
+  var sorted=totals.slice().sort(function(a,b){return a.annual-b.annual;});
+  var best=sorted[0];
+  var minAnnual=best?best.annual:0;
+  var hasPrev=false; // العقد الحالي — سنتركه للمستخدم يضيفه يدوياً (خانة فارغة)
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // جدول المقارنة الرئيسي — أول شيء
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // عنوان التقرير
+  sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:13,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
+  merge(curRow,0,curRow,NCOLS-1); curRow++;
+  sc('A'+(curRow+1),date||'',{font:{name:'Calibri',sz:9,color:{rgb:'64748B'}},alignment:{horizontal:'center'}});
+  merge(curRow,0,curRow,NCOLS-1); curRow+=2;
+
+  // عنوان جدول المقارنة
+  sc('A'+(curRow+1),'جدول مقارنة العروض',hdr(NK,11));
+  merge(curRow,0,curRow,NCOLS-1); curRow++;
+
+  // هيدر الجدول المقارن — 7 أعمدة
+  var cmpCols=['الشركة','قيمة العقد السنوي شاملاً الضريبة','قيمة العقد الجديد المتوقع الأقل','الفرق','مبلغ التوفير','نسبة التوفير','التقييم'];
+  cmpCols.forEach(function(h,i){ sc(CL[i]+(curRow+1),h,hdr(C,9)); });
+  curRow++;
+
+  // صف قيمة العقد الحالي (فارغ قابل للتعبئة)
+  sc('A'+(curRow+1),'العقد الحالي',{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'244062'}},fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'center'}});
+  sc('B'+(curRow+1),'',{fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'right'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}});
+  for(var ci2=2;ci2<NCOLS;ci2++){
+    sc(CL[ci2]+(curRow+1),'',{fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'center'}});
+  }
+  merge(curRow,2,curRow,NCOLS-1); curRow++;
+
+  // صفوف الشركات
+  sorted.forEach(function(t,i){
+    var bg=i===0?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
+    var isBest=i===0;
+    var fColor=isBest?{rgb:'276749'}:NK;
+    var diff=t.annual-minAnnual;
+    var saving=minAnnual>0?diff:0;
+    var savingPct=t.annual>0?((saving/t.annual)*100).toFixed(2)+'%':'—';
+    var rating=isBest?'★ الأفضل':'+'+diff.toLocaleString('ar-SA');
+
+    sc('A'+(curRow+1),t.name,      {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('B'+(curRow+1),'',          {fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}}); // العقد الحالي يكتبه المستخدم
+    sc('C'+(curRow+1),t.annual,    {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('D'+(curRow+1),isBest?0:diff,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('E'+(curRow+1),isBest?0:saving,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('F'+(curRow+1),isBest?'—':savingPct,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('G'+(curRow+1),rating,      {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    curRow++;
+  });
+
+  curRow+=3;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // تفاصيل أسعار كل شركة (من الأقل للأعلى)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sorted.forEach(function(t,ci){
+    var exPayType=t.payType;
+    var monthly=t.monthly;
 
     // اسم الشركة
-    sc('A'+(curRow+1),co.name||'شركة '+(ci+1),hdr(C));
-    merge(curRow,0,curRow,NCOLS-1);
-    curRow++;
+    sc('A'+(curRow+1),(ci+1)+'. '+t.name,hdr(C,10));
+    merge(curRow,0,curRow,NCOLS-1); curRow++;
 
     // هيدر الأعمدة
-    var lastColHdr=exPayType==='monthly'?'الإجمالي السنوي شاملاً الضريبة (ر.س)':'الإجمالي شاملاً الضريبة (ر.س)';
-    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT (ر.س)',lastColHdr].forEach(function(h,i){
-      sc(CL[i]+(curRow+1),h,hdr({rgb:'344E76'}));
+    var lastHdr=exPayType==='monthly'?'الإجمالي السنوي شاملاً الضريبة':'الإجمالي شاملاً الضريبة';
+    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT',lastHdr].forEach(function(h,i){
+      sc(CL[i]+(curRow+1),h,hdr({rgb:'344E76'},9));
     });
     curRow++;
 
-    // صفوف البيانات
-    co.rows.forEach(function(row,ri){
+    // صفوف البنود
+    t.rows.forEach(function(row,ri){
       var bg=ri%2===0?{rgb:'FFFFFF'}:LB;
       var base=(row.count||0)*(row.unitPrice||0);
       var vt=row.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
-      monthly+=total;
-      var vatLabel=vt==='added'?'+ VAT 15%':(vt==='included'?'شامل VAT':'لا ضريبة');
+      var vatLabel=vt==='added'?'VAT 15%':(vt==='included'?'شامل VAT':'لا ضريبة');
       sc('A'+(curRow+1),row.cat||'',    cell(bg));
       sc('B'+(curRow+1),row.nat||'',    cell(bg));
       sc('C'+(curRow+1),row.count||0,   cell(bg));
-      sc('D'+(curRow+1),row.unitPrice||0,cell(bg,false,'right'));
+      sc('D'+(curRow+1),row.unitPrice||0,{...num(),fill:{patternType:'solid',fgColor:bg}});
       sc('E'+(curRow+1),vatLabel,        cell(bg,false,'center'));
-      sc('F'+(curRow+1),vatAmt>0?vatAmt:0,cell(bg,false,'right'));
-      sc('G'+(curRow+1),exPayType==='monthly'?total*12:total, cell(bg,true,'right'));
+      sc('F'+(curRow+1),vatAmt>0?vatAmt:0,{...num(),fill:{patternType:'solid',fgColor:bg}});
+      sc('G'+(curRow+1),exPayType==='monthly'?total*12:total,{...num(),fill:{patternType:'solid',fgColor:bg},font:{name:'Calibri',sz:9,bold:true}});
       curRow++;
     });
 
-    // إجمالي الشركة
-    var exPayType=co.paymentType||'total';
-    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري شاملاً الضريبة':'الإجمالي الكلي شاملاً الضريبة',hdr(C));
-    sc('G'+(curRow+1),monthly,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:C},alignment:{horizontal:'right'}});
-    merge(curRow,0,curRow,5);
-    curRow++;
-
+    // إجمالي
+    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري شاملاً الضريبة':'الإجمالي الكلي شاملاً الضريبة',hdr(C,9));
+    sc('G'+(curRow+1),monthly,numBold(C)); merge(curRow,0,curRow,5); curRow++;
     if(exPayType==='monthly'){
-      sc('F'+(curRow+1),'الإجمالي السنوي شاملاً الضريبة',hdr(NK));
-      sc('G'+(curRow+1),monthly*12,{font:{name:'Calibri',sz:10,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'right'}});
-      merge(curRow,0,curRow,5);
-      curRow++;
+      sc('F'+(curRow+1),'الإجمالي السنوي شاملاً الضريبة',hdr(NK,9));
+      sc('G'+(curRow+1),monthly*12,numBold(NK)); merge(curRow,0,curRow,5); curRow++;
     }
 
     // بنود العقد
-    if(co.terms&&co.terms.length&&co.terms[0]){
-      sc('A'+(curRow+1),'بنود العقد',hdr({rgb:'344E76'}));
-      merge(curRow,0,curRow,NCOLS-1);
-      curRow++;
-      co.terms.forEach(function(t,ti){
-        if(t){
-          sc('A'+(curRow+1),(ti+1)+'. '+t,{font:{name:'Calibri',sz:9},alignment:{horizontal:'right',wrapText:true}});
-          merge(curRow,0,curRow,NCOLS-1);
-          curRow++;
+    if(t.terms&&t.terms.length&&t.terms[0]){
+      sc('A'+(curRow+1),'بنود العقد',hdr({rgb:'344E76'},9)); merge(curRow,0,curRow,NCOLS-1); curRow++;
+      t.terms.forEach(function(tm,ti){
+        if(tm){
+          sc('A'+(curRow+1),(ti+1)+'. '+tm,{font:{name:'Calibri',sz:9},alignment:{horizontal:'right',wrapText:true}});
+          merge(curRow,0,curRow,NCOLS-1); curRow++;
         }
       });
     }
-
-    totals.push({name:co.name||'شركة '+(ci+1),monthly:monthly,annual:exPayType==='monthly'?monthly*12:monthly,payType:exPayType});
-    curRow+=2; // مسافة بين الشركات
+    curRow+=2;
   });
 
-  // ── جدول المقارنة والأفضل ──
-  curRow++;
-  sc('A'+(curRow+1),'جدول المقارنة — من الأفضل؟',hdr(NK));
-  merge(curRow,0,curRow,NCOLS-1);
-  curRow++;
-
-  // هيدر المقارنة
-  var hasMixed=totals.some(function(t){return t.payType==='monthly';});
-  var colBHdr=hasMixed?'الإجمالي الشهري شاملاً الضريبة (ر.س)':'الإجمالي الكلي شاملاً الضريبة (ر.س)';
-  var colCHdr=hasMixed?'الإجمالي السنوي شاملاً الضريبة (ر.س)':'—';
-  [hasMixed?'الشركة':'الشركة','الإجمالي شاملاً الضريبة (ر.س)',colCHdr,'الفرق','نسبة الفرق','التقييم'].forEach(function(h,i){
-    sc(CL[i]+(curRow+1),h,hdr(C));
-  });
-  curRow++;
-
-  // ترتيب تصاعدي
-  var sorted=totals.slice().sort(function(a,b){return a.monthly-b.monthly;});
-  var minM=sorted.length?sorted[0].monthly:0;
-
-  sorted.forEach(function(t,i){
-    var bg=i===0?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
-    var isBest=i===0;
-    var diff=t.monthly-minM;
-    var diffPct=minM>0?((diff/t.monthly)*100).toFixed(1)+'%':'—';
-    var rating=isBest?'★ الأفضل سعراً':'+'+(diff.toLocaleString('ar-SA'))+' ر.س إضافي';
-    sc('A'+(curRow+1),t.name,        {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg}});
-    var dispB=t.monthly;
-    var dispC=t.payType==='monthly'?t.annual:'—';
-    sc('B'+(curRow+1),dispB,     {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
-    sc('C'+(curRow+1),dispC,      {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
-    sc('D'+(curRow+1),diff,          {font:{name:'Calibri',sz:9,color:diff===0?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
-    sc('E'+(curRow+1),diff*12,       {font:{name:'Calibri',sz:9,color:diff===0?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
-    sc('F'+(curRow+1),diffPct,       {font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
-    sc('G'+(curRow+1),rating,        {font:{name:'Calibri',sz:9,bold:isBest,color:isBest?{rgb:'276749'}:NK},fill:{patternType:'solid',fgColor:bg}});
-    curRow++;
-  });
-
-  ws['!cols']=[{wch:20},{wch:18},{wch:7},{wch:15},{wch:12},{wch:15},{wch:18}];
-  ws['!ref']='A1:G'+(curRow+5);
-  ws['!pageSetup']={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0};
-
+  // ضبط عرض الأعمدة
+  ws['!cols']=[{wch:22},{wch:28},{wch:8},{wch:14},{wch:12},{wch:18},{wch:22}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:NCOLS-1}});
   XLSX.utils.book_append_sheet(wb,ws,'مقارنة الأسعار');
   XLSX.writeFile(wb,'مقارنة_'+title+'.xlsx');
   toast('تم تصدير Excel ✅');
