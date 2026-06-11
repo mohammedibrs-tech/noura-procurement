@@ -3600,53 +3600,64 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
   var curContract=parseFloat(currentContract)||0;
   var curVendor=currentVendor||'العقد الحالي';
 
-  // عنوان التقرير
-  sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:13,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
+  // ── عنوان التقرير ──
+  sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   merge(curRow,0,curRow,NCOLS-1); curRow++;
   sc('A'+(curRow+1),date||'',{font:{name:'Calibri',sz:9,color:{rgb:'64748B'}},alignment:{horizontal:'center'}});
   merge(curRow,0,curRow,NCOLS-1); curRow+=2;
 
-  // عنوان جدول المقارنة
-  sc('A'+(curRow+1),'جدول مقارنة العروض',hdr(NK,11));
+  // ── بطاقة العقد الحالي — منفصلة فوق الجدول ──
+  if(curContract>0){
+    var curDiff  = curContract - minAnnual;
+    var curPct   = ((curDiff/curContract)*100).toFixed(2)+'%';
+
+    // عنوان البطاقة
+    sc('A'+(curRow+1),'العقد الحالي',hdr({rgb:'92400E'},10));
+    merge(curRow,0,curRow,NCOLS-1); curRow++;
+
+    // صف المعلومات: المورد | القيمة | أفضل عرض جديد | الفرق | التوفير | النسبة
+    var cardHdrs=['المورد الحالي','قيمة العقد الحالي شاملاً الضريبة','أفضل عرض جديد','الفرق','مبلغ التوفير','نسبة التوفير'];
+    cardHdrs.forEach(function(h,i){
+      sc(['A','B','C','D','E','F'][i]+(curRow+1),h,hdr({rgb:'B45309'},9));
+    });
+    curRow++;
+    var YEL2={rgb:'FFFBEB'};
+    var stBold=function(c){return{font:{name:'Calibri',sz:10,bold:true,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'right'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}},numFmt:'#,##0.00'};};
+    sc('A'+(curRow+1),curVendor,    {font:{name:'Calibri',sz:10,bold:true,color:{rgb:'92400E'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'center'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}}});
+    sc('B'+(curRow+1),curContract,  stBold('92400E'));
+    sc('C'+(curRow+1),minAnnual,    stBold('276749'));
+    sc('D'+(curRow+1),curDiff,      stBold('C53030'));
+    sc('E'+(curRow+1),curDiff,      stBold('276749'));
+    sc('F'+(curRow+1),curPct,       {font:{name:'Calibri',sz:10,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'center'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}}});
+    curRow+=2;
+  }
+
+  // ── عنوان جدول العروض المقدمة ──
+  sc('A'+(curRow+1),'العروض المقدمة — مرتبة من الأقل سعراً',hdr(NK,10));
   merge(curRow,0,curRow,NCOLS-1); curRow++;
 
-  // هيدر — 6 أعمدة (بدون عمود "قيمة العقد السنوي الحالي")
-  var NCOLS6=6; var CL6=['A','B','C','D','E','F'];
-  var cmpCols=['الشركة','قيمة العقد الجديد المتوقع الأقل','الفرق عن الحالي','مبلغ التوفير','نسبة التوفير','التقييم'];
-  cmpCols.forEach(function(h,i){ sc(CL6[i]+(curRow+1),h,hdr(C,9)); });
+  // هيدر الجدول — 5 أعمدة واضحة
+  var CL5=['A','B','C','D','E'];
+  var NCOLS5=5;
+  var cmpHdrs=['الشركة','قيمة العقد السنوي شاملاً الضريبة','الفرق عن العقد الحالي','مبلغ التوفير','نسبة التوفير'];
+  cmpHdrs.forEach(function(h,i){ sc(CL5[i]+(curRow+1),h,hdr(C,9)); });
   curRow++;
 
-  // صف العقد الحالي
-  var YEL={rgb:'FFF8E7'};
-  var curDiff = curContract>0 ? curContract-minAnnual : 0;
-  var curSaving = curContract>0 ? curDiff : 0;
-  var curPct = (curContract>0&&curContract>0) ? ((curDiff/curContract)*100).toFixed(2)+'%' : '—';
-  sc('A'+(curRow+1),curVendor,   {font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  sc('B'+(curRow+1),curContract>0?curContract:'—', curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9,color:{rgb:'999999'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  sc('C'+(curRow+1),curContract>0?curDiff:'—',     curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'C53030'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  sc('D'+(curRow+1),curContract>0?curSaving:'—',   curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  sc('E'+(curRow+1),curContract>0?curPct:'—',      {font:{name:'Calibri',sz:9,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  sc('F'+(curRow+1),curContract>0?'العقد الحالي':'أدخل قيمة العقد الحالي',{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
-  curRow++;
-
-  // صفوف الشركات الجديدة
+  // صفوف الشركات
   sorted.forEach(function(t,i){
-    var bg=i===0?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
     var isBest=i===0;
+    var bg=isBest?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
     var fColor=isBest?{rgb:'276749'}:NK;
-    // الفرق: مقارنة بالعقد الحالي إذا موجود، وإلا مقارنة بالأقل
-    var diffVsCur = curContract>0 ? curContract-t.annual : t.annual-minAnnual;
-    var savingVsCur = curContract>0 ? diffVsCur : (isBest?0:t.annual-minAnnual);
-    var pctVsCur = curContract>0 ? ((diffVsCur/curContract)*100).toFixed(2)+'%' : (isBest?'—':((savingVsCur/t.annual)*100).toFixed(2)+'%');
-    var diffDisplay = curContract>0 ? diffVsCur : (isBest?0:t.annual-minAnnual);
-    var rating = isBest?'★ الأفضل':(curContract>0&&diffVsCur>0?'+'+diffVsCur.toLocaleString('ar-SA'):'+'+((t.annual-minAnnual).toLocaleString('ar-SA')));
+    var diffVsCur = curContract>0 ? curContract-t.annual : (isBest?0:t.annual-minAnnual);
+    var pctVsCur  = curContract>0&&curContract>0 ? ((diffVsCur/curContract)*100).toFixed(2)+'%' : (isBest?'—':((((t.annual-minAnnual)/t.annual)*100).toFixed(2))+'%');
+    var stN=function(c,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}},numFmt:'#,##0.00'};};
+    var stC=function(c,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}};};
 
-    sc('A'+(curRow+1),t.name,         {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
-    sc('B'+(curRow+1),t.annual,       {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('C'+(curRow+1),diffDisplay,    {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('D'+(curRow+1),savingVsCur,    {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('E'+(curRow+1),pctVsCur,       {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
-    sc('F'+(curRow+1),rating,         {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('A'+(curRow+1),t.name,       stC(isBest?'276749':'1A2B4A',isBest));
+    sc('B'+(curRow+1),t.annual,     stN(isBest?'276749':'1A2B4A',isBest));
+    sc('C'+(curRow+1),curContract>0?diffVsCur:0, stN(isBest?'276749':'C53030',false));
+    sc('D'+(curRow+1),curContract>0?diffVsCur:0, stN(isBest?'276749':'276749',false));
+    sc('E'+(curRow+1),pctVsCur,     stC(isBest?'276749':'276749',isBest));
     curRow++;
   });
 
