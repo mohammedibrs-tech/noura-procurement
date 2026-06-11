@@ -767,6 +767,8 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="form-grid">
         <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
         <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
+        <div class="field"><label>قيمة العقد الحالي شاملاً الضريبة</label><input id="cmp-current-contract" type="number" placeholder="0.00" style="direction:ltr;text-align:right;"></div>
+        <div class="field"><label>اسم المورد الحالي</label><input id="cmp-current-vendor" placeholder="اسم الشركة الحالية"></div>
       </div>
     </div>
   </div>
@@ -850,6 +852,8 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="form-grid">
         <div class="field"><label>عنوان المقارنة</label><input id="cmp-title" placeholder="مثال: مقارنة خدمات الأمن 2026"></div>
         <div class="field"><label>التاريخ</label><input id="cmp-date" type="date"></div>
+        <div class="field"><label>قيمة العقد الحالي شاملاً الضريبة</label><input id="cmp-current-contract" type="number" placeholder="0.00" style="direction:ltr;text-align:right;"></div>
+        <div class="field"><label>اسم المورد الحالي</label><input id="cmp-current-vendor" placeholder="اسم الشركة الحالية"></div>
       </div>
     </div>
   </div>
@@ -3438,22 +3442,28 @@ function cmpReset(){
   cmpCompanies=[];cmpEditId=null;
   document.getElementById('cmp-title').value='';
   document.getElementById('cmp-date').value=new Date().toISOString().split('T')[0];
+  if(document.getElementById('cmp-current-contract')) document.getElementById('cmp-current-contract').value='';
+  if(document.getElementById('cmp-current-vendor')) document.getElementById('cmp-current-vendor').value='';
+  if(document.getElementById('cmp-current-contract')) document.getElementById('cmp-current-contract').value='';
+  if(document.getElementById('cmp-current-vendor')) document.getElementById('cmp-current-vendor').value='';
   renderCmpCompanies();
 }
 async function cmpSaveData(){
   const title=document.getElementById('cmp-title').value||'مقارنة بدون عنوان';
   const date=document.getElementById('cmp-date').value;
+  const currentContract=parseFloat(document.getElementById('cmp-current-contract')?.value)||0;
+  const currentVendor=document.getElementById('cmp-current-vendor')?.value||'';
   if(!cmpCompanies.length){toast('أضف شركة واحدة على الأقل',true);return;}
   if(cmpEditId){
     // تعديل موجود
     const idx=cmpSaved.findIndex(s=>s.id===cmpEditId);
-    if(idx!==-1) cmpSaved[idx]={id:cmpEditId,title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))};
+    if(idx!==-1) cmpSaved[idx]={id:cmpEditId,title,date,currentContract,currentVendor,companies:JSON.parse(JSON.stringify(cmpCompanies))};
     cmpEditId=null;
     toast('تم تحديث المقارنة ✅');
   }else{
-    const cmpData={title,date,companies:JSON.parse(JSON.stringify(cmpCompanies))};
+    const cmpData={title,date,currentContract,currentVendor,companies:JSON.parse(JSON.stringify(cmpCompanies))};
     const cmpRes=await sbInsert('procurement_cmp',{title,date,companies:JSON.stringify(cmpData.companies)});
-    if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies});
+    if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies,currentContract,currentVendor});
     else cmpSaved.unshift({...cmpData,id:Date.now()});
     toast('تم حفظ المقارنة ✅');
   }
@@ -3464,6 +3474,8 @@ async function cmpSaveData(){
   cmpEditId=null;
   document.getElementById('cmp-title').value='';
   document.getElementById('cmp-date').value=new Date().toISOString().split('T')[0];
+  if(document.getElementById('cmp-current-contract')) document.getElementById('cmp-current-contract').value='';
+  if(document.getElementById('cmp-current-vendor')) document.getElementById('cmp-current-vendor').value='';
   renderCmpCompanies();
 }
 
@@ -3490,6 +3502,8 @@ function cmpLoad(i){
   const s=cmpSaved[i];if(!s)return;
   document.getElementById('cmp-title').value=s.title||'';
   document.getElementById('cmp-date').value=s.date||'';
+  if(document.getElementById('cmp-current-contract')) document.getElementById('cmp-current-contract').value=s.currentContract||'';
+  if(document.getElementById('cmp-current-vendor')) document.getElementById('cmp-current-vendor').value=s.currentVendor||'';
   cmpCompanies=JSON.parse(JSON.stringify(s.companies||[]));
   cmpEditId=s.id;
   renderCmpCompanies();
@@ -3528,15 +3542,17 @@ function cmpExcel(){
   cmpSyncAllInputs();
   const title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
   const date=document.getElementById('cmp-date').value||new Date().toISOString().split('T')[0];
-  cmpExcelFromData(title,date,cmpCompanies);
+  const currentContract=parseFloat(document.getElementById('cmp-current-contract')?.value)||0;
+  const currentVendor=document.getElementById('cmp-current-vendor')?.value||'';
+  cmpExcelFromData(title,date,cmpCompanies,currentContract,currentVendor);
 }
 
 function cmpExcelById(i){
   const s=cmpSaved[i];if(!s)return;
-  cmpExcelFromData(s.title,s.date,s.companies||[]);
+  cmpExcelFromData(s.title,s.date,s.companies||[],s.currentContract||0,s.currentVendor||'');
 }
 
-function cmpExcelFromData(title,date,companies){
+function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
   if(!companies||!companies.length){toast('لا توجد بيانات',true);return;}
   var wb=XLSX.utils.book_new();
   var ws={};
@@ -3581,6 +3597,8 @@ function cmpExcelFromData(title,date,companies){
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // جدول المقارنة الرئيسي — أول شيء
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  var curContract=parseFloat(currentContract)||0;
+  var curVendor=currentVendor||'العقد الحالي';
 
   // عنوان التقرير
   sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:13,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
@@ -3592,36 +3610,43 @@ function cmpExcelFromData(title,date,companies){
   sc('A'+(curRow+1),'جدول مقارنة العروض',hdr(NK,11));
   merge(curRow,0,curRow,NCOLS-1); curRow++;
 
-  // هيدر الجدول المقارن — 7 أعمدة
-  var cmpCols=['الشركة','قيمة العقد السنوي شاملاً الضريبة','قيمة العقد الجديد المتوقع الأقل','الفرق','مبلغ التوفير','نسبة التوفير','التقييم'];
-  cmpCols.forEach(function(h,i){ sc(CL[i]+(curRow+1),h,hdr(C,9)); });
+  // هيدر — 6 أعمدة (بدون عمود "قيمة العقد السنوي الحالي")
+  var NCOLS6=6; var CL6=['A','B','C','D','E','F'];
+  var cmpCols=['الشركة','قيمة العقد الجديد المتوقع الأقل','الفرق عن الحالي','مبلغ التوفير','نسبة التوفير','التقييم'];
+  cmpCols.forEach(function(h,i){ sc(CL6[i]+(curRow+1),h,hdr(C,9)); });
   curRow++;
 
-  // صف قيمة العقد الحالي (فارغ قابل للتعبئة)
-  sc('A'+(curRow+1),'العقد الحالي',{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'244062'}},fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'center'}});
-  sc('B'+(curRow+1),'',{fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'right'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}});
-  for(var ci2=2;ci2<NCOLS;ci2++){
-    sc(CL[ci2]+(curRow+1),'',{fill:{patternType:'solid',fgColor:{rgb:'FFF8E7'}},alignment:{horizontal:'center'}});
-  }
-  merge(curRow,2,curRow,NCOLS-1); curRow++;
+  // صف العقد الحالي
+  var YEL={rgb:'FFF8E7'};
+  var curDiff = curContract>0 ? curContract-minAnnual : 0;
+  var curSaving = curContract>0 ? curDiff : 0;
+  var curPct = (curContract>0&&curContract>0) ? ((curDiff/curContract)*100).toFixed(2)+'%' : '—';
+  sc('A'+(curRow+1),curVendor,   {font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  sc('B'+(curRow+1),curContract>0?curContract:'—', curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9,color:{rgb:'999999'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  sc('C'+(curRow+1),curContract>0?curDiff:'—',     curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'C53030'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  sc('D'+(curRow+1),curContract>0?curSaving:'—',   curContract>0?{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'right'},numFmt:'#,##0.00'}:{font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  sc('E'+(curRow+1),curContract>0?curPct:'—',      {font:{name:'Calibri',sz:9,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  sc('F'+(curRow+1),curContract>0?'العقد الحالي':'أدخل قيمة العقد الحالي',{font:{name:'Calibri',sz:9,bold:true,color:{rgb:'744210'}},fill:{patternType:'solid',fgColor:YEL},alignment:{horizontal:'center'}});
+  curRow++;
 
-  // صفوف الشركات
+  // صفوف الشركات الجديدة
   sorted.forEach(function(t,i){
     var bg=i===0?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
     var isBest=i===0;
     var fColor=isBest?{rgb:'276749'}:NK;
-    var diff=t.annual-minAnnual;
-    var saving=minAnnual>0?diff:0;
-    var savingPct=t.annual>0?((saving/t.annual)*100).toFixed(2)+'%':'—';
-    var rating=isBest?'★ الأفضل':'+'+diff.toLocaleString('ar-SA');
+    // الفرق: مقارنة بالعقد الحالي إذا موجود، وإلا مقارنة بالأقل
+    var diffVsCur = curContract>0 ? curContract-t.annual : t.annual-minAnnual;
+    var savingVsCur = curContract>0 ? diffVsCur : (isBest?0:t.annual-minAnnual);
+    var pctVsCur = curContract>0 ? ((diffVsCur/curContract)*100).toFixed(2)+'%' : (isBest?'—':((savingVsCur/t.annual)*100).toFixed(2)+'%');
+    var diffDisplay = curContract>0 ? diffVsCur : (isBest?0:t.annual-minAnnual);
+    var rating = isBest?'★ الأفضل':(curContract>0&&diffVsCur>0?'+'+diffVsCur.toLocaleString('ar-SA'):'+'+((t.annual-minAnnual).toLocaleString('ar-SA')));
 
-    sc('A'+(curRow+1),t.name,      {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
-    sc('B'+(curRow+1),'',          {fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}}); // العقد الحالي يكتبه المستخدم
-    sc('C'+(curRow+1),t.annual,    {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('D'+(curRow+1),isBest?0:diff,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('E'+(curRow+1),isBest?0:saving,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
-    sc('F'+(curRow+1),isBest?'—':savingPct,{font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
-    sc('G'+(curRow+1),rating,      {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('A'+(curRow+1),t.name,         {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('B'+(curRow+1),t.annual,       {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('C'+(curRow+1),diffDisplay,    {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('D'+(curRow+1),savingVsCur,    {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    sc('E'+(curRow+1),pctVsCur,       {font:{name:'Calibri',sz:9,color:isBest?{rgb:'276749'}:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
+    sc('F'+(curRow+1),rating,         {font:{name:'Calibri',sz:9,bold:isBest,color:fColor},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     curRow++;
   });
 
@@ -3685,7 +3710,7 @@ function cmpExcelFromData(title,date,companies){
   });
 
   // ضبط عرض الأعمدة
-  ws['!cols']=[{wch:22},{wch:28},{wch:8},{wch:14},{wch:12},{wch:18},{wch:22}];
+  ws['!cols']=[{wch:26},{wch:22},{wch:18},{wch:18},{wch:14},{wch:16},{wch:22}];
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:NCOLS-1}});
   XLSX.utils.book_append_sheet(wb,ws,'مقارنة الأسعار');
   XLSX.writeFile(wb,'مقارنة_'+title+'.xlsx');
