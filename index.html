@@ -419,6 +419,11 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>رقم التواصل</label><input id="po-phone" placeholder="+966XXXXXXXXX"></div>
         <div class="field"><label>الإيميل</label><input id="po-email" placeholder="info@vendor.com"></div>
       </div>
+      <div class="section-title">التواقيع</div>
+      <div class="form-grid" id="po-signatories-grid">
+        <div class="field"><label>الاسم الأول</label><input class="po-signatory" placeholder="الاسم ومسماه الوظيفي" style="width:100%;"></div>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="poAddSignatory()" style="margin-bottom:12px;">+ إضافة موقّع</button>
       <div class="section-title">البنود</div>
       <table class="tbl" style="margin-bottom:8px;">
         <thead><tr><th>م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th><th></th></tr></thead>
@@ -726,6 +731,11 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>التاريخ</label><input id="dn-date" type="date"></div>
         <div class="field"><label>تم التسليم من قبل</label><input id="dn-from" placeholder="اسم المسلّم"></div>
       </div>
+      <div class="section-title">التواقيع</div>
+      <div class="form-grid" id="po-signatories-grid">
+        <div class="field"><label>الاسم الأول</label><input class="po-signatory" placeholder="الاسم ومسماه الوظيفي" style="width:100%;"></div>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="poAddSignatory()" style="margin-bottom:12px;">+ إضافة موقّع</button>
       <div class="section-title">البنود</div>
       <table class="tbl" style="margin-bottom:8px;">
         <thead><tr><th>م</th><th>المنتج / الخدمة</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
@@ -2527,6 +2537,23 @@ function poExcelData(d){
   toast('تم التصدير — افتحه في Excel واطبعه PDF');
 }
 
+function poAddSignatory(){
+  var grid=document.getElementById('po-signatories-grid');
+  if(!grid)return;
+  var count=grid.querySelectorAll('.po-signatory').length+1;
+  var div=document.createElement('div');
+  div.className='field';
+  div.style.display='flex';
+  div.style.gap='6px';
+  div.innerHTML='<input class="po-signatory" placeholder="الاسم ومسماه الوظيفي" style="flex:1;"><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;">×</button>';
+  grid.appendChild(div);
+}
+function poGetSignatories(){
+  var inputs=document.querySelectorAll('#po-signatories-grid .po-signatory');
+  var arr=[];
+  inputs.forEach(function(inp){if(inp.value.trim())arr.push(inp.value.trim());});
+  return arr;
+}
 function poPrint(){poPrintData({
   company:document.getElementById('po-co').value,num:document.getElementById('po-num').value,
   date:document.getElementById('po-date').value,vat:document.getElementById('po-vat').value,
@@ -2534,7 +2561,8 @@ function poPrint(){poPrintData({
   addr:document.getElementById('po-addr').value,
   del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
   del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
-  quote:document.getElementById('po-quote').value,terms:poGetTerms(),rows:poGetRows()
+  quote:document.getElementById('po-quote').value,terms:poGetTerms(),rows:poGetRows(),
+  signatories:poGetSignatories()
 });}
 
 function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:JSON.parse(s.rows||'[]')});}
@@ -3246,13 +3274,14 @@ function dnPrintData(d){
     <div style="margin-bottom:40px;">Received By / تم الاستلام من قبل</div>
     <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br><br>التاريخ:<br><br>التوقيع:</div>
   </div>
+  ${(d.signatories&&d.signatories.length?d.signatories:[]).map((name,si)=>`
   <div style="flex:1;text-align:center;">
-    <div style="margin-bottom:20px;">Delivered By / تم التسليم من قبل</div>
+    <div style="margin-bottom:20px;">${name}</div>
     <div style="position:relative;display:inline-block;min-width:120px;">
-      <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
-      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">أ.محمد ابراهيم الجمعان</div>
+      ${si===0?`<img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">`:""}
+      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">${name}</div>
     </div>
-  </div>
+  </div>`).join("")}
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -3557,22 +3586,68 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
   var wb=XLSX.utils.book_new();
   var ws={};
   ws['!merges']=[];
-  var C={rgb:'244062'},W={rgb:'FFFFFF'},LB={rgb:'EBF8FA'},GR={rgb:'276749'},RD={rgb:'C53030'};
-  var NK={rgb:'1A2B4A'};
 
-  function sc(cell,v,s){ws[cell]={v:v,t:typeof v==='number'?'n':'s',w:String(v)};if(s)ws[cell].s=s;}
+  // ── الألوان ──
+  var WHITE ={rgb:'FFFFFF'};
+  var NAVY  ={rgb:'1F3864'}; // أزرق داكن — هيدرات رئيسية
+  var BLUE  ={rgb:'2F5496'}; // أزرق متوسط — هيدرات أعمدة
+  var LGRAY ={rgb:'D9E1F2'}; // رمادي فاتح — صفوف زوجية
+  var AMBER ={rgb:'FFC000'}; // أصفر/ذهبي — العقد الحالي هيدر
+  var AMBL  ={rgb:'FFF2CC'}; // أصفر فاتح — صف العقد الحالي
+  var GREEN ={rgb:'E2EFDA'}; // أخضر فاتح — أفضل عرض
+  var GREEND={rgb:'375623'}; // أخضر داكن — خط أفضل عرض
+  var W     ={rgb:'FFFFFF'};
+
+  var NCOLS=6; var CL=['A','B','C','D','E','F'];
+
+  function sc(cell,v,s){
+    ws[cell]={v:v,t:typeof v==='number'?'n':'s',w:String(v)};
+    if(s)ws[cell].s=s;
+  }
   function merge(r1,c1,r2,c2){ws['!merges'].push({s:{r:r1,c:c1},e:{r:r2,c:c2}});}
-  function hdr(c,sz){return{font:{name:'Calibri',sz:sz||9,bold:true,color:W},fill:{patternType:'solid',fgColor:c||C},alignment:{horizontal:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'244062'}},bottom:{style:'thin',color:{rgb:'244062'}},left:{style:'thin',color:{rgb:'244062'}},right:{style:'thin',color:{rgb:'244062'}}}};}
-  function cell(bg,bold,align){return{font:{name:'Calibri',sz:9,bold:!!bold},fill:{patternType:'solid',fgColor:bg||{rgb:'FFFFFF'}},alignment:{horizontal:align||'center'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}};}
-  function num(v){return{font:{name:'Calibri',sz:9,bold:false},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}},numFmt:'#,##0.00'};}
-  function numBold(bg,color){return{font:{name:'Calibri',sz:10,bold:true,color:color||W},fill:{patternType:'solid',fgColor:bg||C},alignment:{horizontal:'right'},numFmt:'#,##0.00'};}
 
-  var NCOLS=7;
-  var CL=['A','B','C','D','E','F','G'];
+  // ── أنماط متكررة ──
+  function sTitle(){
+    return{font:{name:'Calibri',sz:14,bold:true,color:WHITE},
+           fill:{patternType:'solid',fgColor:NAVY},
+           alignment:{horizontal:'center',vertical:'center'},
+           border:bdr(NAVY)};
+  }
+  function sSectionHdr(bg,fc){
+    return{font:{name:'Calibri',sz:11,bold:true,color:fc||WHITE},
+           fill:{patternType:'solid',fgColor:bg||NAVY},
+           alignment:{horizontal:'center',vertical:'center'},
+           border:bdr(bg||NAVY)};
+  }
+  function sColHdr(bg){
+    return{font:{name:'Calibri',sz:9,bold:true,color:WHITE},
+           fill:{patternType:'solid',fgColor:bg||BLUE},
+           alignment:{horizontal:'center',vertical:'center',wrapText:true},
+           border:bdr(bg||BLUE)};
+  }
+  function sData(bg,align,bold,color){
+    return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'1A2B4A'}},
+           fill:{patternType:'solid',fgColor:bg||WHITE},
+           alignment:{horizontal:align||'right',vertical:'center'},
+           border:bdr({rgb:'BDD7EE'})};
+  }
+  function sNum(bg,bold,color){
+    return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'1A2B4A'}},
+           fill:{patternType:'solid',fgColor:bg||WHITE},
+           alignment:{horizontal:'right',vertical:'center'},
+           border:bdr({rgb:'BDD7EE'}),
+           numFmt:'#,##0.00'};
+  }
+  function bdr(c){
+    var bc=c||{rgb:'BDD7EE'};
+    return{top:{style:'thin',color:bc},bottom:{style:'thin',color:bc},
+           left:{style:'thin',color:bc},right:{style:'thin',color:bc}};
+  }
+
   var curRow=0;
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // الخطوة 1: احسب إجماليات كل شركة
+  // احسب الإجماليات أولاً
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   var totals=[];
   companies.forEach(function(co,ci){
@@ -3587,142 +3662,153 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
     var annual=exPayType==='monthly'?monthly*12:monthly;
     totals.push({name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,payType:exPayType,rows:co.rows,terms:co.terms||[]});
   });
-
-  // ترتيب من الأقل للأعلى (بالإجمالي السنوي)
   var sorted=totals.slice().sort(function(a,b){return a.annual-b.annual;});
-  var best=sorted[0];
-  var minAnnual=best?best.annual:0;
-  var hasPrev=false; // العقد الحالي — سنتركه للمستخدم يضيفه يدوياً (خانة فارغة)
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // جدول المقارنة الرئيسي — أول شيء
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  var minAnnual=sorted.length?sorted[0].annual:0;
   var curContract=parseFloat(currentContract)||0;
   var curVendor=currentVendor||'العقد الحالي';
 
-  // ── عنوان التقرير ──
-  sc('A'+(curRow+1),title,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // عنوان التقرير
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sc('A'+(curRow+1),title,sTitle());
   merge(curRow,0,curRow,NCOLS-1); curRow++;
   sc('A'+(curRow+1),date||'',{font:{name:'Calibri',sz:9,color:{rgb:'64748B'}},alignment:{horizontal:'center'}});
   merge(curRow,0,curRow,NCOLS-1); curRow+=2;
 
-  // ── بطاقة العقد الحالي — منفصلة فوق الجدول ──
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // بطاقة العقد الحالي
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   if(curContract>0){
-    var curDiff  = curContract - minAnnual;
-    var curPct   = ((curDiff/curContract)*100).toFixed(2)+'%';
+    var curDiff=curContract-minAnnual;
+    var curPct=((curDiff/curContract)*100).toFixed(2)+'%';
 
-    // عنوان البطاقة
-    sc('A'+(curRow+1),'العقد الحالي',hdr({rgb:'92400E'},10));
+    // عنوان القسم
+    sc('A'+(curRow+1),'العقد الحالي',sSectionHdr(AMBER,{rgb:'1A2B4A'}));
     merge(curRow,0,curRow,NCOLS-1); curRow++;
 
-    // صف المعلومات: المورد | القيمة | أفضل عرض جديد | الفرق | التوفير | النسبة
-    var cardHdrs=['المورد الحالي','قيمة العقد الحالي شاملاً الضريبة','أفضل عرض جديد','الفرق','مبلغ التوفير','نسبة التوفير'];
-    cardHdrs.forEach(function(h,i){
-      sc(['A','B','C','D','E','F'][i]+(curRow+1),h,hdr({rgb:'B45309'},9));
-    });
+    // هيدرات الأعمدة
+    ['الشركة الحالية','قيمة العقد السنوي شاملاً الضريبة','أفضل عرض جديد','الفرق','مبلغ التوفير','نسبة التوفير']
+      .forEach(function(h,i){ sc(CL[i]+(curRow+1),h,sColHdr(BLUE)); });
     curRow++;
-    var YEL2={rgb:'FFFBEB'};
-    var stBold=function(c){return{font:{name:'Calibri',sz:10,bold:true,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'right'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}},numFmt:'#,##0.00'};};
-    sc('A'+(curRow+1),curVendor,    {font:{name:'Calibri',sz:10,bold:true,color:{rgb:'92400E'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'center'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}}});
-    sc('B'+(curRow+1),curContract,  stBold('92400E'));
-    sc('C'+(curRow+1),minAnnual,    stBold('276749'));
-    sc('D'+(curRow+1),curDiff,      stBold('C53030'));
-    sc('E'+(curRow+1),curDiff,      stBold('276749'));
-    sc('F'+(curRow+1),curPct,       {font:{name:'Calibri',sz:10,bold:true,color:{rgb:'276749'}},fill:{patternType:'solid',fgColor:YEL2},alignment:{horizontal:'center'},border:{bottom:{style:'medium',color:{rgb:'F59E0B'}},left:{style:'thin',color:{rgb:'FCD34D'}},right:{style:'thin',color:{rgb:'FCD34D'}}}});
+
+    // صف بيانات العقد الحالي
+    sc('A'+(curRow+1),curVendor,      sData(AMBL,'right',true,{rgb:'1A2B4A'}));
+    sc('B'+(curRow+1),curContract,    sNum(AMBL,true,{rgb:'1A2B4A'}));
+    sc('C'+(curRow+1),minAnnual,      sNum(AMBL,true,{rgb:'375623'}));
+    sc('D'+(curRow+1),curDiff,        sNum(AMBL,true,{rgb:'C53030'}));
+    sc('E'+(curRow+1),curDiff,        sNum(AMBL,true,{rgb:'375623'}));
+    sc('F'+(curRow+1),curPct,         sData(AMBL,'center',true,{rgb:'375623'}));
     curRow+=2;
   }
 
-  // ── عنوان جدول العروض المقدمة ──
-  sc('A'+(curRow+1),'العروض المقدمة — مرتبة من الأقل سعراً',hdr(NK,10));
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // جدول العروض المقدمة
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sc('A'+(curRow+1),'العروض المقدمة',sSectionHdr(NAVY,WHITE));
   merge(curRow,0,curRow,NCOLS-1); curRow++;
 
-  // هيدر الجدول — 5 أعمدة واضحة
-  var CL5=['A','B','C','D','E'];
-  var NCOLS5=5;
-  var cmpHdrs=['الشركة','قيمة العقد السنوي شاملاً الضريبة','الفرق عن العقد الحالي','مبلغ التوفير','نسبة التوفير'];
-  cmpHdrs.forEach(function(h,i){ sc(CL5[i]+(curRow+1),h,hdr(C,9)); });
+  // هيدرات الأعمدة
+  ['الشركة','قيمة العقد السنوي شاملاً الضريبة','الفرق عن العقد الحالي','مبلغ التوفير','نسبة التوفير','']
+    .forEach(function(h,i){ sc(CL[i]+(curRow+1),h,sColHdr(BLUE)); });
   curRow++;
 
-  // صفوف الشركات
   sorted.forEach(function(t,i){
     var isBest=i===0;
-    var bg=isBest?{rgb:'E6F4EA'}:(i%2===0?{rgb:'FFFFFF'}:LB);
-    var fColor=isBest?{rgb:'276749'}:NK;
-    var diffVsCur = curContract>0 ? curContract-t.annual : (isBest?0:t.annual-minAnnual);
-    var pctVsCur  = curContract>0&&curContract>0 ? ((diffVsCur/curContract)*100).toFixed(2)+'%' : (isBest?'—':((((t.annual-minAnnual)/t.annual)*100).toFixed(2))+'%');
-    var stN=function(c,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}},numFmt:'#,##0.00'};};
-    var stC=function(c,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:c||'1A2B4A'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}};};
+    var bg=isBest?GREEN:(i%2===0?WHITE:LGRAY);
+    var fc=isBest?GREEND:{rgb:'1A2B4A'};
+    var diffVsCur=curContract>0?curContract-t.annual:(isBest?0:t.annual-minAnnual);
+    var pctVsCur=curContract>0?((diffVsCur/curContract)*100).toFixed(2)+'%':(isBest?'—':((((t.annual-minAnnual)/t.annual)*100).toFixed(2))+'%');
 
-    sc('A'+(curRow+1),t.name,       stC(isBest?'276749':'1A2B4A',isBest));
-    sc('B'+(curRow+1),t.annual,     stN(isBest?'276749':'1A2B4A',isBest));
-    sc('C'+(curRow+1),curContract>0?diffVsCur:0, stN(isBest?'276749':'C53030',false));
-    sc('D'+(curRow+1),curContract>0?diffVsCur:0, stN(isBest?'276749':'276749',false));
-    sc('E'+(curRow+1),pctVsCur,     stC(isBest?'276749':'276749',isBest));
+    sc('A'+(curRow+1),t.name,        sData(bg,'right',isBest,fc));
+    sc('B'+(curRow+1),t.annual,      sNum(bg,isBest,fc));
+    sc('C'+(curRow+1),curContract>0?diffVsCur:0, sNum(bg,false,fc));
+    sc('D'+(curRow+1),curContract>0?diffVsCur:0, sNum(bg,false,fc));
+    sc('E'+(curRow+1),pctVsCur,      sData(bg,'center',isBest,fc));
+    sc('F'+(curRow+1),isBest?'★ الأفضل':'',sData(bg,'center',isBest,fc));
     curRow++;
   });
 
-  curRow+=3;
+  curRow+=2;
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // تفاصيل أسعار كل شركة (من الأقل للأعلى)
+  // تفاصيل أسعار كل شركة
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   sorted.forEach(function(t,ci){
     var exPayType=t.payType;
     var monthly=t.monthly;
 
     // اسم الشركة
-    sc('A'+(curRow+1),(ci+1)+'. '+t.name,hdr(C,10));
+    sc('A'+(curRow+1),(ci+1)+'. '+t.name, sSectionHdr(BLUE,WHITE));
     merge(curRow,0,curRow,NCOLS-1); curRow++;
 
-    // هيدر الأعمدة
+    // هيدرات الأعمدة
     var lastHdr=exPayType==='monthly'?'الإجمالي السنوي شاملاً الضريبة':'الإجمالي شاملاً الضريبة';
-    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT',lastHdr].forEach(function(h,i){
-      sc(CL[i]+(curRow+1),h,hdr({rgb:'344E76'},9));
-    });
+    ['الفئة','الوصف','العدد','القيمة الإفرادية','الضريبة','مبلغ VAT',lastHdr]
+      .forEach(function(h,i){
+        sc(['A','B','C','D','E','F','G'][i]+(curRow+1),h,sColHdr(BLUE));
+      });
     curRow++;
 
     // صفوف البنود
     t.rows.forEach(function(row,ri){
-      var bg=ri%2===0?{rgb:'FFFFFF'}:LB;
+      var bg=ri%2===0?WHITE:LGRAY;
       var base=(row.count||0)*(row.unitPrice||0);
       var vt=row.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
       var vatLabel=vt==='added'?'VAT 15%':(vt==='included'?'شامل VAT':'لا ضريبة');
-      sc('A'+(curRow+1),row.cat||'',    cell(bg));
-      sc('B'+(curRow+1),row.nat||'',    cell(bg));
-      sc('C'+(curRow+1),row.count||0,   cell(bg));
-      sc('D'+(curRow+1),row.unitPrice||0,{...num(),fill:{patternType:'solid',fgColor:bg}});
-      sc('E'+(curRow+1),vatLabel,        cell(bg,false,'center'));
-      sc('F'+(curRow+1),vatAmt>0?vatAmt:0,{...num(),fill:{patternType:'solid',fgColor:bg}});
-      sc('G'+(curRow+1),exPayType==='monthly'?total*12:total,{...num(),fill:{patternType:'solid',fgColor:bg},font:{name:'Calibri',sz:9,bold:true}});
+      sc('A'+(curRow+1),row.cat||'',    sData(bg,'right'));
+      sc('B'+(curRow+1),row.nat||'',    sData(bg,'right'));
+      sc('C'+(curRow+1),row.count||0,   sData(bg,'center'));
+      sc('D'+(curRow+1),row.unitPrice||0,sNum(bg));
+      sc('E'+(curRow+1),vatLabel,        sData(bg,'center'));
+      sc('F'+(curRow+1),vatAmt>0?vatAmt:0,sNum(bg));
+      sc('G'+(curRow+1),exPayType==='monthly'?total*12:total,sNum(bg,true));
       curRow++;
     });
 
-    // إجمالي
-    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري شاملاً الضريبة':'الإجمالي الكلي شاملاً الضريبة',hdr(C,9));
-    sc('G'+(curRow+1),monthly,numBold(C)); merge(curRow,0,curRow,5); curRow++;
+    // صفوف الإجمالي
+    var TBL=['A','B','C','D','E','F','G'];
+    // دمج A→F مع الإجمالي في G
+    for(var ci2=0;ci2<6;ci2++){
+      sc(TBL[ci2]+(curRow+1),'',{fill:{patternType:'solid',fgColor:BLUE},border:bdr(BLUE)});
+    }
+    sc('F'+(curRow+1),exPayType==='monthly'?'الإجمالي الشهري شاملاً الضريبة':'الإجمالي الكلي شاملاً الضريبة',
+       {font:{name:'Calibri',sz:9,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:BLUE},alignment:{horizontal:'right'},border:bdr(BLUE)});
+    sc('G'+(curRow+1),monthly,
+       {font:{name:'Calibri',sz:10,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:BLUE},alignment:{horizontal:'right'},border:bdr(BLUE),numFmt:'#,##0.00'});
+    merge(curRow,0,curRow,4); curRow++;
+
     if(exPayType==='monthly'){
-      sc('F'+(curRow+1),'الإجمالي السنوي شاملاً الضريبة',hdr(NK,9));
-      sc('G'+(curRow+1),monthly*12,numBold(NK)); merge(curRow,0,curRow,5); curRow++;
+      for(var ci3=0;ci3<6;ci3++){
+        sc(TBL[ci3]+(curRow+1),'',{fill:{patternType:'solid',fgColor:NAVY},border:bdr(NAVY)});
+      }
+      sc('F'+(curRow+1),'الإجمالي السنوي شاملاً الضريبة',
+         {font:{name:'Calibri',sz:9,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:NAVY},alignment:{horizontal:'right'},border:bdr(NAVY)});
+      sc('G'+(curRow+1),monthly*12,
+         {font:{name:'Calibri',sz:10,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:NAVY},alignment:{horizontal:'right'},border:bdr(NAVY),numFmt:'#,##0.00'});
+      merge(curRow,0,curRow,4); curRow++;
     }
 
     // بنود العقد
     if(t.terms&&t.terms.length&&t.terms[0]){
-      sc('A'+(curRow+1),'بنود العقد',hdr({rgb:'344E76'},9)); merge(curRow,0,curRow,NCOLS-1); curRow++;
+      sc('A'+(curRow+1),'بنود العقد',sColHdr(BLUE));
+      merge(curRow,0,curRow,6); curRow++;
       t.terms.forEach(function(tm,ti){
         if(tm){
-          sc('A'+(curRow+1),(ti+1)+'. '+tm,{font:{name:'Calibri',sz:9},alignment:{horizontal:'right',wrapText:true}});
-          merge(curRow,0,curRow,NCOLS-1); curRow++;
+          sc('A'+(curRow+1),(ti+1)+'. '+tm,
+             {font:{name:'Calibri',sz:9},fill:{patternType:'solid',fgColor:WHITE},
+              alignment:{horizontal:'right',wrapText:true},border:bdr({rgb:'BDD7EE'})});
+          merge(curRow,0,curRow,6); curRow++;
         }
       });
     }
     curRow+=2;
   });
 
-  // ضبط عرض الأعمدة
-  ws['!cols']=[{wch:26},{wch:22},{wch:18},{wch:18},{wch:14},{wch:16},{wch:22}];
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:NCOLS-1}});
+  // ── عرض الأعمدة ──
+  ws['!cols']=[{wch:28},{wch:22},{wch:18},{wch:16},{wch:14},{wch:14},{wch:22}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:6}});
   XLSX.utils.book_append_sheet(wb,ws,'مقارنة الأسعار');
   XLSX.writeFile(wb,'مقارنة_'+title+'.xlsx');
   toast('تم تصدير Excel ✅');
