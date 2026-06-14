@@ -342,6 +342,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
           <input id="exp-amount" type="number" placeholder="0">
         </div>
         <div class="field">
+          <label>رسوم التحويل (إن وجد)</label>
+          <input id="exp-fee" type="number" placeholder="0">
+        </div>
+        <div class="field">
           <label>التاريخ</label>
           <input id="exp-date" type="date">
         </div>
@@ -375,8 +379,8 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     </div>
     <div class="card-body" style="overflow-x:auto;">
       <table class="tbl">
-        <thead><tr><th>الإدارة</th><th>رقم الفاتورة</th><th>البند</th><th>المبلغ</th><th>الشهر</th><th>التاريخ</th><th>ملاحظات</th><th></th></tr></thead>
-        <tbody id="exp-tbody"><tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات</td></tr></tbody>
+        <thead><tr><th>الإدارة</th><th>رقم الفاتورة</th><th>البند</th><th>المبلغ</th><th>رسوم التحويل</th><th>الشهر</th><th>التاريخ</th><th>ملاحظات</th><th></th></tr></thead>
+        <tbody id="exp-tbody"><tr><td colspan="9" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات</td></tr></tbody>
       </table>
       <div id="exp-total-row" style="text-align:left;padding:8px 12px;font-weight:700;color:#C53030;font-size:12px;"></div>
     </div>
@@ -1913,7 +1917,8 @@ async function expAdd(){
   const monthKey=year+'-'+month;
 
 
-  const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
+  const transferFee=parseFloat(document.getElementById('exp-fee').value)||0;
+  const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,transfer_fee:transferFee,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
   const localRow={...row,id:Date.now()};
   expenses.unshift(localRow);
   localStorage.setItem('expenses_local',JSON.stringify(expenses));
@@ -1937,6 +1942,7 @@ async function expAdd(){
   const expVendorEl=document.getElementById('exp-vendor');if(expVendorEl)expVendorEl.value='';
   document.getElementById('exp-item').value='';
   document.getElementById('exp-amount').value='';
+  document.getElementById('exp-fee').value='';
   document.getElementById('exp-notes').value='';
   document.getElementById('exp-inv').value='';
   // Update filters to match the month we just added to
@@ -1976,7 +1982,7 @@ function renderExpenses(){
     if (filterYear) return eYear === filterYear;
     return true;
   });
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
     var tr=document.getElementById('exp-total-row');if(tr)tr.textContent='';return;}
   var depts=['إدارة المشتريات','إدارة التدريب','إدارة الجودة','إدارة العمليات','إدارة الموارد البشرية','إدارة الدعم والخدمات','إدارة تقنية المعلومات','إدارة التسويق','قسم التدريب والتطوير','مكتب السكرتير','أخرى'];
   var html='';
@@ -1994,6 +2000,7 @@ function renderExpenses(){
     html+='<td><input value="'+(e.invoice_num||'')+'" onchange="expUpdate('+realIdx+',\'invoice_num\',this.value)" style="border:none;background:transparent;width:90px;font-size:11px;" placeholder="—"></td>';
     html+='<td><input value="'+(e.item_name||'')+'" onchange="expUpdate('+realIdx+',\'item_name\',this.value)" style="border:none;background:transparent;width:100%;font-size:11px;"></td>';
     html+='<td><input type="number" value="'+(parseFloat(e.amount)||0)+'" onchange="expUpdate('+realIdx+',\'amount\',this.value)" style="border:none;background:transparent;width:110px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
+    html+='<td><input type="number" value="'+(parseFloat(e.transfer_fee)||0)+'" onchange="expUpdate('+realIdx+',\'transfer_fee\',this.value)" style="border:none;background:transparent;width:80px;font-size:11px;text-align:right;color:#7C3AED;" placeholder="0"></td>';
     html+='<td style="color:#64748B;font-size:11px;">'+(e.month_key||'—')+'</td>';
     html+='<td style="color:#64748B;font-size:11px;">'+(e.expense_date||'—')+'</td>';
     html+='<td style="color:#64748B;font-size:11px;">'+(e.notes||'—')+'</td>';
@@ -2144,24 +2151,29 @@ function expExcel(){
   // ── سجل المصروفات التفصيلي ──
   sc(ws,`A${r+1}`,'سجل المصروفات التفصيلي',hS(NK,12));
   ws['!merges'].push({s:{r,c:0},e:{r,c:5}}); r++;
-  ['الإدارة','البند','المبلغ (ر.س)','التاريخ','ملاحظات',''].forEach((h,i)=>{
+  ['الإدارة','البند','المبلغ (ر.س)','رسوم التحويل (ر.س)','التاريخ','ملاحظات',''].forEach((h,i)=>{
     sc(ws,String.fromCharCode(65+i)+(r+1),h,hS(C,10));
   });
   r++;
+  let totalFees=0;
   expenses.forEach((e,i)=>{
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
+    const fee=parseFloat(e.transfer_fee)||0;
+    totalFees+=fee;
     sc(ws,`A${r+1}`,e.department||'—',dS(bg));
     sc(ws,`B${r+1}`,e.item_name||'—',dS(bg));
     sc(ws,`C${r+1}`,parseFloat(e.amount)||0,{...dS(bg,RD,true),alignment:{horizontal:'right'}});
-    sc(ws,`D${r+1}`,e.expense_date||'—',{...dS(bg),alignment:{horizontal:'center'}});
-    sc(ws,`E${r+1}`,e.notes||'—',dS(bg));
+    sc(ws,`D${r+1}`,fee>0?fee:'—',{...dS(bg,{rgb:'7C3AED'}),alignment:{horizontal:'right'}});
+    sc(ws,`E${r+1}`,e.expense_date||'—',{...dS(bg),alignment:{horizontal:'center'}});
+    sc(ws,`F${r+1}`,e.notes||'—',dS(bg));
     r++;
   });
   // إجمالي
   sc(ws,`B${r+1}`,'الإجمالي الكلي',hS(C,10));
   sc(ws,`C${r+1}`,spent,{...hS(C,11),alignment:{horizontal:'right'}});
+  sc(ws,`D${r+1}`,totalFees>0?totalFees:'—',{...hS(C,11),alignment:{horizontal:'right'}});
   ws['!merges'].push({s:{r,c:0},e:{r,c:1}});
-  ws['!merges'].push({s:{r,c:3},e:{r,c:5}});
+  ws['!merges'].push({s:{r,c:4},e:{r,c:6}});
   r+=3;
 
   // ── التوقيعات ──
@@ -2185,8 +2197,8 @@ function expExcel(){
   // أضف صورة التوقيع كـ base64 في الخلية كـ note/overlay
   // xlsx-js-style لا يدعم addImage مباشرة - PDF هو المكان الصح للتوقيع
 
-  ws['!cols']=[{wch:22},{wch:28},{wch:16},{wch:22},{wch:20},{wch:12}];
-  ws['!ref']='A1:F'+(r+2);
+  ws['!cols']=[{wch:22},{wch:28},{wch:16},{wch:18},{wch:22},{wch:20},{wch:12}];
+  ws['!ref']='A1:G'+(r+2);
   ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0};
 
   XLSX.utils.book_append_sheet(wb,ws,'العهدة المالية');
@@ -2215,7 +2227,7 @@ function expPrint(){
   const deptMap={};
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
-  const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
+  const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#7C3AED;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
   const CSS=`@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}.report-title{font-size:14px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:12px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:12px;}.kpi-box{padding:9px 12px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:3px;}.kpi-val{font-size:18px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:8px;color:#1DA9BD;margin-top:2px;}.section-title{font-size:10px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:3px;margin-bottom:7px;margin-top:10px;}table{width:100%;border-collapse:collapse;font-size:9px;}thead th{padding:4px 7px;text-align:right;font-size:8px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:4px 7px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:16px;margin-top:12px;padding-top:8px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
@@ -2232,9 +2244,9 @@ function expPrint(){
 <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أكثر المشتريات</th></tr></thead>
 <tbody>${deptSorted.map(([d,v])=>{const top=Object.entries(v.items).sort((a,b)=>b[1]-a[1])[0];const pct=spent>0?((v.total/spent)*100).toFixed(1)+'%':'0%';return`<tr><td class="val">${d}</td><td class="teal val" style="text-align:right;">${v.total.toLocaleString('ar-SA')} ر.س</td><td class="muted" style="text-align:center;">${pct}</td><td class="muted">${top?top[0]:'—'}</td></tr>`;}).join('')}</tbody></table>
 <div class="section-title">سجل المصروفات التفصيلي</div>
-<table><thead><tr><th>الإدارة</th><th>البند</th><th style="text-align:right;">المبلغ</th><th style="text-align:center;">التاريخ</th><th>ملاحظات</th></tr></thead>
+<table><thead><tr><th>الإدارة</th><th>البند</th><th style="text-align:right;">المبلغ</th><th style="text-align:right;">رسوم التحويل</th><th style="text-align:center;">التاريخ</th><th>ملاحظات</th></tr></thead>
 <tbody>${expRows}
-<tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الكلي</td><td class="teal val" style="text-align:right;">${spent.toLocaleString('ar-SA')} ر.س</td><td colspan="2"></td></tr></tbody></table>
+<tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الكلي</td><td class="teal val" style="text-align:right;">${spent.toLocaleString('ar-SA')} ر.س</td><td class="val" style="text-align:right;color:#7C3AED;">${filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0)>0?filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td colspan="2"></td></tr></tbody></table>
 
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
