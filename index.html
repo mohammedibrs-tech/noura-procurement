@@ -420,10 +420,11 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>الإيميل</label><input id="po-email" placeholder="info@vendor.com"></div>
       </div>
       <div class="section-title">التواقيع</div>
-      <div class="form-grid" id="po-signatories-grid">
-        <div class="field"><label>الاسم الأول</label><input class="po-signatory" placeholder="الاسم ومسماه الوظيفي" style="width:100%;"></div>
+      <div class="form-grid">
+        <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" placeholder="أ.محمد ابراهيم الجمعان"></div>
+        <div class="field"><label>Reviewed By — مدير الإدارة الداخلية</label><input id="po-sig2" placeholder="أ.عمرو يحيى جاد"></div>
+        <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
-      <button class="btn btn-gray btn-sm" onclick="poAddSignatory()" style="margin-bottom:12px;">+ إضافة موقّع</button>
       <div class="section-title">البنود</div>
       <table class="tbl" style="margin-bottom:8px;">
         <thead><tr><th>م</th><th>الصنف</th><th>الوصف</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th><th></th></tr></thead>
@@ -732,10 +733,11 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>تم التسليم من قبل</label><input id="dn-from" placeholder="اسم المسلّم"></div>
       </div>
       <div class="section-title">التواقيع</div>
-      <div class="form-grid" id="po-signatories-grid">
-        <div class="field"><label>الاسم الأول</label><input class="po-signatory" placeholder="الاسم ومسماه الوظيفي" style="width:100%;"></div>
+      <div class="form-grid">
+        <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" placeholder="أ.محمد ابراهيم الجمعان"></div>
+        <div class="field"><label>Reviewed By — مدير الإدارة الداخلية</label><input id="po-sig2" placeholder="أ.عمرو يحيى جاد"></div>
+        <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
-      <button class="btn btn-gray btn-sm" onclick="poAddSignatory()" style="margin-bottom:12px;">+ إضافة موقّع</button>
       <div class="section-title">البنود</div>
       <table class="tbl" style="margin-bottom:8px;">
         <thead><tr><th>م</th><th>المنتج / الخدمة</th><th>الكمية</th><th>ملاحظات</th><th></th></tr></thead>
@@ -2368,6 +2370,9 @@ function poEditById(i){
   document.getElementById('po-del-addr').value=s.del_addr||'';
   document.getElementById('po-del-vat').value=s.del_vat||'';
   document.getElementById('po-quote').value=s.quote||'';
+  if(document.getElementById('po-sig1')) document.getElementById('po-sig1').value=s.sig1||'';
+  if(document.getElementById('po-sig2')) document.getElementById('po-sig2').value=s.sig2||'';
+  if(document.getElementById('po-sig3')) document.getElementById('po-sig3').value=s.sig3||'';
 
   // الشروط
   if(s.terms) poSetTerms(s.terms);
@@ -2456,6 +2461,9 @@ async function poSave(){
     del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
     del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
     quote:document.getElementById('po-quote').value,rows:JSON.stringify(poGetRows()),
+    sig1:document.getElementById('po-sig1')?.value||'',
+    sig2:document.getElementById('po-sig2')?.value||'',
+    sig3:document.getElementById('po-sig3')?.value||'',
     created_at:new Date().toISOString()
   };
   if(poEditIdx !== null){
@@ -2562,7 +2570,9 @@ function poPrint(){poPrintData({
   del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
   del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
   quote:document.getElementById('po-quote').value,terms:poGetTerms(),rows:poGetRows(),
-  signatories:poGetSignatories()
+  sig1:document.getElementById('po-sig1')?.value||'',
+  sig2:document.getElementById('po-sig2')?.value||'',
+  sig3:document.getElementById('po-sig3')?.value||''
 });}
 
 function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:JSON.parse(s.rows||'[]')});}
@@ -3270,18 +3280,27 @@ function dnPrintData(d){
   <tbody>${rows}</tbody>
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:20px;">
+  <!-- Prepared By -->
   <div style="flex:1;text-align:center;">
-    <div style="margin-bottom:40px;">Received By / تم الاستلام من قبل</div>
-    <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">الاسم:<br><br>التاريخ:<br><br>التوقيع:</div>
+    <div style="margin-bottom:6px;font-size:9px;color:#555;">Prepared By / أعدت بواسطة</div>
+    <div style="margin-bottom:40px;font-size:10px;font-weight:700;">مسؤول المشتريات</div>
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">${d.sig1||'أ.محمد ابراهيم الجمعان'}</div>
   </div>
-  ${(d.signatories&&d.signatories.length?d.signatories:[]).map((name,si)=>`
+  <!-- Reviewed By -->
   <div style="flex:1;text-align:center;">
-    <div style="margin-bottom:20px;">${name}</div>
-    <div style="position:relative;display:inline-block;min-width:120px;">
-      ${si===0?`<img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">`:""}
-      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;">${name}</div>
+    <div style="margin-bottom:6px;font-size:9px;color:#555;">Reviewed By / تم مراجعته من قبل</div>
+    <div style="margin-bottom:4px;font-size:10px;font-weight:700;">مدير الإدارة الداخلية</div>
+    <div style="position:relative;display:inline-block;min-width:140px;">
+      <img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:75px;object-fit:contain;z-index:1;pointer-events:none;">
+      <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;position:relative;z-index:0;margin-top:56px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
     </div>
-  </div>`).join("")}
+  </div>
+  <!-- Approved By -->
+  <div style="flex:1;text-align:center;">
+    <div style="margin-bottom:6px;font-size:9px;color:#555;">Approved By / تم اعتماده من قبل</div>
+    <div style="margin-bottom:40px;font-size:10px;font-weight:700;">الرئيس التنفيذي</div>
+    <div style="border-top:1px solid #000;padding-top:6px;font-size:10px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
+  </div>
 </div>
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
