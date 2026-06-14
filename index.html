@@ -422,7 +422,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="section-title">التواقيع</div>
       <div class="form-grid">
         <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
-        <div class="field"><label>Reviewed By — مدير الإدارة الداخلية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
+        <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
       <div class="section-title">البنود</div>
@@ -735,7 +735,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="section-title">التواقيع</div>
       <div class="form-grid">
         <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
-        <div class="field"><label>Reviewed By — مدير الإدارة الداخلية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
+        <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
       <div class="section-title">البنود</div>
@@ -2688,23 +2688,23 @@ table{border-collapse:collapse;width:100%;}
   </table>
 
   <!-- الاعتمادات -->
-  <table style="margin-bottom:6px;">
+  <table style="margin-bottom:4px;">
     <tr><td colspan="3" class="blue" style="text-align:center;">Approvals / الاعتمادات</td></tr>
   </table>
-  <div style="display:flex;justify-content:space-between;gap:14px;text-align:center;margin-top:10px;">
+  <div style="display:flex;justify-content:space-between;gap:14px;text-align:center;margin-top:6px;">
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;margin-bottom:2px;">Prepared By /<br>أعدت بواسطة</div>
-      <div style="font-size:9px;color:#555;margin-bottom:40px;">مسؤول المشتريات</div>
+      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Prepared By / أعدت بواسطة</div>
+      <div style="font-size:9px;color:#555;margin-bottom:22px;">مسؤول المشتريات</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;">${d.sig1||'أ.محمد ابراهيم الجمعان'}</div>
     </div>
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;margin-bottom:2px;">Reviewed By /<br>تم مراجعته من قبل</div>
-      <div style="font-size:9px;color:#555;margin-bottom:40px;">مدير الإدارة الداخلية</div>
+      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Reviewed By / تم مراجعته من قبل</div>
+      <div style="font-size:9px;color:#555;margin-bottom:22px;">مدير الإدارة المالية</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
     </div>
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;margin-bottom:2px;">Approved By /<br>تم اعتماده من قبل</div>
-      <div style="font-size:9px;color:#555;margin-bottom:40px;">الرئيس التنفيذي</div>
+      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
+      <div style="font-size:9px;color:#555;margin-bottom:22px;">الرئيس التنفيذي</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
     </div>
   </div>
