@@ -2252,6 +2252,20 @@ function expPrint(){
 <tbody>${expRows}
 <tr style="border-top:1px solid #E2E8F0;"><td colspan="2" class="val">الإجمالي الكلي</td><td class="teal val" style="text-align:right;">${spent.toLocaleString('ar-SA')} ر.س</td><td class="val" style="text-align:right;color:#000000;">${filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0)>0?filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td colspan="2"></td></tr></tbody></table>
 
+<div class="sig-area">
+  <div class="sig-box">
+    <div style="font-weight:700;margin-bottom:50px;">Prepared By / مسؤول المشتريات</div>
+    <div style="position:relative;border-top:1px solid #000;padding-top:5px;">
+      <img src="${MAJ_SIG}" style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%) rotate(-12deg);width:72px;object-fit:contain;z-index:5;pointer-events:none;opacity:0.92;">
+      أ.محمد ابراهيم الجمعان
+    </div>
+  </div>
+  <div class="sig-box">
+    <div style="font-weight:700;margin-bottom:50px;">Reviewed By / أخصائي الحسابات</div>
+    <div style="border-top:1px solid #000;padding-top:5px;">&nbsp;</div>
+  </div>
+</div>
+
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
