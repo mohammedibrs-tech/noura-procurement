@@ -1997,7 +1997,7 @@ function renderExpenses(){
     for(var di=0;di<depts.length;di++){
       opts+='<option value="'+depts[di]+'"'+(e.department===depts[di]?' selected':'')+'>'+depts[di]+'</option>';
     }
-    total+=parseFloat(e.amount)||0;
+    total+=expTotal(e);
     html+='<tr>';
     html+='<td><select onchange="expUpdate('+realIdx+',\'department\',this.value)" style="border:none;background:transparent;font-size:11px;width:140px;">'+opts+'</select></td>';
     html+='<td><input value="'+(e.invoice_num||'')+'" onchange="expUpdate('+realIdx+',\'invoice_num\',this.value)" style="border:none;background:transparent;width:90px;font-size:11px;" placeholder="—"></td>';
