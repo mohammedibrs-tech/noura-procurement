@@ -8513,6 +8513,20 @@ var revCompanies = JSON.parse(localStorage.getItem('rev_companies')||'[]');
 var revSavedList = JSON.parse(localStorage.getItem('rev_saved')||'[]');
 var revEditId = null;
 
+function revCalcCurrent(){
+  var sp=parseFloat(document.getElementById('rev-cur-price').value)||0;
+  var oa=parseFloat(document.getElementById('rev-cur-our').value)||0;
+  var ta=parseFloat(document.getElementById('rev-cur-their').value)||0;
+  var el=document.getElementById('rev-cur-result');
+  if(!sp){el.style.display='none';return;}
+  var ourPct=sp>0?((oa/sp)*100).toFixed(1):'—';
+  var theirPct=sp>0?((ta/sp)*100).toFixed(1):'—';
+  el.style.display='flex';
+  el.innerHTML='<span>سعر الخدمة: <b>'+sp.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b></span>'
+    +'<span>حصة نورة: <b>'+oa.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b> ('+ourPct+'%)</span>'
+    +'<span>حصة مقدم الخدمة: <b>'+ta.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b> ('+theirPct+'%)</span>';
+}
+
 function revReset(){
   if(revCompanies.length&&!confirm('مسح المقارنة الحالية؟'))return;
   revCompanies=[]; revEditId=null;
@@ -8520,6 +8534,11 @@ function revReset(){
   document.getElementById('rev-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('rev-service-type').value='';
   document.getElementById('rev-notes').value='';
+  document.getElementById('rev-cur-vendor').value='';
+  document.getElementById('rev-cur-price').value='';
+  document.getElementById('rev-cur-our').value='';
+  document.getElementById('rev-cur-their').value='';
+  document.getElementById('rev-cur-result').style.display='none';
   renderRevCompanies();
 }
 
@@ -8642,27 +8661,56 @@ function renderRevCompanies(){
 }
 
 function renderRevSummary(){
-  if(revCompanies.length<2){document.getElementById('rev-summary-card').style.display='none';return;}
+  if(!revCompanies.length){document.getElementById('rev-summary-card').style.display='none';return;}
   document.getElementById('rev-summary-card').style.display='block';
+
+  var curPrice=parseFloat(document.getElementById('rev-cur-price')?.value)||0;
+  var curOur=parseFloat(document.getElementById('rev-cur-our')?.value)||0;
+  var curTheir=parseFloat(document.getElementById('rev-cur-their')?.value)||0;
+  var curVendor=document.getElementById('rev-cur-vendor')?.value||'';
+  var curOurPct=curPrice>0?(curOur/curPrice)*100:0;
+
   var rows=revCompanies.map(function(co){
     var t=revCalcTotals(co);
-    var ourPct=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1):0;
-    return{name:co.name||'—',ourTotal:t.ourTotal,theirTotal:t.theirTotal,grandTotal:t.grandTotal,ourPct:parseFloat(ourPct)};
+    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    return{name:co.name||'—',ourTotal:t.ourTotal,theirTotal:t.theirTotal,grandTotal:t.grandTotal,ourPct:p};
   });
   var maxPct=Math.max.apply(null,rows.map(function(r){return r.ourPct;}));
+  var hasCur=curPrice>0;
+
   var html='<div style="overflow-x:auto;"><table class="tbl"><thead><tr>'
-    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th style="background:#1a6632;">حصة شركة نورة لتعليم القيادة (ر.س)</th><th style="background:#1a6632;">نسبة شركة نورة لتعليم القيادة %</th><th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th><th>الحكم</th>'
+    +'<th>الشركة</th><th>سعر الخدمة (ر.س)</th>'
+    +'<th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th>'
+    +'<th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
+    +(hasCur?'<th>الفرق في نسبة نورة</th>':'')
     +'</tr></thead><tbody>';
+
+  if(hasCur){
+    html+='<tr style="background:#f0f0f0;font-weight:700;">'
+      +'<td>'+(curVendor||'العقد الحالي')+'</td>'
+      +'<td>'+curPrice.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+curOur.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="text-align:center;">'+curOurPct.toFixed(1)+'%</td>'
+      +'<td>'+curTheir.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="text-align:center;">'+(curPrice>0?((curTheir/curPrice)*100).toFixed(1)+'%':'—')+'</td>'
+      +'<td style="text-align:center;">—</td>'
+      +'</tr>';
+  }
+
   rows.forEach(function(r){
-    var isBest=r.ourPct===maxPct&&maxPct>0;
-    html+='<tr style="background:'+(isBest?'#f0fff4':'#fff')+'">'
-      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+r.name+'</td>'
+    var isBest=Math.abs(r.ourPct-maxPct)<0.01&&maxPct>0;
+    var diff=hasCur?(r.ourPct-curOurPct):null;
+    var diffCell=diff!==null
+      ?'<td style="text-align:center;font-weight:700;color:'+(diff>0?'#276749':(diff<0?'#C53030':'#555'))+';">'+(diff>0?'+':'')+diff.toFixed(1)+'%</td>'
+      :'';
+    html+='<tr style="background:'+(isBest?'#f8f8f8':'#fff')+'">'
+      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+r.name+(isBest?' ★':'')+'</td>'
       +'<td>'+r.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="color:#276749;font-weight:700;">'+r.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="color:#276749;font-weight:700;text-align:center;">'+r.ourPct+'%</td>'
-      +'<td style="color:#C53030;">'+r.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="color:#C53030;text-align:center;">'+(r.grandTotal>0?(100-r.ourPct).toFixed(1)+'%':'—')+'</td>'
-      +'<td style="font-weight:700;color:'+(isBest?'#276749':'#64748B')+';">'+(isBest?'الأفضل لشركة نورة لتعليم القيادة':'—')+'</td>'
+      +'<td style="font-weight:700;">'+r.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="text-align:center;font-weight:'+(isBest?'700':'400')+';">'+r.ourPct.toFixed(1)+'%</td>'
+      +'<td>'+r.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="text-align:center;">'+(r.grandTotal>0?(100-r.ourPct).toFixed(1)+'%':'—')+'</td>'
+      +diffCell
       +'</tr>';
   });
   html+='</tbody></table></div>';
@@ -8675,8 +8723,12 @@ function revSave(){
   var date=document.getElementById('rev-date').value||'';
   var serviceType=document.getElementById('rev-service-type').value||'';
   var notes=document.getElementById('rev-notes').value||'';
+  var curVendor=document.getElementById('rev-cur-vendor').value||'';
+  var curPrice=parseFloat(document.getElementById('rev-cur-price').value)||0;
+  var curOur=parseFloat(document.getElementById('rev-cur-our').value)||0;
+  var curTheir=parseFloat(document.getElementById('rev-cur-their').value)||0;
   if(!revCompanies.length){toast('أضف شركة واحدة على الأقل',true);return;}
-  var record={id:revEditId||Date.now(),title:title,date:date,serviceType:serviceType,notes:notes,companies:JSON.parse(JSON.stringify(revCompanies))};
+  var record={id:revEditId||Date.now(),title:title,date:date,serviceType:serviceType,notes:notes,curVendor:curVendor,curPrice:curPrice,curOur:curOur,curTheir:curTheir,companies:JSON.parse(JSON.stringify(revCompanies))};
   if(revEditId){
     var idx=revSavedList.findIndex(function(s){return s.id===revEditId;});
     if(idx!==-1) revSavedList[idx]=record; else revSavedList.unshift(record);
@@ -8716,6 +8768,11 @@ function revLoad(i){
   document.getElementById('rev-date').value=s.date||'';
   document.getElementById('rev-service-type').value=s.serviceType||'';
   document.getElementById('rev-notes').value=s.notes||'';
+  document.getElementById('rev-cur-vendor').value=s.curVendor||'';
+  document.getElementById('rev-cur-price').value=s.curPrice||'';
+  document.getElementById('rev-cur-our').value=s.curOur||'';
+  document.getElementById('rev-cur-their').value=s.curTheir||'';
+  revCalcCurrent();
   revCompanies=JSON.parse(JSON.stringify(s.companies||[]));
   revEditId=s.id;
   renderRevCompanies();
@@ -8729,30 +8786,44 @@ function revDel(i){
 }
 
 /* ── Excel تصدير النسب ── */
+function revGetCurData(){
+  return{
+    curVendor:document.getElementById('rev-cur-vendor').value||'',
+    curPrice:parseFloat(document.getElementById('rev-cur-price').value)||0,
+    curOur:parseFloat(document.getElementById('rev-cur-our').value)||0,
+    curTheir:parseFloat(document.getElementById('rev-cur-their').value)||0
+  };
+}
 function revExcel(){
   revSyncInputs();
+  var cur=revGetCurData();
   revExcelFromData(
     document.getElementById('rev-title').value||'اتفاقية تقاسم الايرادات',
     document.getElementById('rev-date').value||'',
     document.getElementById('rev-service-type').value||'',
-    revCompanies
+    revCompanies,cur
   );
 }
 function revExcelById(i){
   var s=revSavedList[i];if(!s)return;
-  revExcelFromData(s.title,s.date,s.serviceType,s.companies||[]);
+  revExcelFromData(s.title,s.date,s.serviceType,s.companies||[],{curVendor:s.curVendor||'',curPrice:s.curPrice||0,curOur:s.curOur||0,curTheir:s.curTheir||0});
 }
 
-function revExcelFromData(title,date,serviceType,companies){
+function revExcelFromData(title,date,serviceType,companies,cur){
   if(!companies||!companies.length){toast('لا توجد بيانات',true);return;}
+  cur=cur||{};
+  var curVendor=cur.curVendor||'';
+  var curPrice=parseFloat(cur.curPrice)||0;
+  var curOur=parseFloat(cur.curOur)||0;
+  var curTheir=parseFloat(cur.curTheir)||0;
+  var curOurPct=curPrice>0?((curOur/curPrice)*100):0;
+
   var wb=XLSX.utils.book_new();
   var ws={};ws['!merges']=[];
   var GRAY={rgb:'404040'};
   var LGRAY={rgb:'D0D0D0'};
   var WHITE={rgb:'FFFFFF'};
   var ZEBRA={rgb:'F2F2F2'};
-  var DGREEN={rgb:'1A472A'};
-  var DRED={rgb:'7B1818'};
   var CL=['A','B','C','D','E','F','G'];
   var curRow=0;
   function sc(cell,v,s){ws[cell]={v:v,t:typeof v==='number'?'n':'s',w:String(v)};if(s)ws[cell].s=s;}
@@ -8761,49 +8832,65 @@ function revExcelFromData(title,date,serviceType,companies){
   function sTitle(){return{font:{name:'Calibri',sz:14,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:GRAY},alignment:{horizontal:'center',vertical:'center'},border:bdr()};}
   function sHdr(bg){return{font:{name:'Calibri',sz:9,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:bg||LGRAY},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:bdr()};}
   function sSecHdr(){return{font:{name:'Calibri',sz:10,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:GRAY},alignment:{horizontal:'right',vertical:'center'},border:bdr()};}
-  function sNum(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr(),numFmt:'#,##0.00'};}
-  function sText(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr()};}
-  function sPct(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'center',vertical:'center'},border:bdr()};}
+  function sNum(bg,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr(),numFmt:'#,##0.00'};}
+  function sText(bg,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr()};}
+  function sPct(bg,bold){return{font:{name:'Calibri',sz:9,bold:!!bold,color:{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'center',vertical:'center'},border:bdr()};}
 
-  // عنوان
-  sc('A'+(curRow+1),title,sTitle()); merge(curRow,0,curRow,5); curRow++;
-  sc('A'+(curRow+1),(date||'')+(serviceType?' — '+serviceType:''),{font:{name:'Calibri',sz:9,color:{rgb:'555555'}},alignment:{horizontal:'center'}}); merge(curRow,0,curRow,5); curRow+=2;
+  var hasCur=curPrice>0;
+  var NCOLS=hasCur?6:5;
+
+  // عنوان — اسم الاتفاقية فقط
+  sc('A'+(curRow+1),title,sTitle()); merge(curRow,0,curRow,NCOLS); curRow++;
+  if(date||serviceType){
+    sc('A'+(curRow+1),(date||'')+(serviceType?' — '+serviceType:''),{font:{name:'Calibri',sz:9,color:{rgb:'555555'}},alignment:{horizontal:'center'}}); merge(curRow,0,curRow,NCOLS); curRow++;
+  }
+  curRow++;
+
+  // العقد الحالي
+  if(hasCur){
+    sc('A'+(curRow+1),'العقد الحالي',sSecHdr()); merge(curRow,0,curRow,NCOLS); curRow++;
+    ['مقدم الخدمة الحالي','سعر الخدمة (ر.س)','حصة شركة نورة (ر.س)','نسبة شركة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){sc(CL[i]+(curRow+1),h,sHdr(LGRAY));});
+    curRow++;
+    sc('A'+(curRow+1),curVendor||'العقد الحالي',sText(LGRAY,true));
+    sc('B'+(curRow+1),curPrice,sNum(LGRAY,true));
+    sc('C'+(curRow+1),curOur,sNum(LGRAY,true));
+    sc('D'+(curRow+1),curOurPct.toFixed(1)+'%',sPct(LGRAY,true));
+    sc('E'+(curRow+1),curTheir,sNum(LGRAY,true));
+    sc('F'+(curRow+1),(curPrice>0?((curTheir/curPrice)*100).toFixed(1)+'%':'—'),sPct(LGRAY,true));
+    curRow+=2;
+  }
 
   // ملخص المقارنة
-  sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,5); curRow++;
-  ['الشركة','إجمالي سعر الخدمات (ر.س)','حصة شركة نورة لتعليم القيادة (ر.س)','نسبة شركة نورة لتعليم القيادة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
-    sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
-  });
+  sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,NCOLS); curRow++;
+  var hdrs=['الشركة','سعر الخدمة (ر.س)','حصة شركة نورة (ر.س)','نسبة شركة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'];
+  if(hasCur) hdrs.push('الفرق في نسبة نورة');
+  hdrs.forEach(function(h,i){sc(CL[i]+(curRow+1),h,sHdr(LGRAY));});
   curRow++;
+
   var maxPct=0;
-  companies.forEach(function(co){
-    var t=revCalcTotals(co);
-    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
-    if(p>maxPct)maxPct=p;
-  });
+  companies.forEach(function(co){var t=revCalcTotals(co);var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;if(p>maxPct)maxPct=p;});
   companies.forEach(function(co,ci){
     var t=revCalcTotals(co);
-    var ourPct=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
-    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    var ourPct=t.grandTotal>0?p.toFixed(1)+'%':'—';
+    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     var isBest=Math.abs(p-maxPct)<0.01&&maxPct>0;
     var bg=isBest?LGRAY:(ci%2===0?WHITE:ZEBRA);
-    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' (الأفضل لشركة نورة لتعليم القيادة)':''),sText(bg,isBest));
+    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' ★':''),sText(bg,isBest));
     sc('B'+(curRow+1),t.grandTotal,sNum(bg,isBest));
-    sc('C'+(curRow+1),t.ourTotal,sNum(bg,true,DGREEN));
-    sc('D'+(curRow+1),ourPct,sPct(bg,false,DGREEN));
-    sc('E'+(curRow+1),t.theirTotal,sNum(bg,true,DRED));
-    sc('F'+(curRow+1),theirPct,sPct(bg,false,DRED));
+    sc('C'+(curRow+1),t.ourTotal,sNum(bg,true));
+    sc('D'+(curRow+1),ourPct,sPct(bg,isBest));
+    sc('E'+(curRow+1),t.theirTotal,sNum(bg));
+    sc('F'+(curRow+1),theirPct,sPct(bg));
+    if(hasCur){var diff=p-curOurPct;sc('G'+(curRow+1),(diff>0?'+':'')+diff.toFixed(1)+'%',sPct(bg,true));}
     curRow++;
   });
   curRow+=2;
 
   // تفاصيل كل شركة
   companies.forEach(function(co,ci){
-    sc('A'+(curRow+1),(ci+1)+'. '+(co.name||'شركة '+(ci+1)),sSecHdr()); merge(curRow,0,curRow,5); curRow++;
-    ['وصف الخدمة','سعر الخدمة (ر.س)','حصة شركة نورة لتعليم القيادة (ر.س)','نسبة شركة نورة لتعليم القيادة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
-      sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
-    });
+    sc('A'+(curRow+1),(ci+1)+'. '+(co.name||'شركة '+(ci+1)),sSecHdr()); merge(curRow,0,curRow,NCOLS); curRow++;
+    ['وصف الخدمة','سعر الخدمة (ر.س)','حصة شركة نورة (ر.س)','نسبة شركة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){sc(CL[i]+(curRow+1),h,sHdr(LGRAY));});
     curRow++;
     co.rows.forEach(function(r,ri){
       var sp=parseFloat(r.servicePrice)||0;
@@ -8814,10 +8901,10 @@ function revExcelFromData(title,date,serviceType,companies){
       var bg=ri%2===0?WHITE:ZEBRA;
       sc('A'+(curRow+1),r.desc||'',sText(bg));
       sc('B'+(curRow+1),sp,sNum(bg));
-      sc('C'+(curRow+1),oa,sNum(bg,true,DGREEN));
-      sc('D'+(curRow+1),ourPct,sPct(bg,false,DGREEN));
-      sc('E'+(curRow+1),ta,sNum(bg,true,DRED));
-      sc('F'+(curRow+1),theirPct,sPct(bg,false,DRED));
+      sc('C'+(curRow+1),oa,sNum(bg,true));
+      sc('D'+(curRow+1),ourPct,sPct(bg));
+      sc('E'+(curRow+1),ta,sNum(bg));
+      sc('F'+(curRow+1),theirPct,sPct(bg));
       curRow++;
     });
     var t=revCalcTotals(co);
@@ -8825,15 +8912,15 @@ function revExcelFromData(title,date,serviceType,companies){
     var theirPctT=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     sc('A'+(curRow+1),'الإجمالي',sText(LGRAY,true)); merge(curRow,0,curRow,0);
     sc('B'+(curRow+1),t.grandTotal,sNum(LGRAY,true));
-    sc('C'+(curRow+1),t.ourTotal,sNum(LGRAY,true,DGREEN));
-    sc('D'+(curRow+1),ourPctT,sPct(LGRAY,true,DGREEN));
-    sc('E'+(curRow+1),t.theirTotal,sNum(LGRAY,true,DRED));
-    sc('F'+(curRow+1),theirPctT,sPct(LGRAY,true,DRED));
+    sc('C'+(curRow+1),t.ourTotal,sNum(LGRAY,true));
+    sc('D'+(curRow+1),ourPctT,sPct(LGRAY,true));
+    sc('E'+(curRow+1),t.theirTotal,sNum(LGRAY,true));
+    sc('F'+(curRow+1),theirPctT,sPct(LGRAY,true));
     curRow+=2;
   });
 
-  ws['!cols']=[{wch:28},{wch:18},{wch:16},{wch:12},{wch:20},{wch:14}];
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:5}});
+  ws['!cols']=[{wch:28},{wch:18},{wch:20},{wch:14},{wch:22},{wch:14},{wch:16}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:6}});
   XLSX.utils.book_append_sheet(wb,ws,'تقاسم الايرادات');
   XLSX.writeFile(wb,'اتفاقية_'+title+'.xlsx');
   toast('تم تصدير Excel');
@@ -8842,93 +8929,101 @@ function revExcelFromData(title,date,serviceType,companies){
 /* ── PDF تصدير النسب ── */
 function revPDF(){
   revSyncInputs();
+  var cur=revGetCurData();
   revPDFFromData(
     document.getElementById('rev-title').value||'اتفاقية تقاسم الايرادات',
     document.getElementById('rev-date').value||'',
     document.getElementById('rev-service-type').value||'',
-    revCompanies
+    revCompanies,cur
   );
 }
 function revPDFById(i){
   var s=revSavedList[i];if(!s)return;
-  revPDFFromData(s.title,s.date,s.serviceType,s.companies||[]);
+  revPDFFromData(s.title,s.date,s.serviceType,s.companies||[],{curVendor:s.curVendor||'',curPrice:s.curPrice||0,curOur:s.curOur||0,curTheir:s.curTheir||0});
 }
-function revPDFFromData(title,date,serviceType,companies){
+function revPDFFromData(title,date,serviceType,companies,cur){
   if(!companies||!companies.length){toast('لا توجد بيانات',true);return;}
+  cur=cur||{};
+  var curVendor=cur.curVendor||'';
+  var curPrice=parseFloat(cur.curPrice)||0;
+  var curOur=parseFloat(cur.curOur)||0;
+  var curTheir=parseFloat(cur.curTheir)||0;
+  var curOurPct=curPrice>0?(curOur/curPrice)*100:0;
+  var hasCur=curPrice>0;
+
   var fmt=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});};
   var maxPct=0;
-  companies.forEach(function(co){
-    var t=revCalcTotals(co);
-    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
-    if(p>maxPct)maxPct=p;
-  });
+  companies.forEach(function(co){var t=revCalcTotals(co);var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;if(p>maxPct)maxPct=p;});
+
+  // صف العقد الحالي
+  var curRow2=hasCur?'<tr style="background:#f0f0f0;font-weight:700;">'
+    +'<td>'+(curVendor||'العقد الحالي')+'</td>'
+    +'<td>'+fmt(curPrice)+'</td>'
+    +'<td>'+fmt(curOur)+'</td>'
+    +'<td style="text-align:center;">'+curOurPct.toFixed(1)+'%</td>'
+    +'<td>'+fmt(curTheir)+'</td>'
+    +'<td style="text-align:center;">'+(curPrice>0?((curTheir/curPrice)*100).toFixed(1)+'%':'—')+'</td>'
+    +(hasCur?'<td>—</td>':'')
+    +'</tr>':'';
+
   var summaryRows=companies.map(function(co,ci){
     var t=revCalcTotals(co);
     var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
     var isBest=Math.abs(p-maxPct)<0.01&&maxPct>0;
-    var ourPct=t.grandTotal>0?p.toFixed(1)+'%':'—';
-    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    var diff=hasCur?(p-curOurPct):null;
     return '<tr style="background:'+(isBest?'#e8e8e8':'#fff')+';font-weight:'+(isBest?'700':'400')+';">'
-      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' — الأفضل لشركة نورة لتعليم القيادة':'')+'</td>'
+      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' ★':'')+'</td>'
       +'<td>'+fmt(t.grandTotal)+'</td>'
       +'<td>'+fmt(t.ourTotal)+'</td>'
-      +'<td>'+ourPct+'</td>'
+      +'<td style="text-align:center;">'+p.toFixed(1)+'%</td>'
       +'<td>'+fmt(t.theirTotal)+'</td>'
-      +'<td>'+theirPct+'</td>'
+      +'<td style="text-align:center;">'+(t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—')+'</td>'
+      +(diff!==null?'<td style="text-align:center;font-weight:700;">'+(diff>0?'+':'')+diff.toFixed(1)+'%</td>':'')
       +'</tr>';
   }).join('');
+
+  var diffHdr=hasCur?'<th>الفرق في نسبة نورة</th>':'';
   var detailSecs=companies.map(function(co,ci){
     var rows=co.rows.map(function(r,ri){
       var sp=parseFloat(r.servicePrice)||0;
       var oa=parseFloat(r.ourAmt)||0;
       var ta=parseFloat(r.theirAmt)||0;
-      var ourPct=sp>0?((oa/sp)*100).toFixed(1)+'%':'—';
-      var theirPct=sp>0?((ta/sp)*100).toFixed(1)+'%':'—';
       return '<tr style="background:'+(ri%2===0?'#fff':'#f5f5f5')+';">'
-        +'<td>'+(r.desc||'')+'</td>'
-        +'<td>'+fmt(sp)+'</td>'
-        +'<td>'+fmt(oa)+'</td>'
-        +'<td style="text-align:center;">'+ourPct+'</td>'
-        +'<td>'+fmt(ta)+'</td>'
-        +'<td style="text-align:center;">'+theirPct+'</td>'
+        +'<td>'+(r.desc||'')+'</td><td>'+fmt(sp)+'</td>'
+        +'<td>'+fmt(oa)+'</td><td style="text-align:center;">'+(sp>0?((oa/sp)*100).toFixed(1)+'%':'—')+'</td>'
+        +'<td>'+fmt(ta)+'</td><td style="text-align:center;">'+(sp>0?((ta/sp)*100).toFixed(1)+'%':'—')+'</td>'
         +'</tr>';
     }).join('');
     var t=revCalcTotals(co);
-    var ourPctT=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
-    var theirPctT=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
-    return '<h3 style="margin:24px 0 8px;font-size:13px;border-bottom:2px solid #333;padding-bottom:4px;">'+(ci+1)+'. '+(co.name||'شركة '+(ci+1))+'</h3>'
-      +'<table><thead><tr>'
-      +'<th>وصف الخدمة</th><th>سعر الخدمة (ر.س)</th>'
-      +'<th>حصة شركة نورة لتعليم القيادة (ر.س)</th><th>نسبة شركة نورة لتعليم القيادة %</th>'
-      +'<th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
-      +'</tr></thead><tbody>'+rows
-      +'<tr style="background:#f0f0f0;font-weight:700;">'
-      +'<td>الإجمالي</td><td>'+fmt(t.grandTotal)+'</td>'
-      +'<td>'+fmt(t.ourTotal)+'</td><td style="text-align:center;">'+ourPctT+'</td>'
-      +'<td>'+fmt(t.theirTotal)+'</td><td style="text-align:center;">'+theirPctT+'</td>'
+    return '<h3 style="margin:20px 0 6px;font-size:12px;border-bottom:1px solid #333;padding-bottom:3px;">'+(ci+1)+'. '+(co.name||'شركة '+(ci+1))+'</h3>'
+      +'<table><thead><tr><th>وصف الخدمة</th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th></tr></thead><tbody>'+rows
+      +'<tr style="background:#f0f0f0;font-weight:700;"><td>الإجمالي</td><td>'+fmt(t.grandTotal)+'</td>'
+      +'<td>'+fmt(t.ourTotal)+'</td><td style="text-align:center;">'+(t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—')+'</td>'
+      +'<td>'+fmt(t.theirTotal)+'</td><td style="text-align:center;">'+(t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—')+'</td>'
       +'</tr></tbody></table>';
   }).join('');
+
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>'
-    +'body{font-family:Arial,sans-serif;font-size:12px;color:#111;direction:rtl;padding:24px;}'
-    +'h1{font-size:16px;text-align:center;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:4px;}'
-    +'h2{font-size:13px;margin:20px 0 8px;border-right:4px solid #333;padding-right:8px;}'
-    +'p{text-align:center;color:#555;font-size:11px;margin-bottom:16px;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}'
-    +'th{background:#404040;color:#fff;padding:6px 8px;text-align:right;}'
-    +'td{padding:5px 8px;border-bottom:1px solid #ddd;}'
-    +'@media print{body{padding:8px;}}'
+    +'body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;padding:20px;}'
+    +'h1{font-size:15px;text-align:center;border-bottom:2px solid #333;padding-bottom:6px;margin-bottom:2px;}'
+    +'h2{font-size:12px;margin:16px 0 6px;border-right:3px solid #333;padding-right:6px;}'
+    +'h3{font-size:11px;}'
+    +'p{text-align:center;color:#555;font-size:10px;margin-bottom:12px;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;}'
+    +'th{background:#404040;color:#fff;padding:5px 7px;text-align:right;}'
+    +'td{padding:4px 7px;border-bottom:1px solid #ddd;}'
+    +'@media print{body{padding:6px;}}'
     +'</style></head><body>'
-    +'<h1>'+title+'</h1><p>'+date+(serviceType?' — '+serviceType:'')+'</p>'
+    +'<h1>'+title+'</h1>'
+    +(date||serviceType?'<p>'+(date||'')+(serviceType?' — '+serviceType:'')+'</p>':'')
+    +(hasCur?'<h2>العقد الحالي</h2><table><thead><tr><th>مقدم الخدمة</th><th>سعر الخدمة</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th></tr></thead><tbody>'+curRow2+'</tbody></table>':'')
     +'<h2>ملخص المقارنة</h2>'
-    +'<table><thead><tr>'
-    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th>حصة شركة نورة لتعليم القيادة (ر.س)</th><th>نسبة شركة نورة لتعليم القيادة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
-    +'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
+    +'<table><thead><tr><th>الشركة</th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'+diffHdr+'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
     +'<h2>تفاصيل العروض</h2>'+detailSecs
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
   W.document.close();
 }
-
 // تهيئة عند فتح الصفحة
 (function(){
   document.getElementById('cmp-date') && (document.getElementById('cmp-date').value=new Date().toISOString().split('T')[0]);
