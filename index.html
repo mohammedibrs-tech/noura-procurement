@@ -839,9 +839,23 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       </div>
     </div>
 
+    <!-- العقد الحالي -->
+    <div class="card">
+      <div class="card-header"><h3>العقد الحالي (للمقارنة)</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field"><label>اسم مقدم الخدمة الحالي</label><input id="rev-cur-vendor" placeholder="اسم الشركة الحالية"></div>
+          <div class="field"><label>سعر الخدمة الحالي (ر.س)</label><input id="rev-cur-price" type="number" placeholder="0.00" oninput="revCalcCurrent()"></div>
+          <div class="field"><label>حصة شركة نورة لتعليم القيادة الحالية (ر.س)</label><input id="rev-cur-our" type="number" placeholder="0.00" oninput="revCalcCurrent()"></div>
+          <div class="field"><label>حصة مقدم الخدمة الحالي (ر.س)</label><input id="rev-cur-their" type="number" placeholder="0.00" oninput="revCalcCurrent()"></div>
+        </div>
+        <div id="rev-cur-result" style="display:none;margin-top:12px;padding:10px 14px;background:#f8fafb;border:1px solid var(--border);border-radius:8px;font-size:12px;display:flex;gap:24px;"></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">
-        <h3>مقارنة عروض الشركات</h3>
+        <h3>عروض الشركات المنافسة</h3>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-primary btn-sm" onclick="revAddCompany()">+ إضافة شركة</button>
           <button class="btn btn-gray btn-sm" onclick="revReset()">مقارنة جديدة</button>
@@ -8605,8 +8619,8 @@ function renderRevCompanies(){
     html+='<div style="overflow-x:auto;"><table class="tbl" style="margin-bottom:8px;"><thead><tr>'
       +'<th style="min-width:140px;">وصف الخدمة</th>'
       +'<th style="min-width:110px;">سعر الخدمة<br><small style="font-weight:400;opacity:.8;">(غير شامل ضريبة)</small></th>'
-      +'<th style="min-width:110px;background:#1a6632;">حصة نورة (ر.س)</th>'
-      +'<th style="min-width:80px;background:#1a6632;">نسبة نورة %</th>'
+      +'<th style="min-width:110px;background:#1a6632;">حصة شركة نورة لتعليم القيادة (ر.س)</th>'
+      +'<th style="min-width:80px;background:#1a6632;">نسبة شركة نورة لتعليم القيادة %</th>'
       +'<th style="min-width:110px;background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th>'
       +'<th style="min-width:80px;background:#8b1c1c;">نسبة مقدم الخدمة %</th>'
       +'<th style="width:30px;"></th>'
@@ -8637,7 +8651,7 @@ function renderRevSummary(){
   });
   var maxPct=Math.max.apply(null,rows.map(function(r){return r.ourPct;}));
   var html='<div style="overflow-x:auto;"><table class="tbl"><thead><tr>'
-    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th style="background:#1a6632;">حصة نورة (ر.س)</th><th style="background:#1a6632;">نسبة نورة %</th><th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th><th>الحكم</th>'
+    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th style="background:#1a6632;">حصة شركة نورة لتعليم القيادة (ر.س)</th><th style="background:#1a6632;">نسبة شركة نورة لتعليم القيادة %</th><th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th><th>الحكم</th>'
     +'</tr></thead><tbody>';
   rows.forEach(function(r){
     var isBest=r.ourPct===maxPct&&maxPct>0;
@@ -8648,7 +8662,7 @@ function renderRevSummary(){
       +'<td style="color:#276749;font-weight:700;text-align:center;">'+r.ourPct+'%</td>'
       +'<td style="color:#C53030;">'+r.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="color:#C53030;text-align:center;">'+(r.grandTotal>0?(100-r.ourPct).toFixed(1)+'%':'—')+'</td>'
-      +'<td style="font-weight:700;color:'+(isBest?'#276749':'#64748B')+';">'+(isBest?'الأفضل لنورة':'—')+'</td>'
+      +'<td style="font-weight:700;color:'+(isBest?'#276749':'#64748B')+';">'+(isBest?'الأفضل لشركة نورة لتعليم القيادة':'—')+'</td>'
       +'</tr>';
   });
   html+='</tbody></table></div>';
@@ -8757,7 +8771,7 @@ function revExcelFromData(title,date,serviceType,companies){
 
   // ملخص المقارنة
   sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,5); curRow++;
-  ['الشركة','إجمالي سعر الخدمات (ر.س)','حصة نورة (ر.س)','نسبة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
+  ['الشركة','إجمالي سعر الخدمات (ر.س)','حصة شركة نورة لتعليم القيادة (ر.س)','نسبة شركة نورة لتعليم القيادة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
     sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
   });
   curRow++;
@@ -8774,7 +8788,7 @@ function revExcelFromData(title,date,serviceType,companies){
     var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
     var isBest=Math.abs(p-maxPct)<0.01&&maxPct>0;
     var bg=isBest?LGRAY:(ci%2===0?WHITE:ZEBRA);
-    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' (الافضل لنورة)':''),sText(bg,isBest));
+    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' (الأفضل لشركة نورة لتعليم القيادة)':''),sText(bg,isBest));
     sc('B'+(curRow+1),t.grandTotal,sNum(bg,isBest));
     sc('C'+(curRow+1),t.ourTotal,sNum(bg,true,DGREEN));
     sc('D'+(curRow+1),ourPct,sPct(bg,false,DGREEN));
@@ -8787,7 +8801,7 @@ function revExcelFromData(title,date,serviceType,companies){
   // تفاصيل كل شركة
   companies.forEach(function(co,ci){
     sc('A'+(curRow+1),(ci+1)+'. '+(co.name||'شركة '+(ci+1)),sSecHdr()); merge(curRow,0,curRow,5); curRow++;
-    ['وصف الخدمة','سعر الخدمة (ر.س)','حصة نورة (ر.س)','نسبة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
+    ['وصف الخدمة','سعر الخدمة (ر.س)','حصة شركة نورة لتعليم القيادة (ر.س)','نسبة شركة نورة لتعليم القيادة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
       sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
     });
     curRow++;
@@ -8855,12 +8869,12 @@ function revPDFFromData(title,date,serviceType,companies){
     var ourPct=t.grandTotal>0?p.toFixed(1)+'%':'—';
     var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     return '<tr style="background:'+(isBest?'#e8e8e8':'#fff')+';font-weight:'+(isBest?'700':'400')+';">'
-      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' — الافضل لنورة':'')+'</td>'
+      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' — الأفضل لشركة نورة لتعليم القيادة':'')+'</td>'
       +'<td>'+fmt(t.grandTotal)+'</td>'
-      +'<td style="color:#1A472A;">'+fmt(t.ourTotal)+'</td>'
-      +'<td style="color:#1A472A;">'+ourPct+'</td>'
-      +'<td style="color:#7B1818;">'+fmt(t.theirTotal)+'</td>'
-      +'<td style="color:#7B1818;">'+theirPct+'</td>'
+      +'<td>'+fmt(t.ourTotal)+'</td>'
+      +'<td>'+ourPct+'</td>'
+      +'<td>'+fmt(t.theirTotal)+'</td>'
+      +'<td>'+theirPct+'</td>'
       +'</tr>';
   }).join('');
   var detailSecs=companies.map(function(co,ci){
@@ -8873,10 +8887,10 @@ function revPDFFromData(title,date,serviceType,companies){
       return '<tr style="background:'+(ri%2===0?'#fff':'#f5f5f5')+';">'
         +'<td>'+(r.desc||'')+'</td>'
         +'<td>'+fmt(sp)+'</td>'
-        +'<td style="color:#1A472A;font-weight:700;">'+fmt(oa)+'</td>'
-        +'<td style="color:#1A472A;text-align:center;">'+ourPct+'</td>'
-        +'<td style="color:#7B1818;font-weight:700;">'+fmt(ta)+'</td>'
-        +'<td style="color:#7B1818;text-align:center;">'+theirPct+'</td>'
+        +'<td>'+fmt(oa)+'</td>'
+        +'<td style="text-align:center;">'+ourPct+'</td>'
+        +'<td>'+fmt(ta)+'</td>'
+        +'<td style="text-align:center;">'+theirPct+'</td>'
         +'</tr>';
     }).join('');
     var t=revCalcTotals(co);
@@ -8885,13 +8899,13 @@ function revPDFFromData(title,date,serviceType,companies){
     return '<h3 style="margin:24px 0 8px;font-size:13px;border-bottom:2px solid #333;padding-bottom:4px;">'+(ci+1)+'. '+(co.name||'شركة '+(ci+1))+'</h3>'
       +'<table><thead><tr>'
       +'<th>وصف الخدمة</th><th>سعر الخدمة (ر.س)</th>'
-      +'<th style="background:#1a6632;">حصة نورة (ر.س)</th><th style="background:#1a6632;">نسبة نورة %</th>'
-      +'<th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th>'
+      +'<th>حصة شركة نورة لتعليم القيادة (ر.س)</th><th>نسبة شركة نورة لتعليم القيادة %</th>'
+      +'<th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
       +'</tr></thead><tbody>'+rows
-      +'<tr style="background:#e0e0e0;font-weight:700;">'
+      +'<tr style="background:#f0f0f0;font-weight:700;">'
       +'<td>الإجمالي</td><td>'+fmt(t.grandTotal)+'</td>'
-      +'<td style="color:#1A472A;">'+fmt(t.ourTotal)+'</td><td style="color:#1A472A;text-align:center;">'+ourPctT+'</td>'
-      +'<td style="color:#7B1818;">'+fmt(t.theirTotal)+'</td><td style="color:#7B1818;text-align:center;">'+theirPctT+'</td>'
+      +'<td>'+fmt(t.ourTotal)+'</td><td style="text-align:center;">'+ourPctT+'</td>'
+      +'<td>'+fmt(t.theirTotal)+'</td><td style="text-align:center;">'+theirPctT+'</td>'
       +'</tr></tbody></table>';
   }).join('');
   var W=window.open('','_blank');
@@ -8908,7 +8922,7 @@ function revPDFFromData(title,date,serviceType,companies){
     +'<h1>'+title+'</h1><p>'+date+(serviceType?' — '+serviceType:'')+'</p>'
     +'<h2>ملخص المقارنة</h2>'
     +'<table><thead><tr>'
-    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th>حصة نورة (ر.س)</th><th>نسبة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
+    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th>حصة شركة نورة لتعليم القيادة (ر.س)</th><th>نسبة شركة نورة لتعليم القيادة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
     +'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
     +'<h2>تفاصيل العروض</h2>'+detailSecs
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
