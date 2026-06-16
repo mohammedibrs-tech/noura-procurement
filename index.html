@@ -8511,7 +8511,7 @@ function revReset(){
 
 function revAddCompany(){
   var id=Date.now();
-  revCompanies.push({id:id,name:'',rows:[{desc:'',totalPrice:0,ourPct:0,theirPct:0}],terms:['']});
+  revCompanies.push({id:id,name:'',rows:[{desc:'',servicePrice:0,ourAmt:0,theirAmt:0}],terms:['']});
   renderRevCompanies();
 }
 
@@ -8540,16 +8540,13 @@ function revUpdateField(cid,ri,field,val){
   if(!co||!co.rows[ri])return;
   if(field==='desc') co.rows[ri].desc=val;
   else co.rows[ri][field]=parseFloat(val)||0;
-  // تحديث النسبة المقابلة تلقائياً
-  if(field==='ourPct') co.rows[ri].theirPct=parseFloat((100-(parseFloat(val)||0)).toFixed(2));
-  if(field==='theirPct') co.rows[ri].ourPct=parseFloat((100-(parseFloat(val)||0)).toFixed(2));
   renderRevCompanies();
 }
 
 function revAddRow(cid){
   revSyncInputs();
   var co=revCompanies.find(function(c){return c.id===cid;});
-  if(co){co.rows.push({desc:'',totalPrice:0,ourPct:0,theirPct:0});renderRevCompanies();}
+  if(co){co.rows.push({desc:'',servicePrice:0,ourAmt:0,theirAmt:0});renderRevCompanies();}
 }
 function revDelRow(cid,ri){
   revSyncInputs();
@@ -8560,12 +8557,12 @@ function revDelRow(cid,ri){
 function revCalcTotals(co){
   var ourTotal=0,theirTotal=0,grandTotal=0;
   co.rows.forEach(function(r){
-    var tp=parseFloat(r.totalPrice)||0;
-    var op=parseFloat(r.ourPct)||0;
-    var thp=parseFloat(r.theirPct)||0;
-    ourTotal+=tp*(op/100);
-    theirTotal+=tp*(thp/100);
-    grandTotal+=tp;
+    var sp=parseFloat(r.servicePrice)||0;
+    var oa=parseFloat(r.ourAmt)||0;
+    var ta=parseFloat(r.theirAmt)||0;
+    ourTotal+=oa;
+    theirTotal+=ta;
+    grandTotal+=sp;
   });
   return{ourTotal:ourTotal,theirTotal:theirTotal,grandTotal:grandTotal};
 }
@@ -8583,43 +8580,50 @@ function renderRevCompanies(){
     var tots=revCalcTotals(co);
     var rows='';
     co.rows.forEach(function(r,ri){
-      var tp=parseFloat(r.totalPrice)||0;
-      var op=parseFloat(r.ourPct)||0;
-      var thp=parseFloat(r.theirPct)||0;
-      var ourAmt=tp*(op/100); var theirAmt=tp*(thp/100);
+      var sp=parseFloat(r.servicePrice)||0;
+      var oa=parseFloat(r.ourAmt)||0;
+      var ta=parseFloat(r.theirAmt)||0;
+      var ourPct=sp>0?((oa/sp)*100).toFixed(1)+'%':'—';
+      var theirPct=sp>0?((ta/sp)*100).toFixed(1)+'%':'—';
       rows+='<tr>';
-      rows+='<td><input data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="desc" value="'+(r.desc||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'desc\',this.value)" placeholder="وصف الخدمة" style="width:100%;border:none;background:transparent;font-size:11px;"></td>';
-      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="totalPrice" value="'+(r.totalPrice||0)+'" onchange="revUpdateField('+co.id+','+ri+',\'totalPrice\',this.value)" style="width:90px;border:none;background:transparent;text-align:right;" placeholder="0"></td>';
-      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="ourPct" value="'+(r.ourPct||0)+'" onchange="revUpdateField('+co.id+','+ri+',\'ourPct\',this.value)" style="width:65px;border:none;background:transparent;text-align:center;" placeholder="0" min="0" max="100"></td>';
-      rows+='<td style="font-weight:700;color:#276749;text-align:right;background:#f0fff4;">'+ourAmt.toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
-      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="theirPct" value="'+(r.theirPct||0)+'" onchange="revUpdateField('+co.id+','+ri+',\'theirPct\',this.value)" style="width:65px;border:none;background:transparent;text-align:center;" placeholder="0" min="0" max="100"></td>';
-      rows+='<td style="font-weight:700;color:#C53030;text-align:right;background:#fff5f5;">'+theirAmt.toLocaleString('ar-SA',{minimumFractionDigits:2})+'</td>';
-      rows+='<td><button onclick="revDelRow('+co.id+','+ri+')" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
+      rows+='<td><input data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="desc" value="'+(r.desc||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'desc\',this.value)" placeholder="مثال: خدمة طبية لعميل" style="width:100%;border:none;background:transparent;font-size:11px;"></td>';
+      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="servicePrice" value="'+(r.servicePrice||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'servicePrice\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;font-size:11px;" placeholder="0"></td>';
+      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="ourAmt" value="'+(r.ourAmt||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'ourAmt\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;font-size:11px;" placeholder="0"></td>';
+      rows+='<td style="text-align:center;font-weight:700;color:#276749;background:#f0fff4;">'+ourPct+'</td>';
+      rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="theirAmt" value="'+(r.theirAmt||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'theirAmt\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;font-size:11px;" placeholder="0"></td>';
+      rows+='<td style="text-align:center;font-weight:700;color:#C53030;background:#fff5f5;">'+theirPct+'</td>';
+      rows+='<td><button onclick="revDelRow('+co.id+','+ri+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;">×</button></td>';
       rows+='</tr>';
     });
+    var ourPctTotal=tots.grandTotal>0?((tots.ourTotal/tots.grandTotal)*100).toFixed(1)+'%':'—';
+    var theirPctTotal=tots.grandTotal>0?((tots.theirTotal/tots.grandTotal)*100).toFixed(1)+'%':'—';
     html+='<div style="border:2px solid #1A2B4A;border-radius:10px;margin-bottom:16px;overflow:hidden;">';
     html+='<div style="background:#1A2B4A;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
     html+='<input data-rcid="'+co.id+'" data-rf="name" value="'+(co.name||'')+'" onchange="var c=revCompanies.find(function(x){return x.id==='+co.id+'});if(c)c.name=this.value;" placeholder="اسم الشركة" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:#fff;font-size:14px;font-weight:700;outline:none;width:280px;">';
     html+='<button onclick="revDelCompany('+co.id+')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;">حذف</button></div>';
     html+='<div style="padding:14px;">';
-    html+='<table class="tbl" style="margin-bottom:8px;"><thead><tr>'
-      +'<th>وصف الخدمة</th>'
-      +'<th>السعر الكلي للخدمة (ر.س)</th>'
-      +'<th>نسبتنا %</th>'
-      +'<th style="background:#276749;">حصتنا (ر.س)</th>'
-      +'<th>نسبة الشركة %</th>'
-      +'<th style="background:#C53030;">حصتهم (ر.س)</th>'
-      +'<th></th></tr></thead><tbody>'+rows+'</tbody></table>';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">';
-    html+='<button class="btn btn-gray btn-sm" onclick="revAddRow('+co.id+')">+ إضافة خدمة</button>';
-    html+='<div style="font-size:12px;display:flex;gap:16px;">'
-      +'<span>الاجمالي الكلي: <b style="color:#1A2B4A;">'+tots.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b></span>'
-      +'<span>حصتنا: <b style="color:#276749;">'+tots.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b></span>'
-      +'<span>حصتهم: <b style="color:#C53030;">'+tots.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b></span>'
-      +'</div></div></div></div>';
+    html+='<div style="overflow-x:auto;"><table class="tbl" style="margin-bottom:8px;"><thead><tr>'
+      +'<th style="min-width:140px;">وصف الخدمة</th>'
+      +'<th style="min-width:110px;">سعر الخدمة<br><small style="font-weight:400;opacity:.8;">(غير شامل ضريبة)</small></th>'
+      +'<th style="min-width:110px;background:#1a6632;">حصة نورة (ر.س)</th>'
+      +'<th style="min-width:80px;background:#1a6632;">نسبة نورة %</th>'
+      +'<th style="min-width:110px;background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th>'
+      +'<th style="min-width:80px;background:#8b1c1c;">نسبة مقدم الخدمة %</th>'
+      +'<th style="width:30px;"></th>'
+      +'</tr></thead><tbody>'+rows+'</tbody>'
+      +'<tfoot><tr style="background:#f0f4f8;">'
+      +'<td style="font-weight:700;padding:7px 10px;">الإجمالي</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;">'+tots.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#276749;">'+tots.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#276749;">'+ourPctTotal+'</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#C53030;">'+tots.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#C53030;">'+theirPctTotal+'</td>'
+      +'<td></td></tr></tfoot>'
+      +'</table></div>';
+    html+='<button class="btn btn-gray btn-sm" onclick="revAddRow('+co.id+')" style="margin-top:4px;">+ إضافة خدمة</button>';
+    html+='</div></div>';
   });
   el.innerHTML=html;
-  // ملخص المقارنة
   renderRevSummary();
 }
 
@@ -8628,23 +8632,23 @@ function renderRevSummary(){
   document.getElementById('rev-summary-card').style.display='block';
   var rows=revCompanies.map(function(co){
     var t=revCalcTotals(co);
-    return{name:co.name||'—',ourTotal:t.ourTotal,theirTotal:t.theirTotal,grandTotal:t.grandTotal};
+    var ourPct=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1):0;
+    return{name:co.name||'—',ourTotal:t.ourTotal,theirTotal:t.theirTotal,grandTotal:t.grandTotal,ourPct:parseFloat(ourPct)};
   });
-  var maxOurs=Math.max.apply(null,rows.map(function(r){return r.ourTotal;}));
+  var maxPct=Math.max.apply(null,rows.map(function(r){return r.ourPct;}));
   var html='<div style="overflow-x:auto;"><table class="tbl"><thead><tr>'
-    +'<th>الشركة</th><th>اجمالي الكلي للخدمات</th><th>حصتنا (ر.س)</th><th>حصتنا %</th><th>حصتهم (ر.س)</th><th>حصتهم %</th>'
+    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th style="background:#1a6632;">حصة نورة (ر.س)</th><th style="background:#1a6632;">نسبة نورة %</th><th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th><th>الحكم</th>'
     +'</tr></thead><tbody>';
   rows.forEach(function(r){
-    var isBest=r.ourTotal===maxOurs&&maxOurs>0;
-    var ourPctAvg=r.grandTotal>0?((r.ourTotal/r.grandTotal)*100).toFixed(2)+'%':'—';
-    var theirPctAvg=r.grandTotal>0?((r.theirTotal/r.grandTotal)*100).toFixed(2)+'%':'—';
-    html+='<tr style="background:'+(isBest?'#f0f0f0':'#fff')+';font-weight:'+(isBest?'700':'400')+';">'
-      +'<td>'+r.name+(isBest?' — الأفضل لنا':'')+'</td>'
+    var isBest=r.ourPct===maxPct&&maxPct>0;
+    html+='<tr style="background:'+(isBest?'#f0fff4':'#fff')+'">'
+      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+r.name+'</td>'
       +'<td>'+r.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="color:#276749;font-weight:700;">'+r.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="color:#276749;">'+ourPctAvg+'</td>'
+      +'<td style="color:#276749;font-weight:700;text-align:center;">'+r.ourPct+'%</td>'
       +'<td style="color:#C53030;">'+r.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="color:#C53030;">'+theirPctAvg+'</td>'
+      +'<td style="color:#C53030;text-align:center;">'+(r.grandTotal>0?(100-r.ourPct).toFixed(1)+'%':'—')+'</td>'
+      +'<td style="font-weight:700;color:'+(isBest?'#276749':'#64748B')+';">'+(isBest?'الأفضل لنورة':'—')+'</td>'
       +'</tr>';
   });
   html+='</tbody></table></div>';
@@ -8729,77 +8733,93 @@ function revExcelFromData(title,date,serviceType,companies){
   if(!companies||!companies.length){toast('لا توجد بيانات',true);return;}
   var wb=XLSX.utils.book_new();
   var ws={};ws['!merges']=[];
-  var GRAY={rgb:'404040'};   // هيدر رمادي غامق
-  var LGRAY={rgb:'D0D0D0'};  // هيدر أعمدة رمادي متوسط
+  var GRAY={rgb:'404040'};
+  var LGRAY={rgb:'D0D0D0'};
   var WHITE={rgb:'FFFFFF'};
-  var ZEBRA={rgb:'F2F2F2'};  // صفوف زوجية
+  var ZEBRA={rgb:'F2F2F2'};
   var DGREEN={rgb:'1A472A'};
   var DRED={rgb:'7B1818'};
-  var NCOLS=6; var CL=['A','B','C','D','E','F','G'];
+  var CL=['A','B','C','D','E','F','G'];
   var curRow=0;
   function sc(cell,v,s){ws[cell]={v:v,t:typeof v==='number'?'n':'s',w:String(v)};if(s)ws[cell].s=s;}
   function merge(r1,c1,r2,c2){ws['!merges'].push({s:{r:r1,c:c1},e:{r:r2,c:c2}});}
   function bdr(){return{top:{style:'thin',color:{rgb:'BBBBBB'}},bottom:{style:'thin',color:{rgb:'BBBBBB'}},left:{style:'thin',color:{rgb:'BBBBBB'}},right:{style:'thin',color:{rgb:'BBBBBB'}}};}
   function sTitle(){return{font:{name:'Calibri',sz:14,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:GRAY},alignment:{horizontal:'center',vertical:'center'},border:bdr()};}
-  function sHdr(){return{font:{name:'Calibri',sz:9,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:LGRAY},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:bdr()};}
+  function sHdr(bg){return{font:{name:'Calibri',sz:9,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:bg||LGRAY},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:bdr()};}
   function sSecHdr(){return{font:{name:'Calibri',sz:10,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:GRAY},alignment:{horizontal:'right',vertical:'center'},border:bdr()};}
-  function sData(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr(),numFmt:'#,##0.00'};}
+  function sNum(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr(),numFmt:'#,##0.00'};}
   function sText(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'right',vertical:'center'},border:bdr()};}
+  function sPct(bg,bold,color){return{font:{name:'Calibri',sz:9,bold:!!bold,color:color||{rgb:'111111'}},fill:{patternType:'solid',fgColor:bg||WHITE},alignment:{horizontal:'center',vertical:'center'},border:bdr()};}
 
   // عنوان
-  sc('A'+(curRow+1),title,sTitle()); merge(curRow,0,curRow,6); curRow++;
-  sc('A'+(curRow+1),(date||'') + (serviceType?' — '+serviceType:''),{font:{name:'Calibri',sz:9,color:{rgb:'555555'}},alignment:{horizontal:'center'}}); merge(curRow,0,curRow,6); curRow+=2;
+  sc('A'+(curRow+1),title,sTitle()); merge(curRow,0,curRow,5); curRow++;
+  sc('A'+(curRow+1),(date||'')+(serviceType?' — '+serviceType:''),{font:{name:'Calibri',sz:9,color:{rgb:'555555'}},alignment:{horizontal:'center'}}); merge(curRow,0,curRow,5); curRow+=2;
 
   // ملخص المقارنة
-  sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,6); curRow++;
-  ['الشركة','اجمالي الخدمات (ر.س)','حصتنا (ر.س)','نسبتنا %','حصتهم (ر.س)','نسبتهم %'].forEach(function(h,i){sc(CL[i]+(curRow+1),h,sHdr());});
+  sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,5); curRow++;
+  ['الشركة','إجمالي سعر الخدمات (ر.س)','حصة نورة (ر.س)','نسبة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
+    sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
+  });
   curRow++;
-  var maxOurs=0;
-  companies.forEach(function(co){var t=revCalcTotals(co);if(t.ourTotal>maxOurs)maxOurs=t.ourTotal;});
+  var maxPct=0;
+  companies.forEach(function(co){
+    var t=revCalcTotals(co);
+    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    if(p>maxPct)maxPct=p;
+  });
   companies.forEach(function(co,ci){
-    var t=revCalcTotals(co);var isBest=t.ourTotal===maxOurs&&maxOurs>0;
+    var t=revCalcTotals(co);
+    var ourPct=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    var isBest=Math.abs(p-maxPct)<0.01&&maxPct>0;
     var bg=isBest?LGRAY:(ci%2===0?WHITE:ZEBRA);
-    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' (الافضل lنا)':''),sText(bg,isBest));
-    sc('B'+(curRow+1),t.grandTotal,sData(bg,isBest));
-    sc('C'+(curRow+1),t.ourTotal,sData(bg,true,DGREEN));
-    sc('D'+(curRow+1),t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(2)+'%':'—',sText(bg,false,DGREEN));
-    sc('E'+(curRow+1),t.theirTotal,sData(bg,true,DRED));
-    sc('F'+(curRow+1),t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(2)+'%':'—',sText(bg,false,DRED));
+    sc('A'+(curRow+1),(co.name||'شركة '+(ci+1))+(isBest?' (الافضل لنورة)':''),sText(bg,isBest));
+    sc('B'+(curRow+1),t.grandTotal,sNum(bg,isBest));
+    sc('C'+(curRow+1),t.ourTotal,sNum(bg,true,DGREEN));
+    sc('D'+(curRow+1),ourPct,sPct(bg,false,DGREEN));
+    sc('E'+(curRow+1),t.theirTotal,sNum(bg,true,DRED));
+    sc('F'+(curRow+1),theirPct,sPct(bg,false,DRED));
     curRow++;
   });
   curRow+=2;
 
   // تفاصيل كل شركة
   companies.forEach(function(co,ci){
-    sc('A'+(curRow+1),(ci+1)+'. '+( co.name||'شركة '+(ci+1)),sSecHdr()); merge(curRow,0,curRow,6); curRow++;
-    ['وصف الخدمة','السعر الكلي (ر.س)','نسبتنا %','حصتنا (ر.س)','نسبة الشركة %','حصتهم (ر.س)'].forEach(function(h,i){sc(CL[i]+(curRow+1),h,sHdr());});
+    sc('A'+(curRow+1),(ci+1)+'. '+(co.name||'شركة '+(ci+1)),sSecHdr()); merge(curRow,0,curRow,5); curRow++;
+    ['وصف الخدمة','سعر الخدمة (ر.س)','حصة نورة (ر.س)','نسبة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'].forEach(function(h,i){
+      sc(CL[i]+(curRow+1),h,sHdr(i===2||i===3?{rgb:'1a6632'}:(i===4||i===5?{rgb:'8b1c1c'}:LGRAY)));
+    });
     curRow++;
     co.rows.forEach(function(r,ri){
-      var tp=parseFloat(r.totalPrice)||0;
-      var op=parseFloat(r.ourPct)||0; var thp=parseFloat(r.theirPct)||0;
-      var ourAmt=tp*(op/100); var theirAmt=tp*(thp/100);
+      var sp=parseFloat(r.servicePrice)||0;
+      var oa=parseFloat(r.ourAmt)||0;
+      var ta=parseFloat(r.theirAmt)||0;
+      var ourPct=sp>0?((oa/sp)*100).toFixed(1)+'%':'—';
+      var theirPct=sp>0?((ta/sp)*100).toFixed(1)+'%':'—';
       var bg=ri%2===0?WHITE:ZEBRA;
       sc('A'+(curRow+1),r.desc||'',sText(bg));
-      sc('B'+(curRow+1),tp,sData(bg));
-      sc('C'+(curRow+1),op+'%',sText(bg,false,DGREEN));
-      sc('D'+(curRow+1),ourAmt,sData(bg,true,DGREEN));
-      sc('E'+(curRow+1),thp+'%',sText(bg,false,DRED));
-      sc('F'+(curRow+1),theirAmt,sData(bg,true,DRED));
+      sc('B'+(curRow+1),sp,sNum(bg));
+      sc('C'+(curRow+1),oa,sNum(bg,true,DGREEN));
+      sc('D'+(curRow+1),ourPct,sPct(bg,false,DGREEN));
+      sc('E'+(curRow+1),ta,sNum(bg,true,DRED));
+      sc('F'+(curRow+1),theirPct,sPct(bg,false,DRED));
       curRow++;
     });
-    // اجماليات
     var t=revCalcTotals(co);
-    sc('A'+(curRow+1),'الاجمالي',sText(LGRAY,true)); merge(curRow,0,curRow,1);
-    sc('B'+(curRow+1),t.grandTotal,sData(LGRAY,true));
-    sc('C'+(curRow+1),'',sText(LGRAY));
-    sc('D'+(curRow+1),t.ourTotal,sData(LGRAY,true,DGREEN));
-    sc('E'+(curRow+1),'',sText(LGRAY));
-    sc('F'+(curRow+1),t.theirTotal,sData(LGRAY,true,DRED));
+    var ourPctT=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    var theirPctT=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    sc('A'+(curRow+1),'الإجمالي',sText(LGRAY,true)); merge(curRow,0,curRow,0);
+    sc('B'+(curRow+1),t.grandTotal,sNum(LGRAY,true));
+    sc('C'+(curRow+1),t.ourTotal,sNum(LGRAY,true,DGREEN));
+    sc('D'+(curRow+1),ourPctT,sPct(LGRAY,true,DGREEN));
+    sc('E'+(curRow+1),t.theirTotal,sNum(LGRAY,true,DRED));
+    sc('F'+(curRow+1),theirPctT,sPct(LGRAY,true,DRED));
     curRow+=2;
   });
 
-  ws['!cols']=[{wch:28},{wch:18},{wch:12},{wch:16},{wch:12},{wch:16}];
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:6}});
+  ws['!cols']=[{wch:28},{wch:18},{wch:16},{wch:12},{wch:20},{wch:14}];
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:curRow,c:5}});
   XLSX.utils.book_append_sheet(wb,ws,'تقاسم الايرادات');
   XLSX.writeFile(wb,'اتفاقية_'+title+'.xlsx');
   toast('تم تصدير Excel');
@@ -8822,14 +8842,20 @@ function revPDFById(i){
 function revPDFFromData(title,date,serviceType,companies){
   if(!companies||!companies.length){toast('لا توجد بيانات',true);return;}
   var fmt=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});};
-  var maxOurs=0;
-  companies.forEach(function(co){var t=revCalcTotals(co);if(t.ourTotal>maxOurs)maxOurs=t.ourTotal;});
+  var maxPct=0;
+  companies.forEach(function(co){
+    var t=revCalcTotals(co);
+    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    if(p>maxPct)maxPct=p;
+  });
   var summaryRows=companies.map(function(co,ci){
-    var t=revCalcTotals(co);var isBest=t.ourTotal===maxOurs&&maxOurs>0;
-    var ourPct=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(2)+'%':'—';
-    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(2)+'%':'—';
+    var t=revCalcTotals(co);
+    var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
+    var isBest=Math.abs(p-maxPct)<0.01&&maxPct>0;
+    var ourPct=t.grandTotal>0?p.toFixed(1)+'%':'—';
+    var theirPct=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     return '<tr style="background:'+(isBest?'#e8e8e8':'#fff')+';font-weight:'+(isBest?'700':'400')+';">'
-      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' — الافضل لنا':'')+'</td>'
+      +'<td>'+(co.name||'شركة '+(ci+1))+(isBest?' — الافضل لنورة':'')+'</td>'
       +'<td>'+fmt(t.grandTotal)+'</td>'
       +'<td style="color:#1A472A;">'+fmt(t.ourTotal)+'</td>'
       +'<td style="color:#1A472A;">'+ourPct+'</td>'
@@ -8839,19 +8865,34 @@ function revPDFFromData(title,date,serviceType,companies){
   }).join('');
   var detailSecs=companies.map(function(co,ci){
     var rows=co.rows.map(function(r,ri){
-      var tp=parseFloat(r.totalPrice)||0;var op=parseFloat(r.ourPct)||0;var thp=parseFloat(r.theirPct)||0;
+      var sp=parseFloat(r.servicePrice)||0;
+      var oa=parseFloat(r.ourAmt)||0;
+      var ta=parseFloat(r.theirAmt)||0;
+      var ourPct=sp>0?((oa/sp)*100).toFixed(1)+'%':'—';
+      var theirPct=sp>0?((ta/sp)*100).toFixed(1)+'%':'—';
       return '<tr style="background:'+(ri%2===0?'#fff':'#f5f5f5')+';">'
-        +'<td>'+(r.desc||'')+'</td><td>'+fmt(tp)+'</td>'
-        +'<td style="text-align:center;color:#1A472A;">'+op+'%</td><td style="font-weight:700;color:#1A472A;">'+fmt(tp*(op/100))+'</td>'
-        +'<td style="text-align:center;color:#7B1818;">'+thp+'%</td><td style="font-weight:700;color:#7B1818;">'+fmt(tp*(thp/100))+'</td>'
+        +'<td>'+(r.desc||'')+'</td>'
+        +'<td>'+fmt(sp)+'</td>'
+        +'<td style="color:#1A472A;font-weight:700;">'+fmt(oa)+'</td>'
+        +'<td style="color:#1A472A;text-align:center;">'+ourPct+'</td>'
+        +'<td style="color:#7B1818;font-weight:700;">'+fmt(ta)+'</td>'
+        +'<td style="color:#7B1818;text-align:center;">'+theirPct+'</td>'
         +'</tr>';
     }).join('');
     var t=revCalcTotals(co);
+    var ourPctT=t.grandTotal>0?((t.ourTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
+    var theirPctT=t.grandTotal>0?((t.theirTotal/t.grandTotal)*100).toFixed(1)+'%':'—';
     return '<h3 style="margin:24px 0 8px;font-size:13px;border-bottom:2px solid #333;padding-bottom:4px;">'+(ci+1)+'. '+(co.name||'شركة '+(ci+1))+'</h3>'
-      +'<table><thead><tr><th>وصف الخدمة</th><th>السعر الكلي (ر.س)</th><th>نسبتنا %</th><th>حصتنا (ر.س)</th><th>نسبة الشركة %</th><th>حصتهم (ر.س)</th></tr></thead>'
-      +'<tbody>'+rows
-      +'<tr style="background:#e0e0e0;font-weight:700;"><td>الاجمالي</td><td>'+fmt(t.grandTotal)+'</td><td></td><td style="color:#1A472A;">'+fmt(t.ourTotal)+'</td><td></td><td style="color:#7B1818;">'+fmt(t.theirTotal)+'</td></tr>'
-      +'</tbody></table>';
+      +'<table><thead><tr>'
+      +'<th>وصف الخدمة</th><th>سعر الخدمة (ر.س)</th>'
+      +'<th style="background:#1a6632;">حصة نورة (ر.س)</th><th style="background:#1a6632;">نسبة نورة %</th>'
+      +'<th style="background:#8b1c1c;">حصة مقدم الخدمة (ر.س)</th><th style="background:#8b1c1c;">نسبة مقدم الخدمة %</th>'
+      +'</tr></thead><tbody>'+rows
+      +'<tr style="background:#e0e0e0;font-weight:700;">'
+      +'<td>الإجمالي</td><td>'+fmt(t.grandTotal)+'</td>'
+      +'<td style="color:#1A472A;">'+fmt(t.ourTotal)+'</td><td style="color:#1A472A;text-align:center;">'+ourPctT+'</td>'
+      +'<td style="color:#7B1818;">'+fmt(t.theirTotal)+'</td><td style="color:#7B1818;text-align:center;">'+theirPctT+'</td>'
+      +'</tr></tbody></table>';
   }).join('');
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>'
@@ -8866,7 +8907,9 @@ function revPDFFromData(title,date,serviceType,companies){
     +'</style></head><body>'
     +'<h1>'+title+'</h1><p>'+date+(serviceType?' — '+serviceType:'')+'</p>'
     +'<h2>ملخص المقارنة</h2>'
-    +'<table><thead><tr><th>الشركة</th><th>اجمالي الخدمات</th><th>حصتنا (ر.س)</th><th>نسبتنا %</th><th>حصتهم (ر.س)</th><th>نسبتهم %</th></tr></thead><tbody>'+summaryRows+'</tbody></table>'
+    +'<table><thead><tr>'
+    +'<th>الشركة</th><th>إجمالي سعر الخدمات</th><th>حصة نورة (ر.س)</th><th>نسبة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
+    +'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
     +'<h2>تفاصيل العروض</h2>'+detailSecs
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
   W.document.close();
