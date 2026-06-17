@@ -8984,6 +8984,41 @@ function revExcelFromData(title,date,serviceType,companies,cur){
     curRow+=2;
   }
 
+  // ── قسم المقارنة البارز في Excel ──
+  if(hasCur&&hasExp){
+    var dAmt3=exp.ourTotal-curOur;
+    var dPct3=exp.ourPct-curOurPct;
+    var GREEN={rgb:'1a7a3f'}; var RED={rgb:'b30000'};
+    var dColor3=dAmt3>=0?GREEN:RED;
+    var GBG={rgb:'e8f5e9'}; var RBGC={rgb:'fce8e8'};
+    var highlightBg=dAmt3>=0?GBG:RBGC;
+    var CMPNCOLS=3;
+    sc('A'+(curRow+1),'مقارنة العقد الحالي بالعقد الجديد',{font:{name:'Calibri',sz:11,bold:true,color:WHITE},fill:{patternType:'solid',fgColor:GRAY},alignment:{horizontal:'center',vertical:'center'},border:bdr()});
+    merge(curRow,0,curRow,CMPNCOLS); curRow++;
+    var cmpLabels=['البند','العقد الحالي — '+(curVendor||'—'),'العقد الجديد — '+exp.name,'الفرق'];
+    cmpLabels.forEach(function(h,i){sc(['A','B','C','D'][i]+(curRow+1),h,sHdr(LGRAY));});
+    curRow++;
+    sc('A'+(curRow+1),'سعر الخدمة (ر.س)',sText(WHITE,false));
+    sc('B'+(curRow+1),curPrice,sNum(WHITE,false));
+    sc('C'+(curRow+1),exp.grandTotal,sNum(WHITE,false));
+    var dPrice=exp.grandTotal-curPrice;
+    sc('D'+(curRow+1),(dPrice>=0?'+':'')+dPrice.toLocaleString('ar-SA',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
+    curRow++;
+    sc('A'+(curRow+1),'حصة شركة نورة (ر.س)',sText(ZEBRA,false));
+    sc('B'+(curRow+1),curOur,sNum(ZEBRA,false));
+    sc('C'+(curRow+1),exp.ourTotal,sNum(ZEBRA,false));
+    sc('D'+(curRow+1),(dAmt3>=0?'+':'')+dAmt3.toLocaleString('ar-SA',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:ZEBRA},alignment:{horizontal:'center'},border:bdr()});
+    curRow++;
+    sc('A'+(curRow+1),'نسبة شركة نورة %',sText(WHITE,false));
+    sc('B'+(curRow+1),curOurPct.toFixed(1)+'%',sPct(WHITE,false));
+    sc('C'+(curRow+1),exp.ourPct.toFixed(1)+'%',sPct(WHITE,false));
+    sc('D'+(curRow+1),(dPct3>=0?'+':'')+dPct3.toFixed(1)+'%',{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
+    curRow++;
+    var summaryLabel3=dAmt3>=0?('✓ وفرنا: '+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أكثر)'):('✗ فقدنا: '+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أقل)');
+    sc('A'+(curRow+1),summaryLabel3,{font:{name:'Calibri',sz:10,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:highlightBg},alignment:{horizontal:'center',vertical:'center'},border:bdr()});
+    merge(curRow,0,curRow,CMPNCOLS); curRow+=2;
+  }
+
   // ملخص المقارنة
   sc('A'+(curRow+1),'ملخص المقارنة',sSecHdr()); merge(curRow,0,curRow,NCOLS); curRow++;
   var hdrs=['الشركة','سعر الخدمة (ر.س)','حصة شركة نورة (ر.س)','نسبة شركة نورة %','حصة مقدم الخدمة (ر.س)','نسبة مقدم الخدمة %'];
@@ -9123,6 +9158,42 @@ function revPDFFromData(title,date,serviceType,companies,cur){
       +'</tr></thead><tbody>'+expRow+'</tbody></table>';
   }
 
+  // ── قسم المقارنة البارز (حالي vs متوقع) ──
+  var savingsSection='';
+  if(hasCur&&hasExp){
+    var dAmt2=exp.ourTotal-curOur;
+    var dPct2=exp.ourPct-curOurPct;
+    var dAmtFmt=(dAmt2>=0?'+':'')+fmt(dAmt2);
+    var dPctFmt=(dPct2>=0?'+':'')+dPct2.toFixed(1)+'%';
+    var dColor=dAmt2>=0?'#1a7a3f':'#b30000';
+    savingsSection=
+      '<div style="border:2px solid #404040;border-radius:6px;margin:12px 0 16px;overflow:hidden;">'+
+      '<div style="background:#404040;color:#fff;padding:7px 12px;font-size:12px;font-weight:700;">مقارنة العقد الحالي بالعقد الجديد</div>'+
+      '<table style="width:100%;border-collapse:collapse;font-size:10px;margin:0;">'+
+      '<thead><tr>'+
+      '<th style="background:#f0f0f0;color:#111;padding:5px 8px;text-align:right;border-bottom:1px solid #ccc;">البند</th>'+
+      '<th style="background:#f0f0f0;color:#111;padding:5px 8px;text-align:center;border-bottom:1px solid #ccc;">العقد الحالي<br><small style=\"font-weight:400\">'+(curVendor||'—')+'</small></th>'+
+      '<th style="background:#f0f0f0;color:#111;padding:5px 8px;text-align:center;border-bottom:1px solid #ccc;">العقد الجديد<br><small style=\"font-weight:400\">'+exp.name+'</small></th>'+
+      '<th style="background:#f0f0f0;color:#111;padding:5px 8px;text-align:center;border-bottom:1px solid #ccc;">الفرق</th>'+
+      '</tr></thead><tbody>'+
+      '<tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">سعر الخدمة (ر.س)</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+fmt(curPrice)+'</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+fmt(exp.grandTotal)+'</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;color:'+dColor+';font-weight:700;">'+( (exp.grandTotal-curPrice)>=0?'+':'')+fmt(exp.grandTotal-curPrice)+'</td></tr>'+
+      '<tr style="background:#fafafa;"><td style="padding:5px 8px;border-bottom:1px solid #eee;">حصة شركة نورة (ر.س)</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+fmt(curOur)+'</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+fmt(exp.ourTotal)+'</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;color:'+dColor+';font-weight:700;">'+dAmtFmt+'</td></tr>'+
+      '<tr><td style="padding:5px 8px;border-bottom:1px solid #eee;">نسبة شركة نورة %</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+curOurPct.toFixed(1)+'%</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+exp.ourPct.toFixed(1)+'%</td>'+
+      '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;color:'+dColor+';font-weight:700;">'+dPctFmt+'</td></tr>'+
+      '</tbody></table>'+
+      '<div style="background:'+(dAmt2>=0?'#e8f5e9':'#fce8e8')+';padding:8px 12px;font-size:11px;font-weight:700;color:'+dColor+';text-align:center;">'+
+      (dAmt2>=0?'✓ وفرنا للشركة: '+fmt(Math.abs(dAmt2))+' ر.س إضافية ('+Math.abs(dPct2).toFixed(1)+'% أكثر)':'✗ فقدنا من حصة الشركة: '+fmt(Math.abs(dAmt2))+' ر.س ('+Math.abs(dPct2).toFixed(1)+'% أقل)')+
+      '</div></div>';
+  }
+
   var summaryRows=companies.map(function(co,ci){
     var t=revCalcTotals(co);
     var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;
@@ -9173,6 +9244,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +(date||serviceType?'<p>'+(date||'')+(serviceType?' — '+serviceType:'')+'</p>':'')
     +(hasCur?'<h2>العقد الحالي</h2><table><thead><tr><th>مقدم الخدمة</th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th></tr></thead><tbody>'+curRow2+'</tbody></table>':'')
     +expSection
+    +savingsSection
     +'<h2>ملخص المقارنة</h2>'
     +'<table><thead><tr><th>الشركة</th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'+diffHdr+'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
     +'<h2>تفاصيل العروض</h2>'+detailSecs
