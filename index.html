@@ -9014,7 +9014,7 @@ function revExcelFromData(title,date,serviceType,companies,cur){
     sc('C'+(curRow+1),exp.ourPct.toFixed(1)+'%',sPct(WHITE,false));
     sc('D'+(curRow+1),(dPct3>=0?'+':'')+dPct3.toFixed(1)+'%',{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
     curRow++;
-    var summaryLabel3=dAmt3>=0?('قيمة التوفير: '+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أكثر)'):('الفرق: -'+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أقل)');
+    var summaryLabel3=dAmt3>=0?('التوفير: '+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أكثر)'):('الفرق: -'+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أقل)');
     sc('A'+(curRow+1),summaryLabel3,{font:{name:'Calibri',sz:10,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:highlightBg},alignment:{horizontal:'center',vertical:'center'},border:bdr()});
     merge(curRow,0,curRow,CMPNCOLS); curRow+=2;
   }
@@ -9189,8 +9189,8 @@ function revPDFFromData(title,date,serviceType,companies,cur){
       '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;">'+exp.ourPct.toFixed(1)+'%</td>'+
       '<td style="padding:5px 8px;text-align:center;border-bottom:1px solid #eee;color:'+dColor+';font-weight:700;">'+dPctFmt+'</td></tr>'+
       '</tbody></table>'+
-      '<div style="background:'+(dAmt2>=0?'#e8f5e9':'#fce8e8')+';padding:8px 12px;font-size:11px;font-weight:700;color:'+dColor+';text-align:center;">'+
-      (dAmt2>=0?'قيمة التوفير: '+fmt(Math.abs(dAmt2))+' ر.س ('+Math.abs(dPct2).toFixed(1)+'% أكثر)':'الفرق: -'+fmt(Math.abs(dAmt2))+' ر.س ('+Math.abs(dPct2).toFixed(1)+'% أقل)')+
+      '<div style="padding:8px 12px;font-size:11px;font-weight:700;color:'+dColor+';text-align:center;">'+
+      (dAmt2>=0?'التوفير: '+fmt(Math.abs(dAmt2))+' ر.س ('+Math.abs(dPct2).toFixed(1)+'% أكثر)':'الفرق: -'+fmt(Math.abs(dAmt2))+' ر.س ('+Math.abs(dPct2).toFixed(1)+'% أقل)')+
       '</div></div>';
   }
 
