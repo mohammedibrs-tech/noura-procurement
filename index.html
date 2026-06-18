@@ -1767,19 +1767,11 @@ async function initBudget(){
   }else{
     expenses=localExp;
   }
-  // ══ تنظيف شامل: صحّح month_key من expense_date، واحذف يونيو-ديسمبر للبيانات المستوردة ══
+  // ══ تنظيف شامل: صحّح month_key من expense_date ══
   expenses=expenses.map(function(e){
     var dateKey=(e.expense_date||'').substring(0,7);
     if(dateKey && dateKey.length===7) return Object.assign({},e,{month_key:dateKey});
     return e;
-  }).filter(function(e){
-    var mk=e.month_key||'';
-    var parts=mk.split('-');
-    var yr=parseInt(parts[0]||0);
-    var mn=parseInt(parts[1]||0);
-    // احذف المصروفات المستوردة (IDs تبدأ بـ 17000000) إذا كانت في يونيو 2026 أو أبعد
-    if(String(e.id).startsWith('17000000') && yr===2026 && mn>=6) return false;
-    return true;
   });
   localStorage.setItem('expenses_local',JSON.stringify(expenses));
   // تعيين الشهر الحالي تلقائياً
@@ -2214,9 +2206,11 @@ function expPrint(){
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
-  const CSS=`@page{size:A4;margin:15mm 20mm;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;}h1{font-size:15px;text-align:center;border-bottom:2px solid #333;padding-bottom:6px;margin-bottom:4px;}h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #333;padding-right:8px;}p.sub{text-align:center;color:#555;font-size:10px;margin-bottom:12px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ccc;margin-bottom:14px;}.kpi-box{padding:10px 14px;border-left:1px solid #ccc;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:9px;color:#555;margin-bottom:4px;}.kpi-val{font-size:20px;font-weight:700;color:#111;line-height:1;}.kpi-unit{font-size:9px;color:#555;margin-top:3px;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;}thead th{background:#333;color:#fff;padding:5px 8px;text-align:right;}td{padding:4px 8px;border-bottom:1px solid #ddd;}tbody tr:nth-child(even){background:#f5f5f5;}.val{font-weight:600;}.sig-area{display:flex;gap:24px;margin-top:20px;padding-top:12px;border-top:1px solid #ccc;}.sig-box{flex:1;text-align:center;}`;
+  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#244062;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #244062;padding-right:8px;color:#244062;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#244062;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
+<img src="${BG}" class="bg-img">
+<div class="pdf-content">
 <h1>سجل مصروفات العهدة المالية — ${monthLabel}</h1>
 <p class="sub">تاريخ الإصدار: ${today} | عدد المصروفات: ${filtered.length}</p>
 <div class="kpi-grid">
@@ -2232,11 +2226,19 @@ function expPrint(){
 <table><thead><tr><th>الإدارة</th><th>البند</th><th>المبلغ (ر.س)</th><th>رسوم التحويل</th><th>التاريخ</th><th>ملاحظات</th></tr></thead>
 <tbody>${expRows}
 <tr style="font-weight:700;border-top:2px solid #333;"><td colspan="2">الإجمالي الكلي</td><td style="text-align:right;">${spent.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;">${filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0)>0?filtered.reduce((s,e)=>s+(parseFloat(e.transfer_fee)||0),0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td colspan="2"></td></tr></tbody></table>
-<div class="sig-area">
-  <div class="sig-box"><div style="font-weight:700;margin-bottom:50px;">Prepared By / مسؤول المشتريات</div><div style="border-top:1px solid #333;padding-top:5px;">أ.محمد ابراهيم الجمعان</div></div>
-  <div class="sig-box"><div style="font-weight:700;margin-bottom:50px;">Reviewed By / أخصائي الحسابات</div><div style="border-top:1px solid #333;padding-top:5px;">&nbsp;</div></div>
-</div>
-</body></html>`);
+  <div class="sig-area">
+    <div class="sig-box">
+      <div style="font-weight:700;margin-bottom:10px;">Prepared By / مسؤول المشتريات</div>
+      <img src="${SIG}" class="sig-img">
+      <div style="border-top:1px solid #000;padding-top:5px;font-weight:700;">أ.محمد ابراهيم الجمعان</div>
+    </div>
+    <div class="sig-box">
+      <div style="font-weight:700;margin-bottom:60px;">Reviewed By / أخصائي الحسابات</div>
+      <div style="border-top:1px solid #000;padding-top:5px;">&nbsp;</div>
+    </div>
+  </div>
+  </div>
+  </body></html>`);},{all:false,find:
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
@@ -8639,9 +8641,9 @@ function cmpPDF(){
     +'h1{font-size:16px;text-align:center;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:4px;}'
     +'h2{font-size:13px;margin:20px 0 8px;border-right:4px solid #333;padding-right:8px;}'
     +'p{text-align:center;color:#555;font-size:11px;margin-bottom:16px;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}'
-    +'th{background:#333;color:#fff;padding:6px 8px;text-align:right;}'
-    +'td{padding:5px 8px;border-bottom:1px solid #ddd;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;border:1px solid #000;}'
+    +'th{background:#333;color:#fff;padding:6px 8px;text-align:right;border:1px solid #000;}'
+    +'td{padding:5px 8px;border:1px solid #000;}'
     +'@media print{body{padding:8px;}}'
     +'</style></head><body>'
     +'<h1>'+title+'</h1><p>'+date+'</p>'
@@ -9367,9 +9369,9 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +'h2{font-size:12px;margin:16px 0 6px;border-right:3px solid #333;padding-right:6px;}'
     +'h3{font-size:11px;}'
     +'p{text-align:center;color:#555;font-size:10px;margin-bottom:12px;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;}'
-    +'th{background:#404040;color:#fff;padding:5px 7px;text-align:right;}'
-    +'td{padding:4px 7px;border-bottom:1px solid #ddd;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;border:1px solid #000;}'
+    +'th{background:#404040;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}'
+    +'td{padding:4px 7px;border:1px solid #000;}'
     +'@media print{body{padding:6px;}}'
     +'</style></head><body>'
     +'<h1>'+title+'</h1>'
