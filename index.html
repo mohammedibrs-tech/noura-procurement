@@ -9439,7 +9439,6 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +'<h1>'+title+'</h1>'
     +(date||serviceType?'<p>'+(date||'')+(serviceType?' — '+serviceType:'')+'</p>':'')
     +expSection
-    +savingsSection
     +'<h2>ملخص المقارنة</h2>'
     +'<table><thead><tr><th>الشركة</th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'+diffHdr+'</tr></thead><tbody>'+summaryRows+'</tbody></table>'
     +'<h2>تفاصيل العروض</h2>'+detailSecs
