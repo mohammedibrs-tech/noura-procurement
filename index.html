@@ -1678,11 +1678,16 @@ async function sbGet(table,filter=''){
   }catch(e){return null;}
 }
 async function sbInsert(table,data){
-  const r=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  let r;
+  try {
+    r = await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  } catch(netErr) {
+    throw new Error('NETWORK_ERROR: ' + netErr.message);
+  }
   if(!r.ok){
     const errText = await r.text();
     console.error('Supabase Insert Error ['+table+']:', r.status, errText);
-    throw new Error('HTTP '+r.status+': '+errText);
+    throw new Error('HTTP_'+r.status+': '+errText);
   }
   return r.json();
 }
@@ -1710,26 +1715,42 @@ let poSaved=[];
 let pcGroups={};
 
 async function initBudget(){
-  // ── إعداد قيمة العهدة من Supabase ──
-  const sbCfg = await sbGet('budget_config','limit=1');
-  if(sbCfg && sbCfg.length > 0){
-    budgetTotal = parseFloat(sbCfg[0].total) || 10000;
-  } else {
-    budgetTotal = 10000;
-  }
+  // ── إعداد قيمة العهدة ──
+  // اعرض من cache فوراً، ثم حدّث من Supabase
+  const cachedCfg = JSON.parse(localStorage.getItem('budget_cfg')||'{}');
+  budgetTotal = cachedCfg.total || 10000;
   const inp = document.getElementById('b-total-inp');
   if(inp) inp.value = budgetTotal;
 
-  // ── تحميل المصروفات من Supabase فقط ──
-  const sbExp = await sbGet('expenses');
-  if(sbExp && sbExp.length > 0){
-    expenses = sbExp.map(function(e){
-      var dk = (e.expense_date||'').substring(0,7);
-      return dk.length===7 ? Object.assign({},e,{month_key:dk}) : e;
-    });
-  } else {
-    expenses = [];
+  // اعرض المصروفات من cache فوراً
+  const cachedExp = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+  if(cachedExp.length > 0){
+    expenses = cachedExp;
+    budgetCalcMonth();
+    renderExpenses();
   }
+
+  // ── جلب من Supabase في الخلفية وتحديث الـ cache ──
+  try {
+    const sbCfg = await sbGet('budget_config','limit=1');
+    if(sbCfg && sbCfg.length > 0){
+      budgetTotal = parseFloat(sbCfg[0].total) || 10000;
+      localStorage.setItem('budget_cfg', JSON.stringify({total:budgetTotal}));
+      if(inp) inp.value = budgetTotal;
+    }
+  } catch(e){ /* استخدم الـ cache */ }
+
+  try {
+    const sbExp = await sbGet('expenses');
+    if(sbExp && sbExp.length > 0){
+      expenses = sbExp.map(function(e){
+        var dk = (e.expense_date||'').substring(0,7);
+        return dk.length===7 ? Object.assign({},e,{month_key:dk}) : e;
+      });
+      localStorage.setItem('expenses_cache', JSON.stringify(expenses));
+    }
+    // إذا Supabase فارغ لكن cache فيه بيانات، ابقَ على الـ cache
+  } catch(e){ /* استخدم الـ cache */ }
 
   // ── تعيين الشهر الحالي تلقائياً ──
   var nowMonth = String(new Date().getMonth()+1).padStart(2,'0');
@@ -1823,6 +1844,7 @@ async function budgetSave(){
     } else {
       await sbInsert('budget_config', {total:budgetTotal});
     }
+    localStorage.setItem('budget_cfg', JSON.stringify({total:budgetTotal}));
     toast('تم حفظ العهدة بنجاح ✅');
   } catch(e) {
     console.error('Budget save failed', e);
@@ -1865,6 +1887,7 @@ async function expAdd(){
     const res = await sbInsert('expenses', row);
     if(res && Array.isArray(res) && res[0]){
       expenses.unshift(res[0]);
+      localStorage.setItem('expenses_cache', JSON.stringify(expenses));
       toast('تمت الإضافة بنجاح ✅');
     } else {
       toast('خطأ في الحفظ، حاول مرة أخرى', true);
@@ -1873,12 +1896,14 @@ async function expAdd(){
   } catch(e){
     console.error('expAdd failed', e);
     const msg = e.message || '';
-    if(msg.includes('42501') || msg.includes('permission') || msg.includes('policy')){
-      toast('خطأ في الصلاحيات — تحقق من إعدادات RLS في Supabase', true);
-    } else if(msg.includes('23') || msg.includes('column') || msg.includes('schema')){
-      toast('خطأ في بنية البيانات: ' + msg.substring(0,80), true);
+    if(msg.includes('NETWORK_ERROR') || msg.includes('Failed to fetch')){
+      toast('لا يوجد اتصال بالإنترنت أو Supabase محجوب', true);
+    } else if(msg.includes('42501') || msg.includes('permission') || msg.includes('policy')){
+      toast('خطأ في صلاحيات Supabase (RLS) — راجع إعدادات الجدول', true);
+    } else if(msg.includes('HTTP_4')){
+      toast('خطأ: ' + msg.substring(0,80), true);
     } else {
-      toast('تعذر الحفظ: ' + (msg.substring(0,60)||'تحقق من الاتصال'), true);
+      toast('تعذر الحفظ — ' + (msg.substring(0,60)||'تحقق من الاتصال'), true);
     }
     return;
   }
@@ -1969,6 +1994,7 @@ async function expDel(id,idx){
   const ok = await sbDelete('expenses', id);
   if(ok === false){ toast('تعذر الحذف، تحقق من الاتصال', true); return; }
   expenses.splice(idx,1);
+  localStorage.setItem('expenses_cache', JSON.stringify(expenses));
   budgetCalc(); renderExpenses(); toast('تم الحذف');
 }
 
