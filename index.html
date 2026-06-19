@@ -1715,63 +1715,155 @@ let poSaved=[];
 let pcGroups={};
 
 async function initBudget(){
-  // ══ إعداد العهدة المالية ══
-  const sbCfg = await sbGet('budget_config', 'limit=1');
+  // ── إعداد قيمة العهدة من Supabase ──
+  const sbCfg = await sbGet('budget_config','limit=1');
   if(sbCfg && sbCfg.length > 0){
-    budgetTotal = parseFloat(sbCfg[0].total) || 0;
-    const inp = document.getElementById('b-total-inp');
-    if(inp) inp.value = budgetTotal || 10000;
+    budgetTotal = parseFloat(sbCfg[0].total) || 10000;
   } else {
-    const saved = JSON.parse(localStorage.getItem('budget_cfg') || '{}');
-    budgetTotal = saved.total || 10000;
-    const inp = document.getElementById('b-total-inp');
-    if(inp) inp.value = budgetTotal;
+    budgetTotal = 10000;
   }
+  const inp = document.getElementById('b-total-inp');
+  if(inp) inp.value = budgetTotal;
 
-  // ══ تحميل المصروفات — Supabase فقط ══
+  // ── تحميل المصروفات من Supabase فقط ──
   const sbExp = await sbGet('expenses');
   if(sbExp && sbExp.length > 0){
-    // صحّح month_key من expense_date إذا كان خاطئاً
     expenses = sbExp.map(function(e){
-      var dateKey = (e.expense_date || '').substring(0, 7);
-      if(dateKey && dateKey.length === 7) return Object.assign({}, e, {month_key: dateKey});
-      return e;
+      var dk = (e.expense_date||'').substring(0,7);
+      return dk.length===7 ? Object.assign({},e,{month_key:dk}) : e;
     });
   } else {
     expenses = [];
   }
 
-  // ══ تعيين الشهر الحالي تلقائياً ══
-  var nowMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  var nowYear = String(new Date().getFullYear());
-  var bm = document.getElementById('budget-month');
-  var by = document.getElementById('budget-year');
-  var fm = document.getElementById('filter-month');
-  var fy = document.getElementById('filter-year');
-  if(bm) bm.value = nowMonth;
-  if(by) by.value = nowYear;
-  if(fm) fm.value = nowMonth;
-  if(fy) fy.value = nowYear;
-  budgetCalc();
+  // ── تعيين الشهر الحالي تلقائياً ──
+  var nowMonth = String(new Date().getMonth()+1).padStart(2,'0');
+  var nowYear  = String(new Date().getFullYear());
+  var bm=document.getElementById('budget-month');
+  var by=document.getElementById('budget-year');
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  if(bm) bm.value=nowMonth;
+  if(by) by.value=nowYear;
+  if(fm) fm.value=nowMonth;
+  if(fy) fy.value=nowYear;
+  budgetCalcMonth();
+}
+// إجمالي المصروف لبند واحد = المبلغ + رسوم التحويل (إن وجدت)
+function expTotal(e){return (parseFloat(e.amount)||0)+(parseFloat(e.transfer_fee)||0);}
+
+function budgetCalcMonth(){
+  // عهدة الشهر الواحد
+  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
+  var selMonth=(document.getElementById('budget-month')||{value:''}).value;
+  var selYear=(document.getElementById('budget-year')||{value:'2026'}).value||'2026';
+
+  // فلتر المصروفات حسب الشهر المختار
+  var filtered;
+  if(selMonth){
+    var key=selYear+'-'+selMonth;
+    filtered=expenses.filter(function(e){
+      var mKey = e.month_key || '';
+      var dKey = (e.expense_date || '').substring(0, 7);
+      return mKey === key || dKey === key;
+    });
+  } else {
+    filtered=expenses;
+  }
+
+  var spent=filtered.reduce(function(s,e){return s+expTotal(e);},0);
+  var monthBudget=budgetTotal; // 10,000 لكل شهر
+  var remain=monthBudget-spent;
+  var savePct=monthBudget>0?Math.max(0,(remain/monthBudget)*100).toFixed(1):0;
+  var savedAmt=Math.max(0,remain);
+
+  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  var label=selMonth?(MONTHS[selMonth]+' '+selYear):'كل الشهور';
+  var lbl=document.getElementById('budget-month-label');
+  if(lbl) lbl.textContent='— '+label+' ('+filtered.length+' مصروف)';
+
+  var el_total=document.getElementById('b-total');if(el_total)el_total.textContent=monthBudget.toLocaleString('ar-SA');
+  var el_remain=document.getElementById('b-remain');if(el_remain)el_remain.textContent=remain.toLocaleString('ar-SA');
+  var el_spent=document.getElementById('b-spent');if(el_spent)el_spent.textContent=spent.toLocaleString('ar-SA');
+  var el_pct=document.getElementById('b-save-pct');if(el_pct)el_pct.textContent=savePct+'%';
+  var el_amt=document.getElementById('b-save-amt');if(el_amt)el_amt.textContent='مبلغ التوفير: '+savedAmt.toLocaleString('ar-SA')+' ر.س';
+
+  // مزامنة فلتر جدول المصروفات مع نفس الشهر
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  if(fm&&fm.value!==selMonth){fm.value=selMonth;}
+  if(fy&&selYear&&fy.value!==selYear){fy.value=selYear;}
+
   renderExpenses();
+  renderTopDepts();renderMonthCompare();renderTopItems();
+}
+
+// alias للتوافق مع الكود القديم
+function budgetCalc(){ budgetCalcMonth(); }
+
+// مزامنة فلتر الجدول مع فلتر العهدة
+function syncBudgetFilter(){
+  var fm=document.getElementById('filter-month');
+  var fy=document.getElementById('filter-year');
+  var bm=document.getElementById('budget-month');
+  var by=document.getElementById('budget-year');
+  if(bm&&fm&&bm.value!==fm.value) bm.value=fm.value;
+  if(by&&fy&&by.value!==fy.value) by.value=fy.value;
+  budgetCalcMonth();
+}
+
+function resetLocalData(){
+  // البيانات الآن في Supabase فقط — مسح محلي غير مطلوب
+  if(!confirm('إعادة تحميل الصفحة؟')) return;
+  location.reload();
+}
+
+async function budgetSave(){
+  budgetTotal = parseFloat(document.getElementById('b-total-inp').value) || 10000;
+  toast('جاري الحفظ...');
+  try {
+    const res = await sbGet('budget_config','limit=1');
+    if(res && res.length > 0){
+      await sbUpdate('budget_config', res[0].id, {total:budgetTotal, updated_at:new Date().toISOString()});
+    } else {
+      await sbInsert('budget_config', {total:budgetTotal});
+    }
+    toast('تم حفظ العهدة بنجاح ✅');
+  } catch(e) {
+    console.error('Budget save failed', e);
+    toast('تعذر الحفظ، تحقق من الاتصال', true);
+  }
+  budgetCalcMonth();
 }
 
 async function expAdd(){
-  const dept=document.getElementById('exp-dept').value;
-  const month=document.getElementById('exp-month').value;
-  const year=document.getElementById('exp-year').value||new Date().getFullYear();
-  const invNum=document.getElementById('exp-inv').value.trim();
-  const vendor=(document.getElementById('exp-vendor')||{value:''}).value.trim();
-  const item=document.getElementById('exp-item').value.trim();
-  const amount=parseFloat(document.getElementById('exp-amount').value)||0;
-  const date=document.getElementById('exp-date').value;
-  const notes=document.getElementById('exp-notes').value.trim();
-  if(!item||!amount){toast('أدخل البند والمبلغ',true);return;}
+  const dept        = document.getElementById('exp-dept').value;
+  const month       = document.getElementById('exp-month').value;
+  const year        = document.getElementById('exp-year').value || String(new Date().getFullYear());
+  const invNum      = document.getElementById('exp-inv').value.trim();
+  const vendor      = (document.getElementById('exp-vendor')||{value:''}).value.trim();
+  const item        = document.getElementById('exp-item').value.trim();
+  const amount      = parseFloat(document.getElementById('exp-amount').value) || 0;
+  const date        = document.getElementById('exp-date').value;
+  const notes       = document.getElementById('exp-notes').value.trim();
+  const transferFee = parseFloat(document.getElementById('exp-fee').value) || 0;
 
+  if(!item || !amount){ toast('أدخل البند والمبلغ', true); return; }
   if(vendor) autoAddSupplier(vendor);
-  const monthKey=year+'-'+month;
-  const transferFee=parseFloat(document.getElementById('exp-fee').value)||0;
-  const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,transfer_fee:transferFee,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
+
+  const monthKey = year + '-' + month;
+  const row = {
+    department:   dept,
+    month_key:    monthKey,
+    invoice_num:  invNum,
+    vendor:       vendor,
+    item_name:    item,
+    amount:       amount,
+    transfer_fee: transferFee,
+    expense_date: date || (year+'-'+month+'-01'),
+    notes:        notes,
+    created_at:   new Date().toISOString()
+  };
 
   toast('جاري الحفظ...');
   try {
@@ -1783,28 +1875,27 @@ async function expAdd(){
       toast('خطأ في الحفظ، حاول مرة أخرى', true);
       return;
     }
-  } catch(e) {
-    console.error('Expense save failed', e);
+  } catch(e){
+    console.error('expAdd failed', e);
     toast('تعذر الاتصال بالسحابة، تحقق من الإنترنت', true);
     return;
   }
 
-  const expVendorEl=document.getElementById('exp-vendor');if(expVendorEl)expVendorEl.value='';
+  // تنظيف الحقول
+  const expVendorEl = document.getElementById('exp-vendor'); if(expVendorEl) expVendorEl.value='';
   document.getElementById('exp-item').value='';
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-fee').value='';
   document.getElementById('exp-notes').value='';
   document.getElementById('exp-inv').value='';
-  // Update filters to match the month we just added to
+
+  // ضبط الفلتر على الشهر المضاف
   const fm=document.getElementById('filter-month');
   const fy=document.getElementById('filter-year');
   const bm=document.getElementById('budget-month');
   const by=document.getElementById('budget-year');
-  if(fm) fm.value = month;
-  if(fy) fy.value = year;
-  if(bm) bm.value = month;
-  if(by) by.value = year;
-
+  if(fm) fm.value=month; if(fy) fy.value=year;
+  if(bm) bm.value=month; if(by) by.value=year;
   budgetCalcMonth();
 }
 
@@ -1863,22 +1954,20 @@ function renderExpenses(){
 }
 
 function expUpdate(idx,field,val){
-  if(!expenses[idx])return;
+  if(!expenses[idx]) return;
   if(field==='amount') expenses[idx][field]=parseFloat(val)||0;
   else expenses[idx][field]=val;
   budgetCalc();
   const e=expenses[idx];
-  if(e.id){
-    sbUpdate('expenses',e.id,{[field]:expenses[idx][field]}).catch(()=>{});
-  }
+  if(e.id) sbUpdate('expenses', e.id, {[field]: expenses[idx][field]}).catch(()=>{});
 }
 
 async function expDel(id,idx){
-  if(!confirm('حذف هذا المصروف؟'))return;
-  const ok = await sbDelete('expenses',id);
-  if(ok === false){ toast('تعذر الحذف، تحقق من الاتصال',true); return; }
+  if(!confirm('حذف هذا المصروف؟')) return;
+  const ok = await sbDelete('expenses', id);
+  if(ok === false){ toast('تعذر الحذف، تحقق من الاتصال', true); return; }
   expenses.splice(idx,1);
-  budgetCalc();renderExpenses();toast('تم الحذف');
+  budgetCalc(); renderExpenses(); toast('تم الحذف');
 }
 
 function renderTopDepts(){
