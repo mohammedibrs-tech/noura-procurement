@@ -1711,228 +1711,49 @@ async function sbDelete(table,id){
 /* ══════════════ BUDGET ══════════════ */
 let expenses=[];
 let budgetTotal=0,budgetTarget=0;
-// بيانات Excel المستوردة
-(function(){
-  var imported=[{"id": 1800000000000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "223", "vendor": "lola", "item_name": "ضيافة كيكة للزميل عمرو يحيى بمناسبة حصوله على شهادة CMA", "amount": 395.0, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000001000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "101152798", "vendor": "تموينات بركة", "item_name": "بطارية كبير سيلفر", "amount": 10.0, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000002000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "38", "vendor": "موبيليا", "item_name": "صيانة ادراج", "amount": 30.58, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000003000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "1624", "vendor": "شركة نيلوفر الشرق للتجارة", "item_name": "مياه شرب للموظفين", "amount": 4250.0, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000004000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "47911", "vendor": "ذاشفز", "item_name": "باقة ورد تحمد بالسلامة للزميلة ايمان العنزي", "amount": 348.0, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000005000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "22962", "vendor": "شركة مازن التجارية", "item_name": "توصيلات كهربائية", "amount": 395.0, "expense_date": "2026-01-01", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000006000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "605548970", "vendor": "ذاشفز", "item_name": "باقة ورد للزميل فهد الحربي للتحمد على سلامته", "amount": 389.0, "expense_date": "2026-01-13", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000007000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "1730-1", "vendor": "عطارة العليا", "item_name": "قهوة،شاي،هيل،سكر", "amount": 935.0, "expense_date": "2026-01-19", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000008000, "department": "إدارة المشتريات", "month_key": "2026-01", "invoice_num": "6991", "vendor": "نون", "item_name": "شاحن tybe C", "amount": 48.0, "expense_date": "2026-01-27", "notes": "", "created_at": "2026-01-01T00:00:00.000Z"}, {"id": 1800000100000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "30179", "vendor": "شركة حسام فوزان الخلف للتجارة", "item_name": "Memory cards", "amount": 678.5, "expense_date": "2026-02-02", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000101000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "6", "vendor": "نون", "item_name": "فيري", "amount": 24.0, "expense_date": "2026-02-02", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000102000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "3511", "vendor": "نون", "item_name": "مطحنة قهوة", "amount": 99.0, "expense_date": "2026-02-02", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000103000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "41599", "vendor": "بنايد", "item_name": "فيش 13امبير", "amount": 69.0, "expense_date": "2026-02-01", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000104000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "12107", "vendor": "شركة التطوير والامداد", "item_name": "قلب باب، قسام بلاستيك، قفل عادي", "amount": 175.73, "expense_date": "2026-02-03", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000105000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "2055", "vendor": "شركة نيلوفر الشرق للتجارة", "item_name": "مياه شرب للموظفين", "amount": 4251.15, "expense_date": "2026-02-11", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000106000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "623584843", "vendor": "ذا شفز", "item_name": "ضيافة موالح لزيارة الرئيس التنفيذي لأوقاف الجامعة", "amount": 142.0, "expense_date": "2026-02-16", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000107000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "623557433", "vendor": "ذا شفز", "item_name": "ضيافة حلا لزيارة الرئيس التنفيذي لأوقاف الجامعة", "amount": 333.0, "expense_date": "2026-02-16", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000108000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "69", "vendor": "مؤسسة الأولى الوطنية للتجارة", "item_name": "شطاف كروم", "amount": 161.58, "expense_date": "2026-02-15", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000109000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "2317201", "vendor": "مؤسسة البندري العمار التجارية", "item_name": "spear power supply 700w black", "amount": 345.58, "expense_date": "2026-02-17", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000110000, "department": "إدارة المشتريات", "month_key": "2026-02", "invoice_num": "630191077", "vendor": "ذا شفز", "item_name": "ورد لسلامة الزميلة ساره القرني", "amount": 354.6, "expense_date": "2026-02-26", "notes": "", "created_at": "2026-02-01T00:00:00.000Z"}, {"id": 1800000200000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "2315554", "vendor": "مؤسسة البندري عبدالرحمن العمار التجارية", "item_name": "spear power supply 700w black", "amount": 644.58, "expense_date": "2026-03-16", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000201000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "1120", "vendor": "مؤسسة بئر منى", "item_name": "مياه شرب للموظفين", "amount": 4251.15, "expense_date": "2026-03-29", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000202000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "1282708", "vendor": "بستاني", "item_name": "شوكولا ضيافة لفعالية عيد الفطر السعيد", "amount": 2461.33, "expense_date": "2026-03-28", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000203000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "145", "vendor": "مؤسسة تاج الغدير للحفلات", "item_name": "قهوجية لضيافة عيد الفطر", "amount": 633.08, "expense_date": "2026-03-29", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000204000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "3041", "vendor": "عطارة العليا", "item_name": "قهوة،هيل،سكر،شاي", "amount": 1065.0, "expense_date": "2026-03-31", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000205000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "", "vendor": "نون", "item_name": "فيري", "amount": 22.49, "expense_date": "2026-03-31", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000206000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "102", "vendor": "مؤسسة الأولى الوطنية للتجارة", "item_name": "مسكة باب، كوع كروم،جرجر", "amount": 89.99, "expense_date": "2026-03-31", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000207000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "2317838", "vendor": "مؤسسة البندري عبدالرحمن العمار التجارية", "item_name": "spear power supply 700w black", "amount": 322.58, "expense_date": "2026-03-31", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}, {"id": 1800000208000, "department": "إدارة المشتريات", "month_key": "2026-03", "invoice_num": "446", "vendor": "خالد ناصر القحطاني للديكور الخشبي", "item_name": "اصلاح طاولات مكتبية", "amount": 250.58, "expense_date": "2026-03-31", "notes": "", "created_at": "2026-03-01T00:00:00.000Z"}];
-  var existing=JSON.parse(localStorage.getItem('expenses_local')||'[]');
-  // دائماً نحدّث البيانات المستوردة لضمان صحة month_key
-  var importedMap={};
-  imported.forEach(function(e){importedMap[String(e.id)]=e;});
-  if(existing.length===0){
-    localStorage.setItem('expenses_local',JSON.stringify(imported));
-  } else {
-    // حدّث السجلات الموجودة بـ month_key الصحيح، وأضف الجديدة
-    var existingIds=new Set(existing.map(function(e){return String(e.id)}));
-    var updated=existing.map(function(e){
-      if(importedMap[String(e.id)]){
-        // استبدل month_key بالقيمة المصحّحة
-        return Object.assign({},e,{month_key:importedMap[String(e.id)].month_key});
-      }
-      // احذف السجلات ذات الأشهر المستقبلية (يونيو فأكثر)
-      var mk=e.month_key||(e.expense_date||'').substring(0,7);
-      var mNum=parseInt((mk.split('-')[1]||'0'));
-      var mYear=parseInt((mk.split('-')[0]||'2026'));
-      if(mYear===2026 && mNum>=6) return null;
-      return e;
-    }).filter(Boolean);
-    imported.forEach(function(e){
-      if(!existingIds.has(String(e.id))){updated.push(e);}
-    });
-    localStorage.setItem('expenses_local',JSON.stringify(updated));
-  }
-})();
 let poSaved=[];
 let pcGroups={};
 
 async function initBudget(){
-  // ══ تحميل المصروفات من localStorage فوراً قبل أي طلب شبكة ══
-  try{
-    const _preload=JSON.parse(localStorage.getItem('expenses_local')||'[]');
-    if(_preload.length>0){expenses=_preload;budgetCalc();renderExpenses();}
-  }catch(e){}
-  // جلب إعداد العهدة من Supabase أولاً
-  const sbCfg=await sbGet('budget_config','limit=1');
-  if(sbCfg&&sbCfg.length>0){
-    budgetTotal=parseFloat(sbCfg[0].total)||0;
-    // budgetTarget محذوف — العهدة شهرية ثابتة
-    localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal,target:budgetTarget}));
-  }else{
-    const saved=JSON.parse(localStorage.getItem('budget_cfg')||'{}');
-    budgetTotal=saved.total||10000;
+  // ══ إعداد العهدة المالية ══
+  const sbCfg = await sbGet('budget_config', 'limit=1');
+  if(sbCfg && sbCfg.length > 0){
+    budgetTotal = parseFloat(sbCfg[0].total) || 0;
+    const inp = document.getElementById('b-total-inp');
+    if(inp) inp.value = budgetTotal || 10000;
+  } else {
+    const saved = JSON.parse(localStorage.getItem('budget_cfg') || '{}');
+    budgetTotal = saved.total || 10000;
+    const inp = document.getElementById('b-total-inp');
+    if(inp) inp.value = budgetTotal;
   }
-  document.getElementById('b-total-inp').value=budgetTotal||10000;
-  // جلب المصروفات — Supabase أولاً، ثم دمج مع localStorage
-  const sbExp=await sbGet('expenses');
-  const localExp=JSON.parse(localStorage.getItem('expenses_local')||'[]');
-  if(sbExp&&sbExp.length>0){
-    // دمج محسّن: نتحقق بـ ID الحقيقي أو بـ (اسم البند + التاريخ + المبلغ + الإدارة) لتجنب فقدان السجلات المؤقتة
-    const sbIds=new Set(sbExp.map(function(e){return String(e.id);}));
-    const onlyLocal=localExp.filter(function(e){
-      if(sbIds.has(String(e.id))) return false;
-      // إذا كان ID مؤقت (timestamp رقمي قصير أقل من 16 خانة)، تحقق من تطابق البيانات
-      var isTemp = String(e.id).length <= 15;
-      if(isTemp){
-        var duplicate = sbExp.some(function(sb){
-          return sb.item_name === e.item_name
-            && String(sb.expense_date||'').substring(0,7) === String(e.expense_date||'').substring(0,7)
-            && parseFloat(sb.amount) === parseFloat(e.amount)
-            && (sb.department||'') === (e.department||'');
-        });
-        return !duplicate;
-      }
-      return true;
-    });
-    // رفع السجلات المحلية المؤقتة التي لم تُزامَن بعد إلى Supabase
-    (async function(){
-      for(var li=0;li<onlyLocal.length;li++){
-        var le=onlyLocal[li];
-        var isTemp2=String(le.id).length<=15;
-        if(isTemp2){
-          try{
-            var newRow={department:le.department,month_key:le.month_key,invoice_num:le.invoice_num,vendor:le.vendor,item_name:le.item_name,amount:le.amount,transfer_fee:le.transfer_fee,expense_date:le.expense_date,notes:le.notes,created_at:le.created_at||new Date().toISOString()};
-            var res2=await sbInsert('expenses',newRow);
-            if(res2&&Array.isArray(res2)&&res2[0]){
-              onlyLocal[li]=Object.assign({},le,res2[0]);
-            }
-          }catch(ex2){}
-        }
-      }
-      expenses=[...sbExp,...onlyLocal];
-      try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
-      budgetCalc();renderExpenses();
-    })();
-    expenses=[...sbExp,...onlyLocal];
-  }else{
-    expenses=localExp;
-    // رفع السجلات المحلية المؤقتة إلى Supabase
-    (async function(){
-      for(var li2=0;li2<expenses.length;li2++){
-        var le2=expenses[li2];
-        var isTemp3=String(le2.id).length<=15;
-        if(isTemp3){
-          try{
-            var newRow2={department:le2.department,month_key:le2.month_key,invoice_num:le2.invoice_num,vendor:le2.vendor,item_name:le2.item_name,amount:le2.amount,transfer_fee:le2.transfer_fee,expense_date:le2.expense_date,notes:le2.notes,created_at:le2.created_at||new Date().toISOString()};
-            var res3=await sbInsert('expenses',newRow2);
-            if(res3&&Array.isArray(res3)&&res3[0]){
-              expenses[li2]=Object.assign({},le2,res3[0]);
-            }
-          }catch(ex3){}
-        }
-      }
-      try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
-      budgetCalc();renderExpenses();
-    })();
-  }
-  // ══ تنظيف شامل: صحّح month_key من expense_date ══
-  expenses=expenses.map(function(e){
-    var dateKey=(e.expense_date||'').substring(0,7);
-    if(dateKey && dateKey.length===7) return Object.assign({},e,{month_key:dateKey});
-    return e;
-  });
-  try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
-  // تعيين الشهر الحالي تلقائياً
-  var nowMonth=String(new Date().getMonth()+1).padStart(2,'0');
-  var nowYear=String(new Date().getFullYear());
-  var bm=document.getElementById('budget-month');
-  var by=document.getElementById('budget-year');
-  var fm=document.getElementById('filter-month');
-  var fy=document.getElementById('filter-year');
-  if(bm) bm.value=nowMonth;
-  if(by) by.value=nowYear;
-  if(fm) fm.value=nowMonth;
-  if(fy) fy.value=nowYear;
-  budgetCalcMonth();
-}
 
-// إجمالي المصروف لبند واحد = المبلغ + رسوم التحويل (إن وجدت)
-function expTotal(e){return (parseFloat(e.amount)||0)+(parseFloat(e.transfer_fee)||0);}
-
-function budgetCalcMonth(){
-  // عهدة الشهر الواحد
-  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
-  var selMonth=(document.getElementById('budget-month')||{value:''}).value;
-  var selYear=(document.getElementById('budget-year')||{value:'2026'}).value||'2026';
-
-  // فلتر المصروفات حسب الشهر المختار
-  var filtered;
-  if(selMonth){
-    var key=selYear+'-'+selMonth;
-    filtered=expenses.filter(function(e){
-      var mKey = e.month_key || '';
-      var dKey = (e.expense_date || '').substring(0, 7);
-      return mKey === key || dKey === key;
+  // ══ تحميل المصروفات — Supabase فقط ══
+  const sbExp = await sbGet('expenses');
+  if(sbExp && sbExp.length > 0){
+    // صحّح month_key من expense_date إذا كان خاطئاً
+    expenses = sbExp.map(function(e){
+      var dateKey = (e.expense_date || '').substring(0, 7);
+      if(dateKey && dateKey.length === 7) return Object.assign({}, e, {month_key: dateKey});
+      return e;
     });
   } else {
-    filtered=expenses;
+    expenses = [];
   }
 
-  var spent=filtered.reduce(function(s,e){return s+expTotal(e);},0);
-  var monthBudget=budgetTotal; // 10,000 لكل شهر
-  var remain=monthBudget-spent;
-  var savePct=monthBudget>0?Math.max(0,(remain/monthBudget)*100).toFixed(1):0;
-  var savedAmt=Math.max(0,remain);
-
-  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
-  var label=selMonth?(MONTHS[selMonth]+' '+selYear):'كل الشهور';
-  var lbl=document.getElementById('budget-month-label');
-  if(lbl) lbl.textContent='— '+label+' ('+filtered.length+' مصروف)';
-
-  var el_total=document.getElementById('b-total');if(el_total)el_total.textContent=monthBudget.toLocaleString('ar-SA');
-  var el_remain=document.getElementById('b-remain');if(el_remain)el_remain.textContent=remain.toLocaleString('ar-SA');
-  var el_spent=document.getElementById('b-spent');if(el_spent)el_spent.textContent=spent.toLocaleString('ar-SA');
-  var el_pct=document.getElementById('b-save-pct');if(el_pct)el_pct.textContent=savePct+'%';
-  var el_amt=document.getElementById('b-save-amt');if(el_amt)el_amt.textContent='مبلغ التوفير: '+savedAmt.toLocaleString('ar-SA')+' ر.س';
-
-  // مزامنة فلتر جدول المصروفات مع نفس الشهر
-  var fm=document.getElementById('filter-month');
-  var fy=document.getElementById('filter-year');
-  if(fm&&fm.value!==selMonth){fm.value=selMonth;}
-  if(fy&&selYear&&fy.value!==selYear){fy.value=selYear;}
-
+  // ══ تعيين الشهر الحالي تلقائياً ══
+  var nowMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+  var nowYear = String(new Date().getFullYear());
+  var bm = document.getElementById('budget-month');
+  var by = document.getElementById('budget-year');
+  var fm = document.getElementById('filter-month');
+  var fy = document.getElementById('filter-year');
+  if(bm) bm.value = nowMonth;
+  if(by) by.value = nowYear;
+  if(fm) fm.value = nowMonth;
+  if(fy) fy.value = nowYear;
+  budgetCalc();
   renderExpenses();
-  renderTopDepts();renderMonthCompare();renderTopItems();
-}
-
-// alias للتوافق مع الكود القديم
-function budgetCalc(){ budgetCalcMonth(); }
-
-// مزامنة فلتر الجدول مع فلتر العهدة
-function syncBudgetFilter(){
-  var fm=document.getElementById('filter-month');
-  var fy=document.getElementById('filter-year');
-  var bm=document.getElementById('budget-month');
-  var by=document.getElementById('budget-year');
-  if(bm&&fm&&bm.value!==fm.value) bm.value=fm.value;
-  if(by&&fy&&by.value!==fy.value) by.value=fy.value;
-  budgetCalcMonth();
-}
-
-function resetLocalData(){
-  if(!confirm('سيتم مسح البيانات المحلية وإعادة تحميل الصفحة. هل تريد المتابعة؟')) return;
-  localStorage.removeItem('expenses_local');
-  localStorage.removeItem('budget_cfg');
-  location.reload();
-}
-
-async function budgetSave(){
-  budgetTotal=parseFloat(document.getElementById('b-total-inp').value)||10000;
-  localStorage.setItem('budget_cfg',JSON.stringify({total:budgetTotal}));
-  
-  toast('جاري المزامنة سحابياً...');
-  try {
-    const res = await sbGet('budget_config','limit=1');
-    if(res && res.length > 0){
-      await sbUpdate('budget_config', res[0].id, {total:budgetTotal, updated_at:new Date().toISOString()});
-    } else {
-      await sbInsert('budget_config', {total:budgetTotal});
-    }
-    toast('تم حفظ عهدة الشهر ومزامنتها بنجاح ✅');
-  } catch(e) {
-    console.error('Budget sync failed', e);
-    toast('تم الحفظ محلياً (تعذر الاتصال بالسحابة)', true);
-  }
-  
-  budgetCalcMonth();
 }
 
 async function expAdd(){
@@ -1946,31 +1767,26 @@ async function expAdd(){
   const date=document.getElementById('exp-date').value;
   const notes=document.getElementById('exp-notes').value.trim();
   if(!item||!amount){toast('أدخل البند والمبلغ',true);return;}
-  
+
   if(vendor) autoAddSupplier(vendor);
   const monthKey=year+'-'+month;
-
-
   const transferFee=parseFloat(document.getElementById('exp-fee').value)||0;
   const row={department:dept,month_key:monthKey,invoice_num:invNum,vendor:vendor,item_name:item,amount,transfer_fee:transferFee,expense_date:date||(year+'-'+month+'-01'),notes,created_at:new Date().toISOString()};
-  const localRow={...row,id:Date.now()};
-  expenses.unshift(localRow);
-  localStorage.setItem('expenses_local',JSON.stringify(expenses));
-  
-  toast('جاري المزامنة سحابياً...');
+
+  toast('جاري الحفظ...');
   try {
     const res = await sbInsert('expenses', row);
     if(res && Array.isArray(res) && res[0]){
-      const idx = expenses.findIndex(e => e.id === localRow.id);
-      if(idx !== -1) {
-        expenses[idx] = {...expenses[idx], ...res[0]};
-        localStorage.setItem('expenses_local', JSON.stringify(expenses));
-      }
+      expenses.unshift(res[0]);
+      toast('تمت الإضافة بنجاح ✅');
+    } else {
+      toast('خطأ في الحفظ، حاول مرة أخرى', true);
+      return;
     }
-    toast('تمت الإضافة والمزامنة بنجاح ✅');
   } catch(e) {
-    console.error('Expense sync failed', e);
-    toast('تمت الإضافة محلياً (تعذر الاتصال بالسحابة)', true);
+    console.error('Expense save failed', e);
+    toast('تعذر الاتصال بالسحابة، تحقق من الإنترنت', true);
+    return;
   }
 
   const expVendorEl=document.getElementById('exp-vendor');if(expVendorEl)expVendorEl.value='';
@@ -2050,20 +1866,18 @@ function expUpdate(idx,field,val){
   if(!expenses[idx])return;
   if(field==='amount') expenses[idx][field]=parseFloat(val)||0;
   else expenses[idx][field]=val;
-  localStorage.setItem('expenses_local',JSON.stringify(expenses));
   budgetCalc();
-  // sync لـ Supabase في الخلفية
   const e=expenses[idx];
-  if(e.id&&String(e.id).length>10){
+  if(e.id){
     sbUpdate('expenses',e.id,{[field]:expenses[idx][field]}).catch(()=>{});
   }
 }
 
 async function expDel(id,idx){
   if(!confirm('حذف هذا المصروف؟'))return;
-  try{await sbDelete('expenses',id);}catch(e){}
+  const ok = await sbDelete('expenses',id);
+  if(ok === false){ toast('تعذر الحذف، تحقق من الاتصال',true); return; }
   expenses.splice(idx,1);
-  localStorage.setItem('expenses_local',JSON.stringify(expenses));
   budgetCalc();renderExpenses();toast('تم الحذف');
 }
 
