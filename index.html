@@ -1745,6 +1745,11 @@ let poSaved=[];
 let pcGroups={};
 
 async function initBudget(){
+  // ══ تحميل المصروفات من localStorage فوراً قبل أي طلب شبكة ══
+  try{
+    const _preload=JSON.parse(localStorage.getItem('expenses_local')||'[]');
+    if(_preload.length>0){expenses=_preload;budgetCalc();renderExpenses();}
+  }catch(e){}
   // جلب إعداد العهدة من Supabase أولاً
   const sbCfg=await sbGet('budget_config','limit=1');
   if(sbCfg&&sbCfg.length>0){
@@ -1793,7 +1798,8 @@ async function initBudget(){
         }
       }
       expenses=[...sbExp,...onlyLocal];
-      localStorage.setItem('expenses_local',JSON.stringify(expenses));
+      try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
+      budgetCalc();renderExpenses();
     })();
     expenses=[...sbExp,...onlyLocal];
   }else{
@@ -1813,7 +1819,8 @@ async function initBudget(){
           }catch(ex3){}
         }
       }
-      localStorage.setItem('expenses_local',JSON.stringify(expenses));
+      try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
+      budgetCalc();renderExpenses();
     })();
   }
   // ══ تنظيف شامل: صحّح month_key من expense_date ══
@@ -1822,7 +1829,7 @@ async function initBudget(){
     if(dateKey && dateKey.length===7) return Object.assign({},e,{month_key:dateKey});
     return e;
   });
-  localStorage.setItem('expenses_local',JSON.stringify(expenses));
+  try{localStorage.setItem('expenses_local',JSON.stringify(expenses));}catch(e){}
   // تعيين الشهر الحالي تلقائياً
   var nowMonth=String(new Date().getMonth()+1).padStart(2,'0');
   var nowYear=String(new Date().getFullYear());
@@ -6540,14 +6547,16 @@ function buildSemiReport(){
   const sDeptItemMap={};sAllPC.forEach(e=>{const d=e.department||'أخرى';if(!sDeptItemMap[d])sDeptItemMap[d]={total:0,items:{}};sDeptItemMap[d].total+=parseFloat(e.amount)||0;sDeptItemMap[d].items[e.item_name]=(sDeptItemMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const el=document.getElementById('semi-report-content');if(!el)return;
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:14px;">
-    <div style="padding:12px 16px;border-left:1px solid #ccc;"><div style="font-size:9px;color:#555;margin-bottom:4px;">إجمالي المصروفات</div><div style="font-size:22px;font-weight:700;color:#111;">${fmt2(totalSpent)}</div><div style="font-size:9px;color:#555;">ريال — ${sExp.length} عملية</div></div>
-    <div style="padding:12px 16px;border-left:1px solid #ccc;"><div style="font-size:9px;color:#555;margin-bottom:4px;">طلبات PO</div><div style="font-size:22px;font-weight:700;color:#111;">${sPO.length}</div><div style="font-size:9px;color:#555;">طلب</div></div>
-    <div style="padding:12px 16px;border-left:1px solid #ccc;"><div style="font-size:9px;color:#555;margin-bottom:4px;">فواتير Petty Cash</div><div style="font-size:22px;font-weight:700;color:#111;">${sAllPC.length}</div><div style="font-size:9px;color:#555;">إجمالي: ${fmt2(sAllPC.reduce((s,e)=>s+(parseFloat(e.amount)||0),0))} ر.س</div></div>
-    <div style="padding:12px 16px;border-left:1px solid #ccc;"><div style="font-size:9px;color:#555;margin-bottom:4px;">وفر التفاوض (عقود)</div><div style="font-size:22px;font-weight:700;color:#111;">${fmt2(contractSavSemi)}</div><div style="font-size:9px;color:#555;">ريال</div></div>
-    <div style="padding:12px 16px;"><div style="font-size:9px;color:#555;margin-bottom:4px;">وفر مقارنة الأسعار</div><div style="font-size:22px;font-weight:700;color:#111;">${fmt2(cmpSavings)}</div><div style="font-size:9px;color:#555;">ريال محقق</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+  <h2>ملخص النصف</h2>
+  <table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>
+  <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)} ر.س</td></tr>
+  <tr><td>عدد العمليات</td><td style="text-align:right;">${sExp.length}</td></tr>
+  <tr><td>طلبات PO</td><td style="text-align:right;">${sPO.length}</td></tr>
+  <tr><td>فواتير Petty Cash</td><td style="text-align:right;">${sAllPC.length} (${fmt2(sAllPC.reduce((s,e)=>s+(parseFloat(e.amount)||0),0))} ر.س)</td></tr>
+  <tr><td>وفر التفاوض (عقود)</td><td style="text-align:right;font-weight:700;">${fmt2(contractSavSemi)} ر.س</td></tr>
+  <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${fmt2(cmpSavings)} ر.س</td></tr>
+  </tbody></table>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
     <div class="card"><div class="card-header"><h3>المصروفات شهراً بشهر</h3></div><div class="card-body">
       <table class="tbl"><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>
       ${monthBreak.map(mb=>`<tr><td style="font-weight:600;">${mb.m}</td><td style="text-align:right;font-weight:700;color:#333;">${mb.t.toLocaleString('ar-SA')}</td><td style="text-align:center;color:#555;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}
@@ -6558,15 +6567,16 @@ function buildSemiReport(){
       ${topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;font-weight:600;">${v.toLocaleString('ar-SA')}</td><td style="text-align:center;color:#555;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}
       </tbody></table>
     </div></div>
-    <div class="card"><div class="card-header"><h3>أكثر الإدارات صرفاً</h3></div><div class="card-body">
-      ${deptSorted.slice(0,6).map(([d,v])=>{const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1):0;return`<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="font-weight:600;">${d}</span><span style="color:#333;">${v.total.toLocaleString('ar-SA')} (${pct}%)</span></div><div style="background:#E2E8F0;height:4px;"><div style="background:#244062;width:${pct}%;height:100%;"></div></div></div>`;}).join('')}
-    </div></div>
   </div>
+  <div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>المصروفات حسب الإدارة</h3></div><div class="card-body" style="overflow-x:auto;">
+    <table class="tbl"><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أكثر الأصناف</th></tr></thead><tbody>
+    ${deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1):0;return`<tr><td style="font-weight:600;">${d}</td><td style="text-align:right;font-weight:700;">${v.total.toLocaleString('ar-SA')}</td><td style="text-align:center;color:#555;">${pct}%</td><td>${topI||'—'}</td></tr>`;}).join('')}
+    </tbody></table>
+  </div></div>
   <div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body" style="overflow-x:auto;">
     <table class="tbl"><thead><tr><th>الشركة</th><th>الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">نصف السنة</th><th style="text-align:center;">ينتهي</th><th style="text-align:right;">وفر التفاوض</th></tr></thead><tbody>
     ${buildContractsTableHTML(activeC,totalCM)}</div></div>
   ${buildPCDetailsHTML(sAllPC)}
-  ${expiringC.length?`<div class="card" style="border:1px solid #C53030;margin-bottom:14px;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">عقود تنتهي قريباً</h3></div><div class="card-body">${expiringC.map(c=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span style="font-weight:600;">${c.vendor} — ${c.type}</span><span style="color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم | ${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span></div>`).join('')}</div></div>`:''}
   <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">ملخص الوفرات — النصف ${halfName}</h3></div><div class="card-body" style="font-size:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
       <div style="border:1px solid #E2E8F0;padding:10px;text-align:center;"><div style="font-size:9px;color:#555;">وفر التفاوض بالعقود</div><div style="font-size:18px;font-weight:700;color:#276749;">${totalSaving.toLocaleString('ar-SA')}</div><div style="font-size:9px;color:#555;">ريال</div></div>
@@ -7848,8 +7858,16 @@ function exportMonthlyPDF(){
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content">
 <h1>التقرير الشهري — ${MONTHS_AR[month]} ${year}</h1>
 <p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>
-<table><thead><tr><th>إجمالي المصروفات</th><th>طلبات PO</th><th>فواتير Petty Cash</th><th>إجمالي العقود الشهري</th><th>وفر التفاوض</th><th>وفر مقارنة الأسعار</th></tr></thead><tbody><tr><td class="val">${fmt2(totalSpent)} ر.س</td><td class="val">${monthPO.length}</td><td class="val">${monthPC.length}</td><td class="val">${fmt2(totalCM)} ر.س</td><td class="val">${fmt2(contractSavAmt)} ر.س</td><td class="val">${fmt2(cmpSavAmt)} ر.س</td></tr></tbody></table>
-<h2>أكثر الإدارات صرفاً</h2>
+<h2>ملخص الشهر</h2>
+<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>
+<tr><td>إجمالي المصروفات</td><td style="text-align:right;" class="val">${fmt2(totalSpent)} ر.س</td></tr>
+<tr><td>طلبات الشراء PO</td><td style="text-align:right;" class="val">${monthPO.length}</td></tr>
+<tr><td>فواتير Petty Cash</td><td style="text-align:right;" class="val">${monthPC.length}</td></tr>
+<tr><td>إجمالي العقود الشهري</td><td style="text-align:right;" class="val">${fmt2(totalCM)} ر.س</td></tr>
+<tr><td>وفر التفاوض</td><td style="text-align:right;" class="val">${fmt2(contractSavAmt)} ر.س</td></tr>
+<tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;" class="val">${fmt2(cmpSavAmt)} ر.س</td></tr>
+</tbody></table>
+<h2>المصروفات حسب الإدارة</h2>
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف شراءً</th></tr></thead>
 <tbody>${deptRows}<tr style="font-weight:700;"><td colspan="2">الإجمالي</td><td style="text-align:right;">${fmt2(totalSpent)}</td><td></td></tr></tbody></table>
 ${buildPCDetailsHTML(monthPC)}
@@ -8040,25 +8058,31 @@ function exportQuarterlyPDF(){
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content">
 <h1>التقرير الربع سنوي — الربع ${qName[q]} ${year}</h1>
 <p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>
-<table><thead><tr><th>إجمالي المصروفات</th><th>طلبات PO</th><th>فواتير Petty Cash</th><th>إجمالي العقود الشهري</th><th>وفر التفاوض</th><th>وفر مقارنة الأسعار</th></tr></thead><tbody><tr><td class="val">${fmt2(totalSpent)} ر.س</td><td class="val">${poSaved.filter(p=>months.some(m=>(p.date||'').startsWith(year+'-'+m))).length}</td><td class="val">${qPCAll.length}</td><td class="val">${fmt2(totalCM)} ر.س</td><td class="val">${fmt2(totalSaving)} ر.س</td><td class="val">${fmt2(cmpSavAmtQ)} ر.س</td></tr></tbody></table>
-<div class="three-col">
+<h2>ملخص الربع</h2>
+<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>
+<tr><td>إجمالي المصروفات</td><td style="text-align:right;" class="val">${fmt2(totalSpent)} ر.س</td></tr>
+<tr><td>طلبات الشراء PO</td><td style="text-align:right;" class="val">${poSaved.filter(p=>months.some(m=>(p.date||'').startsWith(year+'-'+m))).length}</td></tr>
+<tr><td>فواتير Petty Cash</td><td style="text-align:right;" class="val">${qPCAll.length}</td></tr>
+<tr><td>إجمالي العقود الشهري</td><td style="text-align:right;" class="val">${fmt2(totalCM)} ر.س</td></tr>
+<tr><td>وفر التفاوض</td><td style="text-align:right;" class="val">${fmt2(totalSaving)} ر.س</td></tr>
+<tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;" class="val">${fmt2(cmpSavAmtQ)} ر.س</td></tr>
+</tbody></table>
+<div class="two-col">
   <div>
-    <div class="section-title">المصروفات شهراً بشهر</div>
+    <h2>المصروفات شهراً بشهر</h2>
     <table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
     <tbody>${monthBreak.map(mb=>`<tr><td class="val">${mb.m}</td><td class="teal val" style="text-align:right;">${mb.t.toLocaleString('ar-SA')}</td><td class="muted" style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('')}
     <tr style="border-top:1px solid #E2E8F0;"><td class="val">الإجمالي</td><td class="teal val" style="text-align:right;">${totalSpent.toLocaleString('ar-SA')}</td><td></td></tr></tbody></table>
   </div>
   <div>
-    <div class="section-title">أعلى الأصناف صرفاً</div>
+    <h2>أعلى الأصناف صرفاً</h2>
     <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
     <tbody>${topItems.map(([i,v])=>`<tr><td class="val">${i}</td><td style="text-align:right;font-weight:600;">${v.toLocaleString('ar-SA')}</td><td class="muted" style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}</tbody></table>
   </div>
-  <div>
-    <h2>أكثر الإدارات صرفاً</h2>
-    <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف</th></tr></thead>
-    <tbody>${deptSorted.map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td><td>${ti||'—'}</td></tr>`;}).join('')}</tbody></table>
-  </div>
 </div>
+<h2>المصروفات حسب الإدارة</h2>
+<table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف</th></tr></thead>
+<tbody>${deptSorted.map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td><td>${ti||'—'}</td></tr>`;}).join('')}</tbody></table>
 <h2>العقود الفعالة</h2>${buildContractsTableHTML(activeC,totalCM)}${buildPCDetailsHTML(qPCAll)}
 
 </body></html>`);
