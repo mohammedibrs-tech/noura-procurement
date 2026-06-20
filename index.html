@@ -269,7 +269,12 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <!-- إدخال العهدة -->
     <div class="card">
-      <div class="card-header"><h3>إعداد العهدة الشهرية</h3><button class="btn btn-red btn-sm" onclick="resetLocalData()" title="امسح البيانات المحلية القديمة وأعد التحميل">🔄 إعادة ضبط البيانات</button></div>
+      <div class="card-header"><h3>إعداد العهدة الشهرية</h3>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-primary btn-sm" onclick="forceReloadExpenses()" title="إعادة تحميل كل المصروفات من السحابة">☁️ تحميل كل السجلات</button>
+          <button class="btn btn-red btn-sm" onclick="resetLocalData()" title="إعادة تحميل الصفحة">🔄 إعادة ضبط</button>
+        </div>
+      </div>
       <div class="card-body">
         <div class="field" style="margin-bottom:12px;">
           <label>عهدة الشهر الواحد (ر.س)</label>
@@ -1979,12 +1984,33 @@ async function initBudget(){
     if(sbExp && sbExp.length > 0){
       expenses = sbExp.map(function(e){
         var dk = (e.expense_date||'').substring(0,7);
-        return dk.length===7 ? Object.assign({},e,{month_key:dk}) : e;
+        if(dk.length===7) e = Object.assign({},e,{month_key:dk});
+        return e;
       });
       localStorage.setItem('expenses_cache', JSON.stringify(expenses));
+      // ← أعد رسم الواجهة بعد جلب كل البيانات
+      budgetCalcMonth();
+      renderExpenses();
+      toast('تم تحميل '+expenses.length+' مصروف ✅');
+    } else if(!sbExp || sbExp.length === 0) {
+      // Supabase فارغ — تحقق من الكاش
+      const cached = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+      if(cached.length > 0){
+        expenses = cached;
+        budgetCalcMonth();
+        renderExpenses();
+      }
     }
-    // إذا Supabase فارغ لكن cache فيه بيانات، ابقَ على الـ cache
-  } catch(e){ /* استخدم الـ cache */ }
+  } catch(e){
+    console.error('expenses fetch error', e);
+    // استخدم الكاش عند الخطأ
+    const cached = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+    if(cached.length > 0){
+      expenses = cached;
+      budgetCalcMonth();
+      renderExpenses();
+    }
+  }
 
   // ── تعيين الشهر الحالي تلقائياً ──
   var nowMonth = String(new Date().getMonth()+1).padStart(2,'0');
@@ -2063,9 +2089,36 @@ function syncBudgetFilter(){
 }
 
 function resetLocalData(){
-  // البيانات الآن في Supabase فقط — مسح محلي غير مطلوب
   if(!confirm('إعادة تحميل الصفحة؟')) return;
   location.reload();
+}
+
+async function forceReloadExpenses(){
+  toast('جاري تحميل كل السجلات من السحابة... ⏳');
+  try {
+    // امسح الكاش القديم أولاً لضمان بيانات نظيفة
+    localStorage.removeItem('expenses_cache');
+    const sbExp = await sbGetAll('expenses');
+    if(sbExp && sbExp.length > 0){
+      expenses = sbExp.map(function(e){
+        var dk = (e.expense_date||'').substring(0,7);
+        if(dk.length===7) e = Object.assign({},e,{month_key:dk});
+        return e;
+      });
+      localStorage.setItem('expenses_cache', JSON.stringify(expenses));
+      budgetCalcMonth();
+      renderExpenses();
+      renderTopDepts();
+      renderMonthCompare();
+      renderTopItems();
+      toast('✅ تم تحميل '+expenses.length+' سجل من السحابة');
+    } else {
+      toast('⚠️ لا توجد سجلات في قاعدة البيانات', true);
+    }
+  } catch(err) {
+    console.error('forceReloadExpenses error:', err);
+    toast('❌ تعذر الاتصال بالسحابة', true);
+  }
 }
 
 async function budgetSave(){
