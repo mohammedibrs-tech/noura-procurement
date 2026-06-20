@@ -3419,15 +3419,24 @@ function renderCmpCompanies(){
       return{name:co2.name||'—',total:m,payType:co2.paymentType||'total'};
     });
     var min2=Math.min.apply(null,tots2.map(function(t){return t.total;}).filter(function(v){return v>0;}));
+    var curC2=parseFloat(document.getElementById('cmp-current-contract')?.value)||0;
     var summHTML='<div style="background:#F0FFF4;border:2px solid #276749;border-radius:10px;padding:14px;margin-top:8px;">';
     summHTML+='<div style="font-weight:700;color:#276749;margin-bottom:10px;">ملخص المقارنة</div>';
     tots2.forEach(function(t){
-      var isBest=t.total===min2&&min2>0;
+      // الأفضل فقط إذا كان أقل من العقد الحالي (إن وجد)
+      var isBest=t.total===min2&&min2>0&&(curC2===0||t.total<curC2);
+      var isExpensive=curC2>0&&t.total>curC2;
       summHTML+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">';
       summHTML+='<span>'+t.name+'</span>';
-      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':'#C53030')+';">'+t.total.toLocaleString('ar-SA')+' ر.س'+(t.payType==='monthly'?' / شهر':' إجمالي')+(isBest?' ★ الأفضل':'')+'</span>';
+      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':isExpensive?'#C53030':'#244062')+';">'+t.total.toLocaleString('ar-SA')+' ر.س'+(t.payType==='monthly'?' / شهر':' إجمالي')+(isBest?' ★ الأفضل':isExpensive?' ⚠ أغلى من الحالي':'')+'</span>';
       summHTML+='</div>';
     });
+    if(curC2>0){
+      summHTML+='<div style="margin-top:8px;padding:6px;background:#fff;border-radius:6px;font-size:11px;color:#555;">';
+      summHTML+='العقد الحالي: <b>'+curC2.toLocaleString('ar-SA')+'</b> ر.س | ';
+      summHTML+=min2<curC2?'<b style="color:#276749;">وفر متوقع: '+(curC2-min2).toLocaleString('ar-SA')+' ر.س ('+((curC2-min2)/curC2*100).toFixed(1)+'%)</b>':'<b style="color:#C53030;">العروض الجديدة أغلى من العقد الحالي</b>';
+      summHTML+='</div>';
+    }
     summHTML+='</div>';
     el.innerHTML+=summHTML;
   }
@@ -8656,19 +8665,23 @@ function cmpPDF(){
   var fmt=function(n){return n.toLocaleString('ar-SA',{minimumFractionDigits:2});};
   var curRow='';
   if(curContract>0){
-    var diff=curContract-minAnn; var pct=((diff/curContract)*100).toFixed(2);
-    curRow='<tr style="background:#f0f0f0;font-weight:700;"><td>'+curVendor+' (العقد الحالي)</td><td>'+fmt(curContract)+'</td><td>'+fmt(minAnn)+'</td><td>'+fmt(diff)+'</td><td>'+pct+'%</td></tr>';
+    var diff=curContract-minAnn;
+    var pct=((Math.abs(diff)/curContract)*100).toFixed(2);
+    var curIsBest = curContract <= minAnn;
+    curRow='<tr style="background:'+(curIsBest?'#eaffea':'#f0f0f0')+';font-weight:700;"><td>'+curVendor+' (العقد الحالي)'+(curIsBest?' ★ العقد الحالي أفضل':'')+'</td><td>'+fmt(curContract)+'</td><td>'+fmt(minAnn)+'</td><td>'+(diff>0?'وفر '+fmt(diff):'زيادة '+fmt(-diff))+'</td><td>'+(diff>0?'':'- ')+pct+'%</td></tr>';
   }
   var compRows=sorted.map(function(t,i){
-    var isBest=i===0;
+    // الأفضل: يجب أن يكون أقل من العقد الحالي (إن وجد)، وليس فقط الأرخص بين العروض
+    var isBest = i===0 && (curContract===0 || t.annual < curContract);
     var diff2=curContract>0?curContract-t.annual:t.annual-minAnn;
-    var pct2=curContract>0?((diff2/curContract)*100).toFixed(2)+'%':(isBest?'—':((((t.annual-minAnn)/t.annual)*100).toFixed(2))+'%');
-    return '<tr style="background:'+(isBest?'#e8e8e8':'#ffffff')+';">'
-      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+t.name+(isBest?' — الافضل':'')+'</td>'
+    var pct2=curContract>0?(Math.abs(diff2/curContract)*100).toFixed(2)+'%':(isBest?'—':((((t.annual-minAnn)/t.annual)*100).toFixed(2))+'%');
+    var bgColor = isBest ? '#eaffea' : (i===0 && curContract>0 && t.annual>=curContract) ? '#fff3f3' : '#ffffff';
+    return '<tr style="background:'+bgColor+';">'
+      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+t.name+(isBest?' ★ الأفضل (أقل من الحالي)':i===0&&curContract>0&&t.annual>=curContract?' ⚠ أغلى من العقد الحالي':'')+'</td>'
       +'<td>'+fmt(t.annual)+'</td>'
-      +'<td>'+fmt(curContract>0?diff2:0)+'</td>'
-      +'<td>'+fmt(curContract>0?diff2:0)+'</td>'
-      +'<td>'+pct2+'</td></tr>';
+      +'<td>'+(curContract>0?(diff2>0?'وفر ':'زيادة ')+fmt(Math.abs(diff2)):fmt(0))+'</td>'
+      +'<td>'+(curContract>0?fmt(diff2>0?diff2:0):fmt(0))+'</td>'
+      +'<td>'+(diff2>=0?'':'-')+pct2+'</td></tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
     var rows=t.rows.map(function(r,ri){
