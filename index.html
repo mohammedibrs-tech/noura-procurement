@@ -780,6 +780,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
   <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
     <button id="cmp-tab-prices" onclick="cmpSwitchTab('prices')" style="padding:10px 22px;border:none;background:none;font-size:13px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;cursor:pointer;">مقارنة الأسعار</button>
     <button id="cmp-tab-revenue" onclick="cmpSwitchTab('revenue')" style="padding:10px 22px;border:none;background:none;font-size:13px;font-weight:700;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">اتفاقيات تقاسم الإيرادات</button>
+    <button id="cmp-tab-fleet" onclick="cmpSwitchTab('fleet')" style="padding:10px 22px;border:none;background:none;font-size:13px;font-weight:700;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">🚗 تحليل شراء الأسطول مقابل التأجير</button>
   </div>
 
   <!-- ══ تبويب مقارنة الأسعار ══ -->
@@ -907,6 +908,119 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="card-body"><div class="saved-list" id="rev-saved-list"></div></div>
     </div>
   </div>
+
+  <!-- ══ تبويب تحليل الأسطول ══ -->
+  <div id="cmp-panel-fleet" style="display:none;">
+
+    <!-- ── رأس القسم ── -->
+    <div style="background:linear-gradient(135deg,#1A2B4A 0%,#1DA9BD 100%);border-radius:12px;padding:20px 24px;margin-bottom:20px;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:4px;">🚗 تحليل قرار شراء الأسطول مقابل الاستمرار في التأجير</div>
+        <div style="font-size:12px;opacity:.85;">دراسة جدوى مالية شاملة — موجّهة لصنّاع القرار والإدارة العليا</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" style="background:#fff;color:#1A2B4A;font-size:12px;" onclick="fleetCalc()">⟳ احتساب النتائج</button>
+        <button class="btn" style="background:#276749;color:#fff;font-size:12px;" onclick="fleetExcel()">📊 Excel</button>
+        <button class="btn" style="background:#7C3AED;color:#fff;font-size:12px;" onclick="fleetPDF()">📄 PDF</button>
+      </div>
+    </div>
+
+    <!-- ── أ: بيانات المركبات ── -->
+    <div class="card">
+      <div class="card-header"><h3>أ — بيانات المركبات الحالية</h3></div>
+      <div class="card-body">
+        <div class="form-grid-3">
+          <div class="field"><label>عدد المركبات</label><input id="fl-count" type="number" value="350" oninput="fleetCalc()"></div>
+          <div class="field"><label>نوع المركبة</label><input id="fl-type" placeholder="مثال: سيدان"></div>
+          <div class="field"><label>موديل المركبة</label><input id="fl-model" placeholder="مثال: تويوتا كامري"></div>
+          <div class="field"><label>سنة الصنع</label><input id="fl-year" type="number" placeholder="2022"></div>
+          <div class="field"><label>العمر التشغيلي الحالي (سنوات)</label><input id="fl-age" type="number" value="3" oninput="fleetCalc()"></div>
+          <div class="field"><label>قيمة شراء المركبة الواحدة (ر.س)</label><input id="fl-unit-price" type="number" placeholder="0" oninput="fleetCalc()"></div>
+        </div>
+        <div id="fl-total-purchase" style="margin-top:12px;padding:10px 16px;background:#EEF9FB;border:1px solid #1DA9BD;border-radius:8px;font-size:13px;font-weight:700;color:#0D7A8A;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ── ب: بيانات التأجير ── -->
+    <div class="card">
+      <div class="card-header"><h3>ب — بيانات عقود التأجير</h3></div>
+      <div class="card-body">
+        <div class="section-title">العقد الحالي</div>
+        <div class="form-grid-3">
+          <div class="field"><label>الإيجار الشهري للمركبة الواحدة (ر.س)</label><input id="fl-rent-monthly" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>مدة العقد الحالي (سنوات)</label><input id="fl-rent-duration" type="number" value="3" oninput="fleetCalc()"></div>
+          <div class="field"><label>هل يشمل صيانة؟</label><select id="fl-rent-maint"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><label>هل يشمل تأمين؟</label><select id="fl-rent-ins"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><label>هل يشمل مركبة بديلة؟</label><select id="fl-rent-alt"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><label>هل يشمل استبدال عند الأعطال؟</label><select id="fl-rent-replace"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+        </div>
+
+        <div class="section-title" style="margin-top:20px;">عروض التأجير الجديدة</div>
+        <div id="fl-lease-offers-body">
+          <div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "إضافة عرض تأجير" للبدء</div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="flAddLeaseOffer()">+ إضافة عرض تأجير</button>
+      </div>
+    </div>
+
+    <!-- ── ج: عقود الصيانة ── -->
+    <div class="card">
+      <div class="card-header"><h3>ج — عروض عقود الصيانة السنوية (حالة الشراء)</h3></div>
+      <div class="card-body">
+        <div id="fl-maint-offers-body">
+          <div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "إضافة مركز صيانة" للبدء</div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="flAddMaintOffer()">+ إضافة مركز صيانة</button>
+      </div>
+    </div>
+
+    <!-- ── د: التكاليف التشغيلية السنوية (حالة الشراء) ── -->
+    <div class="card">
+      <div class="card-header"><h3>د — التكاليف التشغيلية السنوية في حالة الشراء</h3></div>
+      <div class="card-body">
+        <div class="form-grid-3">
+          <div class="field"><label>تكلفة الصيانة السنوية للمركبة (ر.س)</label><input id="fl-op-maint" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>تكلفة التأمين السنوي للمركبة (ر.س)</label><input id="fl-op-ins" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>ترخيص وفحص دوري سنوي/مركبة (ر.س)</label><input id="fl-op-reg" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>تكلفة الإطارات سنوياً/مركبة (ر.س)</label><input id="fl-op-tires" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>قطع الغيار سنوياً/مركبة (ر.س)</label><input id="fl-op-parts" type="number" placeholder="0" oninput="fleetCalc()"></div>
+          <div class="field"><label>معدل الاستهلاك السنوي %</label><input id="fl-depreciation" type="number" value="15" min="1" max="50" oninput="fleetCalc()"></div>
+        </div>
+        <div class="form-grid" style="margin-top:12px;">
+          <div class="field"><label>مدة دراسة TCO — الخيار الأول (سنوات)</label><input id="fl-tco-years1" type="number" value="3" min="1" max="10" oninput="fleetCalc()"></div>
+          <div class="field"><label>مدة دراسة TCO — الخيار الثاني (سنوات)</label><input id="fl-tco-years2" type="number" value="4" min="1" max="10" oninput="fleetCalc()"></div>
+          <div class="field"><label>معدل الخصم / تكلفة رأس المال % (للـ NPV)</label><input id="fl-discount-rate" type="number" value="6" min="1" max="30" oninput="fleetCalc()"></div>
+          <div class="field"><label>معدل نمو التكاليف السنوي المتوقع %</label><input id="fl-cost-growth" type="number" value="3" min="0" max="20" oninput="fleetCalc()"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── نتائج تحليل TCO ── -->
+    <div class="card" id="fl-results-card" style="display:none;">
+      <div class="card-header"><h3>هـ — مؤشرات الأداء والتحليل المالي</h3></div>
+      <div class="card-body" id="fl-kpi-body"></div>
+    </div>
+
+    <!-- ── تحليل المخاطر ── -->
+    <div class="card" id="fl-risk-card" style="display:none;">
+      <div class="card-header"><h3>و — تحليل المخاطر</h3></div>
+      <div class="card-body" id="fl-risk-body"></div>
+    </div>
+
+    <!-- ── لوحة القرار التنفيذية ── -->
+    <div class="card" id="fl-decision-card" style="display:none;">
+      <div class="card-header"><h3>ز — لوحة القرار التنفيذية — الإدارة العليا</h3></div>
+      <div class="card-body" id="fl-decision-body"></div>
+    </div>
+
+    <!-- ── تحليل الحساسية ── -->
+    <div class="card" id="fl-sensitivity-card" style="display:none;">
+      <div class="card-header"><h3>ح — تحليل الحساسية المالية (±10% و ±20%)</h3></div>
+      <div class="card-body" id="fl-sensitivity-body"></div>
+    </div>
+
+  </div><!-- /cmp-panel-fleet -->
+
 </div>
 
 <!-- ══ Petty Cash ══ -->
@@ -8639,15 +8753,397 @@ document.getElementById('sr-modal').addEventListener('click',function(e){if(e.ta
 function cmpSwitchTab(tab){
   document.getElementById('cmp-panel-prices').style.display = tab==='prices'?'block':'none';
   document.getElementById('cmp-panel-revenue').style.display = tab==='revenue'?'block':'none';
+  document.getElementById('cmp-panel-fleet').style.display = tab==='fleet'?'block':'none';
   var tp=document.getElementById('cmp-tab-prices');
   var tr=document.getElementById('cmp-tab-revenue');
-  if(tab==='prices'){
-    tp.style.color='var(--primary)'; tp.style.borderBottomColor='var(--primary)';
-    tr.style.color='var(--sub)'; tr.style.borderBottomColor='transparent';
-  } else {
-    tr.style.color='var(--primary)'; tr.style.borderBottomColor='var(--primary)';
-    tp.style.color='var(--sub)'; tp.style.borderBottomColor='transparent';
+  var tf=document.getElementById('cmp-tab-fleet');
+  [tp,tr,tf].forEach(function(t){t.style.color='var(--sub)';t.style.borderBottomColor='transparent';});
+  if(tab==='prices'){tp.style.color='var(--primary)';tp.style.borderBottomColor='var(--primary)';}
+  else if(tab==='revenue'){tr.style.color='var(--primary)';tr.style.borderBottomColor='var(--primary)';}
+  else if(tab==='fleet'){tf.style.color='var(--primary)';tf.style.borderBottomColor='var(--primary)';}
+}
+
+/* ══════════════════════════════════════════════
+   تحليل الأسطول — Fleet Buy vs Lease Analysis
+══════════════════════════════════════════════ */
+var flLeaseOffers = [];
+var flMaintOffers = [];
+
+function flFmt(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function flFmt2(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function flAddLeaseOffer(){
+  var id=Date.now();
+  flLeaseOffers.push({id:id,name:'',monthlyPerUnit:0,duration:3,inclMaint:'yes',inclIns:'yes',inclAlt:'yes',inclReplace:'yes'});
+  flRenderLeaseOffers();
+}
+function flDelLeaseOffer(id){flLeaseOffers=flLeaseOffers.filter(function(o){return o.id!==id;});flRenderLeaseOffers();fleetCalc();}
+function flRenderLeaseOffers(){
+  var el=document.getElementById('fl-lease-offers-body');if(!el)return;
+  if(!flLeaseOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "إضافة عرض تأجير" للبدء</div>';return;}
+  var h='';
+  flLeaseOffers.forEach(function(o){
+    h+='<div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;background:#FAFBFC;">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    h+='<span style="font-weight:700;font-size:13px;color:var(--navy);">عرض تأجير</span>';
+    h+='<button onclick="flDelLeaseOffer('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
+    h+='<div class="form-grid-3">';
+    h+='<div class="field"><label>اسم شركة التأجير</label><input value="'+(o.name||'')+'" oninput="flUpdateLease('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
+    h+='<div class="field"><label>الإيجار الشهري/مركبة (ر.س)</label><input type="number" value="'+(o.monthlyPerUnit||'')+'" oninput="flUpdateLease('+o.id+',\'monthlyPerUnit\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>مدة العقد المقترحة (سنوات)</label><input type="number" value="'+(o.duration||3)+'" oninput="flUpdateLease('+o.id+',\'duration\',this.value)"></div>';
+    h+='<div class="field"><label>يشمل صيانة؟</label><select onchange="flUpdateLease('+o.id+',\'inclMaint\',this.value)"><option value="yes"'+(o.inclMaint==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclMaint==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><label>يشمل تأمين؟</label><select onchange="flUpdateLease('+o.id+',\'inclIns\',this.value)"><option value="yes"'+(o.inclIns==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclIns==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><label>يشمل مركبة بديلة؟</label><select onchange="flUpdateLease('+o.id+',\'inclAlt\',this.value)"><option value="yes"'+(o.inclAlt==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclAlt==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
+}
+function flUpdateLease(id,field,val){
+  var o=flLeaseOffers.find(function(x){return x.id===id;});
+  if(!o)return;
+  o[field]=(field==='monthlyPerUnit'||field==='duration')?parseFloat(val)||0:val;
+  fleetCalc();
+}
+
+function flAddMaintOffer(){
+  var id=Date.now();
+  flMaintOffers.push({id:id,name:'',annualCost:0,onsite:'yes',corrective:'yes',parts:'yes',sla:'8 ساعات',kpi:'95%'});
+  flRenderMaintOffers();
+}
+function flDelMaintOffer(id){flMaintOffers=flMaintOffers.filter(function(o){return o.id!==id;});flRenderMaintOffers();fleetCalc();}
+function flRenderMaintOffers(){
+  var el=document.getElementById('fl-maint-offers-body');if(!el)return;
+  if(!flMaintOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "إضافة مركز صيانة" للبدء</div>';return;}
+  var h='';
+  flMaintOffers.forEach(function(o){
+    h+='<div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;background:#FAFBFC;">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    h+='<span style="font-weight:700;font-size:13px;color:var(--navy);">مركز صيانة</span>';
+    h+='<button onclick="flDelMaintOffer('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
+    h+='<div class="form-grid-3">';
+    h+='<div class="field"><label>اسم مركز الصيانة</label><input value="'+(o.name||'')+'" oninput="flUpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم المركز"></div>';
+    h+='<div class="field"><label>التكلفة السنوية الإجمالية (ر.س)</label><input type="number" value="'+(o.annualCost||'')+'" oninput="flUpdateMaint('+o.id+',\'annualCost\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>نوع العقد</label><input value="'+(o.contractType||'شامل')+'" oninput="flUpdateMaint('+o.id+',\'contractType\',this.value)"></div>';
+    h+='<div class="field"><label>فنيون داخل الموقع؟</label><select onchange="flUpdateMaint('+o.id+',\'onsite\',this.value)"><option value="yes"'+(o.onsite==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.onsite==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><label>صيانة تصحيحية؟</label><select onchange="flUpdateMaint('+o.id+',\'corrective\',this.value)"><option value="yes"'+(o.corrective==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.corrective==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><label>قطع الغيار مشمولة؟</label><select onchange="flUpdateMaint('+o.id+',\'parts\',this.value)"><option value="yes"'+(o.parts==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.parts==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><label>مستوى SLA</label><input value="'+(o.sla||'8 ساعات')+'" oninput="flUpdateMaint('+o.id+',\'sla\',this.value)"></div>';
+    h+='<div class="field"><label>مؤشر الأداء المتفق عليه (KPI)</label><input value="'+(o.kpi||'95%')+'" oninput="flUpdateMaint('+o.id+',\'kpi\',this.value)"></div>';
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
+}
+function flUpdateMaint(id,field,val){
+  var o=flMaintOffers.find(function(x){return x.id===id;});
+  if(!o)return;
+  o[field]=(field==='annualCost')?parseFloat(val)||0:val;
+  fleetCalc();
+}
+
+function fleetCalc(){
+  var count=parseInt(document.getElementById('fl-count')?.value)||350;
+  var unitPrice=parseFloat(document.getElementById('fl-unit-price')?.value)||0;
+  var totalPurchase=count*unitPrice;
+  var pEl=document.getElementById('fl-total-purchase');
+  if(pEl){
+    if(totalPurchase>0){pEl.style.display='block';pEl.textContent='القيمة الإجمالية لشراء كامل الأسطول: '+flFmt(totalPurchase)+' ر.س';}
+    else{pEl.style.display='none';}
   }
+
+  var opMaint=parseFloat(document.getElementById('fl-op-maint')?.value)||0;
+  var opIns=parseFloat(document.getElementById('fl-op-ins')?.value)||0;
+  var opReg=parseFloat(document.getElementById('fl-op-reg')?.value)||0;
+  var opTires=parseFloat(document.getElementById('fl-op-tires')?.value)||0;
+  var opParts=parseFloat(document.getElementById('fl-op-parts')?.value)||0;
+  var deprRate=(parseFloat(document.getElementById('fl-depreciation')?.value)||15)/100;
+  var discountRate=(parseFloat(document.getElementById('fl-discount-rate')?.value)||6)/100;
+  var costGrowth=(parseFloat(document.getElementById('fl-cost-growth')?.value)||3)/100;
+  var years1=parseInt(document.getElementById('fl-tco-years1')?.value)||3;
+  var years2=parseInt(document.getElementById('fl-tco-years2')?.value)||4;
+  var rentMonthly=parseFloat(document.getElementById('fl-rent-monthly')?.value)||0;
+  var rentDuration=parseInt(document.getElementById('fl-rent-duration')?.value)||3;
+
+  var annualOpPerUnit=opMaint+opIns+opReg+opTires+opParts;
+  var annualOpTotal=annualOpPerUnit*count;
+  var annualDepr=totalPurchase*deprRate;
+
+  function calcBuyTCO(yrs){
+    var total=totalPurchase;
+    var npvOp=0;
+    for(var y=1;y<=yrs;y++){
+      var yearCost=annualOpTotal*Math.pow(1+costGrowth,y-1);
+      total+=yearCost;
+      npvOp+=yearCost/Math.pow(1+discountRate,y);
+    }
+    var residual=totalPurchase*Math.pow(1-deprRate,yrs);
+    var npvTotal=totalPurchase+npvOp-residual/Math.pow(1+discountRate,yrs);
+    return{gross:total,residual:residual,net:total-residual,npv:npvTotal};
+  }
+
+  function calcLeaseTCO(monthlyPerUnit,yrs){
+    var annualLease=monthlyPerUnit*12*count;
+    var total=0;var npv=0;
+    for(var y=1;y<=yrs;y++){
+      var yc=annualLease*Math.pow(1+costGrowth,y-1);
+      total+=yc;
+      npv+=yc/Math.pow(1+discountRate,y);
+    }
+    return{gross:total,npv:npv};
+  }
+
+  var buy1=calcBuyTCO(years1);
+  var buy2=calcBuyTCO(years2);
+  var lease1=calcLeaseTCO(rentMonthly,years1);
+  var lease2=calcLeaseTCO(rentMonthly,years2);
+
+  var savY1=lease1.gross-buy1.net;
+  var savY2=lease2.gross-buy2.net;
+
+  // نقطة التعادل
+  var breakEvenYears=0;
+  if(rentMonthly>0&&annualOpTotal>0){
+    var annualLeaseCost=rentMonthly*12*count;
+    var annualBuyCost=annualOpTotal;
+    if(annualLeaseCost>annualBuyCost){
+      breakEvenYears=totalPurchase/(annualLeaseCost-annualBuyCost);
+    }
+  }
+
+  // ROI (مدة years2)
+  var roi=buy2.net>0?((savY2/buy2.net)*100):0;
+
+  // أفضل عرض صيانة
+  var bestMaint=null;
+  if(flMaintOffers.length){
+    bestMaint=flMaintOffers.reduce(function(a,b){return a.annualCost<b.annualCost?a:b;});
+  }
+
+  // أفضل عرض تأجير
+  var bestLease=null;
+  if(flLeaseOffers.length){
+    bestLease=flLeaseOffers.reduce(function(a,b){return a.monthlyPerUnit<b.monthlyPerUnit?a:b;});
+  }
+
+  // ── KPI section ──
+  var kpiHTML='<div class="kpi-grid">';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">TCO الشراء ('+years1+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#1A2B4A;">'+flFmt(buy1.net)+' ر.س</div><div class="kpi-sub">صافي بعد خصم القيمة المتبقية</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">TCO الشراء ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#1A2B4A;">'+flFmt(buy2.net)+' ر.س</div><div class="kpi-sub">صافي بعد خصم القيمة المتبقية</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">TCO التأجير ('+years1+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#7C3AED;">'+flFmt(lease1.gross)+' ر.س</div><div class="kpi-sub">الإيجار الحالي</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">TCO التأجير ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#7C3AED;">'+flFmt(lease2.gross)+' ر.س</div><div class="kpi-sub">الإيجار الحالي</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">الوفر ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:'+(savY2>=0?'var(--green)':'var(--red)')+';">'+(savY2>=0?'+':'')+flFmt(savY2)+' ر.س</div><div class="kpi-sub">'+(savY2>=0?'لصالح الشراء':'لصالح التأجير')+'</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">نقطة التعادل</div><div class="kpi-val" style="font-size:16px;color:#C53030;">'+(breakEvenYears>0?breakEvenYears.toFixed(1)+' سنة':'—')+'</div><div class="kpi-sub">متى يتعادل الشراء مع التأجير</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">صافي القيمة الحالية NPV (شراء '+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#0D7A8A;">'+flFmt(buy2.npv)+' ر.س</div><div class="kpi-sub">معدل الخصم '+(discountRate*100).toFixed(0)+'%</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">ROI الشراء ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:'+(roi>=0?'var(--green)':'var(--red)');+'">'+(roi>=0?'+':'')+roi.toFixed(1)+'%</div><div class="kpi-sub">العائد على الاستثمار</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">متوسط تكلفة/مركبة/سنة (شراء)</div><div class="kpi-val" style="font-size:16px;">'+flFmt(count>0?buy2.net/(count*years2):0)+' ر.س</div><div class="kpi-sub">على مدى '+years2+' سنوات</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">القيمة الإجمالية للشراء</div><div class="kpi-val" style="font-size:16px;color:#1A2B4A;">'+flFmt(totalPurchase)+' ر.س</div><div class="kpi-sub">'+count+' مركبة</div></div>';
+  kpiHTML+='</div>';
+
+  // TCO comparison table
+  kpiHTML+='<table class="tbl" style="margin-top:16px;">';
+  kpiHTML+='<thead><tr><th>البيان</th><th>'+years1+' سنوات — شراء</th><th>'+years1+' سنوات — تأجير</th><th>'+years2+' سنوات — شراء</th><th>'+years2+' سنوات — تأجير</th></tr></thead>';
+  kpiHTML+='<tbody>';
+  kpiHTML+='<tr><td>تكلفة الاقتناء / الإيجار الكلي</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(lease1.gross)+'</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(lease2.gross)+'</td></tr>';
+  kpiHTML+='<tr><td>إجمالي التكاليف التشغيلية</td><td>'+flFmt(buy1.gross-totalPurchase)+'</td><td>—</td><td>'+flFmt(buy2.gross-totalPurchase)+'</td><td>—</td></tr>';
+  kpiHTML+='<tr><td>القيمة المتبقية (استهلاك '+deprRate*100+'%/سنة)</td><td style="color:var(--green);">-'+flFmt(buy1.residual)+'</td><td>—</td><td style="color:var(--green);">-'+flFmt(buy2.residual)+'</td><td>—</td></tr>';
+  kpiHTML+='<tr style="font-weight:900;background:#EEF9FB;"><td>إجمالي TCO (صافي)</td><td style="color:#1A2B4A;">'+flFmt(buy1.net)+'</td><td style="color:#7C3AED;">'+flFmt(lease1.gross)+'</td><td style="color:#1A2B4A;">'+flFmt(buy2.net)+'</td><td style="color:#7C3AED;">'+flFmt(lease2.gross)+'</td></tr>';
+  kpiHTML+='<tr style="font-weight:700;"><td>الوفر (شراء vs تأجير)</td><td colspan="2" style="text-align:center;color:'+(savY1>=0?'var(--green)':'var(--red)');+';">'+(savY1>=0?'وفر: +':'')+flFmt(Math.abs(savY1))+' ر.س</td><td colspan="2" style="text-align:center;color:'+(savY2>=0?'var(--green)':'var(--red)');+';">'+(savY2>=0?'وفر: +':'')+flFmt(Math.abs(savY2))+' ر.س</td></tr>';
+  kpiHTML+='</tbody></table>';
+
+  var kpiEl=document.getElementById('fl-kpi-body');
+  if(kpiEl){kpiEl.innerHTML=kpiHTML;document.getElementById('fl-results-card').style.display='block';}
+
+  // ── Risk section ──
+  var risks={buy:{breakdown:'متوسط',parts:'متوسط',expansion:'منخفض',vendor:'منخفض'},lease:{breakdown:'منخفض',parts:'منخفض',expansion:'متوسط',vendor:'مرتفع'}};
+  function riskColor(r){return r==='مرتفع'?'#C53030':r==='متوسط'?'#D97706':'#276749';}
+  function riskBadge(r){return '<span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:'+(r==='مرتفع'?'#FEE2E2':r==='متوسط'?'#FEF3C7':'#D1FAE5')+';color:'+riskColor(r)+';">'+r+'</span>';}
+  var riskHTML='<table class="tbl"><thead><tr><th>نوع المخاطرة</th><th>سيناريو الشراء</th><th>سيناريو التأجير</th></tr></thead><tbody>';
+  riskHTML+='<tr><td>مخاطر الأعطال</td><td>'+riskBadge(risks.buy.breakdown)+'</td><td>'+riskBadge(risks.lease.breakdown)+'</td></tr>';
+  riskHTML+='<tr><td>مخاطر توفر قطع الغيار</td><td>'+riskBadge(risks.buy.parts)+'</td><td>'+riskBadge(risks.lease.parts)+'</td></tr>';
+  riskHTML+='<tr><td>مخاطر التوسع المستقبلي</td><td>'+riskBadge(risks.buy.expansion)+'</td><td>'+riskBadge(risks.lease.expansion)+'</td></tr>';
+  riskHTML+='<tr><td>مخاطر الاعتماد على المورد</td><td>'+riskBadge(risks.buy.vendor)+'</td><td>'+riskBadge(risks.lease.vendor)+'</td></tr>';
+  riskHTML+='</tbody></table>';
+  var riskEl=document.getElementById('fl-risk-body');
+  if(riskEl){riskEl.innerHTML=riskHTML;document.getElementById('fl-risk-card').style.display='block';}
+
+  // ── Decision board ──
+  var rec=savY2>=0?'الشراء':'التأجير';
+  var recColor=savY2>=0?'#276749':'#7C3AED';
+  var reasons=savY2>=0
+    ?['توفير إجمالي يبلغ '+flFmt(Math.abs(savY2))+' ر.س على مدى '+years2+' سنوات','امتلاك الأصول وتحقيق القيمة المتبقية','مرونة في التعاقد مع مراكز صيانة منافسة','تقليل الاعتماد على مورد واحد (Vendor Lock-in)']
+    :['التأجير أقل تكلفة بمقدار '+flFmt(Math.abs(savY2))+' ر.س خلال '+years2+' سنوات','يتضمن خدمات صيانة وتأمين مدمجة','مرونة في التوسع والتحديث','لا يتطلب رأس مال مبدئي كبير'];
+  var assumptions=['عدد المركبات: '+count,'التكاليف التشغيلية السنوية/مركبة: '+flFmt(annualOpPerUnit)+' ر.س','معدل الاستهلاك: '+(deprRate*100).toFixed(0)+'% سنوياً','معدل الخصم المستخدم للـ NPV: '+(discountRate*100).toFixed(0)+'%','معدل نمو التكاليف السنوي: '+(costGrowth*100).toFixed(0)+'%','مدة الدراسة الرئيسية: '+years2+' سنوات'];
+  var decHTML='<div style="background:linear-gradient(135deg,'+recColor+','+recColor+'CC);border-radius:10px;padding:18px 22px;color:#fff;text-align:center;margin-bottom:16px;">';
+  decHTML+='<div style="font-size:12px;opacity:.85;margin-bottom:4px;">التوصية النهائية</div>';
+  decHTML+='<div style="font-size:24px;font-weight:900;">✅ '+rec+'</div>';
+  decHTML+='<div style="font-size:12px;opacity:.85;margin-top:4px;">'+(savY2>=0?'وفر':'زيادة تكلفة')+': '+flFmt(Math.abs(savY2))+' ر.س على مدى '+years2+' سنوات</div></div>';
+  decHTML+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">';
+  decHTML+='<div style="background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--sub);margin-bottom:4px;">إجمالي TCO الشراء ('+years2+' سنة)</div><div style="font-weight:900;font-size:16px;color:#1A2B4A;">'+flFmt(buy2.net)+' ر.س</div></div>';
+  decHTML+='<div style="background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--sub);margin-bottom:4px;">إجمالي TCO التأجير ('+years2+' سنة)</div><div style="font-weight:900;font-size:16px;color:#7C3AED;">'+flFmt(lease2.gross)+' ر.س</div></div>';
+  decHTML+='<div style="background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--sub);margin-bottom:4px;">نقطة التعادل</div><div style="font-weight:900;font-size:16px;color:#C53030;">'+(breakEvenYears>0?breakEvenYears.toFixed(1)+' سنة':'—')+'</div></div>';
+  decHTML+='</div>';
+  if(bestMaint){decHTML+='<div style="background:#D1FAE5;border:1px solid #276749;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;"><strong style="color:#276749;">🏆 أفضل عرض صيانة:</strong> '+bestMaint.name+' — '+flFmt(bestMaint.annualCost)+' ر.س/سنة (SLA: '+bestMaint.sla+')</div>';}
+  if(bestLease){decHTML+='<div style="background:#EDE9FE;border:1px solid #7C3AED;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;"><strong style="color:#7C3AED;">🏆 أفضل عرض تأجير:</strong> '+bestLease.name+' — '+flFmt(bestLease.monthlyPerUnit)+' ر.س/شهر/مركبة</div>';}
+  decHTML+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+  decHTML+='<div><div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--navy);">أسباب التوصية:</div><ul style="padding-right:16px;font-size:12px;line-height:1.9;">';
+  reasons.forEach(function(r){decHTML+='<li>'+r+'</li>';});
+  decHTML+='</ul></div>';
+  decHTML+='<div><div style="font-weight:700;font-size:12px;margin-bottom:8px;color:var(--navy);">الافتراضات المستخدمة:</div><ul style="padding-right:16px;font-size:12px;line-height:1.9;">';
+  assumptions.forEach(function(a){decHTML+='<li>'+a+'</li>';});
+  decHTML+='</ul></div></div>';
+  var decEl=document.getElementById('fl-decision-body');
+  if(decEl){decEl.innerHTML=decHTML;document.getElementById('fl-decision-card').style.display='block';}
+
+  // ── Sensitivity ──
+  var scenarios=[{lbl:'تخفيض 20%',f:.8},{lbl:'تخفيض 10%',f:.9},{lbl:'سيناريو الأساس',f:1},{lbl:'زيادة 10%',f:1.1},{lbl:'زيادة 20%',f:1.2}];
+  var senHTML='<table class="tbl"><thead><tr><th>السيناريو</th><th>TCO الشراء ('+years2+' سنة)</th><th>TCO التأجير ('+years2+' سنة)</th><th>الفرق</th><th>التوصية</th></tr></thead><tbody>';
+  scenarios.forEach(function(sc){
+    var bCost=totalPurchase+(annualOpTotal*sc.f*(years2+(years2*(years2-1)/2)*costGrowth))-buy2.residual;
+    var lCost=rentMonthly*sc.f*12*count*years2;
+    var diff=lCost-bCost;
+    var isBase=sc.f===1;
+    senHTML+='<tr style="'+(isBase?'font-weight:700;background:#EEF9FB;':'')+'"><td>'+sc.lbl+'</td><td>'+flFmt(bCost)+'</td><td>'+flFmt(lCost)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)')+';">'+(diff>=0?'+':'')+flFmt(diff)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)');+';">'+(diff>=0?'شراء':'تأجير')+'</td></tr>';
+  });
+  senHTML+='</tbody></table>';
+  var senEl=document.getElementById('fl-sensitivity-body');
+  if(senEl){senEl.innerHTML=senHTML;document.getElementById('fl-sensitivity-card').style.display='block';}
+
+  // save state
+  try{localStorage.setItem('fleet_inputs',JSON.stringify({count:count,unitPrice:unitPrice,opMaint:opMaint,opIns:opIns,opReg:opReg,opTires:opTires,opParts:opParts,deprRate:deprRate*100,discountRate:discountRate*100,costGrowth:costGrowth*100,years1:years1,years2:years2,rentMonthly:rentMonthly,rentDuration:rentDuration,leaseOffers:flLeaseOffers,maintOffers:flMaintOffers}));}catch(e){}
+}
+
+function fleetExcel(){
+  fleetCalc();
+  var count=parseInt(document.getElementById('fl-count')?.value)||350;
+  var unitPrice=parseFloat(document.getElementById('fl-unit-price')?.value)||0;
+  var opMaint=parseFloat(document.getElementById('fl-op-maint')?.value)||0;
+  var opIns=parseFloat(document.getElementById('fl-op-ins')?.value)||0;
+  var opReg=parseFloat(document.getElementById('fl-op-reg')?.value)||0;
+  var opTires=parseFloat(document.getElementById('fl-op-tires')?.value)||0;
+  var opParts=parseFloat(document.getElementById('fl-op-parts')?.value)||0;
+  var deprRate=(parseFloat(document.getElementById('fl-depreciation')?.value)||15)/100;
+  var discRate=(parseFloat(document.getElementById('fl-discount-rate')?.value)||6)/100;
+  var costG=(parseFloat(document.getElementById('fl-cost-growth')?.value)||3)/100;
+  var years1=parseInt(document.getElementById('fl-tco-years1')?.value)||3;
+  var years2=parseInt(document.getElementById('fl-tco-years2')?.value)||4;
+  var rentMo=parseFloat(document.getElementById('fl-rent-monthly')?.value)||0;
+  var totalPurchase=count*unitPrice;
+  var annualOp=(opMaint+opIns+opReg+opTires+opParts)*count;
+
+  var wb=XLSX.utils.book_new();
+
+  // Sheet 1: Summary
+  var sumData=[
+    ['تحليل قرار شراء الأسطول مقابل التأجير','','',''],
+    ['','','',''],
+    ['البيان',years1+' سنوات — شراء',years1+' سنوات — تأجير',years2+' سنوات — شراء',years2+' سنوات — تأجير'],
+  ];
+  function bTCO(yrs){var t=totalPurchase,op=0,res=totalPurchase*Math.pow(1-deprRate,yrs);for(var y=1;y<=yrs;y++)op+=annualOp*Math.pow(1+costG,y-1);return{net:t+op-res,gross:t+op,res:res};}
+  function lTCO(yrs){var t=0;for(var y=1;y<=yrs;y++)t+=rentMo*12*count*Math.pow(1+costG,y-1);return t;}
+  var b1=bTCO(years1),b2=bTCO(years2),l1=lTCO(years1),l2=lTCO(years2);
+  sumData.push(['القيمة الإجمالية للشراء',totalPurchase,'—',totalPurchase,'—']);
+  sumData.push(['إجمالي التكاليف التشغيلية',b1.gross-totalPurchase,'—',b2.gross-totalPurchase,'—']);
+  sumData.push(['القيمة المتبقية',-b1.res,'—',-b2.res,'—']);
+  sumData.push(['إجمالي TCO (صافي)',b1.net,l1,b2.net,l2]);
+  sumData.push(['الوفر (شراء vs تأجير)',l1-b1.net,'',l2-b2.net,'']);
+  sumData.push(['','','','']);
+  sumData.push(['مؤشرات إضافية','','','']);
+  sumData.push(['نقطة التعادل (سنوات)',rentMo>0&&annualOp>0?totalPurchase/((rentMo*12*count)-annualOp):0,'','','']);
+  sumData.push(['ROI الشراء ('+years2+' سنوات)',(l2-b2.net)/b2.net*100+'%','','','']);
+
+  var ws1=XLSX.utils.aoa_to_sheet(sumData);
+  XLSX.utils.book_append_sheet(wb,ws1,'ملخص TCO');
+
+  // Sheet 2: Lease offers
+  if(flLeaseOffers.length){
+    var lData=[['اسم الشركة','إيجار شهري/مركبة','مدة العقد','إيجار سنوي إجمالي','يشمل صيانة','يشمل تأمين','يشمل بديل','يشمل استبدال']];
+    flLeaseOffers.forEach(function(o){
+      lData.push([o.name||'—',o.monthlyPerUnit,o.duration,o.monthlyPerUnit*12*count,o.inclMaint==='yes'?'نعم':'لا',o.inclIns==='yes'?'نعم':'لا',o.inclAlt==='yes'?'نعم':'لا',o.inclReplace==='yes'?'نعم':'لا']);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lData),'عروض التأجير');
+  }
+
+  // Sheet 3: Maintenance offers
+  if(flMaintOffers.length){
+    var mData=[['مركز الصيانة','نوع العقد','التكلفة السنوية','فنيون داخل موقع','صيانة تصحيحية','قطع الغيار','SLA','KPI']];
+    flMaintOffers.forEach(function(o){
+      mData.push([o.name||'—',o.contractType||'—',o.annualCost,o.onsite==='yes'?'نعم':'لا',o.corrective==='yes'?'نعم':'لا',o.parts==='yes'?'نعم':'لا',o.sla||'—',o.kpi||'—']);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mData),'عقود الصيانة');
+  }
+
+  // Sheet 4: Sensitivity
+  var senData=[['السيناريو','TCO الشراء','TCO التأجير','الفرق']];
+  [{lbl:'تخفيض 20%',f:.8},{lbl:'تخفيض 10%',f:.9},{lbl:'سيناريو الأساس',f:1},{lbl:'زيادة 10%',f:1.1},{lbl:'زيادة 20%',f:1.2}].forEach(function(sc){
+    var bC=totalPurchase+(annualOp*sc.f*years2)-b2.res;
+    var lC=rentMo*sc.f*12*count*years2;
+    senData.push([sc.lbl,bC,lC,lC-bC]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(senData),'تحليل الحساسية');
+
+  XLSX.writeFile(wb,'تحليل_الأسطول_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  toast('تم تصدير Excel بنجاح ✓');
+}
+
+function fleetPDF(){
+  fleetCalc();
+  var count=parseInt(document.getElementById('fl-count')?.value)||350;
+  var unitPrice=parseFloat(document.getElementById('fl-unit-price')?.value)||0;
+  var years2=parseInt(document.getElementById('fl-tco-years2')?.value)||4;
+  var years1=parseInt(document.getElementById('fl-tco-years1')?.value)||3;
+  var rentMo=parseFloat(document.getElementById('fl-rent-monthly')?.value)||0;
+  var opMaint=parseFloat(document.getElementById('fl-op-maint')?.value)||0;
+  var opIns=parseFloat(document.getElementById('fl-op-ins')?.value)||0;
+  var opReg=parseFloat(document.getElementById('fl-op-reg')?.value)||0;
+  var opTires=parseFloat(document.getElementById('fl-op-tires')?.value)||0;
+  var opParts=parseFloat(document.getElementById('fl-op-parts')?.value)||0;
+  var deprRate=(parseFloat(document.getElementById('fl-depreciation')?.value)||15)/100;
+  var costG=(parseFloat(document.getElementById('fl-cost-growth')?.value)||3)/100;
+  var annualOp=(opMaint+opIns+opReg+opTires+opParts)*count;
+  var totalPurchase=count*unitPrice;
+  function bTCO2(yrs){var t=totalPurchase,op=0,res=totalPurchase*Math.pow(1-deprRate,yrs);for(var y=1;y<=yrs;y++)op+=annualOp*Math.pow(1+costG,y-1);return{net:t+op-res,gross:t+op,res:res};}
+  function lTCO2(yrs){var t=0;for(var y=1;y<=yrs;y++)t+=rentMo*12*count*Math.pow(1+costG,y-1);return t;}
+  var b1=bTCO2(years1),b2=bTCO2(years2),l1=lTCO2(years1),l2=lTCO2(years2);
+  var savY2=l2-b2.net;
+  var rec=savY2>=0?'الشراء':'التأجير';
+  var BG=FORM_BG||'';
+  var W=window.open('','_blank');
+  W.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تحليل الأسطول</title><style>'
+    +'@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;}'
+    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
+    +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
+    +'h1{font-size:14px;text-align:center;border-bottom:1.5px solid #1A2B4A;padding-bottom:4px;margin-bottom:4px;color:#1A2B4A;}'
+    +'h2{font-size:11px;margin:12px 0 5px;border-right:3.5px solid #1A2B4A;padding-right:7px;color:#1A2B4A;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;border:1px solid #000;background:#fff;}'
+    +'th{background:#1A2B4A;color:#fff;padding:4px 7px;text-align:right;border:1px solid #000;}'
+    +'td{padding:3px 7px;border:1px solid #000;}.rec{background:#1A2B4A;color:#fff;padding:10px;text-align:center;border-radius:6px;font-size:13px;font-weight:900;margin:10px 0;}'
+    +'</style></head><body>'
+    +(BG?'<img src="'+BG+'" class="bg-img">':'')
+    +'<div class="pdf-content">'
+    +'<h1>تحليل قرار شراء الأسطول مقابل التأجير</h1>'
+    +'<p style="text-align:center;color:#555;font-size:9px;">'+new Date().toLocaleDateString('ar-SA')+' — أسطول '+count+' مركبة</p>'
+    +'<div class="rec">التوصية النهائية: '+rec+' — الفرق: '+flFmt(Math.abs(savY2))+' ر.س لصالح '+rec+' خلال '+years2+' سنوات</div>'
+    +'<h2>ملخص TCO</h2>'
+    +'<table><thead><tr><th>البيان</th><th>'+years1+' سنوات — شراء</th><th>'+years1+' سنوات — تأجير</th><th>'+years2+' سنوات — شراء</th><th>'+years2+' سنوات — تأجير</th></tr></thead>'
+    +'<tbody>'
+    +'<tr><td>تكلفة الاقتناء / الإيجار</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(l1)+'</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(l2)+'</td></tr>'
+    +'<tr><td>تكاليف تشغيلية</td><td>'+flFmt(b1.gross-totalPurchase)+'</td><td>—</td><td>'+flFmt(b2.gross-totalPurchase)+'</td><td>—</td></tr>'
+    +'<tr><td>القيمة المتبقية</td><td>-'+flFmt(b1.res)+'</td><td>—</td><td>-'+flFmt(b2.res)+'</td><td>—</td></tr>'
+    +'<tr style="font-weight:900;"><td>إجمالي TCO (صافي)</td><td>'+flFmt(b1.net)+'</td><td>'+flFmt(l1)+'</td><td>'+flFmt(b2.net)+'</td><td>'+flFmt(l2)+'</td></tr>'
+    +'<tr><td>الوفر (شراء vs تأجير)</td><td colspan="2" style="text-align:center;">'+(l1-b1.net>=0?'+':'')+flFmt(l1-b1.net)+' ر.س</td><td colspan="2" style="text-align:center;">'+(savY2>=0?'+':'')+flFmt(savY2)+' ر.س</td></tr>'
+    +'</tbody></table>'
+    +(flLeaseOffers.length?'<h2>عروض التأجير</h2><table><thead><tr><th>الشركة</th><th>إيجار شهري/مركبة</th><th>إيجار سنوي إجمالي</th><th>المدة</th><th>صيانة</th><th>تأمين</th></tr></thead><tbody>'+flLeaseOffers.map(function(o){return'<tr><td>'+(o.name||'—')+'</td><td>'+flFmt(o.monthlyPerUnit)+'</td><td>'+flFmt(o.monthlyPerUnit*12*count)+'</td><td>'+o.duration+' سنوات</td><td>'+(o.inclMaint==='yes'?'✓':'✗')+'</td><td>'+(o.inclIns==='yes'?'✓':'✗')+'</td></tr>';}).join('')+'</tbody></table>':'')
+    +(flMaintOffers.length?'<h2>عقود الصيانة</h2><table><thead><tr><th>المركز</th><th>التكلفة السنوية</th><th>نوع العقد</th><th>فنيون بالموقع</th><th>SLA</th><th>KPI</th></tr></thead><tbody>'+flMaintOffers.map(function(o){return'<tr><td>'+(o.name||'—')+'</td><td>'+flFmt(o.annualCost)+'</td><td>'+(o.contractType||'—')+'</td><td>'+(o.onsite==='yes'?'✓':'✗')+'</td><td>'+(o.sla||'—')+'</td><td>'+(o.kpi||'—')+'</td></tr>';}).join('')+'</tbody></table>':'')
+    +'<h2>تحليل الحساسية المالية</h2>'
+    +'<table><thead><tr><th>السيناريو</th><th>TCO الشراء ('+years2+' سنة)</th><th>TCO التأجير ('+years2+' سنة)</th><th>الفرق</th><th>التوصية</th></tr></thead><tbody>'
+    +[{lbl:'تخفيض 20%',f:.8},{lbl:'تخفيض 10%',f:.9},{lbl:'الأساس',f:1},{lbl:'زيادة 10%',f:1.1},{lbl:'زيادة 20%',f:1.2}].map(function(sc){
+      var bC=totalPurchase+(annualOp*sc.f*years2)-b2.res;var lC=rentMo*sc.f*12*count*years2;var d=lC-bC;
+      return'<tr'+(sc.f===1?' style="font-weight:700;"':'')+'>'+
+        '<td>'+sc.lbl+'</td><td>'+flFmt(bC)+'</td><td>'+flFmt(lC)+'</td>'+
+        '<td style="color:'+(d>=0?'green':'red')+';">'+(d>=0?'+':'')+flFmt(d)+'</td>'+
+        '<td>'+(d>=0?'شراء':'تأجير')+'</td></tr>';}).join('')
+    +'</tbody></table>'
+    +'</div><script>window.onload=function(){window.print();}<\/script></body></html>');
+  W.document.close();
 }
 
 /* ══════════════════════════════════════════════
