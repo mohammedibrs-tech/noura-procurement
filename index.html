@@ -7680,6 +7680,8 @@ function buildPOTableHTML(poList){
   const rows=poList.map(p=>{
     const rows2=JSON.parse(p.rows||'[]');
     const val=rows2.reduce((s,r)=>{
+      const t=parseFloat(r.total)||0;
+      if(t>0) return s+t*1.15;
       const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);
       return s+(r.vatType==='added'?b*1.15:b);
     },0);
@@ -7745,13 +7747,13 @@ function buildContractsTableHTML(activeC,totalCM){
     const revAnnual=fmt(c.revAnnual||0);
     const revTotal=fmt(c.revAnnual||0);
     return `<tr>
-      <td style="padding:3px 6px;border:1px solid #276749;"><strong>${c.vendor}</strong></td>
-      <td style="padding:3px 6px;border:1px solid #276749;">${c.type}</td>
-      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;">${fmt(c.monthly||0)}</td>
-      <td style="padding:3px 6px;border:1px solid #276749;text-align:center;">${c.end||'—'}</td>
-      <td style="padding:3px 6px;border:1px solid #276749;text-align:center;color:#276749;font-weight:600;">${revLabel||'—'}</td>
-      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;color:#276749;font-weight:600;">${c.revType==='monthly'?revMonthly+' /شهر':c.revType==='daily'?'يومي':'—'}</td>
-      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;color:#276749;font-weight:700;">${revAnnual}</td>
+      <td style="padding:3px 6px;border:1px solid #244062;"><strong>${c.vendor}</strong></td>
+      <td style="padding:3px 6px;border:1px solid #244062;">${c.type}</td>
+      <td style="padding:3px 6px;border:1px solid #244062;text-align:right;">${fmt(c.monthly||0)}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:center;">${c.end||'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:center;font-weight:600;">${revLabel||'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:right;font-weight:600;">${c.revType==='monthly'?revMonthly+' /شهر':c.revType==='daily'?'يومي':'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:right;font-weight:700;">${revAnnual}</td>
     </tr>`;
   }).join('');
   const withRevTotal=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
@@ -7766,7 +7768,7 @@ function buildContractsTableHTML(activeC,totalCM){
   <th style="padding:4px 6px;border:1px solid #000;text-align:center;">ينتهي</th>
   <th style="padding:4px 6px;border:1px solid #000;text-align:center;">وفر</th>
 </tr></thead><tbody>${noRevRows}
-<tr style="font-weight:700;background:#f0f4ff;">
+<tr style="font-weight:700;background:#fff;">
   <td colspan="2" style="padding:3px 6px;border:1px solid #000;">الإجمالي</td>
   <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(noRevTotal)}</td>
   <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(noRevTotal*12)}</td>
@@ -7774,26 +7776,26 @@ function buildContractsTableHTML(activeC,totalCM){
 </tr></tbody></table>`:'';
 
   const withRevTable = withRev.length>0?`
-<table style="width:100%;border-collapse:collapse;font-size:8px;border:1px solid #276749;margin-bottom:4px;">
-<thead><tr style="background:#276749;color:#fff;">
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الشركة</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الخدمة</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الشهري</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:center;">ينتهي</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">نوع الإيراد</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">إيراد شهري</th>
-  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">إيراد سنوي</th>
+<table style="width:100%;border-collapse:collapse;font-size:8px;border:1px solid #000;margin-bottom:4px;">
+<thead><tr style="background:#244062;color:#fff;">
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الشركة</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الخدمة</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الشهري</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:center;">ينتهي</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">نوع الإيراد</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">إيراد شهري</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">إيراد سنوي</th>
 </tr></thead><tbody>${withRevRows}
-<tr style="font-weight:700;background:#F0FFF4;color:#276749;">
-  <td colspan="4" style="padding:3px 6px;border:1px solid #276749;">إجمالي الإيراد السنوي</td>
-  <td colspan="2" style="padding:3px 6px;border:1px solid #276749;"></td>
-  <td style="padding:3px 6px;border:1px solid #276749;text-align:right;">${fmt(withRevTotal)}</td>
+<tr style="font-weight:700;background:#fff;">
+  <td colspan="4" style="padding:3px 6px;border:1px solid #000;">إجمالي الإيراد السنوي</td>
+  <td colspan="2" style="padding:3px 6px;border:1px solid #000;"></td>
+  <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(withRevTotal)}</td>
 </tr></tbody></table>`:'';
 
   if(noRev.length>0 && withRev.length>0){
     return `<h2>العقود</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
       <div><div style="font-size:9px;font-weight:700;color:#244062;border-right:3px solid #244062;padding-right:5px;margin-bottom:4px;">العقود الأساسية</div>${noRevTable}</div>
-      <div><div style="font-size:9px;font-weight:700;color:#276749;border-right:3px solid #276749;padding-right:5px;margin-bottom:4px;">عقود الإيراد</div>${withRevTable}</div>
+      <div><div style="font-size:9px;font-weight:700;color:#244062;border-right:3px solid #244062;padding-right:5px;margin-bottom:4px;">عقود الإيراد</div>${withRevTable}</div>
     </div>`;
   }
   return (noRev.length>0?`<h2>العقود الأساسية</h2>${noRevTable}`:'') + (withRev.length>0?`<h2>عقود الإيراد</h2>${withRevTable}`:'');
