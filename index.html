@@ -3246,9 +3246,11 @@ async function dnSave(){
   const co=document.getElementById('dn-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
   const data={company:co,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()};
-  const res=await sbInsert('procurement_dn',{...data,rows:JSON.stringify(data.rows)});
-  if(res&&Array.isArray(res)&&res[0]){dnSaved.unshift({...res[0],rows:data.rows});}
-  else{dnSaved.unshift({...data,id:Date.now()});}
+  try{
+    const res=await sbInsert('procurement_dn',{...data,rows:JSON.stringify(data.rows)});
+    if(res&&Array.isArray(res)&&res[0]){dnSaved.unshift({...res[0],rows:data.rows});}
+    else{dnSaved.unshift({...data,id:Date.now()});}
+  }catch(e){dnSaved.unshift({...data,id:Date.now()});}
   localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
   renderDnSaved();toast('تم الحفظ ✅');
 }
@@ -3424,17 +3426,16 @@ function renderCmpCompanies(){
     summHTML+='<div style="font-weight:700;color:#276749;margin-bottom:10px;">ملخص المقارنة</div>';
     tots2.forEach(function(t){
       // الأفضل فقط إذا كان أقل من العقد الحالي (إن وجد)
-      var isBest=t.total===min2&&min2>0&&(curC2===0||t.total<curC2);
-      var isExpensive=curC2>0&&t.total>curC2;
+      var isLowest=t.total===min2&&min2>0;
       summHTML+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #C6F6D5;font-size:12px;">';
-      summHTML+='<span>'+t.name+'</span>';
-      summHTML+='<span style="font-weight:700;color:'+(isBest?'#276749':isExpensive?'#C53030':'#244062')+';">'+t.total.toLocaleString('ar-SA')+' ر.س'+(t.payType==='monthly'?' / شهر':' إجمالي')+(isBest?' ★ الأفضل':isExpensive?' ⚠ أغلى من الحالي':'')+'</span>';
+      summHTML+='<span>'+t.name+(isLowest?' (أقل عرض مقدم)':'')+'</span>';
+      summHTML+='<span style="font-weight:700;color:#244062;">'+t.total.toLocaleString('ar-SA')+' ر.س'+(t.payType==='monthly'?' / شهر':' إجمالي')+'</span>';
       summHTML+='</div>';
     });
     if(curC2>0){
       summHTML+='<div style="margin-top:8px;padding:6px;background:#fff;border-radius:6px;font-size:11px;color:#555;">';
       summHTML+='العقد الحالي: <b>'+curC2.toLocaleString('ar-SA')+'</b> ر.س | ';
-      summHTML+=min2<curC2?'<b style="color:#276749;">وفر متوقع: '+(curC2-min2).toLocaleString('ar-SA')+' ر.س ('+((curC2-min2)/curC2*100).toFixed(1)+'%)</b>':'<b style="color:#C53030;">العروض الجديدة أغلى من العقد الحالي</b>';
+      summHTML+=min2<curC2?'وفر متوقع: <b>'+(curC2-min2).toLocaleString('ar-SA')+' ر.س ('+((curC2-min2)/curC2*100).toFixed(1)+'%)</b>':'العروض الجديدة أعلى من العقد الحالي';
       summHTML+='</div>';
     }
     summHTML+='</div>';
@@ -3521,9 +3522,13 @@ async function cmpSaveData(){
     toast('تم تحديث المقارنة ✅');
   }else{
     const cmpData={title,date,currentContract,currentVendor,companies:JSON.parse(JSON.stringify(cmpCompanies))};
-    const cmpRes=await sbInsert('procurement_cmp',{title,date,companies:JSON.stringify(cmpData.companies)});
-    if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies,currentContract,currentVendor});
-    else cmpSaved.unshift({...cmpData,id:Date.now()});
+    try{
+      const cmpRes=await sbInsert('procurement_cmp',{title,date,companies:JSON.stringify(cmpData.companies)});
+      if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies,currentContract,currentVendor});
+      else cmpSaved.unshift({...cmpData,id:Date.now()});
+    }catch(e){
+      cmpSaved.unshift({...cmpData,id:Date.now()});
+    }
     toast('تم حفظ المقارنة ✅');
   }
   localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
@@ -3923,10 +3928,7 @@ async function pcAddInvoice(){
   }
 
   // حفظ في Supabase DB
-  await sbInsert('procurement_pc',{
-    month_key:key,
-    invoice:JSON.stringify(invoice)
-  });
+  try{await sbInsert('procurement_pc',{month_key:key,invoice:JSON.stringify(invoice)});}catch(e){}
 
   // حفظ محلي — بدون base64 لتجنب QuotaExceeded
   pcGroups[key].push(invoice);
@@ -4203,10 +4205,7 @@ async function taameedSave(){
   }
 
   // حفظ في Supabase DB
-  await sbInsert('procurement_taameeds',{
-    taameed_id:taameed.id,
-    data:JSON.stringify(taameed)
-  });
+  try{await sbInsert('procurement_taameeds',{taameed_id:taameed.id,data:JSON.stringify(taameed)});}catch(e){}
 
   // حفظ محلي
   if(taameedEditId){
@@ -8667,21 +8666,19 @@ function cmpPDF(){
   if(curContract>0){
     var diff=curContract-minAnn;
     var pct=((Math.abs(diff)/curContract)*100).toFixed(2);
-    var curIsBest = curContract <= minAnn;
-    curRow='<tr style="background:'+(curIsBest?'#eaffea':'#f0f0f0')+';font-weight:700;"><td>'+curVendor+' (العقد الحالي)'+(curIsBest?' ★ العقد الحالي أفضل':'')+'</td><td>'+fmt(curContract)+'</td><td>'+fmt(minAnn)+'</td><td>'+(diff>0?'وفر '+fmt(diff):'زيادة '+fmt(-diff))+'</td><td>'+(diff>0?'':'- ')+pct+'%</td></tr>';
+    curRow='<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendor+' (العقد الحالي)</td><td>'+fmt(curContract)+'</td><td>'+fmt(minAnn)+'</td><td>'+(diff>=0?fmt(diff):fmt(-diff))+'</td><td>'+(diff>=0?'-':'+')+'%'+pct+'</td></tr>';
   }
   var compRows=sorted.map(function(t,i){
-    // الأفضل: يجب أن يكون أقل من العقد الحالي (إن وجد)، وليس فقط الأرخص بين العروض
-    var isBest = i===0 && (curContract===0 || t.annual < curContract);
-    var diff2=curContract>0?curContract-t.annual:t.annual-minAnn;
-    var pct2=curContract>0?(Math.abs(diff2/curContract)*100).toFixed(2)+'%':(isBest?'—':((((t.annual-minAnn)/t.annual)*100).toFixed(2))+'%');
-    var bgColor = isBest ? '#eaffea' : (i===0 && curContract>0 && t.annual>=curContract) ? '#fff3f3' : '#ffffff';
-    return '<tr style="background:'+bgColor+';">'
-      +'<td style="font-weight:'+(isBest?'700':'400')+';">'+t.name+(isBest?' ★ الأفضل (أقل من الحالي)':i===0&&curContract>0&&t.annual>=curContract?' ⚠ أغلى من العقد الحالي':'')+'</td>'
+    var isLowest = i===0; // الأقل سعراً بين العروض المقدمة
+    var isBetter = isLowest && curContract>0 && t.annual < curContract;
+    var diff2=curContract>0?curContract-t.annual:0;
+    var pct2=curContract>0?(Math.abs(diff2/curContract)*100).toFixed(2)+'%':'—';
+    return '<tr style="background:#ffffff;">'
+      +'<td>'+t.name+(isLowest?' (أقل عرض مقدم)':'')+'</td>'
       +'<td>'+fmt(t.annual)+'</td>'
-      +'<td>'+(curContract>0?(diff2>0?'وفر ':'زيادة ')+fmt(Math.abs(diff2)):fmt(0))+'</td>'
-      +'<td>'+(curContract>0?fmt(diff2>0?diff2:0):fmt(0))+'</td>'
-      +'<td>'+(diff2>=0?'':'-')+pct2+'</td></tr>';
+      +'<td>'+(curContract>0?fmt(Math.abs(diff2)):fmt(0))+'</td>'
+      +'<td>'+(curContract>0?fmt(isBetter?diff2:0):fmt(0))+'</td>'
+      +'<td>'+(isBetter?'-':'+')+pct2+'</td></tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
     var rows=t.rows.map(function(r,ri){
