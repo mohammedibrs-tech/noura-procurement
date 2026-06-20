@@ -1885,9 +1885,30 @@ async function deleteFileLocally(key) {
 /* ── SUPABASE ── */
 async function sbGet(table,filter=''){
   try{
-    const r=await fetch(SB+'/rest/v1/'+table+'?'+filter+'&order=created_at.desc',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+    const r=await fetch(SB+'/rest/v1/'+table+'?'+filter+'&order=created_at.desc',{headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Prefer':'count=exact'}});
     if(!r.ok)throw new Error(r.status);
     return r.json();
+  }catch(e){return null;}
+}
+
+// جلب كل السجلات مع pagination (يتجاوز حد 1000)
+async function sbGetAll(table,filter=''){
+  try{
+    const pageSize=1000;
+    let allData=[];
+    let offset=0;
+    while(true){
+      const sep=filter?'&':'';
+      const url=SB+'/rest/v1/'+table+'?'+filter+sep+'order=created_at.asc&limit='+pageSize+'&offset='+offset;
+      const r=await fetch(url,{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+      if(!r.ok)break;
+      const batch=await r.json();
+      if(!batch||!batch.length)break;
+      allData=allData.concat(batch);
+      if(batch.length<pageSize)break; // آخر صفحة
+      offset+=pageSize;
+    }
+    return allData;
   }catch(e){return null;}
 }
 async function sbInsert(table,data){
@@ -1954,7 +1975,7 @@ async function initBudget(){
   } catch(e){ /* استخدم الـ cache */ }
 
   try {
-    const sbExp = await sbGet('expenses');
+    const sbExp = await sbGetAll('expenses');
     if(sbExp && sbExp.length > 0){
       expenses = sbExp.map(function(e){
         var dk = (e.expense_date||'').substring(0,7);
@@ -8333,7 +8354,7 @@ async function loadFromSupabase(){
   }
 
   // RFQ
-  const rfqRes=await sbGet('procurement_rfq');
+  const rfqRes=await sbGetAll('procurement_rfq');
   const rfqLocal=JSON.parse(localStorage.getItem('rfq_saved')||'[]');
   if(rfqRes&&rfqRes.length){
     const sbMapped=rfqRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
@@ -8342,7 +8363,7 @@ async function loadFromSupabase(){
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
 
   // DN
-  const dnRes=await sbGet('procurement_dn');
+  const dnRes=await sbGetAll('procurement_dn');
   const dnLocal=JSON.parse(localStorage.getItem('dn_saved')||'[]');
   if(dnRes&&dnRes.length){
     const sbMapped=dnRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
@@ -8351,7 +8372,7 @@ async function loadFromSupabase(){
   localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
 
   // CMP
-  const cmpRes=await sbGet('procurement_cmp');
+  const cmpRes=await sbGetAll('procurement_cmp');
   const cmpLocal=JSON.parse(localStorage.getItem('cmp_saved')||'[]');
   if(cmpRes&&cmpRes.length){
     const sbMapped=cmpRes.map(r=>({...r,companies:typeof r.companies==='string'?JSON.parse(r.companies):r.companies}));
@@ -8360,7 +8381,7 @@ async function loadFromSupabase(){
   localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
 
   // PO
-  const poRes=await sbGet('orders');
+  const poRes=await sbGetAll('orders');
   const poLocal=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
   if(poRes&&poRes.length){
     const sbMapped=poRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
@@ -8369,7 +8390,7 @@ async function loadFromSupabase(){
   localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
 
   // التعاميد
-  const tmRes=await sbGet('procurement_taameeds');
+  const tmRes=await sbGetAll('procurement_taameeds');
   const tmLocal=JSON.parse(localStorage.getItem('taameeds')||'[]');
   if(tmRes&&tmRes.length){
     const sbMapped=tmRes.map(function(r){return typeof r.data==='string'?JSON.parse(r.data):r.data;}).filter(Boolean);
@@ -8378,7 +8399,7 @@ async function loadFromSupabase(){
   localStorage.setItem('taameeds',JSON.stringify(taameeds));
 
   // Petty Cash — دمج بدون حذف
-  const pcRes=await sbGet('procurement_pc');
+  const pcRes=await sbGetAll('procurement_pc');
   const pcLocal=JSON.parse(localStorage.getItem('pc_groups')||'{}');
   if(pcRes&&pcRes.length){
     // ابدأ من المحلي وأضف من Supabase ما لم يكن موجوداً
