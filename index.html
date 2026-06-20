@@ -9308,14 +9308,33 @@ function fleetPDF(reportTitle){
   var annualOp=(opMaint+opIns+opReg+opTires+opParts)*count;
   var totalPurchase=count*unitPrice;
   var bestMaint=flMaintOffers.filter(function(o){return o.annualCost>0;}).sort(function(a,b){return a.annualCost-b.annualCost;})[0]||null;
+  var bestLease=flLeaseOffers.filter(function(o){return o.monthlyPerUnit>0;}).sort(function(a,b){return a.monthlyPerUnit-b.monthlyPerUnit;})[0]||null;
   var bmc=bestMaint?bestMaint.annualCost:0;
   function bTCO(y){return totalPurchase+bmc*y;}
   function lTCO(y){return rentMo*12*count*y;}
   var b1=bTCO(years1),b2=bTCO(years2),l1=lTCO(years1),l2=lTCO(years2);
-  var sav2=l2-b2; var winner=sav2>=0?'التملك':'التأجير';
+  var sav1=l1-b1, sav2=l2-b2;
+  var winner=sav2>=0?'التملك':'التأجير';
+  var loser=sav2>=0?'التأجير':'التملك';
   var BG=FORM_BG||'';
   var today=new Date().toLocaleDateString('ar-SA');
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
+  // نص الملخص التنفيذي بأسلوب بشري
+  var execSummary='';
+  if(totalPurchase>0&&rentMo>0){
+    var diff=Math.abs(sav2);
+    if(sav2>=0){
+      execSummary='أجرت إدارة الأسطول والمشتريات مراجعة مالية مقارنة بين خيار تملك الأسطول المكوّن من '+count+' مركبة وخيار الاستمرار في التأجير. تغطي الدراسة فترتين زمنيتين: '+years1+' سنوات و'+years2+' سنوات، وتستند إلى العروض الفعلية المقدمة من الجهات المعنية. تشير نتائج المقارنة إلى أن التملك يُمثل الخيار الأقل تكلفة على المدى المدروس، بفارق مالي يبلغ <strong>'+flFmt(diff)+' ريال سعودي</strong> خلال '+years2+' سنوات مقارنة بخيار التأجير المستمر.';
+    } else {
+      execSummary='أجرت إدارة الأسطول والمشتريات مراجعة مالية مقارنة بين خيار تملك الأسطول المكوّن من '+count+' مركبة وخيار الاستمرار في التأجير. تغطي الدراسة فترتين: '+years1+' سنوات و'+years2+' سنوات، بناءً على العروض الفعلية. تظهر المقارنة أن التأجير يبقى الخيار الأقل تكلفة في ظل الأسعار الحالية، بفارق <strong>'+flFmt(diff)+' ريال سعودي</strong> خلال '+years2+' سنوات.';
+    }
+  } else {
+    execSummary='يتضمن هذا التقرير مقارنة مالية بين خيارات إدارة الأسطول للمدة المحددة. يرجى التحقق من اكتمال البيانات المدخلة للحصول على نتائج دقيقة.';
+  }
+  // ملاحظة المخاطر
+  var riskNote=sav2>=0
+    ?'في حال اختيار التملك، تجدر الإشارة إلى أن مسؤولية الصيانة وإدارة الأعطال ستقع على الجهة مباشرة، وهو ما يستلزم توفير عقد صيانة شامل مع جهة مختصة.'
+    :'الاستمرار في التأجير يُبقي على مرونة التشغيل ويُخفف من تبعات الأعطال، غير أن الاعتماد على مورد واحد يشكّل خطراً تعاقدياً ينبغي مراعاته عند التفاوض على شروط التجديد.';
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'
     +'@page{size:A4;margin:15mm 12mm 12mm;}*{box-sizing:border-box;}'
@@ -9323,60 +9342,118 @@ function fleetPDF(reportTitle){
     +'.bg-img{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:1;}'
     +'.rpt-header{background:#1A2B4A;color:#fff;padding:10px 14px;border-radius:4px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}'
-    +'.rpt-header h1{font-size:13pt;font-weight:900;margin:0;color:#fff;}'
-    +'.rpt-header .meta{font-size:8pt;opacity:.8;text-align:left;}'
+    +'.rpt-header h1{font-size:12pt;font-weight:900;margin:0;color:#fff;}'
+    +'.rpt-header .meta{font-size:8pt;opacity:.8;text-align:left;line-height:1.6;}'
     +'h2{font-size:9.5pt;font-weight:900;margin:10px 0 4px;border-right:3px solid #1A2B4A;padding-right:6px;color:#1A2B4A;}'
-    +'p{font-size:8.5pt;color:#333;line-height:1.5;margin:0 0 6px;}'
+    +'p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8pt;}'
     +'th{background:#1A2B4A;color:#fff;padding:4px 6px;text-align:right;border:1px solid #1A2B4A;font-weight:700;}'
     +'td{padding:3px 6px;border:1px solid #ccc;color:#111;}'
     +'tr:nth-child(even) td{background:#f5f7fa;}'
     +'.hl td{background:#dce3ec !important;font-weight:700;}'
-    +'.note{font-size:7.5pt;color:#666;margin:2px 0 8px;}'
-    +'.footer{font-size:7pt;color:#999;text-align:center;margin-top:8px;border-top:1px solid #ddd;padding-top:4px;}'
-    +'ul{margin:0 0 6px;padding-right:16px;} li{font-size:8.5pt;line-height:1.7;}'
+    +'.note{font-size:7.5pt;color:#555;margin:0 0 8px;}'
+    +'ul{margin:2px 0 6px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}'
     +'</style></head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap">'
     +'<div class="rpt-header">'
     +'<h1>'+safeTitle+'</h1>'
-    +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' | '+count+' مركبة</div>'
+    +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' &nbsp;|&nbsp; '+count+' مركبة</div>'
     +'</div>'
-    +'<h2>الوضع الحالي</h2>'
+
+    +'<h2>ملخص تنفيذي</h2>'
+    +'<p>'+execSummary+'</p>'
+
+    +'<h2>بيانات الأسطول والعقود الحالية</h2>'
     +'<table><tbody>'
-    +'<tr><td>عدد المركبات</td><td><strong>'+count+'</strong></td><td>الإيجار الشهري / مركبة</td><td><strong>'+flFmt(rentMo)+'</strong></td><td>قيمة التملك / مركبة</td><td><strong>'+flFmt(unitPrice)+'</strong></td></tr>'
-    +'<tr><td>إجمالي قيمة التملك</td><td><strong>'+flFmt(totalPurchase)+'</strong></td><td>أفضل عرض صيانة سنوي</td><td><strong>'+flFmt(bmc)+'</strong></td><td>معدل الخصم</td><td><strong>'+(discR*100).toFixed(0)+'%</strong></td></tr>'
+    +'<tr><td>عدد المركبات</td><td><strong>'+count+'</strong></td>'
+    +'<td>الإيجار الشهري للمركبة الواحدة</td><td><strong>'+flFmt(rentMo)+' ر.س</strong></td>'
+    +'<td>إجمالي الإيجار الشهري للأسطول</td><td><strong>'+flFmt(rentMo*count)+' ر.س</strong></td></tr>'
+    +'<tr><td>سعر تملك المركبة الواحدة</td><td><strong>'+flFmt(unitPrice)+' ر.س</strong></td>'
+    +'<td>إجمالي قيمة التملك</td><td><strong>'+flFmt(totalPurchase)+' ر.س</strong></td>'
+    +(bmc>0?'<td>أفضل عقد صيانة سنوي</td><td><strong>'+flFmt(bmc)+' ر.س</strong></td>':'<td colspan="2"></td>')
+    +'</tr>'
     +'</tbody></table>'
-    +'<h2>جدول المقارنة الرئيسي</h2>'
-    +'<table><thead><tr><th>خيار المقارنة</th><th>إجمالي قيمة التملك</th><th>أقل عرض صيانة</th><th>التملك مع الصيانة</th><th>إجمالي التأجير</th><th>الفرق المالي</th><th>الوفر المتوقع</th></tr></thead><tbody>'
-    +'<tr><td>'+years1+' سنوات</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(bmc*years1)+'</td><td>'+flFmt(b1)+'</td><td>'+flFmt(l1)+'</td><td>'+(l1-b1>=0?'+':'')+flFmt(l1-b1)+'</td><td>'+(l1-b1>=0?'وفر '+flFmt(l1-b1):'تكلفة إضافية '+flFmt(Math.abs(l1-b1)))+'</td></tr>'
-    +'<tr class="hl"><td>'+years2+' سنوات</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(bmc*years2)+'</td><td>'+flFmt(b2)+'</td><td>'+flFmt(l2)+'</td><td>'+(sav2>=0?'+':'')+flFmt(sav2)+'</td><td>'+(sav2>=0?'وفر '+flFmt(sav2):'تكلفة إضافية '+flFmt(Math.abs(sav2)))+'</td></tr>'
+
+    +'<h2>جدول المقارنة المالية</h2>'
+    +'<table><thead><tr>'
+    +'<th>خيار المقارنة</th>'
+    +'<th>إجمالي قيمة التملك</th>'
+    +'<th>إجمالي عقد الصيانة الأقل سعراً</th>'
+    +'<th>التملك مع الصيانة</th>'
+    +'<th>إجمالي قيمة التأجير</th>'
+    +'<th>الفرق المالي</th>'
+    +'<th>الوفر المتوقع</th>'
+    +'</tr></thead><tbody>'
+    +'<tr><td>'+years1+' سنوات</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(bmc*years1)+'</td><td>'+flFmt(b1)+'</td><td>'+flFmt(l1)+'</td>'
+    +'<td>'+(sav1>=0?'+':'')+flFmt(sav1)+'</td>'
+    +'<td>'+(sav1>=0?'وفر '+flFmt(sav1):'تكلفة إضافية '+flFmt(Math.abs(sav1)))+'</td></tr>'
+    +'<tr class="hl"><td>'+years2+' سنوات</td><td>'+flFmt(totalPurchase)+'</td><td>'+flFmt(bmc*years2)+'</td><td>'+flFmt(b2)+'</td><td>'+flFmt(l2)+'</td>'
+    +'<td>'+(sav2>=0?'+':'')+flFmt(sav2)+'</td>'
+    +'<td>'+(sav2>=0?'وفر '+flFmt(sav2):'تكلفة إضافية '+flFmt(Math.abs(sav2)))+'</td></tr>'
     +'</tbody></table>'
-    +'<p class="note">جميع القيم بالريال السعودي</p>'
-    +(flLeaseOffers.length?'<h2>عروض التأجير</h2><table><thead><tr><th>الشركة</th><th>إيجار / مركبة / شهر</th><th>إجمالي سنوي للأسطول</th><th>المدة</th><th>الصيانة</th><th>التأمين</th></tr></thead><tbody>'+flLeaseOffers.map(function(o){return'<tr><td>'+(o.name||'—')+'</td><td>'+flFmt(o.monthlyPerUnit)+'</td><td>'+flFmt(o.monthlyPerUnit*12*count)+'</td><td>'+o.duration+' سنوات</td><td>'+(o.inclMaint==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.inclIns==='yes'?'مشمول':'غير مشمول')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +(flMaintOffers.length?'<h2>عروض الصيانة</h2><table><thead><tr><th>مركز الصيانة</th><th>التكلفة السنوية</th><th>نوع العقد</th><th>فنيون داخل الموقع</th><th>مستوى الخدمة</th></tr></thead><tbody>'+flMaintOffers.slice().sort(function(a,b){return a.annualCost-b.annualCost;}).map(function(o,i){return'<tr'+(i===0?' class="hl"':'')+'>'+
-      '<td>'+(o.name||'—')+(i===0?' — الأقل سعراً':'')+'</td><td>'+flFmt(o.annualCost)+'</td><td>'+(o.contractType||'—')+'</td><td>'+(o.onsite==='yes'?'متوفر':'غير متوفر')+'</td><td>'+(o.sla||'—')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +'<h2>التحليل المالي</h2>'
-    +'<table><thead><tr><th>الحالة</th><th>تكلفة التملك ('+years2+' سنة)</th><th>تكلفة التأجير ('+years2+' سنة)</th><th>الفرق</th><th>الأقل تكلفة</th></tr></thead><tbody>'
-    +[{l:'تخفيض 20% في التكاليف',f:.8},{l:'تخفيض 10% في التكاليف',f:.9},{l:'بيانات مدخلة',f:1},{l:'زيادة 10% في التكاليف',f:1.1},{l:'زيادة 20% في التكاليف',f:1.2}].map(function(sc){
-      var bC=totalPurchase+annualOp*sc.f*years2;var lC=rentMo*sc.f*12*count*years2;var d=lC-bC;
+    +'<p class="note">جميع القيم بالريال السعودي — الصف المظلل يمثل الفترة الرئيسية للمقارنة</p>'
+
+    +(flLeaseOffers.length?
+      '<h2>عروض التأجير المقدمة</h2>'
+      +'<table><thead><tr><th>الجهة المؤجِّرة</th><th>إيجار شهري / مركبة</th><th>إجمالي سنوي للأسطول</th><th>مدة العقد</th><th>الصيانة</th><th>التأمين</th></tr></thead><tbody>'
+      +flLeaseOffers.slice().sort(function(a,b){return a.monthlyPerUnit-b.monthlyPerUnit;}).map(function(o,i){
+        return'<tr'+(i===0?' class="hl"':'')+'>'+
+          '<td>'+(o.name||'—')+(i===0?' — الأقل سعراً':'')+'</td>'+
+          '<td>'+flFmt(o.monthlyPerUnit)+'</td>'+
+          '<td>'+flFmt(o.monthlyPerUnit*12*count)+'</td>'+
+          '<td>'+o.duration+' سنوات</td>'+
+          '<td>'+(o.inclMaint==='yes'?'مشمول':'غير مشمول')+'</td>'+
+          '<td>'+(o.inclIns==='yes'?'مشمول':'غير مشمول')+'</td>'+
+          '</tr>';
+      }).join('')+'</tbody></table>':'')
+
+    +(flMaintOffers.length?
+      '<h2>عروض عقود الصيانة</h2>'
+      +'<table><thead><tr><th>الجهة المقدِّمة</th><th>التكلفة السنوية</th><th>نوع العقد</th><th>فنيون داخل الموقع</th><th>مستوى الخدمة</th><th>مؤشر الأداء</th></tr></thead><tbody>'
+      +flMaintOffers.slice().sort(function(a,b){return a.annualCost-b.annualCost;}).map(function(o,i){
+        return'<tr'+(i===0?' class="hl"':'')+'>'+
+          '<td>'+(o.name||'—')+(i===0?' — الأقل سعراً':'')+'</td>'+
+          '<td>'+flFmt(o.annualCost)+'</td>'+
+          '<td>'+(o.contractType||'—')+'</td>'+
+          '<td>'+(o.onsite==='yes'?'متوفر':'غير متوفر')+'</td>'+
+          '<td>'+(o.sla||'—')+'</td>'+
+          '<td>'+(o.kpi||'—')+'</td>'+
+          '</tr>';
+      }).join('')+'</tbody></table>':'')
+
+    +'<h2>التحليل المالي لحساسية التكاليف</h2>'
+    +'<p>يوضح الجدول أدناه أثر تغيير التكاليف التشغيلية بنسب محددة على نتيجة المقارنة، بهدف قياس متانة القرار في مختلف الظروف.</p>'
+    +'<table><thead><tr><th>السيناريو</th><th>تكلفة التملك ('+years2+' سنة)</th><th>تكلفة التأجير ('+years2+' سنة)</th><th>الفرق</th><th>الخيار الأقل تكلفة</th></tr></thead><tbody>'
+    +[{l:'انخفاض التكاليف 20%',f:.8},{l:'انخفاض التكاليف 10%',f:.9},{l:'البيانات الحالية',f:1},{l:'ارتفاع التكاليف 10%',f:1.1},{l:'ارتفاع التكاليف 20%',f:1.2}].map(function(sc){
+      var bC=totalPurchase+annualOp*sc.f*years2;
+      var lC=rentMo*sc.f*12*count*years2;
+      var d=lC-bC;
       return'<tr'+(sc.f===1?' class="hl"':'')+'>'+
-        '<td>'+sc.l+'</td><td>'+flFmt(bC)+'</td><td>'+flFmt(lC)+'</td><td>'+(d>=0?'+':'')+flFmt(d)+'</td><td>'+(d>=0?'التملك':'التأجير')+'</td></tr>';}).join('')
+        '<td>'+sc.l+'</td>'+
+        '<td>'+flFmt(bC)+'</td>'+
+        '<td>'+flFmt(lC)+'</td>'+
+        '<td>'+(d>=0?'+':'')+flFmt(d)+'</td>'+
+        '<td>'+(d>=0?'التملك':'التأجير')+'</td>'+
+        '</tr>';
+    }).join('')+'</tbody></table>'
+
+    +'<h2>تقييم المخاطر</h2>'
+    +'<table><thead><tr><th>نوع المخاطرة</th><th>التملك</th><th>التأجير</th><th>ملاحظة</th></tr></thead><tbody>'
+    +'<tr><td>مخاطر الأعطال</td><td>متوسطة</td><td>منخفضة</td><td>المؤجر ملزم بالإحلال في التأجير</td></tr>'
+    +'<tr><td>توفر قطع الغيار</td><td>متوسطة</td><td>منخفضة</td><td>تتحمل الجهة المسؤولية كاملة عند التملك</td></tr>'
+    +'<tr><td>مرونة التوسع</td><td>منخفضة المخاطر</td><td>متوسطة المخاطر</td><td>التملك يتيح حرية التصرف</td></tr>'
+    +'<tr><td>الاعتماد على مورد واحد</td><td>منخفضة</td><td>مرتفعة</td><td>يستلزم التأجير التنويع عند التجديد</td></tr>'
     +'</tbody></table>'
-    +'<h2>تحليل المخاطر</h2>'
-    +'<table><thead><tr><th>نوع المخاطرة</th><th>التملك</th><th>التأجير</th></tr></thead><tbody>'
-    +'<tr><td>مخاطر الأعطال</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر توفر قطع الغيار</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر التوسع المستقبلي</td><td>منخفضة</td><td>متوسطة</td></tr>'
-    +'<tr><td>مخاطر الاعتماد على مورد واحد</td><td>منخفضة</td><td>مرتفعة</td></tr>'
-    +'</tbody></table>'
-    +'<h2>النتائج الرئيسية</h2>'
+    +'<p>'+riskNote+'</p>'
+
+    +'<h2>النتائج والملاحظات</h2>'
     +'<ul>'
-    +'<li>الخيار الأقل تكلفة خلال '+years2+' سنوات: <strong>'+winner+'</strong> — الفارق المالي: <strong>'+flFmt(Math.abs(sav2))+' ريال سعودي</strong></li>'
-    +(bestMaint?'<li>أفضل عرض صيانة: <strong>'+(bestMaint.name||'—')+'</strong> — '+flFmt(bestMaint.annualCost)+' ريال سعودي / سنة — مستوى الخدمة: '+(bestMaint.sla||'—')+'</li>':'')
-    +(bestLease?'<li>أفضل عرض تأجير: <strong>'+(bestLease.name||'—')+'</strong> — '+flFmt(bestLease.monthlyPerUnit)+' ريال سعودي / شهر / مركبة</li>':'')
+    +'<li>وفقاً للبيانات المدخلة، يُعدّ خيار <strong>'+winner+'</strong> هو الأوفر مالياً على مدى '+years2+' سنوات، بفارق يبلغ <strong>'+flFmt(Math.abs(sav2))+' ريال سعودي</strong>.</li>'
+    +(bmc>0?'<li>أقل عرض صيانة مستلَم: <strong>'+(bestMaint?bestMaint.name:'—')+'</strong>، بتكلفة سنوية قدرها <strong>'+flFmt(bmc)+' ريال سعودي</strong>'+( bestMaint&&bestMaint.sla?'، ومستوى خدمة متفق عليه: '+bestMaint.sla:'')+'.</li>':'')
+    +(bestLease?'<li>أقل عرض تأجير مستلَم: <strong>'+bestLease.name+'</strong>، بإيجار شهري <strong>'+flFmt(bestLease.monthlyPerUnit)+' ريال سعودي</strong> للمركبة الواحدة.</li>':'')
+    +'<li>يُنصح بمراجعة هذا التحليل عند أي تغيير جوهري في أسعار العروض أو شروط العقود قبل اتخاذ القرار النهائي.</li>'
     +'</ul>'
-    +'<div class="footer">'+safeTitle+' — إدارة الأسطول والمشتريات — '+today+'</div>'
     +'</div>'
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
   W.document.close();
@@ -10468,101 +10545,29 @@ function f2PDF(reportTitle){
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
   var bma=bestMaint?bestMaint.annual:0;
   var blm=bestLease?bestLease.monthly:0;
-  // حسابات مباشرة بدون معدلات نمو أو استهلاك افتراضية
   function bTCO(y){return totalPurchase+bma*y;}
   function lTCO(y){return annualLease*y;}
   function nlTCO(y){return blm*12*count*y;}
   var b3=bTCO(3),b4=bTCO(4),l3=lTCO(3),l4=lTCO(4),nl3=nlTCO(3),nl4=nlTCO(4);
-  var opts=[{n:'التملك مع أفضل عقد صيانة',c:b4},{n:'التأجير الجديد (أفضل عرض)',c:nl4},{n:'الاستمرار في التأجير الحالي',c:l4}].filter(function(x){return x.c>0;});
+  var opts=[{n:'التملك مع أفضل عقد صيانة',c:b4},{n:'التأجير الجديد — أفضل عرض',c:nl4},{n:'الاستمرار في التأجير الحالي',c:l4}].filter(function(x){return x.c>0;});
   var best=opts.length?opts.reduce(function(a,b){return a.c<b.c?a:b;}):null;
   var BG=FORM_BG||'';
   var today=new Date().toLocaleDateString('ar-SA');
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
-  var W=window.open('','_blank');
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'
-    +'@page{size:A4;margin:0;}*{box-sizing:border-box;}'
-    +'body{font-family:"Arial",sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;background:#fff;}'
-    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:0;object-fit:cover;}'
-    +'.page{position:relative;z-index:1;width:210mm;min-height:297mm;padding:0;page-break-after:always;}'
-    +'.cover{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:297mm;background:#244062;color:#fff;text-align:center;padding:30mm 20mm;}'
-    +'.cover h1{font-size:20pt;font-weight:900;margin-bottom:12px;color:#fff;line-height:1.4;}'
-    +'.cover .sub{font-size:10pt;opacity:.85;margin-bottom:6px;}'
-    +'.cover .meta{font-size:9pt;opacity:.7;margin-top:24px;line-height:1.8;}'
-    +'.content{padding:18mm 15mm 12mm;}'
-    +'h2{font-size:11pt;font-weight:900;margin:14px 0 6px;border-right:4px solid #244062;padding-right:8px;color:#244062;}'
-    +'p,li{font-size:9pt;color:#222;line-height:1.6;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}'
-    +'th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}'
-    +'td{padding:4px 7px;border:1px solid #ccc;color:#111;}'
-    +'tr:nth-child(even) td{background:#f5f7fa;}'
-    +'.best-row td{background:#e8edf2 !important;font-weight:700;}'
-    +'.footer{font-size:7.5pt;color:#888;text-align:center;margin-top:14px;border-top:1px solid #ccc;padding-top:6px;}'
-    +'</style></head><body>'
-    +(BG?'<img src="'+BG+'" class="bg-img">':'')
-    // صفحة الغلاف
-    +'<div class="page cover">'
-    +'<div style="font-size:8pt;opacity:.6;margin-bottom:28px;letter-spacing:2px;">تقرير داخلي — سري</div>'
-    +'<h1>'+safeTitle+'</h1>'
-    +'<div class="sub">إدارة الأسطول والمشتريات</div>'
-    +'<div class="meta">'
-    +'تاريخ الإصدار: '+today+'<br>'
-    +'عدد المركبات: '+count+'<br>'
-    +(unitPrice>0?'قيمة التملك الإجمالية: '+f2Fmt(totalPurchase)+' ريال سعودي':'')
-    +'</div>'
-    +'</div>'
-    // صفحة المحتوى
-    +'<div class="page content">'
-    +'<h2>الملخص التنفيذي</h2>'
-    +'<p>تتناول هذه الدراسة تقييم الخيارات المتاحة لإدارة أسطول مكوّن من <strong>'+count+' مركبة</strong>، من خلال مقارنة مالية موضوعية بين خيارات التملك والتأجير. تستند جميع النتائج إلى البيانات المدخلة فعلياً دون افتراضات مستقبلية.</p>'
-    +(best?'<p>تشير نتائج المقارنة إلى أن خيار <strong>'+best.n+'</strong> هو الأقل تكلفة خلال الفترات المحددة.</p>':'')
-    +'<h2>الوضع الحالي</h2>'
-    +'<table><tbody>'
-    +'<tr><td>عدد المركبات</td><td><strong>'+count+'</strong></td><td>قيمة التملك / مركبة</td><td><strong>'+f2Fmt(unitPrice)+'</strong></td></tr>'
-    +'<tr><td>إجمالي قيمة التملك</td><td><strong>'+f2Fmt(totalPurchase)+'</strong></td><td>التأجير السنوي الحالي</td><td><strong>'+f2Fmt(annualLease)+'</strong></td></tr>'
-    +'<tr><td>أفضل عرض صيانة سنوي</td><td><strong>'+f2Fmt(bma)+'</strong></td><td>أفضل إيجار شهري / مركبة</td><td><strong>'+f2Fmt(blm)+'</strong></td></tr>'
-    +'</tbody></table>'
-    +'<h2>جدول المقارنة الرئيسي</h2>'
-    +'<table><thead><tr><th>خيار المقارنة</th><th>إجمالي قيمة التملك</th><th>إجمالي عقد الصيانة الأقل سعراً</th><th>التملك مع الصيانة</th><th>إجمالي قيمة التأجير</th><th>الفرق المالي</th><th>الوفر المتوقع</th></tr></thead><tbody>'
-    +'<tr'+(best&&best.n.indexOf('التملك')!==-1&&b3<=l3?' class="best-row"':'')+'>'+
-      '<td>التملك مع أفضل صيانة — 3 سنوات</td><td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*3)+'</td><td>'+f2Fmt(b3)+'</td><td>'+f2Fmt(l3)+'</td><td>'+(l3-b3>=0?'+':'')+f2Fmt(l3-b3)+'</td><td>'+(l3-b3>=0?'وفر '+f2Fmt(l3-b3):'تكلفة إضافية '+f2Fmt(Math.abs(l3-b3)))+'</td></tr>'
-    +'<tr'+(best&&best.n.indexOf('التملك')!==-1&&b4<=l4?' class="best-row"':'')+'>'+
-      '<td>التملك مع أفضل صيانة — 4 سنوات</td><td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*4)+'</td><td>'+f2Fmt(b4)+'</td><td>'+f2Fmt(l4)+'</td><td>'+(l4-b4>=0?'+':'')+f2Fmt(l4-b4)+'</td><td>'+(l4-b4>=0?'وفر '+f2Fmt(l4-b4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-b4)))+'</td></tr>'
-    +(nl3>0?'<tr'+(best&&best.n.indexOf('الجديد')!==-1&&nl3<=l3?' class="best-row"':'')+'>'+
-      '<td>التأجير الجديد (أفضل عرض) — 3 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(nl3)+'</td><td>'+f2Fmt(l3)+'</td><td>'+(l3-nl3>=0?'+':'')+f2Fmt(l3-nl3)+'</td><td>'+(l3-nl3>=0?'وفر '+f2Fmt(l3-nl3):'تكلفة إضافية '+f2Fmt(Math.abs(l3-nl3)))+'</td></tr>':'')
-    +(nl4>0?'<tr'+(best&&best.n.indexOf('الجديد')!==-1&&nl4<=l4?' class="best-row"':'')+'>'+
-      '<td>التأجير الجديد (أفضل عرض) — 4 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(nl4)+'</td><td>'+f2Fmt(l4)+'</td><td>'+(l4-nl4>=0?'+':'')+f2Fmt(l4-nl4)+'</td><td>'+(l4-nl4>=0?'وفر '+f2Fmt(l4-nl4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-nl4)))+'</td></tr>':'')
-    +'<tr><td>الاستمرار في التأجير الحالي — 3 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(l3)+'</td><td>'+f2Fmt(l3)+'</td><td>مرجع</td><td>مرجع</td></tr>'
-    +'<tr><td>الاستمرار في التأجير الحالي — 4 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(l4)+'</td><td>'+f2Fmt(l4)+'</td><td>مرجع</td><td>مرجع</td></tr>'
-    +'</tbody></table>'
-    +'<p style="font-size:8pt;color:#666;">جميع القيم بالريال السعودي</p>'
-    +(f2MaintOffers.length?'<h2>ترتيب عروض الصيانة</h2><table><thead><tr><th>الترتيب</th><th>الشركة</th><th>التكلفة السنوية</th><th>قطع الغيار</th><th>مستوى الخدمة</th><th>مركبات متنقلة</th></tr></thead><tbody>'+f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;}).map(function(o,i){return'<tr'+(i===0?' class="best-row"':'')+'>'+
-      '<td>'+(i+1)+(i===0?' — الأقل سعراً':'')+'</td><td>'+(o.name||'—')+'</td><td>'+f2Fmt(o.annual)+'</td><td>'+(o.parts==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.sla||'—')+'</td><td>'+(o.mobile==='yes'?'متوفر':'غير متوفر')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +(f2LeaseOffers.length?'<h2>ترتيب عروض التأجير الجديدة</h2><table><thead><tr><th>الترتيب</th><th>الشركة</th><th>إيجار / مركبة / شهر</th><th>إجمالي سنوي للأسطول</th><th>الصيانة</th><th>التأمين</th><th>مركبة بديلة</th></tr></thead><tbody>'+f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).map(function(o,i){return'<tr'+(i===0?' class="best-row"':'')+'>'+
-      '<td>'+(i+1)+(i===0?' — الأقل سعراً':'')+'</td><td>'+(o.name||'—')+'</td><td>'+f2Fmt(o.monthly)+'</td><td>'+f2Fmt(o.monthly*12*count)+'</td><td>'+(o.inclMaint==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.inclIns==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.inclAlt==='yes'?'متوفر':'غير متوفر')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +'<h2>تحليل المخاطر</h2>'
-    +'<table><thead><tr><th>نوع المخاطرة</th><th>التملك</th><th>التأجير</th></tr></thead><tbody>'
-    +'<tr><td>مخاطر الأعطال</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر توفر قطع الغيار</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر التوسع المستقبلي</td><td>منخفضة</td><td>متوسطة</td></tr>'
-    +'<tr><td>مخاطر الاعتماد على مورد واحد</td><td>منخفضة</td><td>مرتفعة</td></tr>'
-    +'</tbody></table>'
-    +'<h2>النتائج الرئيسية</h2>'
-    +'<ul>'
-    +(best?'<li>الخيار الأقل تكلفة خلال 4 سنوات: <strong>'+best.n+'</strong> بإجمالي <strong>'+f2Fmt(best.c)+'</strong> ريال سعودي</li>':'')
-    +(bestMaint?'<li>أفضل عرض صيانة: <strong>'+(bestMaint.name||'—')+'</strong> — '+f2Fmt(bestMaint.annual)+' ريال سعودي سنوياً — مستوى الخدمة: '+(bestMaint.sla||'—')+'</li>':'')
-    +(bestLease?'<li>أفضل عرض تأجير: <strong>'+(bestLease.name||'—')+'</strong> — '+f2Fmt(bestLease.monthly)+' ريال سعودي / شهر / مركبة</li>':'')
-    +(b4>0&&l4>0?'<li>الفرق المالي بين التملك مع الصيانة والتأجير الحالي (4 سنوات): <strong>'+(l4-b4>=0?'وفر '+f2Fmt(l4-b4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-b4)))+'</strong> ريال سعودي</li>':'')
-    +'</ul>'
-    +'<h2>الملاحظات والقيود</h2>'
-    +'<p>تعتمد هذه الدراسة على البيانات المدخلة فعلياً. أي تغيير في شروط العقود أو تكاليف التشغيل سينعكس مباشرة على نتائج المقارنة. يُوصى بمراجعة الدراسة عند توفر بيانات محدّثة.</p>'
-    +'<div class="footer">'+safeTitle+' — إدارة الأسطول والمشتريات — '+today+'</div>'
-    +'</div>'
-    +'<script>window.onload=function(){window.print();}<\/script></body></html>');
-  W.document.close();
-}
-</script>
-</body></html></div><!-- /main -->  var today=new Date().toLocaleDateString('ar-SA');
-  var safeTitle=reportTitle.replace(/[<>&"]/g,'');
+  // صياغة الملخص التنفيذي
+  var execSummary='';
+  if(totalPurchase>0&&annualLease>0){
+    var bestName=best?best.n:'—';
+    var bestCost=best?best.c:0;
+    var diff4=Math.abs(l4-b4);
+    if(b4<=l4){
+      execSummary='بناءً على مراجعة إدارة الأسطول والمشتريات لعروض التملك والتأجير المقدمة، تشير الأرقام إلى أن تملك الأسطول المكوّن من '+count+' مركبة — مع الأخذ بأقل عرض صيانة متاح — يُحقق وفراً يبلغ <strong>'+f2Fmt(diff4)+' ريال سعودي</strong> خلال أربع سنوات مقارنة بالتأجير الحالي. تستند هذه النتيجة إلى العروض الفعلية دون أي افتراضات إضافية.';
+    } else {
+      execSummary='تُظهر المقارنة المالية أن الاستمرار في التأجير أو التحول إلى عرض تأجير أفضل يُمثل الخيار الأوفر مالياً في المرحلة الحالية، بفارق قدره <strong>'+f2Fmt(diff4)+' ريال سعودي</strong> خلال أربع سنوات. يعكس هذا الاستنتاج البيانات المدخلة فعلياً من عروض التملك والتأجير والصيانة.';
+    }
+  } else {
+    execSummary='تتضمن هذه الدراسة مقارنة مالية بين خيارات إدارة الأسطول. يرجى التحقق من اكتمال بيانات التملك والتأجير الحالي للحصول على نتائج دقيقة.';
+  }
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'
     +'@page{size:A4;margin:15mm 12mm 12mm;}*{box-sizing:border-box;}'
@@ -10571,63 +10576,113 @@ function f2PDF(reportTitle){
     +'.wrap{position:relative;z-index:1;}'
     +'.rpt-header{background:#244062;color:#fff;padding:10px 14px;border-radius:4px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}'
     +'.rpt-header h1{font-size:12pt;font-weight:900;margin:0;color:#fff;line-height:1.3;}'
-    +'.rpt-header .meta{font-size:8pt;opacity:.85;text-align:left;white-space:nowrap;}'
+    +'.rpt-header .meta{font-size:8pt;opacity:.85;text-align:left;}'
     +'h2{font-size:9.5pt;font-weight:900;margin:10px 0 4px;border-right:3px solid #244062;padding-right:6px;color:#244062;}'
-    +'p{font-size:8.5pt;color:#333;line-height:1.5;margin:0 0 5px;}'
+    +'p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:7px;font-size:8pt;}'
     +'th{background:#244062;color:#fff;padding:4px 6px;text-align:right;border:1px solid #244062;font-weight:700;}'
     +'td{padding:3px 6px;border:1px solid #ccc;color:#111;}'
     +'tr:nth-child(even) td{background:#f5f7fa;}'
     +'.hl td{background:#dce3ec !important;font-weight:700;}'
-    +'.note{font-size:7.5pt;color:#666;margin:2px 0 7px;}'
-    +'.footer{font-size:7pt;color:#999;text-align:center;margin-top:8px;border-top:1px solid #ddd;padding-top:4px;}'
-    +'ul{margin:0 0 6px;padding-right:16px;} li{font-size:8.5pt;line-height:1.7;}'
+    +'.note{font-size:7.5pt;color:#555;margin:0 0 7px;}'
+    +'ul{margin:2px 0 6px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}'
     +'</style></head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap">'
     +'<div class="rpt-header">'
     +'<h1>'+safeTitle+'</h1>'
-    +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' | '+count+' مركبة</div>'
+    +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' &nbsp;|&nbsp; '+count+' مركبة</div>'
     +'</div>'
-    +'<h2>الوضع الحالي</h2>'
+
+    +'<h2>ملخص تنفيذي</h2>'
+    +'<p>'+execSummary+'</p>'
+
+    +'<h2>بيانات الأسطول والوضع الحالي</h2>'
     +'<table><tbody>'
-    +'<tr><td>عدد المركبات</td><td><strong>'+count+'</strong></td><td>قيمة التملك / مركبة</td><td><strong>'+f2Fmt(unitPrice)+'</strong></td><td>إجمالي قيمة التملك</td><td><strong>'+f2Fmt(totalPurchase)+'</strong></td></tr>'
-    +'<tr><td>التأجير السنوي الحالي</td><td><strong>'+f2Fmt(annualLease)+'</strong></td><td>أفضل عرض صيانة سنوي</td><td><strong>'+f2Fmt(bma)+'</strong></td><td>أفضل إيجار شهري / مركبة</td><td><strong>'+f2Fmt(blm)+'</strong></td></tr>'
+    +'<tr><td>عدد المركبات</td><td><strong>'+count+'</strong></td>'
+    +'<td>قيمة التملك / مركبة</td><td><strong>'+f2Fmt(unitPrice)+' ر.س</strong></td>'
+    +'<td>إجمالي قيمة التملك</td><td><strong>'+f2Fmt(totalPurchase)+' ر.س</strong></td></tr>'
+    +'<tr><td>التأجير السنوي الحالي</td><td><strong>'+f2Fmt(annualLease)+' ر.س</strong></td>'
+    +'<td>أفضل عرض صيانة سنوي</td><td><strong>'+f2Fmt(bma)+' ر.س</strong></td>'
+    +'<td>أفضل إيجار شهري / مركبة</td><td><strong>'+f2Fmt(blm)+' ر.س</strong></td></tr>'
     +'</tbody></table>'
-    +'<h2>جدول المقارنة الرئيسي</h2>'
-    +'<table><thead><tr><th>خيار المقارنة</th><th>إجمالي قيمة التملك</th><th>إجمالي عقد الصيانة الأقل سعراً</th><th>التملك مع الصيانة</th><th>إجمالي قيمة التأجير</th><th>الفرق المالي</th><th>الوفر المتوقع</th></tr></thead><tbody>'
+
+    +'<h2>جدول المقارنة المالية</h2>'
+    +'<table><thead><tr>'
+    +'<th>خيار المقارنة</th>'
+    +'<th>إجمالي قيمة التملك</th>'
+    +'<th>إجمالي عقد الصيانة الأقل سعراً</th>'
+    +'<th>التملك مع الصيانة</th>'
+    +'<th>إجمالي قيمة التأجير</th>'
+    +'<th>الفرق المالي</th>'
+    +'<th>الوفر المتوقع</th>'
+    +'</tr></thead><tbody>'
     +'<tr'+(b3<=l3?' class="hl"':'')+'>'+
-      '<td>التملك مع أفضل صيانة — 3 سنوات</td><td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*3)+'</td><td>'+f2Fmt(b3)+'</td><td>'+f2Fmt(l3)+'</td><td>'+(l3-b3>=0?'+':'')+f2Fmt(l3-b3)+'</td><td>'+(l3-b3>=0?'وفر '+f2Fmt(l3-b3):'تكلفة إضافية '+f2Fmt(Math.abs(l3-b3)))+'</td></tr>'
+      '<td>التملك مع أفضل صيانة — 3 سنوات</td>'+
+      '<td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*3)+'</td><td>'+f2Fmt(b3)+'</td>'+
+      '<td>'+f2Fmt(l3)+'</td>'+
+      '<td>'+(l3-b3>=0?'+':'')+f2Fmt(l3-b3)+'</td>'+
+      '<td>'+(l3-b3>=0?'وفر '+f2Fmt(l3-b3):'تكلفة إضافية '+f2Fmt(Math.abs(l3-b3)))+'</td></tr>'
     +'<tr'+(b4<=l4?' class="hl"':'')+'>'+
-      '<td>التملك مع أفضل صيانة — 4 سنوات</td><td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*4)+'</td><td>'+f2Fmt(b4)+'</td><td>'+f2Fmt(l4)+'</td><td>'+(l4-b4>=0?'+':'')+f2Fmt(l4-b4)+'</td><td>'+(l4-b4>=0?'وفر '+f2Fmt(l4-b4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-b4)))+'</td></tr>'
+      '<td>التملك مع أفضل صيانة — 4 سنوات</td>'+
+      '<td>'+f2Fmt(totalPurchase)+'</td><td>'+f2Fmt(bma*4)+'</td><td>'+f2Fmt(b4)+'</td>'+
+      '<td>'+f2Fmt(l4)+'</td>'+
+      '<td>'+(l4-b4>=0?'+':'')+f2Fmt(l4-b4)+'</td>'+
+      '<td>'+(l4-b4>=0?'وفر '+f2Fmt(l4-b4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-b4)))+'</td></tr>'
     +(nl3>0?'<tr><td>التأجير الجديد (أفضل عرض) — 3 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(nl3)+'</td><td>'+f2Fmt(l3)+'</td><td>'+(l3-nl3>=0?'+':'')+f2Fmt(l3-nl3)+'</td><td>'+(l3-nl3>=0?'وفر '+f2Fmt(l3-nl3):'تكلفة إضافية '+f2Fmt(Math.abs(l3-nl3)))+'</td></tr>':'')
     +(nl4>0?'<tr><td>التأجير الجديد (أفضل عرض) — 4 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(nl4)+'</td><td>'+f2Fmt(l4)+'</td><td>'+(l4-nl4>=0?'+':'')+f2Fmt(l4-nl4)+'</td><td>'+(l4-nl4>=0?'وفر '+f2Fmt(l4-nl4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-nl4)))+'</td></tr>':'')
     +'<tr><td>الاستمرار في التأجير الحالي — 3 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(l3)+'</td><td>'+f2Fmt(l3)+'</td><td>مرجع</td><td>مرجع</td></tr>'
     +'<tr><td>الاستمرار في التأجير الحالي — 4 سنوات</td><td>—</td><td>—</td><td>'+f2Fmt(l4)+'</td><td>'+f2Fmt(l4)+'</td><td>مرجع</td><td>مرجع</td></tr>'
     +'</tbody></table>'
-    +'<p class="note">جميع القيم بالريال السعودي</p>'
-    +(f2MaintOffers.length?'<h2>ترتيب عروض الصيانة</h2><table><thead><tr><th>الترتيب</th><th>الشركة</th><th>التكلفة السنوية</th><th>قطع الغيار</th><th>مستوى الخدمة</th><th>مركبات متنقلة</th></tr></thead><tbody>'+f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;}).map(function(o,i){return'<tr'+(i===0?' class="hl"':'')+'>'+
-      '<td>'+(i+1)+(i===0?' — الأقل':'')+'</td><td>'+(o.name||'—')+'</td><td>'+f2Fmt(o.annual)+'</td><td>'+(o.parts==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.sla||'—')+'</td><td>'+(o.mobile==='yes'?'متوفر':'غير متوفر')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +(f2LeaseOffers.length?'<h2>ترتيب عروض التأجير</h2><table><thead><tr><th>الترتيب</th><th>الشركة</th><th>إيجار / مركبة / شهر</th><th>إجمالي سنوي للأسطول</th><th>الصيانة</th><th>التأمين</th><th>مركبة بديلة</th></tr></thead><tbody>'+f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).map(function(o,i){return'<tr'+(i===0?' class="hl"':'')+'>'+
-      '<td>'+(i+1)+(i===0?' — الأقل':'')+'</td><td>'+(o.name||'—')+'</td><td>'+f2Fmt(o.monthly)+'</td><td>'+f2Fmt(o.monthly*12*count)+'</td><td>'+(o.inclMaint==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.inclIns==='yes'?'مشمول':'غير مشمول')+'</td><td>'+(o.inclAlt==='yes'?'متوفر':'غير متوفر')+'</td></tr>';}).join('')+'</tbody></table>':'')
-    +'<h2>تحليل المخاطر</h2>'
-    +'<table><thead><tr><th>نوع المخاطرة</th><th>التملك</th><th>التأجير</th></tr></thead><tbody>'
-    +'<tr><td>مخاطر الأعطال</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر توفر قطع الغيار</td><td>متوسطة</td><td>منخفضة</td></tr>'
-    +'<tr><td>مخاطر التوسع المستقبلي</td><td>منخفضة</td><td>متوسطة</td></tr>'
-    +'<tr><td>مخاطر الاعتماد على مورد واحد</td><td>منخفضة</td><td>مرتفعة</td></tr>'
+    +'<p class="note">جميع القيم بالريال السعودي — الصفوف المظللة تمثل الخيار الأقل تكلفة في فئته</p>'
+
+    +(f2MaintOffers.length?
+      '<h2>عروض الصيانة المستلَمة</h2>'
+      +'<table><thead><tr><th>الترتيب</th><th>الجهة المقدِّمة</th><th>التكلفة السنوية</th><th>قطع الغيار</th><th>مستوى الخدمة</th><th>مركبات متنقلة</th></tr></thead><tbody>'
+      +f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;}).map(function(o,i){
+        return'<tr'+(i===0?' class="hl"':'')+'>'+
+          '<td>'+(i+1)+(i===0?' — الأقل سعراً':'')+'</td>'+
+          '<td>'+(o.name||'—')+'</td>'+
+          '<td>'+f2Fmt(o.annual)+'</td>'+
+          '<td>'+(o.parts==='yes'?'مشمول':'غير مشمول')+'</td>'+
+          '<td>'+(o.sla||'—')+'</td>'+
+          '<td>'+(o.mobile==='yes'?'متوفر':'غير متوفر')+'</td>'+
+          '</tr>';
+      }).join('')+'</tbody></table>':'')
+
+    +(f2LeaseOffers.length?
+      '<h2>عروض التأجير المستلَمة</h2>'
+      +'<table><thead><tr><th>الترتيب</th><th>الجهة المؤجِّرة</th><th>إيجار شهري / مركبة</th><th>إجمالي سنوي للأسطول</th><th>الصيانة</th><th>التأمين</th><th>مركبة بديلة</th></tr></thead><tbody>'
+      +f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).map(function(o,i){
+        return'<tr'+(i===0?' class="hl"':'')+'>'+
+          '<td>'+(i+1)+(i===0?' — الأقل سعراً':'')+'</td>'+
+          '<td>'+(o.name||'—')+'</td>'+
+          '<td>'+f2Fmt(o.monthly)+'</td>'+
+          '<td>'+f2Fmt(o.monthly*12*count)+'</td>'+
+          '<td>'+(o.inclMaint==='yes'?'مشمول':'غير مشمول')+'</td>'+
+          '<td>'+(o.inclIns==='yes'?'مشمول':'غير مشمول')+'</td>'+
+          '<td>'+(o.inclAlt==='yes'?'متوفر':'غير متوفر')+'</td>'+
+          '</tr>';
+      }).join('')+'</tbody></table>':'')
+
+    +'<h2>تقييم المخاطر</h2>'
+    +'<table><thead><tr><th>نوع المخاطرة</th><th>التملك</th><th>التأجير</th><th>اعتبار جوهري</th></tr></thead><tbody>'
+    +'<tr><td>مخاطر الأعطال والتوقف</td><td>متوسطة</td><td>منخفضة</td><td>عبء الإحلال على المؤجر في التأجير</td></tr>'
+    +'<tr><td>توفر قطع الغيار</td><td>متوسطة</td><td>منخفضة</td><td>تتحملها الجهة مباشرة عند التملك</td></tr>'
+    +'<tr><td>مرونة التوسع والتحديث</td><td>منخفضة المخاطر</td><td>متوسطة المخاطر</td><td>تجديد العقود فرصة لإعادة التفاوض</td></tr>'
+    +'<tr><td>الاعتماد على مورد واحد</td><td>منخفضة</td><td>مرتفعة</td><td>يستلزم التأجير تنويع الموردين عند الإمكان</td></tr>'
     +'</tbody></table>'
-    +'<h2>النتائج الرئيسية</h2>'
+
+    +'<h2>النتائج والملاحظات</h2>'
     +'<ul>'
-    +(best?'<li>الخيار الأقل تكلفة خلال 4 سنوات: <strong>'+best.n+'</strong> — إجمالي: <strong>'+f2Fmt(best.c)+'</strong> ريال سعودي</li>':'')
-    +(bestMaint?'<li>أفضل عرض صيانة: <strong>'+(bestMaint.name||'—')+'</strong> — '+f2Fmt(bestMaint.annual)+' ريال سعودي / سنة</li>':'')
-    +(bestLease?'<li>أفضل عرض تأجير: <strong>'+(bestLease.name||'—')+'</strong> — '+f2Fmt(bestLease.monthly)+' ريال سعودي / شهر / مركبة</li>':'')
-    +(b4>0&&l4>0?'<li>الفرق المالي (التملك مع الصيانة مقابل التأجير الحالي — 4 سنوات): <strong>'+(l4-b4>=0?'وفر '+f2Fmt(l4-b4):'تكلفة إضافية '+f2Fmt(Math.abs(l4-b4)))+'</strong> ريال سعودي</li>':'')
+    +(best?'<li>يتصدر خيار <strong>'+best.n+'</strong> قائمة الخيارات الأقل تكلفة خلال أربع سنوات، بإجمالي <strong>'+f2Fmt(best.c)+' ريال سعودي</strong>.</li>':'')
+    +(bma>0?'<li>أقل عرض صيانة مستلَم: <strong>'+(bestMaint?bestMaint.name:'—')+'</strong> بتكلفة سنوية <strong>'+f2Fmt(bma)+' ريال سعودي</strong>'+( bestMaint&&bestMaint.sla?'، ومستوى خدمة: '+bestMaint.sla:'')+'.</li>':'')
+    +(blm>0?'<li>أقل إيجار مقدَّم: <strong>'+(bestLease?bestLease.name:'—')+'</strong> بمعدل <strong>'+f2Fmt(blm)+' ريال سعودي</strong> شهرياً للمركبة الواحدة.</li>':'')
+    +'<li>تستند هذه الدراسة إلى العروض الفعلية المستلمة حتى تاريخ إعدادها. ينبغي مراجعتها عند تجديد العروض أو تغيير الشروط التعاقدية.</li>'
     +'</ul>'
-    +'<div class="footer">'+safeTitle+' — إدارة الأسطول والمشتريات — '+today+'</div>'
     +'</div>'
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
   W.document.close();
 }
 </script>
-</body></html></div><!-- /main -->
+</body></html>
