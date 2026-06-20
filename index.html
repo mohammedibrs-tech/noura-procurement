@@ -6504,13 +6504,7 @@ function buildSemiReport(){
     ${deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1):0;return`<tr><td style="font-weight:600;">${d}</td><td style="text-align:right;font-weight:700;">${v.total.toLocaleString('ar-SA')}</td><td style="text-align:center;color:#555;">${pct}%</td><td>${topI||'—'}</td></tr>`;}).join('')}
     </tbody></table>
   </div></div>
-  <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">ملخص الوفرات — النصف ${halfName}</h3></div><div class="card-body" style="font-size:12px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-      <div style="border:1px solid #E2E8F0;padding:10px;text-align:center;"><div style="font-size:9px;color:#555;">وفر التفاوض بالعقود</div><div style="font-size:18px;font-weight:700;color:#276749;">${totalSaving.toLocaleString('ar-SA')}</div><div style="font-size:9px;color:#555;">ريال</div></div>
-      <div style="border:1px solid #E2E8F0;padding:10px;text-align:center;"><div style="font-size:9px;color:#555;">وفر مقارنة الأسعار</div><div style="font-size:18px;font-weight:700;color:#276749;">${cmpSavings.toLocaleString('ar-SA',{maximumFractionDigits:0})}</div><div style="font-size:9px;color:#555;">ريال</div></div>
-      <div style="border:1px solid #E2E8F0;padding:10px;text-align:center;"><div style="font-size:9px;color:#555;">إجمالي الوفرات</div><div style="font-size:18px;font-weight:700;color:#276749;">${(totalSaving+cmpSavings).toLocaleString('ar-SA',{maximumFractionDigits:0})}</div><div style="font-size:9px;color:#555;">ريال</div></div>
-    </div>
-  </div></div>`;
+  `;
 }
 
 function exportSemiPDF(){
@@ -7686,25 +7680,24 @@ function buildPOTableHTML(poList){
   const rows=poList.map(p=>{
     const rows2=JSON.parse(p.rows||'[]');
     const val=rows2.reduce((s,r)=>{
-      const b=(r.count||0)*(r.unitPrice||0);
+      const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);
       return s+(r.vatType==='added'?b*1.15:b);
     },0);
     totalVal+=val;
     return `<tr>
-      <td style="text-align:center;">${p.poNum||'—'}</td>
-      <td>${p.vendor||'—'}</td>
-      <td>${p.title||'—'}</td>
+      <td style="text-align:center;">${p.num||p.poNum||'—'}</td>
+      <td>${p.company||p.vendor||'—'}</td>
       <td style="text-align:center;">${p.date||'—'}</td>
-      <td style="text-align:right;font-weight:600;">${fmt(val)} ر.س</td>
+      <td style="text-align:right;font-weight:700;">${fmt(val)} ر.س</td>
     </tr>`;
   }).join('');
   return `<table>
     <thead><tr>
-      <th>رقم PO</th><th>المورد</th><th>الموضوع</th><th>التاريخ</th><th>القيمة (ر.س)</th>
+      <th>رقم PO</th><th>الشركة / المورد</th><th>التاريخ</th><th style="text-align:right;">القيمة (ر.س)</th>
     </tr></thead>
     <tbody>${rows}
-    <tr style="font-weight:700;border-top:2px solid #333;">
-      <td colspan="3">الإجمالي — ${poList.length} طلب</td>
+    <tr style="font-weight:700;border-top:2px solid #333;background:#f0f4ff;">
+      <td colspan="2">الإجمالي — ${poList.length} طلب شراء</td>
       <td></td>
       <td style="text-align:right;">${fmt(totalVal)} ر.س</td>
     </tr></tbody></table>`;
@@ -7734,12 +7727,12 @@ function buildContractsTableHTML(activeC,totalCM){
   const noRevRows = noRev.map(c=>{
     const {cmpSavingVal,relCmpPct}=buildRow(c);
     return `<tr>
-      <td><strong>${c.vendor}</strong></td><td>${c.type}</td>
-      <td style="text-align:right;">${fmt(c.monthly||0)}</td>
-      <td style="text-align:right;">${fmt(c.annual||0)}</td>
-      <td style="text-align:center;">${c.end||'—'}</td>
-      <td style="text-align:center;">${c.saving>0?fmt(c.saving)+' ر.س':'—'}</td>
-      <td style="text-align:center;">${cmpSavingVal>0?fmt(cmpSavingVal)+' ر.س ('+relCmpPct+')':'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #000;"><strong>${c.vendor}</strong></td>
+      <td style="padding:3px 6px;border:1px solid #000;">${c.type}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(c.monthly||0)}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(c.annual||0)}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:center;">${c.end||'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #000;text-align:center;">${c.saving>0?fmt(c.saving)+' ر.س':cmpSavingVal>0?fmt(cmpSavingVal):'—'}</td>
     </tr>`;
   }).join('');
   const noRevTotal=noRev.reduce((s,c)=>s+(c.monthly||0),0);
@@ -7752,42 +7745,58 @@ function buildContractsTableHTML(activeC,totalCM){
     const revAnnual=fmt(c.revAnnual||0);
     const revTotal=fmt(c.revAnnual||0);
     return `<tr>
-      <td><strong>${c.vendor}</strong></td><td>${c.type}</td>
-      <td style="text-align:right;">${fmt(c.monthly||0)}</td>
-      <td style="text-align:right;">${fmt(c.annual||0)}</td>
-      <td style="text-align:center;">${c.end||'—'}</td>
-      <td style="text-align:center;">${c.saving>0?fmt(c.saving)+' ر.س':'—'}</td>
-      <td style="text-align:center;color:#276749;font-weight:600;">${revLabel}</td>
-      <td style="text-align:right;color:#276749;font-weight:600;">${c.revType==='monthly'?revMonthly+' /شهر':'—'}</td>
-      <td style="text-align:right;color:#276749;font-weight:700;">${revAnnual}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;"><strong>${c.vendor}</strong></td>
+      <td style="padding:3px 6px;border:1px solid #276749;">${c.type}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;">${fmt(c.monthly||0)}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;text-align:center;">${c.end||'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;text-align:center;color:#276749;font-weight:600;">${revLabel||'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;color:#276749;font-weight:600;">${c.revType==='monthly'?revMonthly+' /شهر':c.revType==='daily'?'يومي':'—'}</td>
+      <td style="padding:3px 6px;border:1px solid #276749;text-align:right;color:#276749;font-weight:700;">${revAnnual}</td>
     </tr>`;
   }).join('');
   const withRevTotal=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
 
   const noRevTable = noRev.length>0?`
-<h2>العقود الأساسية (بدون إيراد)</h2>
-<table><thead><tr>
-  <th>الشركة</th><th>الخدمة</th><th>الشهري (ر.س)</th><th>السنوي (ر.س)</th><th>ينتهي</th><th>وفر التفاوض</th><th>وفر المقارنة</th>
+<table style="width:100%;border-collapse:collapse;font-size:8px;border:1px solid #000;margin-bottom:4px;">
+<thead><tr style="background:#244062;color:#fff;">
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الشركة</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الخدمة</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">الشهري</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:right;">السنوي</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:center;">ينتهي</th>
+  <th style="padding:4px 6px;border:1px solid #000;text-align:center;">وفر</th>
 </tr></thead><tbody>${noRevRows}
-<tr style="font-weight:700;border-top:2px solid #333;">
-  <td colspan="2">الإجمالي</td>
-  <td style="text-align:right;">${fmt(noRevTotal)}</td>
-  <td style="text-align:right;">${fmt(noRevTotal*12)}</td>
-  <td colspan="3" style="text-align:center;">وفر التفاوض الكلي: ${fmt(totalSaving)}</td>
+<tr style="font-weight:700;background:#f0f4ff;">
+  <td colspan="2" style="padding:3px 6px;border:1px solid #000;">الإجمالي</td>
+  <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(noRevTotal)}</td>
+  <td style="padding:3px 6px;border:1px solid #000;text-align:right;">${fmt(noRevTotal*12)}</td>
+  <td colspan="2" style="padding:3px 6px;border:1px solid #000;text-align:center;">وفر: ${fmt(totalSaving)}</td>
 </tr></tbody></table>`:'';
 
   const withRevTable = withRev.length>0?`
-<h2>عقود الإيراد</h2>
-<table><thead><tr>
-  <th>الشركة</th><th>الخدمة</th><th>الشهري (ر.س)</th><th>السنوي (ر.س)</th><th>ينتهي</th><th>وفر التفاوض</th>
-  <th style="color:#276749;">نوع الإيراد</th><th style="color:#276749;">إيراد شهري (ر.س)</th><th style="color:#276749;">إيراد سنوي (ر.س)</th>
+<table style="width:100%;border-collapse:collapse;font-size:8px;border:1px solid #276749;margin-bottom:4px;">
+<thead><tr style="background:#276749;color:#fff;">
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الشركة</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الخدمة</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;">الشهري</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:center;">ينتهي</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">نوع الإيراد</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">إيراد شهري</th>
+  <th style="padding:4px 6px;border:1px solid #276749;text-align:right;color:#90EE90;">إيراد سنوي</th>
 </tr></thead><tbody>${withRevRows}
-<tr style="font-weight:700;border-top:2px solid #276749;color:#276749;">
-  <td colspan="8">إجمالي الإيراد السنوي</td>
-  <td style="text-align:right;">${fmt(withRevTotal)}</td>
+<tr style="font-weight:700;background:#F0FFF4;color:#276749;">
+  <td colspan="4" style="padding:3px 6px;border:1px solid #276749;">إجمالي الإيراد السنوي</td>
+  <td colspan="2" style="padding:3px 6px;border:1px solid #276749;"></td>
+  <td style="padding:3px 6px;border:1px solid #276749;text-align:right;">${fmt(withRevTotal)}</td>
 </tr></tbody></table>`:'';
 
-  return noRevTable + withRevTable;
+  if(noRev.length>0 && withRev.length>0){
+    return `<h2>العقود</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+      <div><div style="font-size:9px;font-weight:700;color:#244062;border-right:3px solid #244062;padding-right:5px;margin-bottom:4px;">العقود الأساسية</div>${noRevTable}</div>
+      <div><div style="font-size:9px;font-weight:700;color:#276749;border-right:3px solid #276749;padding-right:5px;margin-bottom:4px;">عقود الإيراد</div>${withRevTable}</div>
+    </div>`;
+  }
+  return (noRev.length>0?`<h2>العقود الأساسية</h2>${noRevTable}`:'') + (withRev.length>0?`<h2>عقود الإيراد</h2>${withRevTable}`:'');
 }
 
 function buildPCDetailsHTML(pcList){
