@@ -6504,10 +6504,6 @@ function buildSemiReport(){
     ${deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1):0;return`<tr><td style="font-weight:600;">${d}</td><td style="text-align:right;font-weight:700;">${v.total.toLocaleString('ar-SA')}</td><td style="text-align:center;color:#555;">${pct}%</td><td>${topI||'—'}</td></tr>`;}).join('')}
     </tbody></table>
   </div></div>
-  <div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body" style="overflow-x:auto;">
-    <table class="tbl"><thead><tr><th>الشركة</th><th>الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">نصف السنة</th><th style="text-align:center;">ينتهي</th><th style="text-align:right;">وفر التفاوض</th></tr></thead><tbody>
-    ${buildContractsTableHTML(activeC,totalCM)}</div></div>
-  ${buildPCDetailsHTML(sAllPC)}
   <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">ملخص الوفرات — النصف ${halfName}</h3></div><div class="card-body" style="font-size:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
       <div style="border:1px solid #E2E8F0;padding:10px;text-align:center;"><div style="font-size:9px;color:#555;">وفر التفاوض بالعقود</div><div style="font-size:18px;font-weight:700;color:#276749;">${totalSaving.toLocaleString('ar-SA')}</div><div style="font-size:9px;color:#555;">ريال</div></div>
@@ -6531,7 +6527,8 @@ function exportSemiPDF(){
   const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
   const sAllPCpdf=months.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>التقرير النصف سنوي — النصف ${halfName} ${year}</h1><p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>${content}${buildContractsTableHTML(sActiveC,sTotalCM)}${buildPCDetailsHTML(sAllPCpdf)}</div></body></html>`);
+  const sPOList=months.map(m=>poSaved.filter(p=>(p.date||'').startsWith(year+'-'+m))).flat();
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>التقرير النصف سنوي — النصف ${halfName} ${year}</h1><p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>${content}<h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
@@ -7138,7 +7135,7 @@ function buildAnnualReport(){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div class="card"><div class="card-header"><h3>تحليل الأصناف عالية الصرف</h3></div><div class="card-body"><table class="tbl"><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>${topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;font-weight:600;color:#111;">${v.toLocaleString('ar-SA')} ر.س</td><td style="text-align:center;color:#555;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}</tbody></table></div></div>
-    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body">${buildContractsTableHTML(activeC,totalCMonthly)}${buildPCDetailsHTML(yPCAll)}</div></div>
+    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body"><h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(poSaved.filter(p=>(p.date||"").startsWith(year)))}${buildContractsTableHTML(activeC,totalCMonthly)}</div></div>
   </div>
   ${expiringC.length?`<div class="card" style="border:1px solid #C53030;margin-bottom:16px;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">عقود تنتهي خلال 90 يوم</h3></div><div class="card-body">${expiringC.map(c=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span style="font-weight:600;">${c.vendor} — ${c.type}</span><span style="color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم | ${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span></div>`).join('')}</div></div>`:''}
   <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">فرص التوفير والتوصيات ${year}</h3></div><div class="card-body" style="font-size:12px;"><p style="margin-bottom:8px;padding:8px;background:#F8FAFB;">إجمالي وفر التفاوض: <strong style="color:#276749;">${totalSaving.toLocaleString('ar-SA')} ر.س</strong></p>${topItems.length?`<p style="margin-bottom:8px;">أعلى صنف: <strong>${topItems[0][0]}</strong> — يُنصح بدراسة عقد سنوي لتوفير التكاليف.</p>`:''}${expiringC.length?`<p>هناك <strong>${expiringC.length} عقد</strong> تنتهي قريباً — فرصة لإعادة التفاوض.</p>`:''}</div></div>`;
@@ -7681,14 +7678,47 @@ function buildMonthlyReport(){
   </div>`;
 }
 
+
+function buildPOTableHTML(poList){
+  if(!poList||!poList.length) return '<p style="color:#888;font-size:9px;">لا توجد طلبات شراء في هذه الفترة</p>';
+  const fmt=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
+  let totalVal=0;
+  const rows=poList.map(p=>{
+    const rows2=JSON.parse(p.rows||'[]');
+    const val=rows2.reduce((s,r)=>{
+      const b=(r.count||0)*(r.unitPrice||0);
+      return s+(r.vatType==='added'?b*1.15:b);
+    },0);
+    totalVal+=val;
+    return `<tr>
+      <td style="text-align:center;">${p.poNum||'—'}</td>
+      <td>${p.vendor||'—'}</td>
+      <td>${p.title||'—'}</td>
+      <td style="text-align:center;">${p.date||'—'}</td>
+      <td style="text-align:right;font-weight:600;">${fmt(val)} ر.س</td>
+    </tr>`;
+  }).join('');
+  return `<table>
+    <thead><tr>
+      <th>رقم PO</th><th>المورد</th><th>الموضوع</th><th>التاريخ</th><th>القيمة (ر.س)</th>
+    </tr></thead>
+    <tbody>${rows}
+    <tr style="font-weight:700;border-top:2px solid #333;">
+      <td colspan="3">الإجمالي — ${poList.length} طلب</td>
+      <td></td>
+      <td style="text-align:right;">${fmt(totalVal)} ر.س</td>
+    </tr></tbody></table>`;
+}
+
 function buildContractsTableHTML(activeC,totalCM){
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const fmt=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
-  const rows=activeC.map(c=>{
-    const revLabel=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?'يومي':'';
-    const revVal=c.revType?fmt(c.revAnnual||0):'—';
-    const isRevShare=(c.revType||'')==='';
-    // ابحث عن مقارنة أسعار مرتبطة بهذا العقد (vendor match)
+
+  // فصل العقود: بدون إيراد | بإيراد
+  const noRev = activeC.filter(c=>!(c.revType));
+  const withRev = activeC.filter(c=>c.revType);
+
+  const buildRow = c => {
     const relCmp=cmpSaved.find(cp=>cp.currentVendor&&cp.currentVendor===c.vendor);
     const cmpSavingVal=relCmp?(()=>{
       const curC=parseFloat(relCmp.currentContract)||0;
@@ -7696,40 +7726,68 @@ function buildContractsTableHTML(activeC,totalCM){
       if(!tots.length||!curC)return 0;
       return Math.max(0,curC-Math.min(...tots));
     })():0;
-    // نسبة التوفير من المقارنة
     const relCmpPct=relCmp&&(parseFloat(relCmp.currentContract)||0)>0?(cmpSavingVal/(parseFloat(relCmp.currentContract))*100).toFixed(1)+'%':'—';
-    // إيراد نورة (اتفاقية)
-    const revShareStr=c.revSharePct>0?`${c.revSharePct}% / ${fmt(c.revShareAmt||0)} ر.س`:'—';
-    // إيراد مقدم الخدمة
-    const theirShareStr=c.theirSharePct>0?`${c.theirSharePct}% / ${fmt(c.theirShareAmt||0)} ر.س`:'—';
+    return {c, cmpSavingVal, relCmpPct};
+  };
+
+  // جدول عقود بدون إيراد
+  const noRevRows = noRev.map(c=>{
+    const {cmpSavingVal,relCmpPct}=buildRow(c);
     return `<tr>
-      <td><strong>${c.vendor}</strong></td>
-      <td>${c.type}</td>
+      <td><strong>${c.vendor}</strong></td><td>${c.type}</td>
       <td style="text-align:right;">${fmt(c.monthly||0)}</td>
       <td style="text-align:right;">${fmt(c.annual||0)}</td>
       <td style="text-align:center;">${c.end||'—'}</td>
       <td style="text-align:center;">${c.saving>0?fmt(c.saving)+' ر.س':'—'}</td>
       <td style="text-align:center;">${cmpSavingVal>0?fmt(cmpSavingVal)+' ر.س ('+relCmpPct+')':'—'}</td>
-      <td style="text-align:center;">${c.revType?revLabel+' / '+revVal:'—'}</td>
-      <td style="text-align:center;">${c.revSharePct>0?revShareStr:'—'}</td>
-      <td style="text-align:center;">${c.theirSharePct>0?theirShareStr:'—'}</td>
     </tr>`;
   }).join('');
-  return `<table>
-    <thead><tr>
-      <th>الشركة</th><th>الخدمة</th><th>الشهري (ر.س)</th><th>السنوي (ر.س)</th><th>ينتهي</th>
-      <th>وفر التفاوض</th><th>وفر المقارنة</th><th>الإيراد</th><th>حصة نورة</th><th>حصة مقدم الخدمة</th>
-    </tr></thead>
-    <tbody>${rows}
-    <tr style="font-weight:700;border-top:2px solid #333;">
-      <td colspan="2">الإجمالي</td>
-      <td style="text-align:right;">${(totalCM).toLocaleString('ar-SA')}</td>
-      <td style="text-align:right;">${(totalCM*12).toLocaleString('ar-SA')}</td>
-      <td colspan="2" style="text-align:center;">وفر التفاوض: ${fmt(totalSaving)}</td>
-      <td colspan="2" style="text-align:center;">وفر المقارنة: ${fmt(calcCmpSavings())}</td>
-      <td colspan="2"></td>
-    </tr>
-    </tbody></table>`;
+  const noRevTotal=noRev.reduce((s,c)=>s+(c.monthly||0),0);
+
+  // جدول عقود بإيراد
+  const withRevRows = withRev.map(c=>{
+    const {cmpSavingVal,relCmpPct}=buildRow(c);
+    const revLabel=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?'يومي ('+( c.revDays||0)+' يوم)':'';
+    const revMonthly=fmt(c.revMonthly||0);
+    const revAnnual=fmt(c.revAnnual||0);
+    const revTotal=fmt(c.revAnnual||0);
+    return `<tr>
+      <td><strong>${c.vendor}</strong></td><td>${c.type}</td>
+      <td style="text-align:right;">${fmt(c.monthly||0)}</td>
+      <td style="text-align:right;">${fmt(c.annual||0)}</td>
+      <td style="text-align:center;">${c.end||'—'}</td>
+      <td style="text-align:center;">${c.saving>0?fmt(c.saving)+' ر.س':'—'}</td>
+      <td style="text-align:center;color:#276749;font-weight:600;">${revLabel}</td>
+      <td style="text-align:right;color:#276749;font-weight:600;">${c.revType==='monthly'?revMonthly+' /شهر':'—'}</td>
+      <td style="text-align:right;color:#276749;font-weight:700;">${revAnnual}</td>
+    </tr>`;
+  }).join('');
+  const withRevTotal=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
+
+  const noRevTable = noRev.length>0?`
+<h2>العقود الأساسية (بدون إيراد)</h2>
+<table><thead><tr>
+  <th>الشركة</th><th>الخدمة</th><th>الشهري (ر.س)</th><th>السنوي (ر.س)</th><th>ينتهي</th><th>وفر التفاوض</th><th>وفر المقارنة</th>
+</tr></thead><tbody>${noRevRows}
+<tr style="font-weight:700;border-top:2px solid #333;">
+  <td colspan="2">الإجمالي</td>
+  <td style="text-align:right;">${fmt(noRevTotal)}</td>
+  <td style="text-align:right;">${fmt(noRevTotal*12)}</td>
+  <td colspan="3" style="text-align:center;">وفر التفاوض الكلي: ${fmt(totalSaving)}</td>
+</tr></tbody></table>`:'';
+
+  const withRevTable = withRev.length>0?`
+<h2>عقود الإيراد</h2>
+<table><thead><tr>
+  <th>الشركة</th><th>الخدمة</th><th>الشهري (ر.س)</th><th>السنوي (ر.س)</th><th>ينتهي</th><th>وفر التفاوض</th>
+  <th style="color:#276749;">نوع الإيراد</th><th style="color:#276749;">إيراد شهري (ر.س)</th><th style="color:#276749;">إيراد سنوي (ر.س)</th>
+</tr></thead><tbody>${withRevRows}
+<tr style="font-weight:700;border-top:2px solid #276749;color:#276749;">
+  <td colspan="8">إجمالي الإيراد السنوي</td>
+  <td style="text-align:right;">${fmt(withRevTotal)}</td>
+</tr></tbody></table>`:'';
+
+  return noRevTable + withRevTable;
 }
 
 function buildPCDetailsHTML(pcList){
@@ -7801,11 +7859,11 @@ function exportMonthlyPDF(){
 <h2>المصروفات حسب الإدارة</h2>
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف شراءً</th></tr></thead>
 <tbody>${deptRows}<tr style="font-weight:700;"><td colspan="2">الإجمالي</td><td style="text-align:right;">${fmt2(totalSpent)}</td><td></td></tr></tbody></table>
-${buildPCDetailsHTML(monthPC)}
+<h2>طلبات الشراء (PO)</h2>
+${buildPOTableHTML(monthPO)}
 <h2>تفاصيل المصروفات</h2>
 <table><thead><tr><th>الإدارة</th><th>البند</th><th>المبلغ (ر.س)</th><th>التاريخ</th></tr></thead>
 <tbody>${expRows}<tr style="font-weight:700;"><td colspan="2">الإجمالي</td><td style="text-align:right;">${fmt2(totalSpent)} ر.س</td><td></td></tr></tbody></table>
-<h2>العقود الفعالة</h2>
 ${buildContractsTableHTML(activeC,totalCM)}
 </div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -8014,8 +8072,9 @@ function exportQuarterlyPDF(){
 <h2>المصروفات حسب الإدارة</h2>
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف</th></tr></thead>
 <tbody>${deptSorted.map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td><td>${ti||'—'}</td></tr>`;}).join('')}</tbody></table>
-<h2>العقود الفعالة</h2>${buildContractsTableHTML(activeC,totalCM)}${buildPCDetailsHTML(qPCAll)}
-
+<h2>طلبات الشراء (PO)</h2>
+${buildPOTableHTML(poSaved.filter(p=>months.some(m=>(p.date||'').startsWith(year+'-'+m))))}
+${buildContractsTableHTML(activeC,totalCM)}
 </body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
