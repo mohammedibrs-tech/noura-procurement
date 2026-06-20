@@ -9034,7 +9034,7 @@ function fleetCalc(){
   kpiHTML+='<div class="kpi"><div class="kpi-label">الوفر ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:'+(savY2>=0?'var(--green)':'var(--red)')+';">'+(savY2>=0?'+':'')+flFmt(savY2)+' ر.س</div><div class="kpi-sub">'+(savY2>=0?'لصالح الشراء':'لصالح التأجير')+'</div></div>';
   kpiHTML+='<div class="kpi"><div class="kpi-label">نقطة التعادل</div><div class="kpi-val" style="font-size:16px;color:#C53030;">'+(breakEvenYears>0?breakEvenYears.toFixed(1)+' سنة':'—')+'</div><div class="kpi-sub">متى يتعادل الشراء مع التأجير</div></div>';
   kpiHTML+='<div class="kpi"><div class="kpi-label">صافي القيمة الحالية NPV (شراء '+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:#0D7A8A;">'+flFmt(buy2.npv)+' ر.س</div><div class="kpi-sub">معدل الخصم '+(discountRate*100).toFixed(0)+'%</div></div>';
-  kpiHTML+='<div class="kpi"><div class="kpi-label">ROI الشراء ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:'+(roi>=0?'var(--green)':'var(--red)');+'">'+(roi>=0?'+':'')+roi.toFixed(1)+'%</div><div class="kpi-sub">العائد على الاستثمار</div></div>';
+  kpiHTML+='<div class="kpi"><div class="kpi-label">ROI الشراء ('+years2+' سنوات)</div><div class="kpi-val" style="font-size:16px;color:'+(roi>=0?'var(--green)':'var(--red)')+'">'+(roi>=0?'+':'')+roi.toFixed(1)+'%</div><div class="kpi-sub">العائد على الاستثمار</div></div>';
   kpiHTML+='<div class="kpi"><div class="kpi-label">متوسط تكلفة/مركبة/سنة (شراء)</div><div class="kpi-val" style="font-size:16px;">'+flFmt(count>0?buy2.net/(count*years2):0)+' ر.س</div><div class="kpi-sub">على مدى '+years2+' سنوات</div></div>';
   kpiHTML+='<div class="kpi"><div class="kpi-label">القيمة الإجمالية للشراء</div><div class="kpi-val" style="font-size:16px;color:#1A2B4A;">'+flFmt(totalPurchase)+' ر.س</div><div class="kpi-sub">'+count+' مركبة</div></div>';
   kpiHTML+='</div>';
@@ -9047,7 +9047,7 @@ function fleetCalc(){
   kpiHTML+='<tr><td>إجمالي التكاليف التشغيلية</td><td>'+flFmt(buy1.gross-totalPurchase)+'</td><td>—</td><td>'+flFmt(buy2.gross-totalPurchase)+'</td><td>—</td></tr>';
   kpiHTML+='<tr><td>القيمة المتبقية (استهلاك '+deprRate*100+'%/سنة)</td><td style="color:var(--green);">-'+flFmt(buy1.residual)+'</td><td>—</td><td style="color:var(--green);">-'+flFmt(buy2.residual)+'</td><td>—</td></tr>';
   kpiHTML+='<tr style="font-weight:900;background:#EEF9FB;"><td>إجمالي TCO (صافي)</td><td style="color:#1A2B4A;">'+flFmt(buy1.net)+'</td><td style="color:#7C3AED;">'+flFmt(lease1.gross)+'</td><td style="color:#1A2B4A;">'+flFmt(buy2.net)+'</td><td style="color:#7C3AED;">'+flFmt(lease2.gross)+'</td></tr>';
-  kpiHTML+='<tr style="font-weight:700;"><td>الوفر (شراء vs تأجير)</td><td colspan="2" style="text-align:center;color:'+(savY1>=0?'var(--green)':'var(--red)');+';">'+(savY1>=0?'وفر: +':'')+flFmt(Math.abs(savY1))+' ر.س</td><td colspan="2" style="text-align:center;color:'+(savY2>=0?'var(--green)':'var(--red)');+';">'+(savY2>=0?'وفر: +':'')+flFmt(Math.abs(savY2))+' ر.س</td></tr>';
+  kpiHTML+='<tr style="font-weight:700;"><td>الوفر (شراء vs تأجير)</td><td colspan="2" style="text-align:center;color:'+(savY1>=0?'var(--green)':'var(--red)')+';\">'+(savY1>=0?'وفر: +':'')+flFmt(Math.abs(savY1))+' ر.س</td><td colspan="2" style="text-align:center;color:'+(savY2>=0?'var(--green)':'var(--red)')+';\">'+(savY2>=0?'وفر: +':'')+flFmt(Math.abs(savY2))+' ر.س</td></tr>';
   kpiHTML+='</tbody></table>';
 
   var kpiEl=document.getElementById('fl-kpi-body');
@@ -9102,7 +9102,7 @@ function fleetCalc(){
     var lCost=rentMonthly*sc.f*12*count*years2;
     var diff=lCost-bCost;
     var isBase=sc.f===1;
-    senHTML+='<tr style="'+(isBase?'font-weight:700;background:#EEF9FB;':'')+'"><td>'+sc.lbl+'</td><td>'+flFmt(bCost)+'</td><td>'+flFmt(lCost)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)')+';">'+(diff>=0?'+':'')+flFmt(diff)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)');+';">'+(diff>=0?'شراء':'تأجير')+'</td></tr>';
+    senHTML+='<tr style="'+(isBase?'font-weight:700;background:#EEF9FB;':'')+'"><td>'+sc.lbl+'</td><td>'+flFmt(bCost)+'</td><td>'+flFmt(lCost)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)')+';">'+(diff>=0?'+':'')+flFmt(diff)+'</td><td style="color:'+(diff>=0?'var(--green)':'var(--red)')+';\">'+(diff>=0?'شراء':'تأجير')+'</td></tr>';
   });
   senHTML+='</tbody></table>';
   var senEl=document.getElementById('fl-sensitivity-body');
@@ -10299,8 +10299,8 @@ function f2PDF(){
     +(best?'<div class="rec">التوصية النهائية: '+best.n+' | الوفر: '+f2Fmt(l4-best.c)+' ر.س خلال 4 سنوات مقارنة بالتأجير الحالي</div>':'')
     +'<h2>مقارنة السيناريوهات</h2>'
     +'<table><thead><tr><th>السيناريو</th><th>3 سنوات (ر.س)</th><th>4 سنوات (ر.س)</th><th>وفر مقابل التأجير الحالي (4 سنوات)</th></tr></thead><tbody>'
-    +'<tr><td>شراء + أفضل صيانة</td><td>'+f2Fmt(b3)+'</td><td>'+f2Fmt(b4)+'</td><td style="color:'+(l4-b4>=0?'green':'red');+';">'+(l4-b4>=0?'+':'')+f2Fmt(l4-b4)+'</td></tr>'
-    +'<tr><td>تأجير جديد (أفضل عرض)</td><td>'+f2Fmt(nl3)+'</td><td>'+f2Fmt(nl4)+'</td><td style="color:'+(l4-nl4>=0?'green':'red');+';">'+(l4-nl4>=0?'+':'')+f2Fmt(l4-nl4)+'</td></tr>'
+    +'<tr><td>شراء + أفضل صيانة</td><td>'+f2Fmt(b3)+'</td><td>'+f2Fmt(b4)+'</td><td style="color:'+(l4-b4>=0?'green':'red')+';">'+(l4-b4>=0?'+':'')+f2Fmt(l4-b4)+'</td></tr>'
+    +'<tr><td>تأجير جديد (أفضل عرض)</td><td>'+f2Fmt(nl3)+'</td><td>'+f2Fmt(nl4)+'</td><td style="color:'+(l4-nl4>=0?'green':'red')+';">'+(l4-nl4>=0?'+':'')+f2Fmt(l4-nl4)+'</td></tr>'
     +'<tr style="font-weight:700;"><td>الاستمرار في التأجير الحالي</td><td>'+f2Fmt(l3)+'</td><td>'+f2Fmt(l4)+'</td><td>مرجع</td></tr>'
     +'</tbody></table>'
     +'<h2>البيانات الأساسية</h2>'
