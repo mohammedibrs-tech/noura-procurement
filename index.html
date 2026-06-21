@@ -6101,7 +6101,7 @@ function exportContractsPDF(){
     const endClr=days!==null&&days<=30&&days>=0?'#C53030':'#64748B';
     const stClr=c.status==='expired'?'#64748B':c.status==='expiring'?'#C53030':c.status==='renewal_due'?'#D97706':'#276749';
     const catLabel=CATEGORY_LABELS[c.category]||c.category||'—';
-    const renLabel=c.renewal==='auto'?'تلقائي 🔁':c.renewal==='subscription'?'اشتراك دوري ♾️':'يدوي';
+    const renLabel=c.renewal==='auto'?'تلقائي ':c.renewal==='subscription'?'اشتراك دوري ️':'يدوي';
     return`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td style="text-align:center;font-size:9px;color:#1D4ED8;">${catLabel}</td><td style="text-align:center;font-size:9px;color:#92400E;">${renLabel}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td style="text-align:right;color:#276749;">${c.revMonthly>0?c.revMonthly.toLocaleString('ar-SA'):'—'}</td><td style="text-align:right;color:#276749;">${c.revAnnual>0?c.revAnnual.toLocaleString('ar-SA'):'—'}</td><td class="muted" style="text-align:center;">${c.start||'—'}</td><td style="text-align:center;color:${endClr};">${c.end||'—'}</td><td style="text-align:center;color:${stClr};font-weight:600;">${STATUS_LABELS[c.status]||c.status}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`;
   }).join('');
   const CSS=`@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:4px;margin-bottom:8px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:24px;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
@@ -7562,25 +7562,62 @@ function buildAnnualReport(){
 function exportAnnualPDF(){
   buildAnnualReport();
   const year=document.getElementById('ra-year').value;
-  const SIG=SIG_URL;const BG=FORM_BG;
+  const BG=FORM_BG;
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
   const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const yPO=poSaved.filter(p=>poInYear(p,year));
-  const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
-  const yPCInvoices=yPCAll.length;
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAnnual=calcCmpSavings();
-  const fmt2=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
-  const quarters=[{name:'ق١',months:['01','02','03']},{name:'ق٢',months:['04','05','06']},{name:'ق٣',months:['07','08','09']},{name:'ق٤',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{...q,total:t};});
-  const deptMap={};yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  const quarters=[{name:'الربع الاول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},{name:'الربع الثالث',months:['07','08','09']},{name:'الربع الرابع',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{...q,total:t};});
+  const deptMap={};yExp.forEach(e=>{const d=e.department||'اخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
-  const maxT=Math.max(...monthlyData.map(x=>x.t),1);
+  const yPOVal=yPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const today=new Date().toLocaleDateString('ar-SA');
+  const deptRows=deptSorted.map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const qRows=quarters.map(q=>`<tr><td>${q.name}</td><td style="text-align:right;">${fmt2(q.total)}</td><td style="text-align:center;">${totalSpent>0?((q.total/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
+  const monthRows=monthlyData.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
+<div class="page">${BG?'<img class="bg" src="'+BG+'">':''}
+<div class="pdf-content">
+<h1>التقرير السنوي — عام ${year} | تاريخ الاصدار: ${today}</h1>
+<div class="sec-title">ملخص العام</div>
+<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة (ر.س)</th></tr></thead><tbody>
+<tr><td>اجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
+<tr><td>اجمالي قيمة طلبات الشراء (PO)</td><td style="text-align:right;font-weight:700;">${fmt2(yPOVal)} — ${yPO.length} طلب</td></tr>
+<tr><td>اجمالي الالتزامات السنوية للعقود</td><td style="text-align:right;">${fmt2(totalCMonthly*12)}</td></tr>
+<tr><td>الوفر المحقق بالتفاوض</td><td style="text-align:right;">${fmt2(totalSaving)}</td></tr>
+<tr><td>الوفر المحقق بمقارنة الاسعار</td><td style="text-align:right;">${fmt2(cmpSavAnnual)}</td></tr>
+<tr><td style="font-weight:900;font-size:8.5px;">الناتج الكلي (مصروفات + طلبات شراء)</td><td style="text-align:right;font-weight:900;font-size:9px;">${fmt2(totalSpent+yPOVal)}</td></tr>
+</tbody></table>
+<div class="two-col">
+  <div><div class="sec-title">المصروفات ربع سنوياً</div>
+  <table><thead><tr><th>الربع</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <tbody>${qRows}<tr><td style="font-weight:700;">الاجمالي</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td><td></td></tr></tbody></table></div>
+  <div><div class="sec-title">المصروفات شهراً بشهر</div>
+  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <tbody>${monthRows}</tbody></table></div>
+</div>
+<div class="two-col">
+  <div><div class="sec-title">المصروفات حسب الادارة</div>
+  <table><thead><tr><th>الادارة</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <tbody>${deptRows}</tbody></table></div>
+  <div><div class="sec-title">اكثر الاصناف صرفاً</div>
+  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <tbody>${topItemRows}</tbody></table></div>
+</div>
+${buildContractsTableHTML(activeC,totalCMonthly)}
+</div></div></body></html>`);
+  w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 function ptRevTypeChange(){
   const t=document.getElementById('pt-rev-type').value;
@@ -8034,81 +8071,110 @@ function buildPOTableHTML(poList){
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
-  const ST=(t)=>`<div style="margin:7px 0 2px;padding:2px 7px;background:#244062;color:#fff;font-size:7px;font-weight:800;">${t}</div>`;
+  const TH='padding:3px 6px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:2.5px 6px;border:1px solid #ccc;font-size:7px;background:rgba(255,255,255,0.8);';
+  const TDF='padding:3px 6px;border:1px solid #244062;font-size:7.5px;background:rgba(235,242,255,0.9);font-weight:800;';
+  const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:7.5px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
 
-  const noRev=activeC.filter(c=>!c.revType);
-  const withRev=activeC.filter(c=>c.revType);
-  let noRevHTML='', withRevHTML='';
+  const CATLABEL={'security':'حراسة امنية','maintenance':'صيانة','cleaning':'نظافة','service':'خدمات اخرى','revenue':'عقد بايراد','telecom':'اشتراك اتصالات','software':'ترخيص برامج','subscription':'اشتراك سنوي'};
+  const RENLABEL={'manual':'يدوي','auto':'تلقائي','subscription':'اشتراك دوري'};
+  const STLABEL={'active':'فعال','expiring':'ينتهي قريبا','renewal_due':'مستحق التجديد','expired':'منته','pending':'قيد التفاوض','cancelled':'ملغى'};
+  const STCLR={'active':'#276749','expiring':'#C53030','renewal_due':'#92400E','expired':'#64748B','pending':'#5B21B6','cancelled':'#991B1B'};
 
-  if(noRev.length>0){
-    const rows=noRev.map((c,i)=>{
-      const bg='transparent';
-      return `<tr style="background:rgba(255,255,255,0.75);">
-        <td style="${TD}font-weight:700;">${c.vendor}</td>
-        <td style="${TD}">${c.type||'—'}</td>
-        <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
-        <td style="${TD}text-align:right;">${fmt((c.monthly||0)*12)}</td>
-        <td style="${TD}text-align:center;">${c.end||'—'}</td>
-      </tr>`;
-    }).join('');
-    const tot=noRev.reduce((s,c)=>s+(c.monthly||0),0);
-    noRevHTML=`<table style="width:100%;border-collapse:collapse;margin-bottom:0;">
-      <thead><tr>
-        <th style="${TH}">الشركة</th>
-        <th style="${TH}">الخدمة</th>
-        <th style="${TH}text-align:right;">الشهري</th>
-        <th style="${TH}text-align:right;">السنوي</th>
-        <th style="${TH}text-align:center;">ينتهي</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr>
-        <td colspan="2" style="${TD}font-size:8px;font-weight:800;">الإجمالي</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot)}</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot*12)}</td>
-        <td style="${TD}"></td>
-      </tr></tfoot>
-    </table>`;
-  }
+  if(!activeC||!activeC.length) return ST('العقود الفعالة')+'<p style="font-size:8px;padding:6px;">لا توجد عقود فعالة مسجلة.</p>';
 
-  if(withRev.length>0){
-    const rows=withRev.map((c,i)=>{
-      const bg='transparent';
-      const rl=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?`يومي(${c.revDays||0})`:'';
-      return `<tr style="background:rgba(255,255,255,0.75);">
-        <td style="${TD}font-weight:700;">${c.vendor}</td>
-        <td style="${TD}">${c.type||'—'}</td>
-        <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
-        <td style="${TD}text-align:center;">${c.end||'—'}</td>
-        <td style="${TD}text-align:right;font-weight:700;">${fmt(c.revAnnual||0)}</td>
-      </tr>`;
-    }).join('');
-    const tot=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
-    withRevHTML=`<table style="width:100%;border-collapse:collapse;margin-bottom:0;">
-      <thead><tr>
-        <th style="${TH}">الشركة</th>
-        <th style="${TH}">الخدمة</th>
-        <th style="${TH}text-align:right;">الشهري</th>
-        <th style="${TH}text-align:center;">ينتهي</th>
-        <th style="${TH}text-align:right;">إيراد سنوي</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr>
-        <td colspan="4" style="${TD}font-size:8px;font-weight:800;">إجمالي الإيراد السنوي</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot)}</td>
-      </tr></tfoot>
-    </table>`;
-  }
+  // --- الجدول الرئيسي الموحد ---
+  const allRows = activeC.map((c,i)=>{
+    const rowBg = i%2===0 ? 'rgba(255,255,255,0.85)' : 'rgba(245,248,255,0.85)';
+    const catLabel = CATLABEL[c.category]||c.category||'—';
+    const renLabel = RENLABEL[c.renewal]||c.renewal||'يدوي';
+    const stLabel  = STLABEL[c.status]||c.status||'—';
+    const stClr    = STCLR[c.status]||'#64748B';
+    const monthly  = parseFloat(c.monthly)||0;
+    const annual   = parseFloat(c.annual)||(monthly*12);
+    const revAnn   = parseFloat(c.revAnnual)||0;
+    const saving   = parseFloat(c.saving)||0;
+    return `<tr style="background:${rowBg};">
+      <td style="${TD}font-weight:700;">${c.vendor||'—'}</td>
+      <td style="${TD}">${c.type||'—'}</td>
+      <td style="${TD}text-align:center;">${catLabel}</td>
+      <td style="${TD}text-align:center;">${renLabel}</td>
+      <td style="${TD}text-align:right;font-weight:600;">${fmt(monthly)}</td>
+      <td style="${TD}text-align:right;">${fmt(annual)}</td>
+      <td style="${TD}text-align:right;color:#276749;">${revAnn>0?fmt(revAnn):'—'}</td>
+      <td style="${TD}text-align:center;font-size:6.5px;">${c.start||'—'}</td>
+      <td style="${TD}text-align:center;font-size:6.5px;">${c.end||'—'}</td>
+      <td style="${TD}text-align:center;color:${stClr};font-weight:700;">${stLabel}</td>
+      <td style="${TD}text-align:right;color:#276749;">${saving>0?fmt(saving):'—'}</td>
+    </tr>`;
+  }).join('');
 
-  if(noRev.length>0&&withRev.length>0){
-    return `${ST('العقود')}
-    <div style="display:grid;grid-template-columns:3fr 2fr;gap:6px;">
-      <div><div style="font-size:7px;font-weight:700;margin-bottom:2px;padding-bottom:1px;border-bottom:1px solid #888;">العقود الأساسية</div>${noRevHTML}</div>
-      <div><div style="font-size:7px;font-weight:700;margin-bottom:2px;padding-bottom:1px;border-bottom:1px solid #888;">عقود الإيراد</div>${withRevHTML}</div>
-    </div>`;
-  }
-  return (noRev.length>0?ST('العقود الأساسية')+noRevHTML:'')+(withRev.length>0?ST('عقود الإيراد')+withRevHTML:'');
+  const totMonthly = activeC.reduce((s,c)=>s+(parseFloat(c.monthly)||0),0);
+  const totAnnual  = activeC.reduce((s,c)=>s+(parseFloat(c.annual)||(parseFloat(c.monthly)||0)*12),0);
+  const totRevAnn  = activeC.reduce((s,c)=>s+(parseFloat(c.revAnnual)||0),0);
+  const totSaving  = activeC.reduce((s,c)=>s+(parseFloat(c.saving)||0),0);
+
+  const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:7px;">
+    <thead><tr>
+      <th style="${TH}">الشركة / مقدم الخدمة</th>
+      <th style="${TH}">وصف الخدمة</th>
+      <th style="${TH}text-align:center;">التصنيف</th>
+      <th style="${TH}text-align:center;">التجديد</th>
+      <th style="${TH}text-align:right;">الشهري (ر.س)</th>
+      <th style="${TH}text-align:right;">السنوي (ر.س)</th>
+      <th style="${TH}text-align:right;color:#A7F3D0;">الايراد السنوي</th>
+      <th style="${TH}text-align:center;">تاريخ البداية</th>
+      <th style="${TH}text-align:center;">تاريخ الانتهاء</th>
+      <th style="${TH}text-align:center;">الحالة</th>
+      <th style="${TH}text-align:right;color:#A7F3D0;">وفر التفاوض</th>
+    </tr></thead>
+    <tbody>${allRows}</tbody>
+    <tfoot><tr>
+      <td colspan="4" style="${TDF}">الاجمالي — ${activeC.length} عقد فعال</td>
+      <td style="${TDF}text-align:right;">${fmt(totMonthly)}</td>
+      <td style="${TDF}text-align:right;">${fmt(totAnnual)}</td>
+      <td style="${TDF}text-align:right;color:#276749;">${totRevAnn>0?fmt(totRevAnn):'—'}</td>
+      <td colspan="3" style="${TDF}"></td>
+      <td style="${TDF}text-align:right;color:#276749;">${totSaving>0?fmt(totSaving):'—'}</td>
+    </tr></tfoot>
+  </table>`;
+
+  // --- ملخص حسب التصنيف ---
+  const catMap={};
+  activeC.forEach(c=>{
+    const cat=c.category||'service';
+    if(!catMap[cat])catMap[cat]={count:0,monthly:0,annual:0};
+    catMap[cat].count++;
+    catMap[cat].monthly+=parseFloat(c.monthly)||0;
+    catMap[cat].annual+=parseFloat(c.annual)||(parseFloat(c.monthly)||0)*12;
+  });
+  const catRows=Object.entries(catMap).map(([cat,v])=>`<tr style="background:rgba(255,255,255,0.8);">
+    <td style="${TD}">${CATLABEL[cat]||cat}</td>
+    <td style="${TD}text-align:center;">${v.count}</td>
+    <td style="${TD}text-align:right;">${fmt(v.monthly)}</td>
+    <td style="${TD}text-align:right;">${fmt(v.annual)}</td>
+  </tr>`).join('');
+
+  const summaryHTML=`<table style="width:100%;border-collapse:collapse;font-size:7px;">
+    <thead><tr>
+      <th style="${TH}">التصنيف</th>
+      <th style="${TH}text-align:center;">عدد العقود</th>
+      <th style="${TH}text-align:right;">الاجمالي الشهري (ر.س)</th>
+      <th style="${TH}text-align:right;">الاجمالي السنوي (ر.س)</th>
+    </tr></thead>
+    <tbody>${catRows}</tbody>
+    <tfoot><tr>
+      <td style="${TDF}">الاجمالي</td>
+      <td style="${TDF}text-align:center;">${activeC.length}</td>
+      <td style="${TDF}text-align:right;">${fmt(totMonthly)}</td>
+      <td style="${TDF}text-align:right;">${fmt(totAnnual)}</td>
+    </tr></tfoot>
+  </table>`;
+
+  return ST('العقود الفعالة — تفاصيل كاملة')
+    + tableHTML
+    + ST('ملخص العقود حسب التصنيف')
+    + summaryHTML;
 }
 
 function buildPCDetailsHTML(pcList){
@@ -8451,11 +8517,11 @@ async function init(){
     
     // إذا كان الهاتف يفتح لأول مرة، قم بتحديث الواجهة بالكامل
     if(isFirstTime) {
-      toast('تم جلب بياناتك السحابية بنجاح ✅');
+      toast('تم جلب بياناتك السحابية بنجاح ');
       // تحديث بسيط للواجهة لضمان ظهور البيانات
       setTimeout(() => { if(typeof renderPCGroups==='function') renderPCGroups(); }, 500);
     } else {
-      toast('تم تحديث البيانات ✅');
+      toast('تم تحديث البيانات ');
     }
   }).catch((err)=>{
     console.error('Supabase Sync Error:', err);
