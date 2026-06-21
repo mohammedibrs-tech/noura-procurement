@@ -6836,7 +6836,7 @@ function buildSemiReport(){
   <tr><td>طلبات PO</td><td style="text-align:right;">${sPO.length}</td></tr>
   <tr><td>إجمالي قيمة طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">${fmt2(sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0))} (${sPO.length} طلب)</td></tr>
   <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${(cmpSavings>0?cmpSavings.toLocaleString('en-US',{minimumFractionDigits:2}):'—')}</td></tr>
-  <tr style="background:#e0f5ff;border-top:2px solid #0077aa;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:10px;">${(totalSpent+sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0)).toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
+  <tr style="background:#fff;border-top:2px solid #244062;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:10px;">${(totalSpent+sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0)).toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
   </tbody></table>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
     <div class="card"><div class="card-header"><h3>المصروفات شهراً بشهر</h3></div><div class="card-body">
@@ -6877,7 +6877,7 @@ function exportSemiPDF(){
   const itemSumS=buildItemSummaryHTML(sExpForSum,sPOList);
   const rsTitle=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>${rsTitle2}</h1>${content}<div class="sec-title">طلبات الشراء (PO)</div>${itemSumS}<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>${rsTitle2}</h1>${content}<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
@@ -8102,7 +8102,7 @@ function exportQuarterlyPDF(){
 <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;">${fmt2(totalCM)}</td></tr>
 <tr><td>وفر التفاوض</td><td style="text-align:right;">${fmt2(totalSaving)}</td></tr>
 <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;">${fmt2(cmpSavAmtQ)}</td></tr>
-<tr style="background:#e0f5ff;border-top:2px solid #0077aa;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:9px;">${fmt2(totalSpent+qPOVal)}</td></tr>
+<tr style="background:#fff;border-top:2px solid #244062;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:9px;">${fmt2(totalSpent+qPOVal)}</td></tr>
 </tbody></table>
 <div class="two-col">
   <div><div class="sec-title">المصروفات شهراً بشهر</div>
@@ -8113,7 +8113,7 @@ function exportQuarterlyPDF(){
 </div>
 <div class="sec-title">المصروفات حسب الإدارة</div>
 <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أكثر الأصناف</th></tr></thead><tbody>${deptRows}</tbody></table>
-${itemSumQ}<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(qPO)}
+<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(qPO)}
 ${buildContractsTableHTML(activeC,totalCM)}
 </div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
@@ -8121,62 +8121,22 @@ ${buildContractsTableHTML(activeC,totalCM)}
 
 
 function buildItemSummaryHTML(expList, poList) {
-  var itemMap = {};
-  expList.forEach(function(e) {
-    var name = e.item_name || 'أخرى';
-    itemMap[name] = (itemMap[name] || 0) + (parseFloat(e.amount) || 0);
-  });
-  var expItems = Object.entries(itemMap).sort(function(a,b){return b[1]-a[1];});
-  var totalExp = expItems.reduce(function(s,kv){return s+kv[1];}, 0);
-
-  var poItemMap = {};
-  poList.forEach(function(po) {
-    var rows = [];
-    try { rows = JSON.parse(po.rows || '[]'); } catch(e){}
-    rows.forEach(function(r) {
-      var name = r.item || r.itemName || r.name || 'صنف';
-      var t = parseFloat(r.total) || 0;
-      var val = 0;
-      if (t > 0) { val = t * 1.15; }
-      else { var b = (parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0); val = r.vatType==='added' ? b*1.15 : b; }
-      if (val > 0) poItemMap[name] = (poItemMap[name] || 0) + val;
-    });
-  });
-  var poItems = Object.entries(poItemMap).sort(function(a,b){return b[1]-a[1];});
-  var totalPO = poItems.reduce(function(s,kv){return s+kv[1];}, 0);
+  var totalExp = expList.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  var totalPO = poList.reduce(function(s,p){
+    var rows=[];try{rows=JSON.parse(p.rows||'[]');}catch(e){}
+    return s+rows.reduce(function(ss,r){
+      var t=parseFloat(r.total)||0;
+      if(t>0)return ss+t*1.15;
+      var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);
+      return ss+(r.vatType==='added'?b*1.15:b);
+    },0);
+  },0);
   var grandTotal = totalExp + totalPO;
-  var f = function(n){return n.toLocaleString('en-US',{minimumFractionDigits:2});};
-
-  var expRows = expItems.map(function(kv){
-    var n=kv[0],v=kv[1];
-    var pct = totalExp>0 ? (v/totalExp*100).toFixed(1) : '0';
-    return '<tr><td>'+n+'</td><td style="text-align:right;">'+f(v)+'</td><td style="text-align:right;">'+pct+'%</td></tr>';
-  }).join('');
-
-  var poRows = poItems.map(function(kv){
-    var n=kv[0],v=kv[1];
-    var pct = totalPO>0 ? (v/totalPO*100).toFixed(1) : '0';
-    return '<tr><td>'+n+'</td><td style="text-align:right;">'+f(v)+'</td><td style="text-align:right;">'+pct+'%</td></tr>';
-  }).join('');
-
-  return '<div class="sec-title">\u0645\u0644\u062e\u0635 \u0627\u0644\u0623\u0635\u0646\u0627\u0641</div>'
-    +'<div class="two-col">'
-    +'<div><table>'
-    +'<thead><tr><th>\u0635\u0646\u0641 \u0627\u0644\u0645\u0635\u0631\u0648\u0641\u0627\u062a</th><th style="text-align:right;">\u0627\u0644\u0645\u0628\u0644\u063a</th><th style="text-align:right;">%</th></tr></thead>'
-    +'<tbody>'+(expRows||'<tr><td colspan="3" style="text-align:center;">\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a</td></tr>')+'</tbody>'
-    +'<tfoot><tr><td style="font-weight:900;">\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0635\u0631\u0648\u0641\u0627\u062a</td><td style="text-align:right;font-weight:900;">'+f(totalExp)+'</td><td></td></tr></tfoot>'
-    +'</table></div>'
-    +'<div><table>'
-    +'<thead><tr><th>\u0623\u0635\u0646\u0627\u0641 \u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0634\u0631\u0627\u0621 PO</th><th style="text-align:right;">\u0627\u0644\u0642\u064a\u0645\u0629 \u0634\u0627\u0645\u0644 \u0636</th><th style="text-align:right;">%</th></tr></thead>'
-    +'<tbody>'+(poRows||'<tr><td colspan="3" style="text-align:center;">\u0644\u0627 \u062a\u0648\u062c\u062f \u0637\u0644\u0628\u0627\u062a</td></tr>')+'</tbody>'
-    +'<tfoot><tr><td style="font-weight:900;">\u0625\u062c\u0645\u0627\u0644\u064a PO</td><td style="text-align:right;font-weight:900;">'+f(totalPO)+'</td><td></td></tr></tfoot>'
-    +'</table></div>'
-    +'</div>'
-    +'<table style="margin-top:2px;"><tbody>'
-    +'<tr style="background:#e0eaf5;">'
-    +'<td style="font-weight:900;font-size:8px;">\u0627\u0644\u0646\u0627\u062a\u062c \u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a (\u0645\u0635\u0631\u0648\u0641\u0627\u062a + PO \u0634\u0627\u0645\u0644 \u0627\u0644\u0636\u0631\u064a\u0628\u0629)</td>'
+  var f=function(n){return n.toLocaleString('en-US',{minimumFractionDigits:2});};
+  return '<tr style="background:#fff;border-top:2px solid #244062;">'
+    +'<td style="font-weight:900;font-size:8px;">الناتج الإجمالي (مصروفات + PO)</td>'
     +'<td style="text-align:right;font-weight:900;font-size:9px;">'+f(grandTotal)+'</td>'
-    +'</tr></tbody></table>';
+    +'</tr>';
 }
 
 function exportMonthlyPDF(){
@@ -8213,7 +8173,7 @@ function exportMonthlyPDF(){
 <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;" class="val">${fmt2(totalCM)}</td></tr>
 <tr><td>وفر التفاوض</td><td style="text-align:right;" class="val">${fmt2(totalSaving)}</td></tr>
 <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;" class="val">${fmt2(cmpSavAmtQ)}</td></tr>
-<tr style="background:#e0f5ff;border-top:2px solid #0077aa;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:9px;">${fmt2(totalSpent+monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0))}</td></tr>
+<tr style="background:#fff;border-top:2px solid #244062;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:9px;">${fmt2(totalSpent+monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0))}</td></tr>
 </tbody></table>
 <div class="two-col">
   <div>
@@ -8231,7 +8191,7 @@ function exportMonthlyPDF(){
 <div class="sec-title">المصروفات حسب الإدارة</div>
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف</th></tr></thead>
 <tbody>${deptSorted.map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td><td>${ti||'—'}</td></tr>`;}).join('')}</tbody></table>
-<div class="${itemSumM}<div class="sec-title">طلبات الشراء (PO)</div>
+<div class="sec-title">طلبات الشراء (PO)</div>
 ${buildPOTableHTML(poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))))}
 ${buildContractsTableHTML(activeC,totalCM)}
 </body></html>`);
