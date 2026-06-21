@@ -378,6 +378,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
           <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
         </select>
         <input id="filter-year" type="number" value="2026" onchange="syncBudgetFilter()" style="width:75px;font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;">
+          <button onclick="document.getElementById('filter-year').value='';document.getElementById('filter-month').value='';syncBudgetFilter();" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:#f0f4ff;cursor:pointer;">عرض الكل</button>
         <button class="btn btn-green btn-sm" onclick="expExcel()">Excel</button>
         <button class="btn btn-red btn-sm" onclick="expPrint()">PDF</button>
       </div>
@@ -6863,7 +6864,7 @@ function exportSemiPDF(){
   const halfName=half==='1'?'الأول':'الثاني';
   const SIG=SIG_URL;const BG=FORM_BG;
   const content=document.getElementById('semi-report-content').innerHTML;
-  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#111;direction:rtl;margin:0;padding:0;line-height:1.4;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:14px;text-align:center;margin:0 0 12px;color:#111;font-weight:800;border-bottom:2px solid #244062;padding-bottom:6px;}.sec-title{display:block;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;font-size:8.5px;font-weight:700;border-right:4px solid #1a2e50;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8px;}thead tr{background:#244062;}thead th{padding:4px 6px;border:1px solid #1a3358;color:#fff;font-size:8px;}tbody td{padding:3px 6px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f7f7f7;}tfoot td{padding:4px 6px;border:1px solid #ccc;border-top:2px solid #244062;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.po-section{page-break-before:always;}@media print{.bg-img{position:fixed;}.po-section table{font-size:7px;}}';
+  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#000;direction:rtl;margin:0;padding:0;line-height:1.5;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:13px;text-align:center;margin:0 0 10px;color:#000;font-weight:900;border-bottom:2px solid #000;padding-bottom:5px;}.sec-title{display:block;margin:10px 0 3px;padding:3px 8px;background:#fff;color:#000;font-size:8.5px;font-weight:800;border:1.5px solid #000;border-right:4px solid #000;}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #888;color:#000;font-size:7.5px;font-weight:700;background:#fff;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f5f5f5;}tfoot td{padding:3px 5px;border:1px solid #888;border-top:2px solid #000;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}.po-wrap{margin-top:10px;}@media print{.bg-img{position:fixed;}}';
   const SIG_B=`<div style="display:flex;gap:40px;margin-top:20px;padding-top:15px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#111;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#111;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
     const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
@@ -7919,168 +7920,148 @@ function buildMonthlyReport(){
 
 
 function buildPOTableHTML(poList){
-  if(!poList||!poList.length) return '<p style="font-size:8.5px;color:#555;margin:4px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
+  if(!poList||!poList.length) return '<p style="font-size:8px;color:#555;margin:4px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   let totalVal=0;
-  const rows=poList.map((p,i)=>{
-    const rows2=JSON.parse(p.rows||'[]');
-    const val=rows2.reduce((s,r)=>{
+  const items=poList.map(p=>{
+    const r2=JSON.parse(p.rows||'[]');
+    const val=r2.reduce((s,r)=>{
       const t=parseFloat(r.total)||0;
-      if(t>0) return s+t*1.15;
+      if(t>0)return s+t*1.15;
       const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);
       return s+(r.vatType==='added'?b*1.15:b);
     },0);
     totalVal+=val;
     const isSeed=(p.date||'')==='2025-01-01'&&(p.id||0)>=1700000001&&(p.id||0)<=1700000099;
-    const dateDisplay=isSeed?'يونيو — ديسمبر 2025':(p.date||'—');
-    const bg=i%2===0?'#fff':'#f7f7f7';
-    return `<tr style="background:${bg};">
-      <td style="padding:3px 6px;border:1px solid #ccc;text-align:center;font-size:7.5px;">${p.num||p.poNum||'—'}</td>
-      <td style="padding:3px 6px;border:1px solid #ccc;font-size:7.5px;">${p.company||p.vendor||'—'}</td>
-      <td style="padding:3px 6px;border:1px solid #ccc;text-align:center;font-size:7.5px;">${dateDisplay}</td>
-      <td style="padding:3px 6px;border:1px solid #ccc;text-align:right;font-size:7.5px;">${fmt(val)}</td>
-    </tr>`;
-  }).join('');
-  return `<table style="width:100%;border-collapse:collapse;border:1.5px solid #244062;">
-    <thead>
-      <tr style="background:#244062;">
-        <th style="padding:4px 6px;border:1px solid #1a3358;color:#fff;text-align:center;font-size:8px;">رقم PO</th>
-        <th style="padding:4px 6px;border:1px solid #1a3358;color:#fff;text-align:right;font-size:8px;">الشركة / المورد</th>
-        <th style="padding:4px 6px;border:1px solid #1a3358;color:#fff;text-align:center;font-size:8px;">التاريخ</th>
-        <th style="padding:4px 6px;border:1px solid #1a3358;color:#fff;text-align:right;font-size:8px;">القيمة شامل الضريبة</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-    <tfoot>
-      <tr style="border-top:2px solid #244062;">
-        <td colspan="2" style="padding:5px 6px;border:1px solid #ccc;font-size:10px;font-weight:800;letter-spacing:0.3px;">الإجمالي</td>
-        <td style="padding:5px 6px;border:1px solid #ccc;"></td>
-        <td style="padding:5px 6px;border:1px solid #ccc;text-align:right;font-size:12px;font-weight:800;">${fmt(totalVal)}</td>
-      </tr>
-    </tfoot>
+    return {num:p.num||p.poNum||'—', co:p.company||p.vendor||'—', val, date:isSeed?'يونيو—ديسمبر 2025':(p.date||'—')};
+  });
+  const half=Math.ceil(items.length/2);
+  const left=items.slice(0,half);
+  const right=items.slice(half);
+  const TH='padding:3px 5px;border:1px solid #888;color:#000;font-size:7px;font-weight:700;background:#fff;';
+  const TD='padding:2.5px 5px;border:1px solid #ccc;font-size:7px;';
+  const mkRows=(arr,si)=>arr.map((it,i)=>`<tr style="background:${(si+i)%2===0?'#fff':'#f5f5f5'};">
+    <td style="${TD}text-align:center;">${it.num}</td>
+    <td style="${TD}">${it.co}</td>
+    <td style="${TD}text-align:right;font-weight:700;">${fmt(it.val)}</td>
+  </tr>`).join('');
+  const mkTbl=(arr,si)=>`<table style="width:100%;border-collapse:collapse;">
+    <thead><tr>
+      <th style="${TH}text-align:center;">رقم PO</th>
+      <th style="${TH}">المورد</th>
+      <th style="${TH}text-align:right;">القيمة (ض)</th>
+    </tr></thead>
+    <tbody>${mkRows(arr,si)}</tbody>
   </table>`;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div>${mkTbl(left,0)}</div>
+    <div>${mkTbl(right,half)}</div>
+  </div>
+  <div style="border-top:2px solid #000;margin-top:4px;padding:4px 6px;display:flex;justify-content:space-between;align-items:baseline;">
+    <span style="font-size:10px;font-weight:800;">الإجمالي — ${poList.length} طلب شراء</span>
+    <span style="font-size:13px;font-weight:900;">${fmt(totalVal)}</span>
+  </div>`;
 }
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:4px 6px;border:1px solid #1a3358;color:#fff;font-size:8px;';
-  const TD='padding:3px 6px;border:1px solid #ccc;font-size:8px;';
+  const TH='padding:3px 5px;border:1px solid #888;color:#000;font-size:7px;font-weight:700;background:#fff;text-align:right;';
+  const TD='padding:2.5px 5px;border:1px solid #ccc;font-size:7px;';
+  const ST=(t)=>`<div style="margin:8px 0 3px;padding:3px 8px;background:#fff;color:#000;font-size:8px;font-weight:800;border:1.5px solid #000;border-right:4px solid #000;">${t}</div>`;
 
-  // حساب وفر مقارنة الأسعار لكل عقد بشكل صحيح:
-  // currentContract = قيمة العقد الحالي المُدخلة في المقارنة
-  // أقل عرض من الشركات = الوفر الفعلي
   function getCmpSaving(vendor){
-    const relCmp=cmpSaved.find(cp=>cp.currentVendor&&cp.currentVendor===vendor);
-    if(!relCmp) return 0;
-    const curC=parseFloat(relCmp.currentContract)||0;
-    if(!curC) return 0;
-    const tots=(relCmp.companies||[]).map(co=>{
-      return(co.rows||[]).reduce((s,r)=>{
-        const b=(r.count||0)*(r.unitPrice||0);
-        return s+(r.vatType==='added'?b*1.15:b);
-      },0);
-    }).filter(v=>v>0);
-    if(!tots.length) return 0;
-    return Math.max(0, curC - Math.min(...tots));
+    const rel=cmpSaved.find(cp=>cp.currentVendor===vendor);
+    if(!rel)return 0;
+    const curC=parseFloat(rel.currentContract)||0;
+    if(!curC)return 0;
+    const tots=(rel.companies||[]).map(co=>(co.rows||[]).reduce((s,r)=>{
+      const b=(r.count||0)*(r.unitPrice||0);
+      return s+(r.vatType==='added'?b*1.15:b);
+    },0)).filter(v=>v>0);
+    if(!tots.length)return 0;
+    return Math.max(0,curC-Math.min(...tots));
   }
 
-  const noRev  = activeC.filter(c=>!c.revType);
-  const withRev= activeC.filter(c=> c.revType);
+  const noRev=activeC.filter(c=>!c.revType);
+  const withRev=activeC.filter(c=>c.revType);
 
-  // ─── جدول العقود الأساسية ───
-  let noRevHTML='';
+  let noRevHTML='',withRevHTML='';
+
   if(noRev.length>0){
-    const noRevRows=noRev.map((c,i)=>{
-      const bg=i%2===0?'#fff':'#f7f7f7';
-      // وفر التفاوض: حقل saving مُدخل يدوياً = الفرق بين العقد القديم والجديد
-      // وفر مقارنة الأسعار: محسوب من جدول المقارنة
-      let savingHTML='—';
+    const rows=noRev.map((c,i)=>{
+      const bg=i%2===0?'#fff':'#f5f5f5';
+      let wafr='—';
       if((c.saving||0)>0){
         const prev=(c.monthly||0)+(c.saving||0);
-        savingHTML=`<span style="color:#1a5c36;font-size:7.5px;line-height:1.6;display:block;">
-          <span style="color:#555;">من</span> ${fmt(prev)} 
-          <span style="color:#555;">إلى</span> ${fmt(c.monthly||0)}<br>
-          <strong>وفر ${fmt(c.saving)} / شهر</strong>
-        </span>`;
+        wafr=`من ${fmt(prev)} ← ${fmt(c.monthly||0)}<br><b>وفر ${fmt(c.saving)}/شهر</b>`;
       } else {
-        const cmpSav=getCmpSaving(c.vendor);
-        if(cmpSav>0){
-          savingHTML=`<span style="color:#1a5c36;font-size:7.5px;"><strong>${fmt(cmpSav)}</strong><br><span style="color:#555;font-size:6.5px;">مقارنة أسعار</span></span>`;
-        }
+        const cs=getCmpSaving(c.vendor);
+        if(cs>0)wafr=`<b>${fmt(cs)}</b><br><span style="font-size:6px;">مقارنة أسعار</span>`;
       }
       return `<tr style="background:${bg};">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
-        <td style="${TD}">${c.type}</td>
+        <td style="${TD}">${c.type||'—'}</td>
         <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
         <td style="${TD}text-align:right;">${fmt((c.monthly||0)*12)}</td>
         <td style="${TD}text-align:center;">${c.end||'—'}</td>
-        <td style="${TD}text-align:center;">${savingHTML}</td>
+        <td style="${TD}text-align:center;font-size:6.5px;">${wafr}</td>
       </tr>`;
     }).join('');
-    const noRevTotal=noRev.reduce((s,c)=>s+(c.monthly||0),0);
-    const totalSavNeg=noRev.reduce((s,c)=>s+(c.saving||0),0);
-    noRevHTML=`<table style="width:100%;border-collapse:collapse;border:1.5px solid #244062;margin-bottom:8px;">
-      <thead><tr style="background:#244062;">
-        <th style="${TH}text-align:right;">الشركة</th>
-        <th style="${TH}text-align:right;">الخدمة</th>
-        <th style="${TH}text-align:right;">الشهري</th>
-        <th style="${TH}text-align:right;">السنوي</th>
-        <th style="${TH}text-align:center;">ينتهي</th>
-        <th style="${TH}text-align:center;">الوفر</th>
+    const tot=noRev.reduce((s,c)=>s+(c.monthly||0),0);
+    const totSav=noRev.reduce((s,c)=>s+(c.saving||0),0);
+    noRevHTML=`<table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="${TH}">الشركة</th><th style="${TH}">الخدمة</th>
+        <th style="${TH}text-align:right;">الشهري</th><th style="${TH}text-align:right;">السنوي</th>
+        <th style="${TH}text-align:center;">ينتهي</th><th style="${TH}text-align:center;">الوفر</th>
       </tr></thead>
-      <tbody>${noRevRows}</tbody>
-      <tfoot><tr style="border-top:2px solid #244062;">
-        <td colspan="2" style="${TD}font-size:10px;font-weight:800;">الإجمالي</td>
-        <td style="${TD}text-align:right;font-size:11px;font-weight:800;">${fmt(noRevTotal)}</td>
-        <td style="${TD}text-align:right;font-size:11px;font-weight:800;">${fmt(noRevTotal*12)}</td>
+      <tbody>${rows}</tbody>
+      <tfoot><tr>
+        <td colspan="2" style="${TD}font-size:9px;font-weight:800;">الإجمالي</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:800;">${fmt(tot)}</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:800;">${fmt(tot*12)}</td>
         <td style="${TD}"></td>
-        <td style="${TD}text-align:center;font-size:9px;font-weight:700;color:#1a5c36;">${totalSavNeg>0?fmt(totalSavNeg)+' وفر':'—'}</td>
+        <td style="${TD}text-align:center;font-size:7.5px;font-weight:700;">${totSav>0?fmt(totSav)+' وفر':'—'}</td>
       </tr></tfoot>
     </table>`;
   }
 
-  // ─── جدول عقود الإيراد ───
-  let withRevHTML='';
   if(withRev.length>0){
-    const withRevRows=withRev.map((c,i)=>{
-      const bg=i%2===0?'#fff':'#f7f7f7';
-      const revLabel=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?`يومي (${c.revDays||0} يوم)`:'';
+    const rows=withRev.map((c,i)=>{
+      const bg=i%2===0?'#fff':'#f5f5f5';
+      const rl=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?`يومي(${c.revDays||0})`:'';
       return `<tr style="background:${bg};">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
-        <td style="${TD}">${c.type}</td>
+        <td style="${TD}">${c.type||'—'}</td>
         <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
         <td style="${TD}text-align:center;">${c.end||'—'}</td>
-        <td style="${TD}text-align:center;">${revLabel||'—'}</td>
-        <td style="${TD}text-align:right;">${c.revType==='monthly'?fmt(c.revMonthly||0)+' /شهر':c.revType==='daily'?'يومي':'—'}</td>
+        <td style="${TD}text-align:center;">${rl}</td>
         <td style="${TD}text-align:right;font-weight:700;">${fmt(c.revAnnual||0)}</td>
       </tr>`;
     }).join('');
-    const withRevTotal=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
-    withRevHTML=`<table style="width:100%;border-collapse:collapse;border:1.5px solid #244062;margin-bottom:8px;">
-      <thead><tr style="background:#244062;">
-        <th style="${TH}text-align:right;">الشركة</th>
-        <th style="${TH}text-align:right;">الخدمة</th>
-        <th style="${TH}text-align:right;">الشهري</th>
-        <th style="${TH}text-align:center;">ينتهي</th>
-        <th style="${TH}text-align:center;">نوع الإيراد</th>
-        <th style="${TH}text-align:right;">إيراد شهري</th>
-        <th style="${TH}text-align:right;">إيراد سنوي</th>
+    const tot=withRev.reduce((s,c)=>s+(c.revAnnual||0),0);
+    withRevHTML=`<table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="${TH}">الشركة</th><th style="${TH}">الخدمة</th>
+        <th style="${TH}text-align:right;">الشهري</th><th style="${TH}text-align:center;">ينتهي</th>
+        <th style="${TH}text-align:center;">الإيراد</th><th style="${TH}text-align:right;">سنوي</th>
       </tr></thead>
-      <tbody>${withRevRows}</tbody>
-      <tfoot><tr style="border-top:2px solid #244062;">
-        <td colspan="5" style="${TD}font-size:10px;font-weight:800;">إجمالي الإيراد السنوي</td>
-        <td style="${TD}"></td>
-        <td style="${TD}text-align:right;font-size:11px;font-weight:800;">${fmt(withRevTotal)}</td>
+      <tbody>${rows}</tbody>
+      <tfoot><tr>
+        <td colspan="5" style="${TD}font-size:9px;font-weight:800;">إجمالي الإيراد السنوي</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:800;">${fmt(tot)}</td>
       </tr></tfoot>
     </table>`;
   }
 
-  const sectionTitle=(t)=>`<div style="margin:14px 0 5px;padding:5px 10px;background:#244062;color:#fff;font-size:9px;font-weight:700;border-right:4px solid #1a2e50;">${t}</div>`;
-
   if(noRev.length>0&&withRev.length>0){
-    return sectionTitle('العقود الأساسية')+noRevHTML+sectionTitle('عقود الإيراد')+withRevHTML;
+    return `${ST('العقود')}
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;">
+      <div><div style="font-size:7.5px;font-weight:700;margin-bottom:3px;border-bottom:1px solid #000;padding-bottom:2px;">العقود الأساسية</div>${noRevHTML}</div>
+      <div><div style="font-size:7.5px;font-weight:700;margin-bottom:3px;border-bottom:1px solid #000;padding-bottom:2px;">عقود الإيراد</div>${withRevHTML}</div>
+    </div>`;
   }
-  return (noRev.length>0?sectionTitle('العقود الأساسية')+noRevHTML:'')+(withRev.length>0?sectionTitle('عقود الإيراد')+withRevHTML:'');
+  return (noRev.length>0?ST('العقود الأساسية')+noRevHTML:'')+(withRev.length>0?ST('عقود الإيراد')+withRevHTML:'');
 }
 
 function buildPCDetailsHTML(pcList){
@@ -8139,7 +8120,7 @@ function exportQuarterlyPDF(){
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#111;direction:rtl;margin:0;padding:0;line-height:1.4;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:14px;text-align:center;margin:0 0 12px;color:#111;font-weight:800;border-bottom:2px solid #244062;padding-bottom:6px;}.sec-title{display:block;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;font-size:8.5px;font-weight:700;border-right:4px solid #1a2e50;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8px;}thead tr{background:#244062;}thead th{padding:4px 6px;border:1px solid #1a3358;color:#fff;font-size:8px;}tbody td{padding:3px 6px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f7f7f7;}tfoot td{padding:4px 6px;border:1px solid #ccc;border-top:2px solid #244062;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.po-section{page-break-before:always;}@media print{.bg-img{position:fixed;}.po-section table{font-size:7px;}}';
+  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#000;direction:rtl;margin:0;padding:0;line-height:1.5;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:13px;text-align:center;margin:0 0 10px;color:#000;font-weight:900;border-bottom:2px solid #000;padding-bottom:5px;}.sec-title{display:block;margin:10px 0 3px;padding:3px 8px;background:#fff;color:#000;font-size:8.5px;font-weight:800;border:1.5px solid #000;border-right:4px solid #000;}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #888;color:#000;font-size:7.5px;font-weight:700;background:#fff;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f5f5f5;}tfoot td{padding:3px 5px;border:1px solid #888;border-top:2px solid #000;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}.po-wrap{margin-top:10px;}@media print{.bg-img{position:fixed;}}';
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}
 <div class="pdf-content">
@@ -8189,7 +8170,7 @@ function exportMonthlyPDF(){
   const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=60;});
   const cmpSavAmt=calcCmpSavings();
   const contractSavAmt=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#111;direction:rtl;margin:0;padding:0;line-height:1.4;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:14px;text-align:center;margin:0 0 12px;color:#111;font-weight:800;border-bottom:2px solid #244062;padding-bottom:6px;}.sec-title{display:block;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;font-size:8.5px;font-weight:700;border-right:4px solid #1a2e50;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8px;}thead tr{background:#244062;}thead th{padding:4px 6px;border:1px solid #1a3358;color:#fff;font-size:8px;}tbody td{padding:3px 6px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f7f7f7;}tfoot td{padding:4px 6px;border:1px solid #ccc;border-top:2px solid #244062;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.po-section{page-break-before:always;}@media print{.bg-img{position:fixed;}.po-section table{font-size:7px;}}';
+  const CSS='@page{size:A4;margin:14mm 12mm 14mm;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#000;direction:rtl;margin:0;padding:0;line-height:1.5;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}h1{font-size:13px;text-align:center;margin:0 0 10px;color:#000;font-weight:900;border-bottom:2px solid #000;padding-bottom:5px;}.sec-title{display:block;margin:10px 0 3px;padding:3px 8px;background:#fff;color:#000;font-size:8.5px;font-weight:800;border:1.5px solid #000;border-right:4px solid #000;}table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #888;color:#000;font-size:7.5px;font-weight:700;background:#fff;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #ccc;}tbody tr:nth-child(even){background:#f5f5f5;}tfoot td{padding:3px 5px;border:1px solid #888;border-top:2px solid #000;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}.po-wrap{margin-top:10px;}@media print{.bg-img{position:fixed;}}';
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content">
 <h1>التقرير الربع سنوي — الربع ${qName[q]} ${year}</h1>
