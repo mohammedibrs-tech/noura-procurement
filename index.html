@@ -6870,7 +6870,7 @@ function exportSemiPDF(){
   const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
   const sAllPCpdf=months.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const w=window.open('','_blank');
-  const sPOList=months.map(m=>poSaved.filter(p=>poInMonthKey(p,year+'-'+m))).flat();
+  const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>التقرير النصف سنوي — النصف ${halfName} ${year}</h1><p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>${content}<h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
