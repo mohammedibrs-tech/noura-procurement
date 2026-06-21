@@ -6865,7 +6865,7 @@ function exportSemiPDF(){
   const halfName=half==='1'?'الأول':'الثاني';
   const SIG=SIG_URL;const BG=FORM_BG;
   const content=document.getElementById('semi-report-content').innerHTML;
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:7.5px;color:#000;direction:rtl;line-height:1.5;margin:0;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:38mm 12mm 8mm;}h1{font-size:11px;text-align:center;margin:0 0 5px;color:#000;font-weight:900;border-bottom:2px solid #244062;padding-bottom:3px;}.sec-title{display:block;margin:5px 0 2px;padding:2px 6px;background:#244062;color:#fff;font-size:7px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:6.5px;}thead th{padding:2px 3px;border:1px solid #244062;color:#fff;font-size:6.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:1.5px 3px;border:1px solid #bbb;color:#000;background:transparent;}tfoot td{padding:2px 3px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:transparent;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const SIG_B=`<div style="display:flex;gap:40px;margin-top:20px;padding-top:15px;border-top:1px solid #E2E8F0;"><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#111;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;"><img src="${SIG}" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:55px;object-fit:contain;z-index:1;"><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;position:relative;">أ.محمد ابراهيم الجمعان</div></div></div><div style="flex:1;text-align:center;"><div style="font-size:9px;font-weight:700;color:#111;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
     const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
@@ -7928,8 +7928,8 @@ function buildPOTableHTML(poList){
   const half=Math.ceil(items.length/2);
   const left=items.slice(0,half);
   const right=items.slice(half);
-  const TH='padding:2.5px 4px;border:1px solid #888;color:#000;font-size:6.5px;font-weight:700;background:#244062;color:#fff;text-align:right;';
-  const TD='padding:2px 4px;border:1px solid #bbb;font-size:6.5px;background:transparent;';
+  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
   const mkRows=(arr,si)=>arr.map((it,i)=>`<tr style="background:${'transparent'};">
     <td style="${TD}text-align:center;font-size:6px;">${it.num}</td>
     <td style="${TD}">${it.co}</td>
@@ -7956,8 +7956,8 @@ function buildPOTableHTML(poList){
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:2px 3px;border:1px solid #244062;color:#fff;font-size:6.5px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:1.5px 3px;border:1px solid #bbb;font-size:6.5px;background:transparent;';
+  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
   const ST=(t)=>`<div style="margin:7px 0 2px;padding:2px 7px;background:#244062;color:#fff;font-size:7px;font-weight:800;">${t}</div>`;
 
   const noRev=activeC.filter(c=>!c.revType);
@@ -7967,7 +7967,7 @@ function buildContractsTableHTML(activeC,totalCM){
   if(noRev.length>0){
     const rows=noRev.map((c,i)=>{
       const bg='transparent';
-      return `<tr style="background:transparent;">
+      return `<tr style="background:rgba(255,255,255,0.75);">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
         <td style="${TD}">${c.type||'—'}</td>
         <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
@@ -7998,7 +7998,7 @@ function buildContractsTableHTML(activeC,totalCM){
     const rows=withRev.map((c,i)=>{
       const bg='transparent';
       const rl=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?`يومي(${c.revDays||0})`:'';
-      return `<tr style="background:transparent;">
+      return `<tr style="background:rgba(255,255,255,0.75);">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
         <td style="${TD}">${c.type||'—'}</td>
         <td style="${TD}text-align:right;">${fmt(c.monthly||0)}</td>
@@ -8089,7 +8089,7 @@ function exportQuarterlyPDF(){
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:7.5px;color:#000;direction:rtl;line-height:1.5;margin:0;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:38mm 12mm 8mm;}h1{font-size:11px;text-align:center;margin:0 0 5px;color:#000;font-weight:900;border-bottom:2px solid #244062;padding-bottom:3px;}.sec-title{display:block;margin:5px 0 2px;padding:2px 6px;background:#244062;color:#fff;font-size:7px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:6.5px;}thead th{padding:2px 3px;border:1px solid #244062;color:#fff;font-size:6.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:1.5px 3px;border:1px solid #bbb;color:#000;background:transparent;}tfoot td{padding:2px 3px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:transparent;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const itemSumQ=buildItemSummaryHTML(qExp,qPO);
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg" src="'+BG+'">':''}
@@ -8161,7 +8161,7 @@ function exportMonthlyPDF(){
   const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=60;});
   const cmpSavAmt=calcCmpSavings();
   const contractSavAmt=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:7.5px;color:#000;direction:rtl;line-height:1.5;margin:0;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:38mm 12mm 8mm;}h1{font-size:11px;text-align:center;margin:0 0 5px;color:#000;font-weight:900;border-bottom:2px solid #244062;padding-bottom:3px;}.sec-title{display:block;margin:5px 0 2px;padding:2px 6px;background:#244062;color:#fff;font-size:7px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:6.5px;}thead th{padding:2px 3px;border:1px solid #244062;color:#fff;font-size:6.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:1.5px 3px;border:1px solid #bbb;color:#000;background:transparent;}tfoot td{padding:2px 3px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:transparent;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const itemSumM=buildItemSummaryHTML(monthExp,monthPO);
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg" src="'+BG+'">':''}<div class="pdf-content">
