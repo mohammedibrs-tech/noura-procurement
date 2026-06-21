@@ -2045,12 +2045,34 @@ async function initBudget(){
   budgetCalcMonth();
 }
 // ── مساعد: يُعيد مفتاح الشهر للـ PO (YYYY-MM) مع دعم created_at كـ fallback ──
+// ملاحظة: POs الـ seed لسنة 2025 كلها تحمل تاريخ 2025-01-01 (تاريخ بيانات افتراضي)
+// لذا نعيد '2025' بدلاً من '2025-01' للتمييز، وفي الفلترة نعالجها كسنوية فقط
 function poMonthKey(p){
   var d=(p.date||'').trim();
+  // تعرف على seed data لسنة 2025: تاريخها 2025-01-01 وid في نطاق الـ seed
+  var id=p.id||0;
+  if(d==='2025-01-01' && id>=1700000001 && id<=1700000099){
+    // هذا PO من الـ seed - نضع شهر يناير لكنه يُظهر في أي شهر بسنة 2025
+    // نستخدم marker خاص: نعيد 'SEED-2025' ليميزه منطق الفلترة
+    return 'SEED-2025';
+  }
   if(d.length>=7 && d!=='Invalid Date') return d.substring(0,7);
   var ca=(p.created_at||'').trim();
   if(ca.length>=7) return ca.substring(0,7);
   return '';
+}
+// فلتر POs مع دعم seed data لسنة 2025
+function poInMonthKey(p, key){
+  var pmk=poMonthKey(p);
+  if(pmk===key) return true;
+  // seed data لسنة 2025 تظهر في كل أشهر 2025
+  if(pmk==='SEED-2025' && key.startsWith('2025-')) return true;
+  return false;
+}
+function poInYear(p, year){
+  var pmk=poMonthKey(p);
+  if(pmk==='SEED-2025') return year==='2025'||year===2025;
+  return pmk.startsWith(year+'-');
 }
 // ── مساعد: يُعيد مفتاح الشهر للمصروف (YYYY-MM) مع اعتبار month_key أولاً ──
 function expMonthKey(e){
@@ -4710,7 +4732,7 @@ function exportMonthlyExcel(){
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
@@ -4783,7 +4805,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A1',`التقرير الربع سنوي — الربع ${qName[q]} ${year}`,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   ws1['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r++;
   ['إجمالي المصروفات','طلبات PO','إجمالي العقود الشهري','توفير التفاوض'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
-  [totalSpent,poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
+  [totalSpent,poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
     sc(ws1,String.fromCharCode(65+i)+(r+1),v,{font:{name:'Calibri',sz:13,bold:true,color:[RD,NK,{rgb:'7C3AED'},GR][i]},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});
   });r+=2;
   // مقارنة الأشهر
@@ -5150,7 +5172,7 @@ function buildMonthlyReport(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الشهر
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
 
   // فواتير Petty Cash
   const monthPC=pcGroups[key]||[];
@@ -5298,7 +5320,7 @@ function exportMonthlyExcel(){
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
@@ -5371,7 +5393,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A1',`التقرير الربع سنوي — الربع ${qName[q]} ${year}`,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   ws1['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r++;
   ['إجمالي المصروفات','طلبات PO','إجمالي العقود الشهري','توفير التفاوض'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
-  [totalSpent,poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
+  [totalSpent,poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
     sc(ws1,String.fromCharCode(65+i)+(r+1),v,{font:{name:'Calibri',sz:13,bold:true,color:[RD,NK,{rgb:'7C3AED'},GR][i]},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});
   });r+=2;
   // مقارنة الأشهر
@@ -5714,7 +5736,7 @@ function buildMonthlyReport(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الشهر
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
 
   // فواتير Petty Cash
   const monthPC=pcGroups[key]||[];
@@ -5871,7 +5893,7 @@ function buildQuarterlyReport(){
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الربع
-  const qPO=poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m));
+  const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
 
   // Petty Cash الربع
   const qPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
@@ -6092,7 +6114,7 @@ function exportMonthlyExcel(){
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
@@ -6165,7 +6187,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A1',`التقرير الربع سنوي — الربع ${qName[q]} ${year}`,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   ws1['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r++;
   ['إجمالي المصروفات','طلبات PO','إجمالي العقود الشهري','توفير التفاوض'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
-  [totalSpent,poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
+  [totalSpent,poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
     sc(ws1,String.fromCharCode(65+i)+(r+1),v,{font:{name:'Calibri',sz:13,bold:true,color:[RD,NK,{rgb:'7C3AED'},GR][i]},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});
   });r+=2;
   // مقارنة الأشهر
@@ -6508,7 +6530,7 @@ function buildMonthlyReport(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الشهر
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
 
   // فواتير Petty Cash
   const monthPC=pcGroups[key]||[];
@@ -6656,7 +6678,7 @@ function exportMonthlyExcel(){
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
@@ -6729,7 +6751,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A1',`التقرير الربع سنوي — الربع ${qName[q]} ${year}`,{font:{name:'Calibri',sz:14,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   ws1['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r++;
   ['إجمالي المصروفات','طلبات PO','إجمالي العقود الشهري','توفير التفاوض'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
-  [totalSpent,poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
+  [totalSpent,poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))).length,totalContractMonthly,totalSaving].forEach((v,i)=>{
     sc(ws1,String.fromCharCode(65+i)+(r+1),v,{font:{name:'Calibri',sz:13,bold:true,color:[RD,NK,{rgb:'7C3AED'},GR][i]},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});
   });r+=2;
   // مقارنة الأشهر
@@ -6786,7 +6808,7 @@ function buildSemiReport(){
   const halfName=half===1?'الأول':'الثاني';
   const sExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=sExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const sPO=poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m));
+  const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
@@ -6848,7 +6870,7 @@ function exportSemiPDF(){
   const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
   const sAllPCpdf=months.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const w=window.open('','_blank');
-  const sPOList=months.map(m=>poSaved.filter(p=>poMonthKey(p)===(year+'-'+m))).flat();
+  const sPOList=months.map(m=>poSaved.filter(p=>poInMonthKey(p,year+'-'+m))).flat();
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>التقرير النصف سنوي — النصف ${halfName} ${year}</h1><p class="sub">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')} | إدارة المشتريات — نورة لتعليم القيادة</p>${content}<h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -6868,7 +6890,7 @@ function exportSemiExcel(){
   sc(ws,'A1',`التقرير النصف سنوي — النصف ${halfName} ${year}`,{font:{name:'Calibri',sz:13,bold:true,color:W},fill:{patternType:'solid',fgColor:NK},alignment:{horizontal:'center'}});
   ws['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r++;
   ['إجمالي المصروفات','طلبات PO','فواتير PC','الشهري للعقود',''].forEach((h,i)=>sc(ws,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
-  const sPO=poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m));
+  const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
@@ -7408,7 +7430,7 @@ function buildAnnualReport(){
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
   const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const yPO=poSaved.filter(p=>poMonthKey(p).startsWith(year+'-'));
+  const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
@@ -7456,7 +7478,7 @@ function buildAnnualReport(){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div class="card"><div class="card-header"><h3>تحليل الأصناف عالية الصرف</h3></div><div class="card-body"><table class="tbl"><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>${topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;font-weight:600;color:#111;">${v.toLocaleString('ar-SA')} ر.س</td><td style="text-align:center;color:#555;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}</tbody></table></div></div>
-    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body"><h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(poSaved.filter(p=>poMonthKey(p).startsWith(year)))}${buildContractsTableHTML(activeC,totalCMonthly)}</div></div>
+    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body"><h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(poSaved.filter(p=>poInYear(p,year)))}${buildContractsTableHTML(activeC,totalCMonthly)}</div></div>
   </div>
   ${expiringC.length?`<div class="card" style="border:1px solid #C53030;margin-bottom:16px;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">عقود تنتهي خلال 90 يوم</h3></div><div class="card-body">${expiringC.map(c=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span style="font-weight:600;">${c.vendor} — ${c.type}</span><span style="color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم | ${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span></div>`).join('')}</div></div>`:''}
   <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">فرص التوفير والتوصيات ${year}</h3></div><div class="card-body" style="font-size:12px;"><p style="margin-bottom:8px;padding:8px;background:#F8FAFB;">إجمالي وفر التفاوض: <strong style="color:#276749;">${totalSaving.toLocaleString('ar-SA')} ر.س</strong></p>${topItems.length?`<p style="margin-bottom:8px;">أعلى صنف: <strong>${topItems[0][0]}</strong> — يُنصح بدراسة عقد سنوي لتوفير التكاليف.</p>`:''}${expiringC.length?`<p>هناك <strong>${expiringC.length} عقد</strong> تنتهي قريباً — فرصة لإعادة التفاوض.</p>`:''}</div></div>`;
@@ -7469,7 +7491,7 @@ function exportAnnualPDF(){
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
   const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const yPO=poSaved.filter(p=>poMonthKey(p).startsWith(year+'-'));
+  const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
@@ -7510,7 +7532,7 @@ function exportAnnualExcel(){
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
   const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const yPO=poSaved.filter(p=>poMonthKey(p).startsWith(year+'-'));
+  const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
@@ -7855,7 +7877,7 @@ function buildMonthlyReport(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الشهر
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===key);
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
 
   // فواتير Petty Cash
   const monthPC=pcGroups[key]||[];
@@ -8161,7 +8183,7 @@ function exportMonthlyPDF(){
   const SIG=SIG_URL;const BG=FORM_BG;
   const monthExp=expenses.filter(e=>expMonthKey(e)===(year+'-'+month));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const monthPO=poSaved.filter(p=>poMonthKey(p)===(year+'-'+month));
+  const monthPO=poSaved.filter(p=>poInMonthKey(p,year+'-'+month));
   const monthPC=pcGroups[year+'-'+month]||[];
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
@@ -8220,7 +8242,7 @@ function buildQuarterlyReport(){
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
   // PO الربع
-  const qPO=poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m));
+  const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
 
   // Petty Cash الربع
   const qPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
@@ -8385,7 +8407,7 @@ function exportQuarterlyPDF(){
 <h2>ملخص الربع</h2>
 <table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>
 <tr><td>إجمالي المصروفات</td><td style="text-align:right;" class="val">${fmt2(totalSpent)} ر.س</td></tr>
-<tr><td>طلبات الشراء PO</td><td style="text-align:right;" class="val">${poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)).length}</td></tr>
+<tr><td>طلبات الشراء PO</td><td style="text-align:right;" class="val">${poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))).length}</td></tr>
 <tr><td>فواتير Petty Cash</td><td style="text-align:right;" class="val">${qPCAll.length}</td></tr>
 <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;" class="val">${fmt2(totalCM)} ر.س</td></tr>
 <tr><td>وفر التفاوض</td><td style="text-align:right;" class="val">${fmt2(totalSaving)} ر.س</td></tr>
@@ -8408,7 +8430,7 @@ function exportQuarterlyPDF(){
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر الأصناف</th></tr></thead>
 <tbody>${deptSorted.map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td><td>${ti||'—'}</td></tr>`;}).join('')}</tbody></table>
 <h2>طلبات الشراء (PO)</h2>
-${buildPOTableHTML(poSaved.filter(p=>months.some(m=>poMonthKey(p)===year+'-'+m)))}
+${buildPOTableHTML(poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m))))}
 ${buildContractsTableHTML(activeC,totalCM)}
 </body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
