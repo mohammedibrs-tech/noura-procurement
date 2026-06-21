@@ -2281,20 +2281,19 @@ function renderExpenses(){
   var filterYear=fyEl ? fyEl.value : '';
   
   var filtered = expenses.filter(function(e) {
-    var mKey = e.month_key || '';
-    var dKey = (e.expense_date || '').substring(0, 7);
-    var eYear = '', eMonth = '';
-    if (mKey.includes('-')) {
-      var parts = mKey.split('-');
-      eYear = parts[0]; eMonth = parts[1];
-    } else if (dKey.includes('-')) {
-      var parts = dKey.split('-');
-      eYear = parts[0]; eMonth = parts[1];
-    }
-    // ضمان الفلترة الصحيحة لشهر مايو 2026
-    if (filterMonth && filterYear) return eYear === filterYear && eMonth === filterMonth;
-    if (filterMonth) return eMonth === filterMonth;
-    if (filterYear) return eYear === filterYear;
+    var mKey = (e.month_key || '').trim();
+    var dKey = (e.expense_date || '').trim().substring(0, 7);
+    // استخدم month_key أولاً، ثم expense_date
+    var key = (mKey.length === 7) ? mKey : (dKey.length === 7 ? dKey : '');
+    if (!key) return !filterMonth && !filterYear;
+    var parts = key.split('-');
+    var eYear = parts[0] || '';
+    var eMonth = parts[1] || '';
+    var fy = (filterYear || '').toString().trim();
+    var fm = (filterMonth || '').toString().trim();
+    if (fm && fy) return eYear === fy && eMonth === fm;
+    if (fm) return eMonth === fm;
+    if (fy) return eYear === fy;
     return true;
   });
   if(!filtered.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات لهذا الشهر</td></tr>';
@@ -6874,21 +6873,8 @@ function exportSemiPDF(){
   const w=window.open('','_blank');
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const rsTitle=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>@page{size:A4;margin:14mm 12mm 14mm;}
-body{font-family:'Arial',sans-serif;font-size:8.5px;color:#111;direction:rtl;margin:0;padding:0;line-height:1.4;}
-.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}
-.pdf-content{position:relative;z-index:2;padding:25mm 12mm 16mm;}
-h1{font-size:14px;text-align:center;margin:0 0 12px;color:#111;font-weight:800;border-bottom:2px solid #244062;padding-bottom:6px;}
-.sec-title{display:block;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;font-size:8.5px;font-weight:700;border-right:4px solid #1a2e50;}
-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8px;}
-thead tr{background:#244062;}
-thead th{padding:4px 6px;border:1px solid #1a3358;color:#fff;font-size:8px;}
-tbody td{padding:3px 6px;border:1px solid #ccc;}
-tbody tr:nth-child(even){background:#f7f7f7;}
-tfoot td{padding:4px 6px;border:1px solid #ccc;border-top:2px solid #244062;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.po-section{page-break-before:always;}
-@media print{.bg-img{position:fixed;}.po-section table{font-size:7px;}}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>${rsTitle}</h1>${content}<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}</div></body></html>`);
+  const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>${BG?'<img src="'+BG+'" class="bg-img">':''}<div class="pdf-content"><h1>${rsTitle2}</h1>${content}<div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(sPOList)}${buildContractsTableHTML(sActiveC,sTotalCM)}${SIG_B}</div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
