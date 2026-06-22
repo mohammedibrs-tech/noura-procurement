@@ -2128,7 +2128,7 @@ function expMonthKey(e){
   return '';
 }
 // إجمالي المصروف لبند واحد = المبلغ + رسوم التحويل (إن وجدت)
-function expTotal(e){return (parseFloat(e.amount)||0)+(parseFloat(e.transfer_fee)||0);}
+function expTotal(e){return (expTotal(e))+(parseFloat(e.transfer_fee)||0);}
 
 function budgetCalcMonth(){
   // عهدة الشهر الواحد
@@ -2356,7 +2356,7 @@ function renderExpenses(){
     html+='<td><select onchange="expUpdate('+realIdx+',\'department\',this.value)" style="border:none;background:transparent;font-size:11px;width:140px;">'+opts+'</select></td>';
     html+='<td><input value="'+(e.invoice_num||'')+'" onchange="expUpdate('+realIdx+',\'invoice_num\',this.value)" style="border:none;background:transparent;width:90px;font-size:11px;" placeholder="—"></td>';
     html+='<td><input value="'+(e.item_name||'')+'" onchange="expUpdate('+realIdx+',\'item_name\',this.value)" style="border:none;background:transparent;width:100%;font-size:11px;"></td>';
-    html+='<td><input type="number" value="'+(parseFloat(e.amount)||0)+'" onchange="expUpdate('+realIdx+',\'amount\',this.value)" style="border:none;background:transparent;width:110px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
+    html+='<td><input type="number" value="'+(expTotal(e))+'" onchange="expUpdate('+realIdx+',\'amount\',this.value)" style="border:none;background:transparent;width:110px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
     html+='<td><input type="number" value="'+(parseFloat(e.transfer_fee)||0)+'" onchange="expUpdate('+realIdx+',\'transfer_fee\',this.value)" style="border:none;background:transparent;width:80px;font-size:11px;text-align:right;color:#7C3AED;" placeholder="0"></td>';
     html+='<td style="color:#64748B;font-size:11px;">'+(e.month_key||'—')+'</td>';
     html+='<td style="color:#64748B;font-size:11px;">'+(e.expense_date||'—')+'</td>';
@@ -2516,7 +2516,7 @@ function expExcel(){
     totalFees+=fee;
     sc(ws,`A${r+1}`,e.department||'—',dS(bg));
     sc(ws,`B${r+1}`,e.item_name||'—',dS(bg));
-    sc(ws,`C${r+1}`,parseFloat(e.amount)||0,{...dS(bg,RD,true),alignment:{horizontal:'right'}});
+    sc(ws,`C${r+1}`,expTotal(e),{...dS(bg,RD,true),alignment:{horizontal:'right'}});
     sc(ws,`D${r+1}`,fee>0?fee:'—',{...dS(bg,{rgb:'7C3AED'}),alignment:{horizontal:'right'}});
     sc(ws,`E${r+1}`,e.expense_date||'—',{...dS(bg),alignment:{horizontal:'center'}});
     sc(ws,`F${r+1}`,e.notes||'—',dS(bg));
@@ -2581,7 +2581,7 @@ function expPrint(){
   const deptMap={};
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
-  const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
+  const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(expTotal(e)).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
   const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#244062;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #244062;padding-right:8px;color:#244062;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#244062;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
@@ -4840,13 +4840,13 @@ function exportMonthlyExcel(){
   const key=year+'-'+month;
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -4876,7 +4876,7 @@ function exportMonthlyExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws,'A'+(r+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws,'B'+(r+1),e.item_name||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws,'C'+(r+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws,'C'+(r+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws,'D'+(r+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws,'E'+(r+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r++;
   });
@@ -4897,12 +4897,12 @@ function exportQuarterlyExcel(){
   const qName={1:'الأول',2:'الثاني',3:'الثالث',4:'الرابع'};
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
-  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -4921,7 +4921,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A'+(r+1),'مقارنة الأشهر',hS(NK));ws1['!merges'].push({s:{r,c:0},e:{r,c:4}});r++;
   ['الشهر','الإجمالي (ر.س)','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   months.forEach((m,i)=>{
-    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws1,'A'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws1,'B'+(r+1),mTotal,{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
@@ -5293,7 +5293,7 @@ function buildMonthlyReport(){
 
   // مصروفات الشهر
   const monthExp=expenses.filter(e=>expMonthKey(e)===key);
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
 
   // PO الشهر
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
@@ -5315,14 +5315,14 @@ function buildMonthlyReport(){
     const d=e.department||'أخرى';
     if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
-    deptMap[d].total+=parseFloat(e.amount)||0;
+    deptMap[d].total+=expTotal(e);
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
   });
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
 
   // أعلى الأصناف صرفاً
   const itemMap={};
-  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const el=document.getElementById('monthly-report-content');
@@ -5445,13 +5445,13 @@ function exportMonthlyExcel(){
   const key=year+'-'+month;
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -5481,7 +5481,7 @@ function exportMonthlyExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws,'A'+(r+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws,'B'+(r+1),e.item_name||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws,'C'+(r+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws,'C'+(r+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws,'D'+(r+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws,'E'+(r+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r++;
   });
@@ -5502,12 +5502,12 @@ function exportQuarterlyExcel(){
   const qName={1:'الأول',2:'الثاني',3:'الثالث',4:'الرابع'};
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
-  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -5526,7 +5526,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A'+(r+1),'مقارنة الأشهر',hS(NK));ws1['!merges'].push({s:{r,c:0},e:{r,c:4}});r++;
   ['الشهر','الإجمالي (ر.س)','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   months.forEach((m,i)=>{
-    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws1,'A'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws1,'B'+(r+1),mTotal,{font:{name:'Calibri',sz:10,bold:true,color:RD},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
@@ -5866,7 +5866,7 @@ function buildMonthlyReport(){
 
   // مصروفات الشهر
   const monthExp=expenses.filter(e=>expMonthKey(e)===key);
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
 
   // PO الشهر
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
@@ -5888,14 +5888,14 @@ function buildMonthlyReport(){
     const d=e.department||'أخرى';
     if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
-    deptMap[d].total+=parseFloat(e.amount)||0;
+    deptMap[d].total+=expTotal(e);
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
   });
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
 
   // أعلى الأصناف صرفاً
   const itemMap={};
-  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const el=document.getElementById('monthly-report-content');
@@ -6025,7 +6025,7 @@ function buildQuarterlyReport(){
     const d=(e.expense_date||e.created_at||'').substring(0,7);
     return months.some(m=>d===year+'-'+m);
   });
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
 
   // PO الربع
   const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
@@ -6036,7 +6036,7 @@ function buildQuarterlyReport(){
   // مصروفات شهر بشهر
   const monthlyBreakdown=months.map(m=>{
     const mExp=qExp.filter(e=>expMonthKey(e)===(year+'-'+m));
-    return{month:MONTHS_AR[m],total:mExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0)};
+    return{month:MONTHS_AR[m],total:mExp.reduce((s,e)=>s+expTotal(e),0)};
   });
 
   // إجمالي العقود
@@ -6046,12 +6046,12 @@ function buildQuarterlyReport(){
 
   // أعلى الأصناف
   const itemMap={};
-  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   // الإدارات
   const deptMap={};
-  qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
 
   const el=document.getElementById('quarterly-report-content');
@@ -6253,13 +6253,13 @@ function exportMonthlyExcel(){
   const key=year+'-'+month;
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -6289,7 +6289,7 @@ function exportMonthlyExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws,'A'+(r+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws,'B'+(r+1),e.item_name||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws,'C'+(r+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws,'C'+(r+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws,'D'+(r+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws,'E'+(r+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r++;
   });
@@ -6310,12 +6310,12 @@ function exportQuarterlyExcel(){
   const qName={1:'الأول',2:'الثاني',3:'الثالث',4:'الرابع'};
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
-  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'404040'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'555555'},LB={rgb:'F2F2F2'};
@@ -6334,7 +6334,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A'+(r+1),'مقارنة الأشهر',hS(NK));ws1['!merges'].push({s:{r,c:0},e:{r,c:4}});r++;
   ['الشهر','الإجمالي (ر.س)','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   months.forEach((m,i)=>{
-    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws1,'A'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws1,'B'+(r+1),mTotal,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
@@ -6674,7 +6674,7 @@ function buildMonthlyReport(){
 
   // مصروفات الشهر
   const monthExp=expenses.filter(e=>expMonthKey(e)===key);
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
 
   // PO الشهر
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
@@ -6696,14 +6696,14 @@ function buildMonthlyReport(){
     const d=e.department||'أخرى';
     if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
-    deptMap[d].total+=parseFloat(e.amount)||0;
+    deptMap[d].total+=expTotal(e);
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
   });
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
 
   // أعلى الأصناف صرفاً
   const itemMap={};
-  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const el=document.getElementById('monthly-report-content');
@@ -6896,13 +6896,13 @@ function exportMonthlyExcel(){
   const key=year+'-'+month;
   const monthName=MONTHS_AR[month];
   const monthExp=expenses.filter(e=>(e.expense_date||e.created_at||'').startsWith(key));
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
   const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const wb=XLSX.utils.book_new();
   const C={rgb:'244062'},W={rgb:'FFFFFF'},NK={rgb:'111111'},GR={rgb:'333333'},RD={rgb:'C53030'},LB={rgb:'F2F2F2'};
@@ -6942,7 +6942,7 @@ function exportMonthlyExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws2,'A'+(r2+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws2,'B'+(r2+1),e.item_name||'—',{font:{name:'Calibri',sz:10,bold:true},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws2,'C'+(r2+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws2,'C'+(r2+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws2,'D'+(r2+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws2,'E'+(r2+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r2++;
   });
@@ -6972,15 +6972,15 @@ function exportQuarterlyExcel(){
   const qName={1:'الأول',2:'الثاني',3:'الثالث',4:'الرابع'};
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
   const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const itemMap={};
-  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'244062'},W={rgb:'FFFFFF'},NK={rgb:'111111'},LB={rgb:'F2F2F2'};
@@ -7001,7 +7001,7 @@ function exportQuarterlyExcel(){
   sc(ws1,'A'+(r+1),'المصروفات شهراً بشهر',hS());ws1['!merges'].push({s:{r,c:0},e:{r,c:3}});r++;
   ['الشهر','الاجمالي','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   months.forEach((m,i)=>{
-    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mTotal=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws1,'A'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws1,'B'+(r+1),mTotal,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
@@ -7039,7 +7039,7 @@ function exportQuarterlyExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws2,'A'+(r2+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws2,'B'+(r2+1),e.item_name||'—',{font:{name:'Calibri',sz:10,bold:true},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws2,'C'+(r2+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws2,'C'+(r2+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws2,'D'+(r2+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws2,'E'+(r2+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r2++;
   });
@@ -7068,21 +7068,21 @@ function exportSemiPDF(){
   const BG=FORM_BG;
   const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
   const sExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=sExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=sExp.reduce((s,e)=>s+expTotal(e),0);
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSavAmt=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const deptMap={};
-  sExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const itemMap={};sExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  sExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(expTotal(e));});
+  const itemMap={};sExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const monthBreak=months.map(m=>{const t=sExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
+  const monthBreak=months.map(m=>{const t=sExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);return{m:MONTHS_AR[m],t};});
   const sPOVal=sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const qty=parseFloat(r.qty||r.count)||0;const price=parseFloat(r.price||r.unitPrice)||0;const b=qty*price;return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const today=new Date().toLocaleDateString('ar-SA');
   const rsTitle=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;height:210mm;overflow:hidden;page-break-after:always;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 18mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.92);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -7123,15 +7123,15 @@ function exportSemiExcel(){
   const months=half===1?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
   const halfName=half===1?'الأول':'الثاني';
   const sExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
-  const totalSpent=sExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=sExp.reduce((s,e)=>s+expTotal(e),0);
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  sExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  sExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const itemMap={};
-  sExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  sExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'244062'},W={rgb:'FFFFFF'},NK={rgb:'111111'},LB={rgb:'F2F2F2'};
@@ -7152,7 +7152,7 @@ function exportSemiExcel(){
   sc(ws1,'A'+(r+1),'المصروفات شهراً بشهر',hS());ws1['!merges'].push({s:{r,c:0},e:{r,c:3}});r++;
   ['الشهر','الاجمالي','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   months.forEach((m,i)=>{
-    const mTotal=sExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mTotal=sExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws1,'A'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws1,'B'+(r+1),mTotal,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
@@ -7190,7 +7190,7 @@ function exportSemiExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws2,'A'+(r2+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws2,'B'+(r2+1),e.item_name||'—',{font:{name:'Calibri',sz:10,bold:true},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws2,'C'+(r2+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws2,'C'+(r2+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws2,'D'+(r2+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws2,'E'+(r2+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r2++;
   });
@@ -7736,15 +7736,15 @@ function exportAnnualExcel(){
   const year=document.getElementById('ra-year').value;
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
-  const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=yExp.reduce((s,e)=>s+expTotal(e),0);
   const yPO=poSaved.filter(p=>poInYear(p,year));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
-  yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const itemMap={};
-  yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const wb=XLSX.utils.book_new();
   const C={rgb:'244062'},W={rgb:'FFFFFF'},NK={rgb:'111111'},LB={rgb:'F2F2F2'};
@@ -7765,9 +7765,9 @@ function exportAnnualExcel(){
   sc(ws1,'A'+(r+1),'المصروفات ربع سنوياً',hS());ws1['!merges'].push({s:{r,c:0},e:{r,c:3}});r++;
   ['الربع','الشهر','الاجمالي الشهري','النسبة'].forEach((h,i)=>sc(ws1,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   [{name:'الأول',months:['01','02','03']},{name:'الثاني',months:['04','05','06']},{name:'الثالث',months:['07','08','09']},{name:'الرابع',months:['10','11','12']}].forEach(q=>{
-    const qTotal=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const qTotal=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+expTotal(e),0);
     q.months.forEach((m,mi)=>{
-      const mTotal=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const mTotal=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);
       const bg=r%2===0?{rgb:'FFFFFF'}:LB;
       sc(ws1,'A'+(r+1),mi===0?'الربع '+q.name:'',{font:{name:'Calibri',sz:10,bold:mi===0},fill:{patternType:'solid',fgColor:bg}});
       sc(ws1,'B'+(r+1),MONTHS_AR[m],{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
@@ -7807,7 +7807,7 @@ function exportAnnualExcel(){
     const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     sc(ws2,'A'+(r2+1),e.department||'—',{font:{name:'Calibri',sz:10},fill:{patternType:'solid',fgColor:bg}});
     sc(ws2,'B'+(r2+1),e.item_name||'—',{font:{name:'Calibri',sz:10,bold:true},fill:{patternType:'solid',fgColor:bg}});
-    sc(ws2,'C'+(r2+1),parseFloat(e.amount)||0,{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
+    sc(ws2,'C'+(r2+1),expTotal(e),{font:{name:'Calibri',sz:10,bold:true,color:NK},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'right'}});
     sc(ws2,'D'+(r2+1),e.expense_date||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg},alignment:{horizontal:'center'}});
     sc(ws2,'E'+(r2+1),e.notes||'—',{font:{name:'Calibri',sz:10,color:{rgb:'64748B'}},fill:{patternType:'solid',fgColor:bg}});r2++;
   });
@@ -7833,7 +7833,7 @@ function buildAnnualReport(){
   const year=document.getElementById('ra-year').value;
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
-  const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=yExp.reduce((s,e)=>s+expTotal(e),0);
   const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
@@ -7847,12 +7847,12 @@ function buildAnnualReport(){
   const quarters=[
     {name:'الربع الأول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},
     {name:'الربع الثالث',months:['07','08','09']},{name:'الربع الرابع',months:['10','11','12']},
-  ].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{...q,total:t};});
-  const deptMap={};yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
+  ].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+expTotal(e),0);return{...q,total:t};});
+  const deptMap={};yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
-  const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t,key:m};});
+  const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);return{m:MONTHS_AR[m],t,key:m};});
   const maxT=Math.max(...monthlyData.map(x=>x.t),1);
   const el=document.getElementById('annual-report-content');if(!el)return;
   el.innerHTML=`
@@ -7894,21 +7894,21 @@ function exportAnnualPDF(){
   const BG=FORM_BG;
   const ALL_MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   const yExp=expenses.filter(e=>expMonthKey(e).startsWith(year+'-'));
-  const totalSpent=yExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=yExp.reduce((s,e)=>s+expTotal(e),0);
   const yPO=poSaved.filter(p=>poInYear(p,year));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAnnual=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const quarters=[{name:'الربع الاول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},{name:'الربع الثالث',months:['07','08','09']},{name:'الربع الرابع',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{...q,total:t};});
-  const deptMap={};yExp.forEach(e=>{const d=e.department||'اخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
+  const quarters=[{name:'الربع الاول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},{name:'الربع الثالث',months:['07','08','09']},{name:'الربع الرابع',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+expTotal(e),0);return{...q,total:t};});
+  const deptMap={};yExp.forEach(e=>{const d=e.department||'اخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expTotal(e);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
-  const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
+  const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);return{m:MONTHS_AR[m],t};});
   const yPOVal=yPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const qty=parseFloat(r.qty||r.count)||0;const price=parseFloat(r.price||r.unitPrice)||0;const b=qty*price;return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;height:210mm;overflow:hidden;page-break-after:always;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 18mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.92);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const today=new Date().toLocaleDateString('ar-SA');
   const deptRows=deptSorted.map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -8208,7 +8208,7 @@ function buildMonthlyReport(){
 
   // مصروفات الشهر
   const monthExp=expenses.filter(e=>expMonthKey(e)===key);
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
 
   // PO الشهر
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
@@ -8230,14 +8230,14 @@ function buildMonthlyReport(){
     const d=e.department||'أخرى';
     if(d==='إدارة المشتريات')return; // استثناء إدارة المشتريات
     if(!deptMap[d])deptMap[d]={total:0,items:{}};
-    deptMap[d].total+=parseFloat(e.amount)||0;
+    deptMap[d].total+=expTotal(e);
     deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;
   });
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
 
   // أعلى الأصناف صرفاً
   const itemMap={};
-  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const el=document.getElementById('monthly-report-content');
@@ -8404,7 +8404,7 @@ function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:11px;font-weight:700;background:#244062;text-align:right;';
   const TD='padding:5px 7px;border:1px solid #ccc;font-size:11px;background:rgba(255,255,255,0.8);';
-  const TDF='padding:5px 7px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.9);font-weight:800;';
+  const TDF='padding:5px 7px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.97);font-weight:800;';
   const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
 
   const CATLABEL={'security':'حراسة امنية','maintenance':'صيانة','cleaning':'نظافة','service':'خدمات اخرى','revenue':'عقد بايراد','telecom':'اشتراك اتصالات','software':'ترخيص برامج','subscription':'اشتراك سنوي'};
@@ -8416,7 +8416,7 @@ function buildContractsTableHTML(activeC,totalCM){
 
   // --- الجدول الرئيسي الموحد ---
   const allRows = activeC.map((c,i)=>{
-    const rowBg = i%2===0 ? 'rgba(255,255,255,0.85)' : 'rgba(245,248,255,0.85)';
+    const rowBg = i%2===0 ? 'rgba(255,255,255,0.95)' : 'rgba(245,248,255,0.95)';
     const renLabel = RENLABEL[c.renewal]||c.renewal||'يلزم توقيع عقد جديد';
     const stLabel  = STLABEL[c.status]||c.status||'—';
     const monthly  = parseFloat(c.monthly)||0;
@@ -8469,15 +8469,15 @@ function buildContractsTableHTML(activeC,totalCM){
 function buildPCDetailsHTML(pcList){
   if(!pcList||!pcList.length)return '<p>لا توجد فواتير بيتي كاش</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
-  const total=pcList.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const total=pcList.reduce((s,e)=>s+expTotal(e),0);
   const deptMap={};const itemMap={};
   pcList.forEach(e=>{
     const d=e.department||'أخرى';
     if(!deptMap[d])deptMap[d]=0;
-    deptMap[d]+=parseFloat(e.amount)||0;
+    deptMap[d]+=expTotal(e);
     const it=e.item_name||'غير محدد';
     if(!itemMap[it])itemMap[it]=0;
-    itemMap[it]+=parseFloat(e.amount)||0;
+    itemMap[it]+=expTotal(e);
   });
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const deptRows=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]).map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;">${fmt(v)}</td><td style="text-align:center;">${total>0?((v/total)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -8505,24 +8505,24 @@ function exportQuarterlyPDF(){
   const allMonths={1:['01','02','03'],2:['04','05','06'],3:['07','08','09'],4:['10','11','12']};
   const months=allMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===(year+'-'+m)));
-  const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=qExp.reduce((s,e)=>s+expTotal(e),0);
   const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAmtQ=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const itemMap={};qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const itemMap={};qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const deptMap={};qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const deptMap={};qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(expTotal(e));});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
-  const monthBreak=months.map(m=>{const t=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
+  const monthBreak=months.map(m=>{const t=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+expTotal(e),0);return{m:MONTHS_AR[m],t};});
   const qPOVal=qPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0);
   const deptRows=deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topI||'—'}</td></tr>`;}).join('');
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:5px 7px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(expTotal(e))}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;height:210mm;overflow:hidden;page-break-after:always;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 18mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:5px 7px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.95);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const itemSumQ=buildItemSummaryHTML(qExp,qPO);
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg" src="'+BG+'">':''}
@@ -8554,7 +8554,7 @@ ${buildContractsTableHTML(activeC,totalCM)}
 
 
 function buildItemSummaryHTML(expList, poList) {
-  var totalExp = expList.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  var totalExp = expList.reduce(function(s,e){return s+expTotal(e);},0);
   var totalPO = poList.reduce(function(s,p){
     var rows=[];try{rows=JSON.parse(p.rows||'[]');}catch(e){}
     return s+rows.reduce(function(ss,r){
@@ -8578,19 +8578,19 @@ function exportMonthlyPDF(){
   const BG=FORM_BG;
   const monthName=MONTHS_AR[month]||month;
   const monthExp=expenses.filter(e=>expMonthKey(e)===(year+'-'+month));
-  const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalSpent=monthExp.reduce((s,e)=>s+expTotal(e),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,year+'-'+month));
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSavAmt=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const deptMap={};
-  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const itemMap={};monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(expTotal(e));});
+  const itemMap={};monthExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+expTotal(e);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const monthPOVal=monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const qty=parseFloat(r.qty||r.count)||0;const price=parseFloat(r.price||r.unitPrice)||0;const b=qty*price;return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const today=new Date().toLocaleDateString('ar-SA');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;height:210mm;overflow:hidden;page-break-after:always;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 18mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.92);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const w=window.open('','_blank');
