@@ -2866,7 +2866,7 @@ function renderPoSaved(){
   var html='';
   for(var i=0;i<poSaved.length;i++){
     var s=poSaved[i];
-    var tot=0;try{var rr=JSON.parse(s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
+    var tot=0;try{var rr=typeof s.rows==='string'?JSON.parse(s.rows||'[]'):(s.rows||[]);rr.forEach(function(r){const t=parseFloat(r.total)||0;if(t>0){tot+=t*1.15;}else{const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);tot+=(r.vatType==='added'?b*1.15:b);}});}catch(e){console.warn('rows parse error',e);}
     var totWithVat=(tot*1.15).toFixed(2);
     html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
       '<div class="saved-item-info">'+
@@ -2892,7 +2892,7 @@ function poExcel(){poExcelData({
   rows:poGetRows()
 });}
 
-function poExcelById(i){const s=poSaved[i];if(!s)return;poExcelData({...s,rows:JSON.parse(s.rows||'[]')});}
+function poExcelById(i){const s=poSaved[i];if(!s)return;const rows=typeof s.rows==='string'?JSON.parse(s.rows||'[]'):(s.rows||[]);poExcelData({...s,rows});}
 
 function poExcelData(d){
   const bin=atob(LPO_B64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
@@ -8594,13 +8594,21 @@ async function loadFromSupabase(){
   }else cmpSaved=cmpLocal;
   localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
 
-  // PO
+  // PO — دمج Supabase مع localStorage مع الأولوية للمحلي دائماً
   const poRes=await sbGetAll('orders');
   const poLocal=JSON.parse(localStorage.getItem('po_saved_local')||'[]');
   if(poRes&&poRes.length){
-    const sbMapped=poRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
-    poSaved=mergeById(sbMapped,poLocal);
-  }else poSaved=poLocal;
+    const sbMapped=poRes.map(r=>({...r,rows:typeof r.rows==='string'?r.rows:JSON.stringify(r.rows)}));
+    // دمج: ابدأ بالمحلي ثم أضف ما هو في Supabase فقط وليس محلياً
+    const merged=[...poLocal];
+    sbMapped.forEach(function(sbItem){
+      const existsLocal=merged.some(function(l){return String(l.id)===String(sbItem.id)||l.num===sbItem.num;});
+      if(!existsLocal) merged.push(sbItem);
+    });
+    poSaved=merged;
+  }else{
+    poSaved=poLocal;
+  }
   localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
 
   // التعاميد
