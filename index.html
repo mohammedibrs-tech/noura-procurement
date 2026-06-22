@@ -1857,10 +1857,25 @@ async function doLogin(){
   const p=document.getElementById('l-pass').value;
   const h=await sha256(p);
   if(u==='admin'&&h===ADMIN_HASH){
+    // احفظ بيانات الدخول تلقائياً
+    localStorage.setItem('saved_user',u);
+    localStorage.setItem('saved_pass',p);
     document.getElementById('login-screen').style.display='none';
     init();
   }else{
     document.getElementById('l-err').style.display='block';
+  }
+}
+
+// تشغيل تلقائي عند وجود بيانات محفوظة
+async function autoLogin(){
+  const u=localStorage.getItem('saved_user');
+  const p=localStorage.getItem('saved_pass');
+  if(!u||!p) return;
+  const h=await sha256(p);
+  if(u==='admin'&&h===ADMIN_HASH){
+    document.getElementById('login-screen').style.display='none';
+    init();
   }
 }
 
@@ -2813,53 +2828,68 @@ async function poDeleteById(i){
 }
 
 async function poSave(){
-  const co=document.getElementById('po-co').value.trim();
-  if(!co){toast('أدخل اسم الشركة',true);return;}
-  autoAddSupplier(co);
-  const terms=poGetTerms();
-  const data={
-    company:co,num:document.getElementById('po-num').value,date:document.getElementById('po-date').value,
-    vat:document.getElementById('po-vat').value,terms:terms,email:document.getElementById('po-email').value,
-    phone:document.getElementById('po-phone').value,addr:document.getElementById('po-addr').value,
-    del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
-    del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
-    quote:document.getElementById('po-quote').value,rows:JSON.stringify(poGetRows()),
-    sig1:document.getElementById('po-sig1')?.value||'',
-    sig2:document.getElementById('po-sig2')?.value||'',
-    sig3:document.getElementById('po-sig3')?.value||'',
-    created_at:new Date().toISOString()
-  };
-  if(poEditIdx !== null){
-    // وضع التعديل — حدّث السجل الموجود
-    var existing=poSaved[poEditIdx];
-    var updatedData={...existing,...data};
-    poSaved[poEditIdx]=updatedData;
-    localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-    // تحديث Supabase
-    if(existing.id) sbUpdate('orders',existing.id,data).catch(function(){});
-    poResetEdit();
-    renderPoSaved();
-    toast('تم حفظ التعديلات ✅');
-  } else {
-    // إضافة جديدة
-    var newRecord={...data,id:Date.now()};
-    var savedToCloud=false;
-    try{
-      const res=await sbInsert('orders',data);
-      if(res&&Array.isArray(res)&&res[0]){newRecord=res[0];savedToCloud=true;}
-      else{console.warn('sbInsert returned unexpected:',res);}
-    }catch(e){
-      console.error('poSave sbInsert error:',e.message);
-      toast('خطأ في الحفظ: '+e.message,true);
+  try{
+    const co=document.getElementById('po-co').value.trim();
+    if(!co){toast('أدخل اسم الشركة',true);return;}
+    autoAddSupplier(co);
+    const terms=poGetTerms();
+    const data={
+      id:'local_'+Date.now(),
+      company:co,
+      num:document.getElementById('po-num').value||'',
+      date:document.getElementById('po-date').value||'',
+      vat:document.getElementById('po-vat')?.value||'',
+      terms:terms,
+      email:document.getElementById('po-email')?.value||'',
+      phone:document.getElementById('po-phone')?.value||'',
+      addr:document.getElementById('po-addr')?.value||'',
+      del_email:document.getElementById('po-del-email')?.value||'',
+      del_phone:document.getElementById('po-del-phone')?.value||'',
+      del_addr:document.getElementById('po-del-addr')?.value||'',
+      del_vat:document.getElementById('po-del-vat')?.value||'',
+      quote:document.getElementById('po-quote')?.value||'',
+      rows:JSON.stringify(poGetRows()),
+      sig1:document.getElementById('po-sig1')?.value||'',
+      sig2:document.getElementById('po-sig2')?.value||'',
+      sig3:document.getElementById('po-sig3')?.value||'',
+      created_at:new Date().toISOString()
+    };
+    if(poEditIdx!==null){
+      var existing=poSaved[poEditIdx];
+      poSaved[poEditIdx]={...existing,...data,id:existing.id};
+      localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+      renderPoSaved();
+      toast('تم حفظ التعديلات ✅');
+      if(existing.id&&!String(existing.id).startsWith('local_')){
+        sbUpdate('orders',existing.id,data).catch(function(){});
+      }
+      poResetEdit();
+    } else {
+      // احفظ محلياً أولاً — فوراً بدون انتظار
+      poSaved.unshift(data);
+      localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+      renderPoSaved();
+      toast('تم الحفظ ✅');
+      // ثم حاول رفع Supabase في الخلفية
+      try{
+        const sbData={...data};delete sbData.id;
+        const res=await sbInsert('orders',sbData);
+        if(res&&Array.isArray(res)&&res[0]){
+          // حدّث الـ id المحلي بالـ id من Supabase
+          const sbId=res[0].id;
+          const localIdx=poSaved.findIndex(p=>p.id===data.id);
+          if(localIdx!==-1){poSaved[localIdx]={...poSaved[localIdx],id:sbId};}
+          localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+        }
+      }catch(e){
+        console.warn('Supabase sync failed (saved locally):',e.message);
+      }
     }
-    poSaved.unshift(newRecord);
-    localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-    renderPoSaved();
-    if(savedToCloud)toast('تم الحفظ في السحابة ✅');
-    else toast('تم الحفظ محلياً فقط — تحقق من الاتصال',false);
+  }catch(e){
+    console.error('poSave error:',e);
+    toast('خطأ: '+e.message,true);
   }
 }
-
 function renderPoSaved(){
   var el=document.getElementById('po-saved');if(!el)return;
   if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
@@ -8287,7 +8317,7 @@ function buildMonthlyReport(){
 
 
 function buildPOTableHTML(poList){
-  if(!poList||!poList.length) return '<p style="font-size:10px;color:#555;margin:3px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
+  if(!poList||!poList.length) return '<p style="font-size:11px;color:#555;margin:3px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   let totalVal=0;
   const items=poList.map(p=>{
@@ -8305,10 +8335,10 @@ function buildPOTableHTML(poList){
   const half=Math.ceil(items.length/2);
   const left=items.slice(0,half);
   const right=items.slice(half);
-  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
+  const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:11px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:5px 7px;border:1px solid #bbb;font-size:11px;background:rgba(255,255,255,0.75);';
   const mkRows=(arr,si)=>arr.map((it,i)=>`<tr style="background:${'transparent'};">
-    <td style="${TD}text-align:center;font-size:6px;">${it.num}</td>
+    <td style="${TD}text-align:center;font-size:10px;">${it.num}</td>
     <td style="${TD}">${it.co}</td>
     <td style="${TD}text-align:right;font-weight:700;">${fmt(it.val)}</td>
   </tr>`).join('');
@@ -8325,7 +8355,7 @@ function buildPOTableHTML(poList){
     <div>${mkTbl(right,half)}</div>
   </div>
   <div style="border-top:2px solid #000;padding:3px 0;text-align:center;">
-    <span style="font-size:8px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
+    <span style="font-size:11px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
     &nbsp;&nbsp;
     <span style="font-size:14px;font-weight:900;letter-spacing:0.5px;">${fmt(totalVal)}</span>
   </div>`;
@@ -8333,9 +8363,9 @@ function buildPOTableHTML(poList){
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:3px 6px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:2.5px 6px;border:1px solid #ccc;font-size:7px;background:rgba(255,255,255,0.8);';
-  const TDF='padding:3px 6px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.9);font-weight:800;';
+  const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:11px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:5px 7px;border:1px solid #ccc;font-size:11px;background:rgba(255,255,255,0.8);';
+  const TDF='padding:5px 7px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.9);font-weight:800;';
   const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
 
   const CATLABEL={'security':'حراسة امنية','maintenance':'صيانة','cleaning':'نظافة','service':'خدمات اخرى','revenue':'عقد بايراد','telecom':'اشتراك اتصالات','software':'ترخيص برامج','subscription':'اشتراك سنوي'};
@@ -8343,7 +8373,7 @@ function buildContractsTableHTML(activeC,totalCM){
   const STLABEL={'active':'فعال','expiring':'ينتهي قريبا','renewal_due':'مستحق التجديد','expired':'منته','pending':'قيد التفاوض','cancelled':'ملغى'};
   const STCLR={'active':'#276749','expiring':'#C53030','renewal_due':'#92400E','expired':'#64748B','pending':'#5B21B6','cancelled':'#991B1B'};
 
-  if(!activeC||!activeC.length) return ST('العقود الفعالة')+'<p style="font-size:8px;padding:6px;">لا توجد عقود فعالة مسجلة.</p>';
+  if(!activeC||!activeC.length) return ST('العقود الفعالة')+'<p style="font-size:11px;padding:6px;">لا توجد عقود فعالة مسجلة.</p>';
 
   // --- الجدول الرئيسي الموحد ---
   const allRows = activeC.map((c,i)=>{
@@ -8360,8 +8390,8 @@ function buildContractsTableHTML(activeC,totalCM){
       <td style="${TD}text-align:right;font-weight:600;">${fmt(monthly)}</td>
       <td style="${TD}text-align:right;">${fmt(annual)}</td>
       <td style="${TD}text-align:right;">${revAnn>0?fmt(revAnn):'—'}</td>
-      <td style="${TD}text-align:center;font-size:9.5px;">${c.start||'—'}</td>
-      <td style="${TD}text-align:center;font-size:9.5px;">${c.end||'—'}</td>
+      <td style="${TD}text-align:center;font-size:11px;">${c.start||'—'}</td>
+      <td style="${TD}text-align:center;font-size:11px;">${c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
     </tr>`;
   }).join('');
@@ -8371,7 +8401,7 @@ function buildContractsTableHTML(activeC,totalCM){
   const totRevAnn  = activeC.reduce((s,c)=>s+(parseFloat(c.revAnnual)||0),0);
   const totSaving  = activeC.reduce((s,c)=>s+(parseFloat(c.saving)||0),0);
 
-  const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:7px;">
+  const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:11px;">
     <thead><tr>
       <th style="${TH}">الشركة / مقدم الخدمة</th>
       <th style="${TH}">وصف الخدمة</th>
@@ -8453,7 +8483,7 @@ function exportQuarterlyPDF(){
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:5px 7px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const itemSumQ=buildItemSummaryHTML(qExp,qPO);
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg" src="'+BG+'">':''}
@@ -10848,5 +10878,7 @@ function f2PDF(reportTitle){
     +'<script>window.onload=function(){window.print();}<\/script></body></html>');
   W.document.close();
 }
+// تسجيل دخول تلقائي عند تحميل الصفحة
+window.addEventListener('load', function(){ autoLogin(); });
 </script>
 </body></html>
