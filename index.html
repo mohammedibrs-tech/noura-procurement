@@ -2128,7 +2128,7 @@ function expMonthKey(e){
   return '';
 }
 // إجمالي المصروف لبند واحد = المبلغ + رسوم التحويل (إن وجدت)
-function expTotal(e){return (expTotal(e))+(parseFloat(e.transfer_fee)||0);}
+function expTotal(e){return (parseFloat(e.amount)||0)+(parseFloat(e.transfer_fee)||0);}
 
 function budgetCalcMonth(){
   // عهدة الشهر الواحد
