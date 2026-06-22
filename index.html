@@ -2842,11 +2842,21 @@ async function poSave(){
     toast('تم حفظ التعديلات ✅');
   } else {
     // إضافة جديدة
-    const res=await sbInsert('orders',data);
-    if(res&&Array.isArray(res)&&res[0]){poSaved.unshift(res[0]);}
-    else{poSaved.unshift({...data,id:Date.now()});}
+    var newRecord={...data,id:Date.now()};
+    var savedToCloud=false;
+    try{
+      const res=await sbInsert('orders',data);
+      if(res&&Array.isArray(res)&&res[0]){newRecord=res[0];savedToCloud=true;}
+      else{console.warn('sbInsert returned unexpected:',res);}
+    }catch(e){
+      console.error('poSave sbInsert error:',e.message);
+      toast('خطأ في الحفظ: '+e.message,true);
+    }
+    poSaved.unshift(newRecord);
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-    renderPoSaved();toast('تم الحفظ ✅');
+    renderPoSaved();
+    if(savedToCloud)toast('تم الحفظ في السحابة ✅');
+    else toast('تم الحفظ محلياً فقط — تحقق من الاتصال',false);
   }
 }
 
