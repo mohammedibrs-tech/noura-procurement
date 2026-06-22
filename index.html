@@ -2834,7 +2834,6 @@ async function poSave(){
     autoAddSupplier(co);
     const terms=poGetTerms();
     const data={
-      id:'local_'+Date.now(),
       company:co,
       num:document.getElementById('po-num').value||'',
       date:document.getElementById('po-date').value||'',
@@ -2866,6 +2865,7 @@ async function poSave(){
       poResetEdit();
     } else {
       // احفظ محلياً أولاً — فوراً بدون انتظار
+      data.id='local_'+Date.now();
       poSaved.unshift(data);
       localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
       renderPoSaved();
@@ -2893,17 +2893,37 @@ async function poSave(){
 function renderPoSaved(){
   var el=document.getElementById('po-saved');if(!el)return;
   if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
-  var html='';
-  for(var i=0;i<poSaved.length;i++){
-    var s=poSaved[i];
-    var tot=0;try{var rr=typeof s.rows==='string'?JSON.parse(s.rows||'[]'):(s.rows||[]);rr.forEach(function(r){const t=parseFloat(r.total)||0;if(t>0){tot+=t*1.15;}else{// حسب الحقول القديمة count/unitPrice أو الجديدة qty/price
-const qty=parseFloat(r.qty||r.count)||0;const price=parseFloat(r.price||r.unitPrice)||0;const b=qty*price;tot+=(r.vatType==='added'?b*1.15:b);}});}catch(e){console.warn('rows parse error',e);}
-    var totWithVat=(tot*1.15).toFixed(2);
-    html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
+
+  // فصل 2025 و 2026
+  var list2025=[],list2026=[],listOther=[];
+  poSaved.forEach(function(s,i){
+    var yr=(s.date||s.created_at||'').substring(0,4);
+    if(yr==='2025')list2025.push({s:s,i:i});
+    else if(yr==='2026')list2026.push({s:s,i:i});
+    else listOther.push({s:s,i:i});
+  });
+
+  function calcVal(s){
+    var tot=0;
+    try{
+      var rr=typeof s.rows==='string'?JSON.parse(s.rows||'[]'):(s.rows||[]);
+      rr.forEach(function(r){
+        var t=parseFloat(r.total)||0;
+        if(t>0){tot+=t*1.15;}
+        else{var qty=parseFloat(r.qty||r.count)||0;var price=parseFloat(r.price||r.unitPrice)||0;var b=qty*price;tot+=(r.vatType==='added'?b*1.15:b);}
+      });
+    }catch(e){}
+    return tot;
+  }
+
+  function mkCard(obj){
+    var s=obj.s,i=obj.i;
+    var val=calcVal(s);
+    return '<div class="saved-item" style="border-right:3px solid #244062;">'+
       '<div class="saved-item-info">'+
         '<strong style="font-size:13px;color:#244062;">'+(s.company||'')+'</strong>'+
         '<span style="color:var(--sub);font-size:11px;"> | '+(s.num||'—')+' | '+(s.date||'—')+'</span>'+
-        (totWithVat>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+parseFloat(totWithVat).toLocaleString('ar-SA')+' ر.س</span>':'')+
+        (val>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+val.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س (شامل ض)</span>':'')+
       '</div>'+
       '<div class="saved-item-actions" style="display:flex;gap:4px;flex-wrap:wrap;">'+
         '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="poEditById('+i+')">✏️ تعديل</button>'+
@@ -2912,6 +2932,22 @@ const qty=parseFloat(r.qty||r.count)||0;const price=parseFloat(r.price||r.unitPr
         '<button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;border:1px solid #C53030;" onclick="poDeleteById('+i+')">🗑️ حذف</button>'+
       '</div></div>';
   }
+
+  function mkSection(title,list,color){
+    if(!list.length)return'<p style="color:#aaa;font-size:11px;padding:4px 8px;">لا توجد طلبات</p>';
+    var total=list.reduce(function(s,o){return s+calcVal(o.s);},0);
+    return '<div style="margin-bottom:4px;padding:4px 8px;background:'+color+';border-radius:6px;display:flex;justify-content:space-between;align-items:center;">'+
+      '<span style="font-weight:700;font-size:12px;color:#244062;">'+title+' ('+list.length+' طلب)</span>'+
+      '<span style="font-size:11px;font-weight:700;color:#C53030;">الإجمالي: '+total.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</span>'+
+      '</div>'+
+      list.map(mkCard).join('');
+  }
+
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'+
+    '<div>'+mkSection('طلبات الشراء 2025',list2025,'#EFF6FF')+'</div>'+
+    '<div>'+mkSection('طلبات الشراء 2026',list2026,'#F0FDF4')+'</div>'+
+  '</div>';
+  if(listOther.length) html+=mkSection('طلبات أخرى',listOther,'#FFF7ED');
   el.innerHTML=html;
 }
 
