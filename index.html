@@ -7005,7 +7005,7 @@ function exportSemiPDF(){
   const sPOVal=sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const today=new Date().toLocaleDateString('ar-SA');
   const rsTitle=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -7025,10 +7025,10 @@ function exportSemiPDF(){
 </tbody></table>
 <div class="two-col">
   <div><div class="sec-title">المصروفات شهراً بشهر</div>
-  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${monthRows}<tr><td style="font-weight:700;">الاجمالي</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td><td></td></tr></tbody></table></div>
   <div><div class="sec-title">اكثر الاصناف صرفاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${topItemRows}</tbody></table></div>
 </div>
 <div class="sec-title">المصروفات حسب الادارة</div>
@@ -7831,7 +7831,7 @@ function exportAnnualPDF(){
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
   const yPOVal=yPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const today=new Date().toLocaleDateString('ar-SA');
   const deptRows=deptSorted.map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -7856,7 +7856,7 @@ function exportAnnualPDF(){
   <table><thead><tr><th>الربع</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
   <tbody>${qRows}<tr><td style="font-weight:700;">الاجمالي</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td><td></td></tr></tbody></table></div>
   <div><div class="sec-title">المصروفات شهراً بشهر</div>
-  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${monthRows}</tbody></table></div>
 </div>
 <div class="two-col">
@@ -7864,7 +7864,7 @@ function exportAnnualPDF(){
   <table><thead><tr><th>الادارة</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
   <tbody>${deptRows}</tbody></table></div>
   <div><div class="sec-title">اكثر الاصناف صرفاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${topItemRows}</tbody></table></div>
 </div>
 ${buildContractsTableHTML(activeC,totalCMonthly)}
@@ -8277,7 +8277,7 @@ function buildMonthlyReport(){
 
 
 function buildPOTableHTML(poList){
-  if(!poList||!poList.length) return '<p style="font-size:7.5px;color:#555;margin:3px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
+  if(!poList||!poList.length) return '<p style="font-size:10px;color:#555;margin:3px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   let totalVal=0;
   const items=poList.map(p=>{
@@ -8325,8 +8325,8 @@ function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const TH='padding:3px 6px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
   const TD='padding:2.5px 6px;border:1px solid #ccc;font-size:7px;background:rgba(255,255,255,0.8);';
-  const TDF='padding:3px 6px;border:1px solid #244062;font-size:7.5px;background:rgba(235,242,255,0.9);font-weight:800;';
-  const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:7.5px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
+  const TDF='padding:3px 6px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.9);font-weight:800;';
+  const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
 
   const CATLABEL={'security':'حراسة امنية','maintenance':'صيانة','cleaning':'نظافة','service':'خدمات اخرى','revenue':'عقد بايراد','telecom':'اشتراك اتصالات','software':'ترخيص برامج','subscription':'اشتراك سنوي'};
   const RENLABEL={'manual':'يلزم توقيع عقد جديد','auto':'يتجدد تلقائيا','subscription':'اشتراك'};
@@ -8350,8 +8350,8 @@ function buildContractsTableHTML(activeC,totalCM){
       <td style="${TD}text-align:right;font-weight:600;">${fmt(monthly)}</td>
       <td style="${TD}text-align:right;">${fmt(annual)}</td>
       <td style="${TD}text-align:right;">${revAnn>0?fmt(revAnn):'—'}</td>
-      <td style="${TD}text-align:center;font-size:6.5px;">${c.start||'—'}</td>
-      <td style="${TD}text-align:center;font-size:6.5px;">${c.end||'—'}</td>
+      <td style="${TD}text-align:center;font-size:9.5px;">${c.start||'—'}</td>
+      <td style="${TD}text-align:center;font-size:9.5px;">${c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
     </tr>`;
   }).join('');
@@ -8443,7 +8443,7 @@ function exportQuarterlyPDF(){
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7.5px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(255,255,255,0.85);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const itemSumQ=buildItemSummaryHTML(qExp,qPO);
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg" src="'+BG+'">':''}
@@ -8511,7 +8511,7 @@ function exportMonthlyPDF(){
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const monthPOVal=monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const today=new Date().toLocaleDateString('ar-SA');
-  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.6;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:13px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:3px 8px;background:#244062;color:#fff;font-size:8px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:7.5px;}thead th{padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:2.5px 5px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:3px 5px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  const CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Calibri,Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.7;background:#fff;}.page{position:relative;width:297mm;min-height:210mm;overflow:hidden;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:fill;display:block;}.pdf-content{position:relative;z-index:1;padding:32mm 14mm 10mm 14mm;}h1{font-size:14px;text-align:center;margin:0 0 8px;color:#244062;font-weight:900;border-bottom:2px solid #244062;padding-bottom:4px;}.sec-title{display:block;margin:7px 0 3px;padding:4px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;}table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10px;}thead th{padding:4px 6px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;}tbody td{padding:3px 6px;border:1px solid #bbb;color:#000;background:rgba(255,255,255,0.75);}tfoot td{padding:4px 6px;border:1px solid #244062;border-top:2px solid #244062;color:#000;font-weight:700;background:rgba(235,242,255,0.9);}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const w=window.open('','_blank');
@@ -8533,7 +8533,7 @@ function exportMonthlyPDF(){
   <table><thead><tr><th>الادارة</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th><th>اكثر الاصناف</th></tr></thead>
   <tbody>${deptRows}</tbody></table></div>
   <div><div class="sec-title">اكثر الاصناف صرفاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th></tr></thead>
+  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${topItemRows}</tbody></table></div>
 </div>
 <div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(monthPO)}
