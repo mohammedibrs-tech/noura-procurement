@@ -7158,7 +7158,7 @@ function exportSemiPDF(){
 <table><thead><tr><th>الادارة</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">النسبة</th><th>اكثر الاصناف</th></tr></thead>
 <tbody>${deptRows}</tbody></table>
 <div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(sPO)}
-${buildContractsTableHTML(activeC,totalCM)}
+${buildContractsTableHTML(activeC,totalCM,year)}
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -7928,7 +7928,7 @@ function buildAnnualReport(){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div class="card"><div class="card-header"><h3>تحليل الأصناف عالية الصرف</h3></div><div class="card-body"><table class="tbl"><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>${topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;font-weight:600;color:#111;">${v.toLocaleString('ar-SA')} ر.س</td><td style="text-align:center;color:#555;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('')}</tbody></table></div></div>
-    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body"><h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(poSaved.filter(p=>poInYear(p,year)))}${buildContractsTableHTML(activeC,totalCMonthly)}</div></div>
+    <div class="card"><div class="card-header"><h3>العقود الفعالة</h3></div><div class="card-body"><h2>طلبات الشراء (PO)</h2>${buildPOTableHTML(poSaved.filter(p=>poInYear(p,year)))}${buildContractsTableHTML(activeC,totalCMonthly,year)}</div></div>
   </div>
   ${expiringC.length?`<div class="card" style="border:1px solid #C53030;margin-bottom:16px;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">عقود تنتهي خلال 90 يوم</h3></div><div class="card-body">${expiringC.map(c=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span style="font-weight:600;">${c.vendor} — ${c.type}</span><span style="color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم | ${(c.monthly||0).toLocaleString('ar-SA')} ر.س/شهر</span></div>`).join('')}</div></div>`:''}
   <div class="card" style="border:1px solid #276749;"><div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">فرص التوفير والتوصيات ${year}</h3></div><div class="card-body" style="font-size:12px;"><p style="margin-bottom:8px;padding:8px;background:#F8FAFB;">إجمالي وفر التفاوض: <strong style="color:#276749;">${totalSaving.toLocaleString('ar-SA')} ر.س</strong></p>${topItems.length?`<p style="margin-bottom:8px;">أعلى صنف: <strong>${topItems[0][0]}</strong> — يُنصح بدراسة عقد سنوي لتوفير التكاليف.</p>`:''}${expiringC.length?`<p>هناك <strong>${expiringC.length} عقد</strong> تنتهي قريباً — فرصة لإعادة التفاوض.</p>`:''}</div></div>`;
@@ -7990,7 +7990,7 @@ function exportAnnualPDF(){
   <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${topItemRows}</tbody></table></div>
 </div>
-${buildContractsTableHTML(activeC,totalCMonthly)}
+${buildContractsTableHTML(activeC,totalCMonthly,year)}
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -8453,7 +8453,7 @@ function buildPOTableHTML(poList){
   </div>`;
 }
 
-function buildContractsTableHTML(activeC,totalCM){
+function buildContractsTableHTML(activeC,totalCM,reportYear){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;';
   const TD='padding:5px 7px;border:1px solid #ccc;font-size:10px;background:rgba(255,255,255,0.93);';
@@ -8506,7 +8506,22 @@ function buildContractsTableHTML(activeC,totalCM){
   const allRows = activeC.map((c,i)=>{
     const rowBg = i%2===0 ? 'rgba(255,255,255,0.95)' : 'rgba(245,248,255,0.95)';
     const renLabel = RENLABEL[c.renewal]||c.renewal||'—';
-    const stLabel  = STLABEL[c.status]||c.status||'—';
+    // حساب الحالة بناءً على سنة التقرير وليس الحالة الحالية
+    let stLabel = STLABEL[c.status]||c.status||'—';
+    if(reportYear){
+      const effEnd = c.renewedUntil||c.end||'';
+      const yearEndDate = reportYear+'-12-31';
+      const yearStartDate = reportYear+'-01-01';
+      if(effEnd && effEnd < yearStartDate){
+        stLabel = 'منته';
+      } else if(effEnd && effEnd < yearEndDate){
+        stLabel = 'ينتهي قريبا';
+      } else if(!effEnd || effEnd >= yearEndDate){
+        // نشط طوال السنة
+        if(c.status==='pending') stLabel='قيد التفاوض';
+        else stLabel='فعال';
+      }
+    }
     const monthly  = parseFloat(c.monthly)||0;
     const annual   = parseFloat(c.annual)||(monthly*12);
     const rev = getRevInfo(c);
@@ -8642,7 +8657,7 @@ function exportQuarterlyPDF(){
 <div class="sec-title">المصروفات حسب الإدارة</div>
 <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أكثر الأصناف</th></tr></thead><tbody>${deptRows}</tbody></table>
 <div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(qPO)}
-${buildContractsTableHTML(activeC,totalCM)}
+${buildContractsTableHTML(activeC,totalCM,year)}
 </div></div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -8710,7 +8725,7 @@ function exportMonthlyPDF(){
   <table><thead><tr><th>الصنف</th><th style="text-align:right;">الاجمالي</th><th style="text-align:center;">% من الإجمالي</th></tr></thead>
   <tbody>${topItemRows}</tbody></table></div>
 <div class="sec-title">طلبات الشراء (PO)</div>${buildPOTableHTML(monthPO)}
-${buildContractsTableHTML(activeC,totalCM)}
+${buildContractsTableHTML(activeC,totalCM,year)}
 </div></div></body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
