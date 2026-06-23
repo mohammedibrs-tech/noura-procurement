@@ -8534,7 +8534,7 @@ function buildContractsTableHTML(activeC,totalCM,reportYear){
       <td style="${TD}text-align:right;">${rev.label}</td>
       <td style="${TD}text-align:right;">${rev.annualVal>0?fmt(rev.annualVal):'—'}</td>
       <td style="${TD}text-align:center;font-size:9px;">${c.start||'—'}</td>
-      <td style="${TD}text-align:center;font-size:9px;">${c.renewedUntil?'<span style=\'color:#1a5c2a;font-weight:700;\'>'+c.renewedUntil+' ↻</span>':c.end||'—'}</td>
+      <td style="${TD}text-align:center;font-size:9px;">${c.renewedUntil||c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
     </tr>`;
   }).join('');
