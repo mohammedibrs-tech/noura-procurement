@@ -9371,6 +9371,7 @@ function flRenderMaintOffers(){
     h+='<div class="form-grid-3">';
     h+='<div class="field"><label>اسم مركز الصيانة</label><input value="'+(o.name||'')+'" oninput="flUpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم المركز"></div>';
     h+='<div class="field"><label>التكلفة السنوية الإجمالية (ر.س)</label><input type="number" value="'+(o.annualCost||'')+'" oninput="flUpdateMaint('+o.id+',\'annualCost\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>مدة عقد الصيانة (سنوات)</label><input type="number" value="'+(o.maintYears||1)+'" min="1" max="10" oninput="flUpdateMaint('+o.id+',\'maintYears\',this.value)" placeholder="1"></div>';
     h+='<div class="field"><label>نوع العقد</label><input value="'+(o.contractType||'شامل')+'" oninput="flUpdateMaint('+o.id+',\'contractType\',this.value)"></div>';
     h+='<div class="field"><label>فنيون داخل الموقع؟</label><select onchange="flUpdateMaint('+o.id+',\'onsite\',this.value)"><option value="yes"'+(o.onsite==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.onsite==='no'?' selected':'')+'>لا</option></select></div>';
     h+='<div class="field"><label>صيانة تصحيحية؟</label><select onchange="flUpdateMaint('+o.id+',\'corrective\',this.value)"><option value="yes"'+(o.corrective==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.corrective==='no'?' selected':'')+'>لا</option></select></div>';
@@ -9384,7 +9385,7 @@ function flRenderMaintOffers(){
 function flUpdateMaint(id,field,val){
   var o=flMaintOffers.find(function(x){return x.id===id;});
   if(!o)return;
-  o[field]=(field==='annualCost')?parseFloat(val)||0:val;
+  o[field]=(field==='annualCost'||field==='maintYears')?parseFloat(val)||0:val;
   fleetCalc();
 }
 
@@ -9423,10 +9424,13 @@ function fleetCalc(){
     for(var y=1;y<=yrs;y++) npv+=(annualOpTotal>0?annualOpTotal:maintAnnual)/Math.pow(1+discountRate,y);
     return{total:total,opCost:opCost,npv:npv,perUnit:count>0?total/(count*yrs):0};
   }
+  var bestMaintYears=bestMaint?(bestMaint.maintYears||1):1;
   function calcBuyWithMaint(yrs){
-    var maintCost=bestMaintCost*yrs;
+    // الصيانة تُحسب بسنوات عقدها فقط، مهما كانت مدة المقارنة
+    var maintYrs=Math.min(bestMaintYears,yrs);
+    var maintCost=bestMaintCost*maintYrs;
     var total=totalPurchase+maintCost;
-    return{total:total,maintCost:maintCost,perUnit:count>0?total/(count*yrs):0};
+    return{total:total,maintCost:maintCost,maintYrs:maintYrs,perUnit:count>0?total/(count*yrs):0};
   }
   function calcLease(monthly,yrs){
     var total=monthly*12*count*yrs;
@@ -9474,14 +9478,14 @@ function fleetCalc(){
   kpiHTML+='<th>الوفر المتوقع</th>';
   kpiHTML+='</tr></thead><tbody>';
   var rows2=[
-    {n:years1+' سنوات',bp:totalPurchase,mc:bestMaintCost*years1,bm:buyM1.total,lc:lease1.total,diff:lease1.total-buyM1.total},
-    {n:years2+' سنوات',bp:totalPurchase,mc:bestMaintCost*years2,bm:buyM2.total,lc:lease2.total,diff:lease2.total-buyM2.total}
+    {n:years1+' سنوات',bp:totalPurchase,mc:buyM1.maintCost,bm:buyM1.total,lc:lease1.total,diff:lease1.total-buyM1.total,mYrs:buyM1.maintYrs},
+    {n:years2+' سنوات',bp:totalPurchase,mc:buyM2.maintCost,bm:buyM2.total,lc:lease2.total,diff:lease2.total-buyM2.total,mYrs:buyM2.maintYrs}
   ];
   rows2.forEach(function(r){
     var isBetter=r.diff>=0;
     kpiHTML+='<tr style="'+(r.n.indexOf(years2)!==-1?'font-weight:700;background:#f5f7fa;':'')+'"><td>'+r.n+'</td>';
     kpiHTML+='<td>'+flFmt(r.bp)+'</td>';
-    kpiHTML+='<td>'+(r.mc>0?flFmt(r.mc):'—')+'</td>';
+    kpiHTML+='<td>'+(r.mc>0?flFmt(r.mc)+(r.mYrs?'<br><small style="color:#888;font-size:10px;">'+r.mYrs+' سنة</small>':''):'—')+'</td>';
     kpiHTML+='<td>'+flFmt(r.bm)+'</td>';
     kpiHTML+='<td>'+flFmt(r.lc)+'</td>';
     kpiHTML+='<td>'+(r.diff>=0?'+':'')+flFmt(r.diff)+'</td>';
@@ -9675,7 +9679,8 @@ function fleetPDF(reportTitle){
   var bestMaint=flMaintOffers.filter(function(o){return o.annualCost>0;}).sort(function(a,b){return a.annualCost-b.annualCost;})[0]||null;
   var bestLease=flLeaseOffers.filter(function(o){return o.monthlyPerUnit>0;}).sort(function(a,b){return a.monthlyPerUnit-b.monthlyPerUnit;})[0]||null;
   var bmc=bestMaint?bestMaint.annualCost:0;
-  function bTCO(y){return totalPurchase+bmc*y;}
+  var bmcYears=bestMaint?(bestMaint.maintYears||1):1;
+  function bTCO(y){return totalPurchase+bmc*Math.min(bmcYears,y);}
   function lTCO(y){return rentMo*12*count*y;}
   var b1=bTCO(years1),b2=bTCO(years2),l1=lTCO(years1),l2=lTCO(years2);
   var sav1=l1-b1, sav2=l2-b2;
@@ -9701,26 +9706,26 @@ function fleetPDF(reportTitle){
     ?'في حال اختيار التملك، تجدر الإشارة إلى أن مسؤولية الصيانة وإدارة الأعطال ستقع على الجهة مباشرة، وهو ما يستلزم توفير عقد صيانة شامل مع جهة مختصة.'
     :'الاستمرار في التأجير يُبقي على مرونة التشغيل ويُخفف من تبعات الأعطال، غير أن الاعتماد على مورد واحد يشكّل خطراً تعاقدياً ينبغي مراعاته عند التفاوض على شروط التجديد.';
   var W=window.open('','_blank');
+  if(!W){toast('يرجى السماح بالنوافذ المنبثقة',true);return;}
   W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'
-    +'@page{size:A4;margin:15mm 12mm 12mm;}*{box-sizing:border-box;}'
-    +'body{font-family:"Arial",sans-serif;font-size:8.5pt;color:#111;direction:rtl;margin:0;padding:0;background:#fff;}'
-    +'.bg-img{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;object-fit:cover;pointer-events:none;}'
-    +'.wrap{position:relative;z-index:1;}'
-    +'.rpt-header{background:#1A2B4A;color:#fff;padding:10px 14px;border-radius:4px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}'
-    +'.rpt-header h1{font-size:12pt;font-weight:900;margin:0;color:#fff;}'
-    +'.rpt-header .meta{font-size:8pt;opacity:.8;text-align:left;line-height:1.6;}'
-    +'h2{font-size:9.5pt;font-weight:900;margin:10px 0 4px;border-right:3px solid #1A2B4A;padding-right:6px;color:#1A2B4A;}'
-    +'p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8pt;}'
-    +'th{background:#1A2B4A;color:#fff;padding:4px 6px;text-align:right;border:1px solid #1A2B4A;font-weight:700;}'
-    +'td{padding:3px 6px;border:1px solid #ccc;color:#111;}'
+    +'@page{size:A4;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:Calibri,Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;background:#fff;}'
+    +'.page{position:relative;width:210mm;min-height:297mm;}'
+    +'.bg{position:absolute;top:0;left:0;width:100%;height:100%;}'
+    +'.content{position:relative;z-index:1;padding:37mm 14mm 36mm;}'
+    +'h1{font-size:13pt;text-align:center;border-bottom:2px solid #244062;padding-bottom:5px;margin-bottom:6px;color:#244062;font-weight:900;}'
+    +'h2{font-size:10pt;font-weight:900;margin:10px 0 4px;border-right:3px solid #244062;padding-right:6px;color:#244062;}'
+    +'p{font-size:9pt;color:#222;line-height:1.6;margin:0 0 6px;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9pt;}'
+    +'th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;font-size:9pt;}'
+    +'td{padding:4px 7px;border:1px solid #ccc;color:#111;font-size:9pt;}'
     +'tr:nth-child(even) td{background:#f5f7fa;}'
     +'.hl td{background:#dce3ec !important;font-weight:700;}'
     +'.note{font-size:7.5pt;color:#555;margin:0 0 8px;}'
     +'ul{margin:2px 0 6px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}'
-    +'</style></head><body>'
-    +(BG?'<img src="'+BG+'" class="bg-img">':'')
-    +'<div class="wrap">'
+    +'</style></head><body><div class="page">'
+    +(BG?'<img src="'+BG+'" class="bg">':'')
+    +'<div class="content">'
     +'<div class="rpt-header">'
     +'<h1>'+safeTitle+'</h1>'
     +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' &nbsp;|&nbsp; '+count+' مركبة</div>'
@@ -9896,7 +9901,7 @@ function cmpPDF(){
   html+='th{background:#244062;color:#fff;padding:6px 8px;text-align:right;border:1px solid #000;font-size:12px;}';
   html+='td{padding:5px 8px;border:1px solid #000;font-size:12px;}';
   html+='@media print{.bg-img{position:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
-  html+='</style></head><body>';
+  html+='</style></head><body><div class="page">';
   if(BG_CMP) html+='<img src="'+BG_CMP+'" class="bg-img">';
   html+='<div class="pdf-content">';
   html+='<h1>'+title+'</h1><p>'+date+'</p>';
@@ -10635,7 +10640,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +'th{background:#244062;color:#fff;padding:3px 5px;text-align:right;border:1px solid #000;font-size:8px;}'
     +'td{padding:2px 5px;border:1px solid #000;background:transparent;font-size:8px;}'
     +'@media print{.bg-img{position:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}'
-    +'</style></head><body>'
+    +'</style></head><body><div class="page">'
     +(BG_REV?'<img src="'+BG_REV+'" class="bg-img">':'')
     +'<div class="pdf-content">'
     +'<h1>'+title+'</h1>'
@@ -10951,9 +10956,9 @@ function f2PDF(reportTitle){
     +'.hl td{background:#dce3ec !important;font-weight:700;}'
     +'.note{font-size:7.5pt;color:#555;margin:0 0 7px;}'
     +'ul{margin:2px 0 6px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}'
-    +'</style></head><body>'
-    +(BG?'<img src="'+BG+'" class="bg-img">':'')
-    +'<div class="wrap">'
+    +'</style></head><body><div class="page">'
+    +(BG?'<img src="'+BG+'" class="bg">':'')
+    +'<div class="content">'
     +'<div class="rpt-header">'
     +'<h1>'+safeTitle+'</h1>'
     +'<div class="meta">إدارة الأسطول والمشتريات<br>'+today+' &nbsp;|&nbsp; '+count+' مركبة</div>'
