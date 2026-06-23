@@ -9853,8 +9853,8 @@ function cmpPDF(){
     var saving=curContract-minAnn;
     var savingAbs=Math.abs(saving);
     var savingPct=(savingAbs/curContract*100).toFixed(2);
-    var diffCell=saving>0?('<td style="color:#1a6b35;font-weight:700;">'+fmt(savingAbs)+' ر.س (وفر)</td>'):saving<0?('<td style="color:#b91c1c;font-weight:700;">'+fmt(savingAbs)+' ر.س (زيادة)</td>'):'<td style="text-align:center;">لا فرق</td>';
-    var pctCell=saving>0?('<td style="color:#1a6b35;font-weight:700;text-align:center;">'+savingPct+'% أقل</td>'):saving<0?('<td style="color:#b91c1c;font-weight:700;text-align:center;">'+savingPct+'% أعلى</td>'):'<td style="text-align:center;">0%</td>';
+    var diffCell=saving>0?('<td style="color:#1a6b35;font-weight:700;">'+fmt(savingAbs)+' ر.س (وفر)</td>'):saving<0?('<td style="color:#000;font-weight:700;">'+fmt(savingAbs)+' ر.س (زيادة)</td>'):'<td style="text-align:center;">لا فرق</td>';
+    var pctCell=saving>0?('<td style="color:#1a6b35;font-weight:700;text-align:center;">'+savingPct+'% أقل</td>'):saving<0?('<td style="color:#000;font-weight:700;text-align:center;">'+savingPct+'% أعلى</td>'):'<td style="text-align:center;">0%</td>';
     curRow='<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendor+' (العقد الحالي)</td><td style="text-align:center;">'+curDuration+'</td><td style="text-align:right;">'+fmt(curContract)+' ر.س</td><td style="text-align:right;">'+fmt(minAnn)+' ر.س</td>'+diffCell+pctCell+'</tr>';
   }
   var compRows=sorted.map(function(t,i){
@@ -9865,8 +9865,8 @@ function cmpPDF(){
       var d=curContract-t.annual;
       var dAbs=Math.abs(d);
       var dPct=(dAbs/curContract*100).toFixed(2);
-      diffCell2=d>0?('<td style="color:#1a6b35;">وفر '+fmt(dAbs)+' ر.س</td>'):d<0?('<td style="color:#b91c1c;">زيادة '+fmt(dAbs)+' ر.س</td>'):'<td style="text-align:center;">مساوٍ للحالي</td>';
-      pctCell2=d>0?('<td style="color:#1a6b35;text-align:center;font-weight:700;">'+dPct+'% أقل من الحالي</td>'):d<0?('<td style="color:#b91c1c;text-align:center;font-weight:700;">'+dPct+'% أعلى من الحالي</td>'):'<td style="text-align:center;">0%</td>';
+      diffCell2=d>0?('<td style="color:#1a6b35;">وفر '+fmt(dAbs)+' ر.س</td>'):d<0?('<td style="color:#000;">زيادة '+fmt(dAbs)+' ر.س</td>'):'<td style="text-align:center;">مساوٍ للحالي</td>';
+      pctCell2=d>0?('<td style="color:#1a6b35;text-align:center;font-weight:700;">'+dPct+'% أقل من الحالي</td>'):d<0?('<td style="color:#000;text-align:center;font-weight:700;">'+dPct+'% أعلى من الحالي</td>'):'<td style="text-align:center;">0%</td>';
     } else {
       var dMin=t.annual-minAnn;
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س عن الأقل':'—')+'</td>';
@@ -10033,7 +10033,7 @@ function renderRevCompanies(){
       rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="ourAmt" value="'+(r.ourAmt||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'ourAmt\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;font-size:11px;" placeholder="0"></td>';
       rows+='<td style="text-align:center;font-weight:700;color:#276749;background:#f0fff4;">'+ourPct+'</td>';
       rows+='<td><input type="number" data-rcid="'+co.id+'" data-rri="'+ri+'" data-rf="theirAmt" value="'+(r.theirAmt||'')+'" onchange="revUpdateField('+co.id+','+ri+',\'theirAmt\',this.value)" style="width:100px;border:none;background:transparent;text-align:right;font-size:11px;" placeholder="0"></td>';
-      rows+='<td style="text-align:center;font-weight:700;color:#C53030;background:#fff5f5;">'+theirPct+'</td>';
+      rows+='<td style="text-align:center;font-weight:700;color:#000;background:#fff5f5;">'+theirPct+'</td>';
       rows+='<td><button onclick="revDelRow('+co.id+','+ri+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;">×</button></td>';
       rows+='</tr>';
     });
@@ -10058,8 +10058,8 @@ function renderRevCompanies(){
       +'<td style="font-weight:700;padding:7px 10px;text-align:right;">'+tots.grandTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#276749;">'+tots.ourTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#276749;">'+ourPctTotal+'</td>'
-      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#C53030;">'+tots.theirTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#C53030;">'+theirPctTotal+'</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#000;">'+tots.theirTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#000;">'+theirPctTotal+'</td>'
       +'<td></td></tr></tfoot>'
       +'</table></div>';
     html+='<button class="btn btn-gray btn-sm" onclick="revAddRow('+co.id+')" style="margin-top:4px;">+ إضافة خدمة</button>';
@@ -10761,8 +10761,8 @@ function f2Calc(){
   kH+='<div class="kpi"><div class="kpi-label">إجمالي تكلفة الشراء</div><div class="kpi-val" style="font-size:16px;color:#1A2B4A;">'+(totalPurchase>0?f2Fmt(totalPurchase)+' ر.س':'—')+'</div><div class="kpi-sub">'+count+' مركبة</div></div>';
   kH+='<div class="kpi"><div class="kpi-label">TCO الشراء — 3 سنوات</div><div class="kpi-val" style="font-size:16px;color:#244062;">'+(b3.net>0?f2Fmt(b3.net)+' ر.س':'—')+'</div></div>';
   kH+='<div class="kpi"><div class="kpi-label">TCO الشراء — 4 سنوات</div><div class="kpi-val" style="font-size:16px;color:#244062;">'+(b4.net>0?f2Fmt(b4.net)+' ر.س':'—')+'</div></div>';
-  kH+='<div class="kpi"><div class="kpi-label">TCO التأجير الحالي — 3 سنوات</div><div class="kpi-val" style="font-size:16px;color:#C53030;">'+(l3.gross>0?f2Fmt(l3.gross)+' ر.س':'—')+'</div></div>';
-  kH+='<div class="kpi"><div class="kpi-label">TCO التأجير الحالي — 4 سنوات</div><div class="kpi-val" style="font-size:16px;color:#C53030;">'+(l4.gross>0?f2Fmt(l4.gross)+' ر.س':'—')+'</div></div>';
+  kH+='<div class="kpi"><div class="kpi-label">TCO التأجير الحالي — 3 سنوات</div><div class="kpi-val" style="font-size:16px;color:#000;">'+(l3.gross>0?f2Fmt(l3.gross)+' ر.س':'—')+'</div></div>';
+  kH+='<div class="kpi"><div class="kpi-label">TCO التأجير الحالي — 4 سنوات</div><div class="kpi-val" style="font-size:16px;color:#000;">'+(l4.gross>0?f2Fmt(l4.gross)+' ر.س':'—')+'</div></div>';
   if(best4)kH+='<div class="kpi"><div class="kpi-label">أفضل خيار (4 سنوات)</div><div class="kpi-val" style="font-size:14px;color:#276749;">'+best4.n+'</div><div class="kpi-sub">'+f2Fmt(best4.c)+' ر.س</div></div>';
   kH+='<div class="kpi"><div class="kpi-label">أفضل صيانة — سنوياً</div><div class="kpi-val" style="font-size:16px;color:#276749;">'+(bestMaint?f2Fmt(bestMaint.annual)+' ر.س':'—')+'</div><div class="kpi-sub">'+(bestMaint?bestMaint.name:'')+'</div></div>';
   kH+='<div class="kpi"><div class="kpi-label">أفضل تأجير — شهري/مركبة</div><div class="kpi-val" style="font-size:16px;color:#7C3AED;">'+(bestLease?f2Fmt(bestLease.monthly)+' ر.س':'—')+'</div><div class="kpi-sub">'+(bestLease?bestLease.name:'')+'</div></div>';
