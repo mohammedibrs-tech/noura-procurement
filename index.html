@@ -8396,68 +8396,101 @@ function buildPOTableHTML(poList){
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:11px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:5px 7px;border:1px solid #ccc;font-size:11px;background:rgba(255,255,255,0.8);';
+  const TH='padding:5px 7px;border:1px solid #244062;color:#fff;font-size:10px;font-weight:700;background:#244062;text-align:right;';
+  const TD='padding:5px 7px;border:1px solid #ccc;font-size:10px;background:rgba(255,255,255,0.93);';
   const TDF='padding:5px 7px;border:1px solid #244062;font-size:10px;background:rgba(235,242,255,0.97);font-weight:800;';
-  const ST=(t)=>`<div style="margin:8px 0 2px;padding:3px 8px;background:#244062;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.3px;">${t}</div>`;
+  const ST=(t)=>`<div style="margin:8px 0 2px;padding:4px 10px;background:#244062;color:#fff;font-size:10px;font-weight:800;">${t}</div>`;
 
-  const CATLABEL={'security':'حراسة امنية','maintenance':'صيانة','cleaning':'نظافة','service':'خدمات اخرى','revenue':'عقد بايراد','telecom':'اشتراك اتصالات','software':'ترخيص برامج','subscription':'اشتراك سنوي'};
   const RENLABEL={'manual':'يلزم توقيع عقد جديد','auto':'يتجدد تلقائيا','subscription':'اشتراك'};
   const STLABEL={'active':'فعال','expiring':'ينتهي قريبا','renewal_due':'مستحق التجديد','expired':'منته','pending':'قيد التفاوض','cancelled':'ملغى'};
-  const STCLR={'active':'#276749','expiring':'#C53030','renewal_due':'#92400E','expired':'#64748B','pending':'#5B21B6','cancelled':'#991B1B'};
 
-  if(!activeC||!activeC.length) return ST('العقود الفعالة')+'<p style="font-size:11px;padding:6px;">لا توجد عقود فعالة مسجلة.</p>';
+  if(!activeC||!activeC.length) return ST('ملخص العقود')+'<p style="font-size:10px;padding:6px;">لا توجد عقود مسجلة.</p>';
 
-  // --- الجدول الرئيسي الموحد ---
+  // تحديد نوع الإيراد ووصفه وقيمته
+  function getRevInfo(c){
+    const revType = c.revType || c.rev_type || '';
+    const revMonthly = parseFloat(c.revMonthly||c.rev_monthly)||0;
+    const revAnnual  = parseFloat(c.revAnnual||c.rev_annual)||0;
+    const revDays    = parseFloat(c.revDays||c.rev_days)||0;
+    const revDayPrice= parseFloat(c.revDayPrice||c.rev_day_price)||0;
+    const nouraRatio = parseFloat(c.nouraRatio)||0;
+    const vendorRatio= parseFloat(c.vendorRatio)||0;
+
+    if(revType==='monthly'&&revMonthly>0){
+      return {label:`${fmt(revMonthly)} / شهر`, annualVal: revMonthly*12, isRecurring:true};
+    }
+    if(revType==='fixed'&&revAnnual>0){
+      return {label:`${fmt(revAnnual)} / سنة`, annualVal: revAnnual, isRecurring:true};
+    }
+    if(revType==='daily'&&revDays>0&&revDayPrice>0){
+      const total=revDays*revDayPrice;
+      return {label:`${fmt(total)} / ${revDays} يوم`, annualVal: total, isRecurring:false};
+    }
+    if(nouraRatio>0||vendorRatio>0){
+      return {label:`نورة ${nouraRatio}% — مزود ${vendorRatio}%`, annualVal:0, isRecurring:false};
+    }
+    if(revAnnual>0){
+      return {label:`${fmt(revAnnual)} / سنة`, annualVal: revAnnual, isRecurring:true};
+    }
+    return {label:'—', annualVal:0, isRecurring:false};
+  }
+
   const allRows = activeC.map((c,i)=>{
     const rowBg = i%2===0 ? 'rgba(255,255,255,0.95)' : 'rgba(245,248,255,0.95)';
-    const renLabel = RENLABEL[c.renewal]||c.renewal||'يلزم توقيع عقد جديد';
+    const renLabel = RENLABEL[c.renewal]||c.renewal||'—';
     const stLabel  = STLABEL[c.status]||c.status||'—';
     const monthly  = parseFloat(c.monthly)||0;
     const annual   = parseFloat(c.annual)||(monthly*12);
-    const revAnn   = parseFloat(c.revAnnual)||0;
+    const rev = getRevInfo(c);
     return `<tr style="background:${rowBg};">
       <td style="${TD}font-weight:700;">${c.vendor||'—'}</td>
       <td style="${TD}">${c.type||'—'}</td>
       <td style="${TD}text-align:center;">${renLabel}</td>
-      <td style="${TD}text-align:right;font-weight:600;">${fmt(monthly)}</td>
-      <td style="${TD}text-align:right;">${fmt(annual)}</td>
-      <td style="${TD}text-align:right;">${revAnn>0?fmt(revAnn):'—'}</td>
-      <td style="${TD}text-align:center;font-size:11px;">${c.start||'—'}</td>
-      <td style="${TD}text-align:center;font-size:11px;">${c.end||'—'}</td>
+      <td style="${TD}text-align:right;font-weight:600;">${monthly>0?fmt(monthly):'—'}</td>
+      <td style="${TD}text-align:right;">${annual>0?fmt(annual):'—'}</td>
+      <td style="${TD}text-align:right;color:#1a5c2a;">${rev.label}</td>
+      <td style="${TD}text-align:right;color:#1a5c2a;font-weight:${rev.isRecurring?'700':'400'};">${rev.annualVal>0?fmt(rev.annualVal):'—'}</td>
+      <td style="${TD}text-align:center;font-size:9px;">${c.start||'—'}</td>
+      <td style="${TD}text-align:center;font-size:9px;">${c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
     </tr>`;
   }).join('');
 
   const totMonthly = activeC.reduce((s,c)=>s+(parseFloat(c.monthly)||0),0);
   const totAnnual  = activeC.reduce((s,c)=>s+(parseFloat(c.annual)||(parseFloat(c.monthly)||0)*12),0);
-  const totRevAnn  = activeC.reduce((s,c)=>s+(parseFloat(c.revAnnual)||0),0);
-  const totSaving  = activeC.reduce((s,c)=>s+(parseFloat(c.saving)||0),0);
+  // الإيراد السنوي: فقط الإيرادات الدورية (شهري×12 وسنوي ثابت)
+  const totRevAnnual = activeC.reduce((s,c)=>{const r=getRevInfo(c);return s+(r.isRecurring?r.annualVal:0);},0);
+  // إجمالي الإيراد التأجيري (غير دوري)
+  const totRevNonRecurring = activeC.reduce((s,c)=>{const r=getRevInfo(c);return s+(!r.isRecurring&&r.annualVal>0?r.annualVal:0);},0);
 
-  const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:11px;">
+  const tableHTML = `<table style="width:100%;border-collapse:collapse;font-size:10px;">
     <thead><tr>
       <th style="${TH}">الشركة / مقدم الخدمة</th>
       <th style="${TH}">وصف الخدمة</th>
       <th style="${TH}text-align:center;">التجديد</th>
       <th style="${TH}text-align:right;">الشهري</th>
       <th style="${TH}text-align:right;">السنوي</th>
-      <th style="${TH}text-align:right;">الايراد السنوي</th>
-      <th style="${TH}text-align:center;">تاريخ البداية</th>
-      <th style="${TH}text-align:center;">تاريخ الانتهاء</th>
+      <th style="${TH}text-align:right;">الإيراد</th>
+      <th style="${TH}text-align:right;">الإيراد السنوي المحتسب</th>
+      <th style="${TH}text-align:center;">البداية</th>
+      <th style="${TH}text-align:center;">الانتهاء</th>
       <th style="${TH}text-align:center;">الحالة</th>
     </tr></thead>
     <tbody>${allRows}</tbody>
-    <tfoot><tr>
-      <td colspan="3" style="${TDF}">الاجمالي — ${activeC.length} عقد فعال</td>
-      <td style="${TDF}text-align:right;">${fmt(totMonthly)}</td>
-      <td style="${TDF}text-align:right;">${fmt(totAnnual)}</td>
-      <td style="${TDF}text-align:right;">${totRevAnn>0?fmt(totRevAnn):'—'}</td>
-      <td colspan="3" style="${TDF}"></td>
-    </tr></tfoot>
+    <tfoot>
+      <tr>
+        <td colspan="3" style="${TDF}">الاجمالي — ${activeC.length} عقد</td>
+        <td style="${TDF}text-align:right;">${fmt(totMonthly)}</td>
+        <td style="${TDF}text-align:right;">${fmt(totAnnual)}</td>
+        <td style="${TDF}"></td>
+        <td style="${TDF}text-align:right;color:#1a5c2a;">${totRevAnnual>0?fmt(totRevAnnual):'—'}</td>
+        <td colspan="3" style="${TDF}"></td>
+      </tr>
+      ${totRevNonRecurring>0?`<tr><td colspan="6" style="${TDF}font-size:9px;">* إيرادات تأجير / غير دورية (غير مشمولة في الإجمالي السنوي)</td><td style="${TDF}text-align:right;font-size:9px;color:#92400E;">${fmt(totRevNonRecurring)}</td><td colspan="3" style="${TDF}"></td></tr>`:''}
+    </tfoot>
   </table>`;
 
-  return ST('ملخص العقود')
-    + tableHTML;
+  return ST('ملخص العقود') + tableHTML;
 }
 
 function buildPCDetailsHTML(pcList){
