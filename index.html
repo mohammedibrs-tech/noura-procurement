@@ -7098,7 +7098,19 @@ function exportSemiPDF(){
   const sExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=sExp.reduce((s,e)=>s+expTotal(e),0);
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
-  const activeC=contracts.filter(c=>c.status!=='cancelled'&&c.status!=='expired');
+  const yearStart=year+'-01-01';
+  const yearEnd=year+'-12-31';
+  const activeC=contracts.filter(c=>{
+    if(c.status==='cancelled') return false;
+    // العقد يجب أن يكون نشطاً خلال السنة المختارة
+    const cStart=(c.start||'');
+    const cEnd=(c.end||'');
+    // لو في تاريخ بداية وهو بعد نهاية السنة — لا يظهر
+    if(cStart && cStart>yearEnd) return false;
+    // لو في تاريخ انتهاء وهو قبل بداية السنة — لا يظهر
+    if(cEnd && cEnd<yearStart) return false;
+    return true;
+  });
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSavAmt=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
