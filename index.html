@@ -4972,6 +4972,12 @@ function ctCalc(){
   const annualEl=document.getElementById('ct-annual');
   if(!annualEl.value||annualEl.dataset.auto==='1'){annualEl.value=m*12;annualEl.dataset.auto='1';}
 }
+function ctCalcClient(){
+  const total=parseFloat(document.getElementById('ct-rev-client-total')?.value)||0;
+  const noura=parseFloat(document.getElementById('ct-rev-client-noura')?.value)||0;
+  const vendor=document.getElementById('ct-rev-client-vendor');
+  if(vendor&&total>0&&noura>=0) vendor.value=(total-noura).toFixed(2);
+}
 function ctCalcRev(){
   const m=parseFloat(document.getElementById('ct-rev-monthly').value)||0;
   const a=document.getElementById('ct-rev-annual');
@@ -5007,6 +5013,9 @@ function ctRevTypeChange(){
   show('ct-rev-days-wrap', t==='daily');
   show('ct-rev-day-price-wrap', t==='daily');
   show('ct-rev-daily-total-wrap', t==='daily');
+  show('ct-rev-client-total-wrap', t==='per_client');
+  show('ct-rev-client-noura-wrap', t==='per_client');
+  show('ct-rev-client-vendor-wrap', t==='per_client');
   if(t==='fixed'){
     const a=document.getElementById('ct-rev-annual');
     if(a){a.removeAttribute('readonly');a.style.background='';}
@@ -5089,7 +5098,7 @@ function potentialSave(){
     monthly,annual:annualVal,
     durationType,durationDays,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -5164,6 +5173,9 @@ async function contractSave(){
   const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
   const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
   const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const revClientTotal=parseFloat(document.getElementById('ct-rev-client-total')?.value)||0;
+  const revClientNoura=parseFloat(document.getElementById('ct-rev-client-noura')?.value)||0;
+  const revClientVendor=parseFloat(document.getElementById('ct-rev-client-vendor')?.value)||0;
   const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
@@ -5174,7 +5186,7 @@ async function contractSave(){
     end:document.getElementById('ct-end').value,
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -5220,6 +5232,9 @@ function contractEdit(id){
   const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
   const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
   const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
+  const rcte=document.getElementById('ct-rev-client-total');if(rcte)rcte.value=c.revClientTotal||0;
+  const rcne=document.getElementById('ct-rev-client-noura');if(rcne)rcne.value=c.revClientNoura||0;
+  const rcve=document.getElementById('ct-rev-client-vendor');if(rcve)rcve.value=c.revClientVendor||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -5589,6 +5604,9 @@ function ctRevTypeChange(){
   show('ct-rev-days-wrap', t==='daily');
   show('ct-rev-day-price-wrap', t==='daily');
   show('ct-rev-daily-total-wrap', t==='daily');
+  show('ct-rev-client-total-wrap', t==='per_client');
+  show('ct-rev-client-noura-wrap', t==='per_client');
+  show('ct-rev-client-vendor-wrap', t==='per_client');
   if(t==='fixed'){
     const a=document.getElementById('ct-rev-annual');
     if(a){a.removeAttribute('readonly');a.style.background='';}
@@ -5668,7 +5686,7 @@ function potentialSave(){
     monthly,annual:annualVal,
     durationType,durationDays,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -5745,6 +5763,9 @@ async function contractSave(){
   const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
   const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
   const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const revClientTotal=parseFloat(document.getElementById('ct-rev-client-total')?.value)||0;
+  const revClientNoura=parseFloat(document.getElementById('ct-rev-client-noura')?.value)||0;
+  const revClientVendor=parseFloat(document.getElementById('ct-rev-client-vendor')?.value)||0;
   const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
@@ -5755,7 +5776,7 @@ async function contractSave(){
     end:document.getElementById('ct-end').value,
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -5801,6 +5822,9 @@ function contractEdit(id){
   const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
   const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
   const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
+  const rcte=document.getElementById('ct-rev-client-total');if(rcte)rcte.value=c.revClientTotal||0;
+  const rcne=document.getElementById('ct-rev-client-noura');if(rcne)rcne.value=c.revClientNoura||0;
+  const rcve=document.getElementById('ct-rev-client-vendor');if(rcve)rcve.value=c.revClientVendor||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -6397,6 +6421,9 @@ function ctRevTypeChange(){
   show('ct-rev-days-wrap', t==='daily');
   show('ct-rev-day-price-wrap', t==='daily');
   show('ct-rev-daily-total-wrap', t==='daily');
+  show('ct-rev-client-total-wrap', t==='per_client');
+  show('ct-rev-client-noura-wrap', t==='per_client');
+  show('ct-rev-client-vendor-wrap', t==='per_client');
   if(t==='fixed'){
     const a=document.getElementById('ct-rev-annual');
     if(a){a.removeAttribute('readonly');a.style.background='';}
@@ -6476,7 +6503,7 @@ function potentialSave(){
     monthly,annual:annualVal,
     durationType,durationDays,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -6553,6 +6580,9 @@ async function contractSave(){
   const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
   const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
   const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const revClientTotal=parseFloat(document.getElementById('ct-rev-client-total')?.value)||0;
+  const revClientNoura=parseFloat(document.getElementById('ct-rev-client-noura')?.value)||0;
+  const revClientVendor=parseFloat(document.getElementById('ct-rev-client-vendor')?.value)||0;
   const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
@@ -6563,7 +6593,7 @@ async function contractSave(){
     end:document.getElementById('ct-end').value,
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -6609,6 +6639,9 @@ function contractEdit(id){
   const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
   const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
   const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
+  const rcte=document.getElementById('ct-rev-client-total');if(rcte)rcte.value=c.revClientTotal||0;
+  const rcne=document.getElementById('ct-rev-client-noura');if(rcne)rcne.value=c.revClientNoura||0;
+  const rcve=document.getElementById('ct-rev-client-vendor');if(rcve)rcve.value=c.revClientVendor||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -8008,7 +8041,7 @@ function potentialSave(){
     monthly,annual:annualVal,
     durationType,durationDays,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     priority:document.getElementById('pt-priority').value,
     notes:document.getElementById('pt-notes').value,
     created_at:new Date().toISOString()
@@ -8085,6 +8118,9 @@ async function contractSave(){
   const revDays=parseFloat(document.getElementById('ct-rev-days')?.value)||0;
   const revDayPrice=parseFloat(document.getElementById('ct-rev-day-price')?.value)||0;
   const revDailyTotal=parseFloat(document.getElementById('ct-rev-daily-total')?.value)||0;
+  const revClientTotal=parseFloat(document.getElementById('ct-rev-client-total')?.value)||0;
+  const revClientNoura=parseFloat(document.getElementById('ct-rev-client-noura')?.value)||0;
+  const revClientVendor=parseFloat(document.getElementById('ct-rev-client-vendor')?.value)||0;
   const annualVal=parseFloat(document.getElementById('ct-annual').value)||monthly*12;
   const contract={
     id:contractEditId||Date.now(),
@@ -8095,7 +8131,7 @@ async function contractSave(){
     end:document.getElementById('ct-end').value,
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
-    revDays,revDayPrice,
+    revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
     total:parseFloat(document.getElementById('ct-total').value)||0,
     status:document.getElementById('ct-status').value,
     notes:document.getElementById('ct-notes').value,
@@ -8141,6 +8177,9 @@ function contractEdit(id){
   const rde=document.getElementById('ct-rev-days');if(rde)rde.value=c.revDays||0;
   const rdpe=document.getElementById('ct-rev-day-price');if(rdpe)rdpe.value=c.revDayPrice||0;
   const rdte=document.getElementById('ct-rev-daily-total');if(rdte)rdte.value=c.revType==='daily'?c.revAnnual||0:0;
+  const rcte=document.getElementById('ct-rev-client-total');if(rcte)rcte.value=c.revClientTotal||0;
+  const rcne=document.getElementById('ct-rev-client-noura');if(rcne)rcne.value=c.revClientNoura||0;
+  const rcve=document.getElementById('ct-rev-client-vendor');if(rcve)rcve.value=c.revClientVendor||0;
   document.getElementById('ct-total').value=c.total||0;
   document.getElementById('ct-status').value=c.status||'active';
   document.getElementById('ct-notes').value=c.notes||'';
@@ -8429,6 +8468,15 @@ function buildContractsTableHTML(activeC,totalCM){
     if(nouraRatio>0||vendorRatio>0){
       return {label:`نورة ${nouraRatio}% — مزود ${vendorRatio}%`, annualVal:0, isRecurring:false};
     }
+    if(revType==='per_client'||c.revClientNoura>0||c.revClientTotal>0){
+      const clientTotal=parseFloat(c.revClientTotal)||0;
+      const nouraShare=parseFloat(c.revClientNoura)||0;
+      const vendorShare=parseFloat(c.revClientVendor)||(clientTotal-nouraShare);
+      if(clientTotal>0){
+        return {label:`نورة ${fmt(nouraShare)} — مزود ${fmt(vendorShare)} / عميل (إجمالي ${fmt(clientTotal)})`, annualVal:0, isRecurring:false};
+      }
+      return {label:`نورة ${fmt(nouraShare)} / عميل`, annualVal:0, isRecurring:false};
+    }
     if(revAnnual>0){
       return {label:`${fmt(revAnnual)} / سنة`, annualVal: revAnnual, isRecurring:true};
     }
@@ -8448,8 +8496,8 @@ function buildContractsTableHTML(activeC,totalCM){
       <td style="${TD}text-align:center;">${renLabel}</td>
       <td style="${TD}text-align:right;font-weight:600;">${monthly>0?fmt(monthly):'—'}</td>
       <td style="${TD}text-align:right;">${annual>0?fmt(annual):'—'}</td>
-      <td style="${TD}text-align:right;color:#1a5c2a;">${rev.label}</td>
-      <td style="${TD}text-align:right;color:#1a5c2a;font-weight:${rev.isRecurring?'700':'400'};">${rev.annualVal>0?fmt(rev.annualVal):'—'}</td>
+      <td style="${TD}text-align:right;">${rev.label}</td>
+      <td style="${TD}text-align:right;">${rev.annualVal>0?fmt(rev.annualVal):'—'}</td>
       <td style="${TD}text-align:center;font-size:9px;">${c.start||'—'}</td>
       <td style="${TD}text-align:center;font-size:9px;">${c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
@@ -8483,7 +8531,7 @@ function buildContractsTableHTML(activeC,totalCM){
         <td style="${TDF}text-align:right;">${fmt(totMonthly)}</td>
         <td style="${TDF}text-align:right;">${fmt(totAnnual)}</td>
         <td style="${TDF}"></td>
-        <td style="${TDF}text-align:right;color:#1a5c2a;">${totRevAnnual>0?fmt(totRevAnnual):'—'}</td>
+        <td style="${TDF}text-align:right;">${totRevAnnual>0?fmt(totRevAnnual):'—'}</td>
         <td colspan="3" style="${TDF}"></td>
       </tr>
       ${totRevNonRecurring>0?`<tr><td colspan="6" style="${TDF}font-size:9px;">* إيرادات تأجير / غير دورية (غير مشمولة في الإجمالي السنوي)</td><td style="${TDF}text-align:right;font-size:9px;color:#92400E;">${fmt(totRevNonRecurring)}</td><td colspan="3" style="${TDF}"></td></tr>`:''}
