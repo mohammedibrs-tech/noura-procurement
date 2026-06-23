@@ -1257,30 +1257,25 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>اسم الشركة / مقدم الخدمة</label><input id="ct-vendor" placeholder="اسم الشركة المورّدة"></div>
         <div class="field"><label>وصف الخدمة</label><input id="ct-type" placeholder="مثال: خدمات الحراسة الأمنية، صيانة المكيفات"></div>
         <div class="field"><label>تصنيف العقد</label>
-          <select id="ct-category" onchange="ctCategoryChange()">
-            <option value="">— اختر التصنيف —</option>
-            <optgroup label="عقود خدمات">
-              <option value="security">🔒 حراسة أمنية</option>
-              <option value="maintenance">🔧 صيانة</option>
-              <option value="cleaning">🧹 نظافة</option>
-              <option value="service">📋 خدمات أخرى</option>
-            </optgroup>
-            <optgroup label="عقود ذات إيراد">
-              <option value="revenue">💰 عقد بإيراد</option>
-            </optgroup>
-            <optgroup label="اشتراكات وتراخيص">
-              <option value="telecom">📡 اشتراك اتصالات</option>
-              <option value="software">💻 ترخيص برامج / تقنية</option>
-              <option value="subscription">🔄 اشتراك سنوي آخر</option>
-            </optgroup>
-          </select>
+          <input id="ct-category" list="ct-category-list" onchange="ctCategoryChange()" oninput="ctCategoryChange()" placeholder="اختر أو اكتب تصنيفاً">
+          <datalist id="ct-category-list">
+            <option value="security">حراسة أمنية</option>
+            <option value="maintenance">صيانة</option>
+            <option value="cleaning">نظافة</option>
+            <option value="service">خدمات أخرى</option>
+            <option value="revenue">عقد بإيراد</option>
+            <option value="telecom">اشتراك اتصالات</option>
+            <option value="software">ترخيص برامج / تقنية</option>
+            <option value="subscription">اشتراك سنوي آخر</option>
+          </datalist>
         </div>
         <div class="field"><label>آلية التجديد</label>
-          <select id="ct-renewal">
-            <option value="manual">📅 يدوي — يتطلب تجديداً صريحاً</option>
-            <option value="auto">🔁 تلقائي — يتجدد تلقائياً ما لم يُلغَ</option>
-            <option value="subscription">♾️ اشتراك دوري مستمر</option>
-          </select>
+          <input id="ct-renewal" list="ct-renewal-list" placeholder="اختر أو اكتب آلية التجديد">
+          <datalist id="ct-renewal-list">
+            <option value="manual">يدوي — يتطلب تجديداً صريحاً</option>
+            <option value="auto">تلقائي — يتجدد تلقائياً ما لم يُلغَ</option>
+            <option value="subscription">اشتراك دوري مستمر</option>
+          </datalist>
         </div>
         <div class="field"><label>تاريخ بداية العقد</label><input id="ct-start" type="date"></div>
         <div class="field"><label>تاريخ انتهاء العقد / الاستحقاق</label><input id="ct-end" type="date"></div>
@@ -7070,7 +7065,7 @@ function exportSemiPDF(){
   const sExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=sExp.reduce((s,e)=>s+expTotal(e),0);
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring'||c.status==='renewal_due');
+  const activeC=contracts.filter(c=>c.status!=='cancelled'&&c.status!=='expired');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSavAmt=calcCmpSavings();
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
