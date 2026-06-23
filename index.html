@@ -1279,6 +1279,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         </div>
         <div class="field"><label>تاريخ بداية العقد</label><input id="ct-start" type="date"></div>
         <div class="field"><label>تاريخ انتهاء العقد / الاستحقاق</label><input id="ct-end" type="date"></div>
+        <div class="field"><label>مجدد حتى <small style="color:#888;">(اختياري — يُستخدم بدل تاريخ الانتهاء)</small></label><input id="ct-renewed-until" type="date"></div>
         <div class="field"><label>القيمة الشهرية (ر.س)</label><input id="ct-monthly" type="number" placeholder="0" oninput="ctCalc()"></div>
         <div class="field"><label>القيمة السنوية (ر.س)</label><input id="ct-annual" type="number" placeholder="0 — يُحسب تلقائياً أو أدخله يدوياً"></div>
         <div class="field"><label>نوع الإيراد</label>
@@ -5184,6 +5185,7 @@ async function contractSave(){
     renewal:document.getElementById('ct-renewal')?.value||'manual',
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
+    renewedUntil:document.getElementById('ct-renewed-until')?.value||'',
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
     revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
@@ -5223,6 +5225,7 @@ function contractEdit(id){
   document.getElementById('ct-type').value=c.type||'';
   document.getElementById('ct-start').value=c.start||'';
   document.getElementById('ct-end').value=c.end||'';
+  if(document.getElementById('ct-renewed-until')) document.getElementById('ct-renewed-until').value=c.renewedUntil||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
   const revTypeEl=document.getElementById('ct-rev-type');
@@ -5774,6 +5777,7 @@ async function contractSave(){
     renewal:document.getElementById('ct-renewal')?.value||'manual',
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
+    renewedUntil:document.getElementById('ct-renewed-until')?.value||'',
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
     revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
@@ -5813,6 +5817,7 @@ function contractEdit(id){
   document.getElementById('ct-type').value=c.type||'';
   document.getElementById('ct-start').value=c.start||'';
   document.getElementById('ct-end').value=c.end||'';
+  if(document.getElementById('ct-renewed-until')) document.getElementById('ct-renewed-until').value=c.renewedUntil||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
   const revTypeEl=document.getElementById('ct-rev-type');
@@ -6591,6 +6596,7 @@ async function contractSave(){
     renewal:document.getElementById('ct-renewal')?.value||'manual',
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
+    renewedUntil:document.getElementById('ct-renewed-until')?.value||'',
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
     revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
@@ -6630,6 +6636,7 @@ function contractEdit(id){
   document.getElementById('ct-type').value=c.type||'';
   document.getElementById('ct-start').value=c.start||'';
   document.getElementById('ct-end').value=c.end||'';
+  if(document.getElementById('ct-renewed-until')) document.getElementById('ct-renewed-until').value=c.renewedUntil||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
   const revTypeEl=document.getElementById('ct-rev-type');
@@ -7104,10 +7111,9 @@ function exportSemiPDF(){
     if(c.status==='cancelled') return false;
     // العقد يجب أن يكون نشطاً خلال السنة المختارة
     const cStart=(c.start||'');
-    const cEnd=(c.end||'');
-    // لو في تاريخ بداية وهو بعد نهاية السنة — لا يظهر
+    // التاريخ الفعلي للانتهاء: "مجدد حتى" إن وجد، وإلا تاريخ الانتهاء الأصلي
+    const cEnd=(c.renewedUntil||c.end||'');
     if(cStart && cStart>yearEnd) return false;
-    // لو في تاريخ انتهاء وهو قبل بداية السنة — لا يظهر
     if(cEnd && cEnd<yearStart) return false;
     return true;
   });
@@ -8141,6 +8147,7 @@ async function contractSave(){
     renewal:document.getElementById('ct-renewal')?.value||'manual',
     start:document.getElementById('ct-start').value,
     end:document.getElementById('ct-end').value,
+    renewedUntil:document.getElementById('ct-renewed-until')?.value||'',
     monthly,annual:annualVal,
     revType,revMonthly,revAnnual:revType==='monthly'?revMonthly*12:revType==='daily'?revDailyTotal:revAnnualEl,
     revDays,revDayPrice,revDailyTotal,revClientTotal,revClientNoura,revClientVendor,
@@ -8180,6 +8187,7 @@ function contractEdit(id){
   document.getElementById('ct-type').value=c.type||'';
   document.getElementById('ct-start').value=c.start||'';
   document.getElementById('ct-end').value=c.end||'';
+  if(document.getElementById('ct-renewed-until')) document.getElementById('ct-renewed-until').value=c.renewedUntil||'';
   document.getElementById('ct-monthly').value=c.monthly||0;
   document.getElementById('ct-annual').value=c.annual||0;
   const revTypeEl=document.getElementById('ct-rev-type');
@@ -8511,7 +8519,7 @@ function buildContractsTableHTML(activeC,totalCM){
       <td style="${TD}text-align:right;">${rev.label}</td>
       <td style="${TD}text-align:right;">${rev.annualVal>0?fmt(rev.annualVal):'—'}</td>
       <td style="${TD}text-align:center;font-size:9px;">${c.start||'—'}</td>
-      <td style="${TD}text-align:center;font-size:9px;">${c.end||'—'}</td>
+      <td style="${TD}text-align:center;font-size:9px;">${c.renewedUntil?'<span style=\'color:#1a5c2a;font-weight:700;\'>'+c.renewedUntil+' ↻</span>':c.end||'—'}</td>
       <td style="${TD}text-align:center;font-weight:700;">${stLabel}</td>
     </tr>`;
   }).join('');
