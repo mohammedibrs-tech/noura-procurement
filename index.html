@@ -5259,7 +5259,12 @@ function contractEdit(id){
 async function contractDelete(id){
   if(!confirm('حذف هذا العقد؟'))return;
   contracts=contracts.filter(c=>c.id!==id);
+  // حفظ قائمة المحذوفات لمنع رجوعهم من Supabase
+  const deleted=JSON.parse(localStorage.getItem('contracts_deleted')||'[]');
+  if(!deleted.includes(id)){deleted.push(id);localStorage.setItem('contracts_deleted',JSON.stringify(deleted));}
   localStorage.setItem('contracts',JSON.stringify(contracts));
+  // حذف من Supabase في الخلفية
+  sbDelete('procurement_contracts',id).catch(()=>{});
   renderContracts();toast('تم الحذف');
 }
 
@@ -5843,7 +5848,12 @@ function contractEdit(id){
 async function contractDelete(id){
   if(!confirm('حذف هذا العقد؟'))return;
   contracts=contracts.filter(c=>c.id!==id);
+  // حفظ قائمة المحذوفات لمنع رجوعهم من Supabase
+  const deleted=JSON.parse(localStorage.getItem('contracts_deleted')||'[]');
+  if(!deleted.includes(id)){deleted.push(id);localStorage.setItem('contracts_deleted',JSON.stringify(deleted));}
   localStorage.setItem('contracts',JSON.stringify(contracts));
+  // حذف من Supabase في الخلفية
+  sbDelete('procurement_contracts',id).catch(()=>{});
   renderContracts();toast('تم الحذف');
 }
 
@@ -6662,7 +6672,12 @@ function contractEdit(id){
 async function contractDelete(id){
   if(!confirm('حذف هذا العقد؟'))return;
   contracts=contracts.filter(c=>c.id!==id);
+  // حفظ قائمة المحذوفات لمنع رجوعهم من Supabase
+  const deleted=JSON.parse(localStorage.getItem('contracts_deleted')||'[]');
+  if(!deleted.includes(id)){deleted.push(id);localStorage.setItem('contracts_deleted',JSON.stringify(deleted));}
   localStorage.setItem('contracts',JSON.stringify(contracts));
+  // حذف من Supabase في الخلفية
+  sbDelete('procurement_contracts',id).catch(()=>{});
   renderContracts();toast('تم الحذف');
 }
 
@@ -8213,7 +8228,12 @@ function contractEdit(id){
 async function contractDelete(id){
   if(!confirm('حذف هذا العقد؟'))return;
   contracts=contracts.filter(c=>c.id!==id);
+  // حفظ قائمة المحذوفات لمنع رجوعهم من Supabase
+  const deleted=JSON.parse(localStorage.getItem('contracts_deleted')||'[]');
+  if(!deleted.includes(id)){deleted.push(id);localStorage.setItem('contracts_deleted',JSON.stringify(deleted));}
   localStorage.setItem('contracts',JSON.stringify(contracts));
+  // حذف من Supabase في الخلفية
+  sbDelete('procurement_contracts',id).catch(()=>{});
   renderContracts();toast('تم الحذف');
 }
 
@@ -8821,8 +8841,11 @@ async function loadFromSupabase(){
   const ctRes=await sbGet('procurement_contracts');
   const ctLocal=JSON.parse(localStorage.getItem('contracts')||'[]');
   if(ctRes&&ctRes.length){
-    const sbMapped=ctRes.map(r=>typeof r.data==='string'?JSON.parse(r.data):r.data).filter(Boolean);
-    contracts=mergeById(sbMapped,ctLocal);
+    const ctDeleted=JSON.parse(localStorage.getItem('contracts_deleted')||'[]');
+    const sbMapped=ctRes.map(r=>typeof r.data==='string'?JSON.parse(r.data):r.data).filter(Boolean).filter(c=>!ctDeleted.includes(c.id));
+    const merged=[...ctLocal];
+    sbMapped.forEach(sb=>{if(!merged.some(l=>String(l.id)===String(sb.id)))merged.push(sb);});
+    contracts=merged;
   }else contracts=ctLocal;
   localStorage.setItem('contracts',JSON.stringify(contracts));
 
@@ -9863,16 +9886,16 @@ function cmpPDF(){
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
   html+='@page{size:A4;margin:0;}';
-  html+='body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}';
-  html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}';
-  html+='.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}';
+  html+='body{font-family:Calibri,Arial,sans-serif;font-size:12px;color:#111;direction:rtl;margin:0;padding:0;}';
+  html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:fill;pointer-events:none;}';
+  html+='.pdf-content{position:relative;z-index:2;padding:37mm 14mm 36mm;}';
   html+='h1{font-size:15px;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:4px;color:#244062;}';
-  html+='h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #244062;padding-right:7px;color:#244062;}';
-  html+='p{text-align:center;color:#555;font-size:10px;margin-bottom:14px;}';
-  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;border:1px solid #000;background:#fff;}';
-  html+='th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
-  html+='td{padding:4px 7px;border:1px solid #000;}';
-  html+='@media print{.bg-img{position:fixed;}}';
+  html+='h2{font-size:13px;margin:16px 0 6px;border-right:4px solid #244062;padding-right:7px;color:#244062;}';
+  html+='p{text-align:center;color:#555;font-size:11px;margin-bottom:14px;}';
+  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px;border:1px solid #000;background:#fff;}';
+  html+='th{background:#244062;color:#fff;padding:6px 8px;text-align:right;border:1px solid #000;font-size:12px;}';
+  html+='td{padding:5px 8px;border:1px solid #000;font-size:12px;}';
+  html+='@media print{.bg-img{position:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
   html+='</style></head><body>';
   if(BG_CMP) html+='<img src="'+BG_CMP+'" class="bg-img">';
   html+='<div class="pdf-content">';
@@ -9905,9 +9928,9 @@ function revCalcCurrent(){
   var ourPct=sp>0?((oa/sp)*100).toFixed(1):'—';
   var theirPct=sp>0?((ta/sp)*100).toFixed(1):'—';
   el.style.display='flex';
-  el.innerHTML='<span>سعر الخدمة: <b>'+sp.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b></span>'
-    +'<span>حصة نورة: <b>'+oa.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b> ('+ourPct+'%)</span>'
-    +'<span>حصة مقدم الخدمة: <b>'+ta.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</b> ('+theirPct+'%)</span>';
+  el.innerHTML='<span>سعر الخدمة: <b>'+sp.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</b></span>'
+    +'<span>حصة نورة: <b>'+oa.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</b> ('+ourPct+'%)</span>'
+    +'<span>حصة مقدم الخدمة: <b>'+ta.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</b> ('+theirPct+'%)</span>';
 }
 
 function revReset(){
@@ -10029,10 +10052,10 @@ function renderRevCompanies(){
       +'</tr></thead><tbody>'+rows+'</tbody>'
       +'<tfoot><tr style="background:#f0f4f8;">'
       +'<td style="font-weight:700;padding:7px 10px;">الإجمالي</td>'
-      +'<td style="font-weight:700;padding:7px 10px;text-align:right;">'+tots.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#276749;">'+tots.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;">'+tots.grandTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#276749;">'+tots.ourTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#276749;">'+ourPctTotal+'</td>'
-      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#C53030;">'+tots.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;padding:7px 10px;text-align:right;color:#C53030;">'+tots.theirTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="font-weight:700;padding:7px 10px;text-align:center;color:#C53030;">'+theirPctTotal+'</td>'
       +'<td></td></tr></tfoot>'
       +'</table></div>';
@@ -10088,10 +10111,10 @@ function renderRevSummary(){
   if(hasCur){
     html+='<tr style="background:#f0f0f0;font-weight:700;">'
       +'<td>'+(curVendor||'العقد الحالي')+'</td>'
-      +'<td>'+curPrice.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td>'+curOur.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+curPrice.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+curOur.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="text-align:center;">'+curOurPct.toFixed(1)+'%</td>'
-      +'<td>'+curTheir.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+curTheir.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="text-align:center;">'+(curPrice>0?((curTheir/curPrice)*100).toFixed(1)+'%':'—')+'</td>'
       +'<td style="text-align:center;">—</td>'
       +'</tr>';
@@ -10105,10 +10128,10 @@ function renderRevSummary(){
       :'';
     html+='<tr style="background:'+(isBest?'#f8f8f8':'#fff')+'">'
       +'<td style="font-weight:'+(isBest?'700':'400')+';">'+r.name+'</td>'
-      +'<td>'+r.grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
-      +'<td style="font-weight:700;">'+r.ourTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+r.grandTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td style="font-weight:700;">'+r.ourTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="text-align:center;font-weight:'+(isBest?'700':'400')+';">'+r.ourPct.toFixed(1)+'%</td>'
-      +'<td>'+r.theirTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س</td>'
+      +'<td>'+r.theirTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td>'
       +'<td style="text-align:center;">'+(r.grandTotal>0?(100-r.ourPct).toFixed(1)+'%':'—')+'</td>'
       +diffCell
       +'</tr>';
@@ -10139,7 +10162,7 @@ function revRenderExpected(){
   var hasCur=curPrice>0;
   var diffAmt=hasCur?(exp.ourTotal-curOur):null;
   var diffPct=hasCur?(exp.ourPct-curOurPct):null;
-  var fmt=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});};
+  var fmt=function(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});};
   var html='<table class="tbl"><thead><tr>'
     +'<th></th><th>سعر الخدمة (ر.س)</th><th>حصة شركة نورة (ر.س)</th><th>نسبة شركة نورة %</th><th>حصة مقدم الخدمة (ر.س)</th><th>نسبة مقدم الخدمة %</th>'
     +(hasCur?'<th>التغير في حصة نورة (ر.س)</th><th>التغير في النسبة %</th>':'')
@@ -10347,7 +10370,7 @@ function revExcelFromData(title,date,serviceType,companies,cur){
     sc('F'+(curRow+1),(exp.grandTotal>0?(100-exp.ourPct).toFixed(1)+'%':'—'),sPct(LGRAY,true));
     if(hasCur){
       var dAmt=exp.ourTotal-curOur; var dPct=exp.ourPct-curOurPct;
-      sc('G'+(curRow+1),(dAmt>0?'+':'')+dAmt.toLocaleString('ar-SA',{minimumFractionDigits:2}),sText(LGRAY,true));
+      sc('G'+(curRow+1),(dAmt>0?'+':'')+dAmt.toLocaleString('en-US',{minimumFractionDigits:2}),sText(LGRAY,true));
       sc('H'+(curRow+1),(dPct>0?'+':'')+dPct.toFixed(1)+'%',sPct(LGRAY,true));
     }
     curRow+=2;
@@ -10371,19 +10394,19 @@ function revExcelFromData(title,date,serviceType,companies,cur){
     sc('B'+(curRow+1),curPrice,sNum(WHITE,false));
     sc('C'+(curRow+1),exp.grandTotal,sNum(WHITE,false));
     var dPrice=exp.grandTotal-curPrice;
-    sc('D'+(curRow+1),(dPrice>=0?'+':'')+dPrice.toLocaleString('ar-SA',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
+    sc('D'+(curRow+1),(dPrice>=0?'+':'')+dPrice.toLocaleString('en-US',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
     curRow++;
     sc('A'+(curRow+1),'حصة شركة نورة (ر.س)',sText(ZEBRA,false));
     sc('B'+(curRow+1),curOur,sNum(ZEBRA,false));
     sc('C'+(curRow+1),exp.ourTotal,sNum(ZEBRA,false));
-    sc('D'+(curRow+1),(dAmt3>=0?'+':'')+dAmt3.toLocaleString('ar-SA',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:ZEBRA},alignment:{horizontal:'center'},border:bdr()});
+    sc('D'+(curRow+1),(dAmt3>=0?'+':'')+dAmt3.toLocaleString('en-US',{minimumFractionDigits:2}),{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:ZEBRA},alignment:{horizontal:'center'},border:bdr()});
     curRow++;
     sc('A'+(curRow+1),'نسبة شركة نورة %',sText(WHITE,false));
     sc('B'+(curRow+1),curOurPct.toFixed(1)+'%',sPct(WHITE,false));
     sc('C'+(curRow+1),exp.ourPct.toFixed(1)+'%',sPct(WHITE,false));
     sc('D'+(curRow+1),(dPct3>=0?'+':'')+dPct3.toFixed(1)+'%',{font:{name:'Calibri',sz:9,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:WHITE},alignment:{horizontal:'center'},border:bdr()});
     curRow++;
-    var summaryLabel3=dAmt3>=0?('التوفير: '+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أكثر)'):('الفرق: -'+Math.abs(dAmt3).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أقل)');
+    var summaryLabel3=dAmt3>=0?('التوفير: '+Math.abs(dAmt3).toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أكثر)'):('الفرق: -'+Math.abs(dAmt3).toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س ('+Math.abs(dPct3).toFixed(1)+'% أقل)');
     sc('A'+(curRow+1),summaryLabel3,{font:{name:'Calibri',sz:10,bold:true,color:dColor3},fill:{patternType:'solid',fgColor:highlightBg},alignment:{horizontal:'center',vertical:'center'},border:bdr()});
     merge(curRow,0,curRow,CMPNCOLS); curRow+=2;
   }
@@ -10495,7 +10518,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
   var exp=cur.expected||null;
   var hasExp=!!(exp&&exp.grandTotal>0);
 
-  var fmt=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});};
+  var fmt=function(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});};
   var maxPct=0;
   companies.forEach(function(co){var t=revCalcTotals(co);var p=t.grandTotal>0?(t.ourTotal/t.grandTotal)*100:0;if(p>maxPct)maxPct=p;});
 
@@ -10601,17 +10624,17 @@ function revPDFFromData(title,date,serviceType,companies,cur){
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>'
     +'@page{size:A4;margin:0;}'
-    +'body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;}'
-    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
-    +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
-    +'h1{font-size:14px;text-align:center;border-bottom:1.5px solid #244062;padding-bottom:4px;margin-bottom:4px;color:#244062;}'
-    +'h2{font-size:11px;margin:12px 0 5px;border-right:3.5px solid #244062;padding-right:7px;color:#244062;}'
-    +'h3{font-size:10px;}'
-    +'p{text-align:center;color:#555;font-size:9px;margin-bottom:10px;}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;border:1px solid #000;background:#fff;}'
-    +'th{background:#244062;color:#fff;padding:4px 7px;text-align:right;border:1px solid #000;}'
-    +'td{padding:3px 7px;border:1px solid #000;background:transparent;}'
-    +'@media print{.bg-img{position:fixed;}}'
+    +'body{font-family:Calibri,Arial,sans-serif;font-size:12px;color:#111;direction:rtl;margin:0;padding:0;}'
+    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:fill;pointer-events:none;}'
+    +'.pdf-content{position:relative;z-index:2;padding:37mm 14mm 36mm;}'
+    +'h1{font-size:15px;text-align:center;border-bottom:1.5px solid #244062;padding-bottom:4px;margin-bottom:4px;color:#244062;}'
+    +'h2{font-size:13px;margin:12px 0 5px;border-right:3.5px solid #244062;padding-right:7px;color:#244062;}'
+    +'h3{font-size:12px;}'
+    +'p{text-align:center;color:#555;font-size:11px;margin-bottom:10px;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:12px;border:1px solid #000;background:#fff;}'
+    +'th{background:#244062;color:#fff;padding:6px 8px;text-align:right;border:1px solid #000;font-size:12px;}'
+    +'td{padding:4px 8px;border:1px solid #000;background:transparent;font-size:12px;}'
+    +'@media print{.bg-img{position:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}'
     +'</style></head><body>'
     +(BG_REV?'<img src="'+BG_REV+'" class="bg-img">':'')
     +'<div class="pdf-content">'
@@ -10637,7 +10660,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
 ══════════════════════════════════════════════ */
 var f2MaintOffers=[];
 var f2LeaseOffers=[];
-function f2Fmt(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function f2Fmt(n){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,mobile:'no',parts:'yes',sla:'8 ساعات',duration:1});f2RenderMaint();}
 function f2DelMaint(id){f2MaintOffers=f2MaintOffers.filter(function(o){return o.id!==id;});f2RenderMaint();f2Calc();}
 function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='annual'||field==='duration')?parseFloat(val)||0:val;f2Calc();}
@@ -10894,7 +10917,7 @@ function f2PDF(reportTitle){
   var opts=[{n:'التملك مع أفضل عقد صيانة',c:b4},{n:'التأجير الجديد — أفضل عرض',c:nl4},{n:'الاستمرار في التأجير الحالي',c:l4}].filter(function(x){return x.c>0;});
   var best=opts.length?opts.reduce(function(a,b){return a.c<b.c?a:b;}):null;
   var BG=FORM_BG||'';
-  var today=new Date().toLocaleDateString('ar-SA');
+  var today=new Date().toLocaleDateString('en-US');
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
   // صياغة الملخص التنفيذي
   var execSummary='';
