@@ -7538,7 +7538,7 @@ function committeeExportPDFData(c){
   const offersTable=(()=>{
     const rows=(c.offers||[]).sort((a,b)=>a.amount-b.amount).map(o=>{
       const amt=o.paymentType==='monthly'?(o.amount||0)*12:(o.amount||0);
-      return `<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${amt.toLocaleString('ar-SA')} ريال</td></tr>`;
+      return `<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td><td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${amt.toLocaleString('en-US',{minimumFractionDigits:2})} ريال</td></tr>`;
     }).join('');
     return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
     <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">الإجمالي السنوي شاملاً الضريبة المضافة</th></tr></thead>
@@ -7567,7 +7567,7 @@ ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
 <p>${c.views||''}</p>
 <p><strong>توصيات لجنة فحص العروض:</strong></p>
-<p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) بقيمة إجمالية قدرها (<strong>${(c.winnerAmount||0).toLocaleString('ar-SA')}</strong>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%) وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
+<p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) بقيمة إجمالية قدرها (<strong>${(c.winnerAmount||0).toLocaleString('en-US',{minimumFractionDigits:2})}</strong>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%) وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
 ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}م.</p>`:''}
 <p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
