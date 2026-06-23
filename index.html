@@ -8393,9 +8393,8 @@ function buildPOTableHTML(poList){
     <div>${mkTbl(left,0)}</div>
     <div>${mkTbl(right,half)}</div>
   </div>
-  <div style="border-top:2px solid #000;padding:3px 0;text-align:center;">
-    <span style="font-size:11px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
-    &nbsp;&nbsp;
+  <div style="border:2px solid #000;border-radius:6px;padding:5px 12px;margin-top:4px;background:#fff;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:11px;font-weight:800;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
     <span style="font-size:14px;font-weight:900;letter-spacing:0.5px;">${fmt(totalVal)}</span>
   </div>`;
 }
