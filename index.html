@@ -6890,42 +6890,52 @@ function exportSemiPDF(){
   const year=document.getElementById('rs-year').value;
   const halfName=half==='1'?'الأول':'الثاني';
   const SIG=SIG_URL;const BG=FORM_BG;
-  const content=document.getElementById('semi-report-content').innerHTML;
-  const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
-  const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
-  const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sExpForSum=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
+  const cmpSav=calcCmpSavings();
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  // ملخص النصف — جدول
+  const summaryRows=`
+    <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)}</td><td style="text-align:right;">ر.س</td></tr>
+    <tr><td>إجمالي قيمة طلبات الشراء (PO)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)}</td><td style="text-align:right;">ر.س — ${sPOList.length} طلب</td></tr>
+    <tr><td>إجمالي العقود الشهري (العقود النشطة)</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)}</td><td style="text-align:right;">ر.س</td></tr>
+    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSav>0?sFmt(cmpSav):'—'}</td><td style="text-align:right;">ر.س</td></tr>
+    <tr><td style="font-weight:800;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sPOVal)}</td><td style="text-align:right;font-weight:700;">ر.س</td></tr>`;
+  // المصروفات شهراً بشهر
+  const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
+  // أعلى الأصناف
+  const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  // المصروفات حسب الإدارة
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
-  const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===year+'-'+m).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   const SIG_B=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG?'<img src="'+SIG+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
-  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #244062;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #244062;background:#244062;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #244062;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #244062;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#244062;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #244062;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
-  const w=window.open('','_blank');
+  const CSS='@page{size:A4 landscape;margin:32mm 13mm 20mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#000;direction:rtl;line-height:1.5;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:8.5px;font-weight:800;color:#fff;background:#244062;padding:4px 8px;margin:10px 0 0;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}thead{display:table-header-group;}thead th{padding:5px 6px;border:1px solid #244062;background:#1a5276;color:#fff;font-size:8px;font-weight:700;text-align:right;}tbody td{padding:4px 6px;border:1px solid #bbb;color:#000;font-size:8px;background:#fff;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 6px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:8px;background:#d6e4f0;color:#000;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;}.sig-area{display:flex;gap:40px;margin-top:18px;padding-top:10px;border-top:2px solid #244062;page-break-inside:avoid;}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col{page-break-inside:avoid;}}';
   const bgStyle=BG?`<style>:root{--bg-url:url('${BG}');}body{background-image:url('${BG}');background-size:297mm 210mm;background-repeat:repeat;}</style>`:'';
+  const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style>${bgStyle}</head><body class="${BG?'has-bg':''}"><div class="pdf-content">
 <h1>${rsTitle2}</h1>
-<div class="kpi-row">
-  <div class="kpi-box"><div class="kpi-label">إجمالي المصروفات</div><div class="kpi-val">${sFmt(sTotalSpent)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">قيمة PO</div><div class="kpi-val">${sFmt(sPOVal)}</div><div class="kpi-unit">ر.س (${sPOList.length} طلب)</div></div>
-  <div class="kpi-box"><div class="kpi-label">العقود الشهري</div><div class="kpi-val">${sFmt(sTotalCM)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">المجموع (PO + مصروف)</div><div class="kpi-val">${sFmt(sTotalSpent+sPOVal)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">عدد الإدارات</div><div class="kpi-val">${Object.keys(sDeptMap).length}</div><div class="kpi-unit">إدارة</div></div>
-</div>
+<div class="sec-title">ملخص النصف ${halfName} ${year}</div>
+<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th><th style="text-align:right;">الوحدة / ملاحظة</th></tr></thead>
+<tbody>${summaryRows}</tbody></table>
 <div class="two-col">
-  <div><div class="sec-title">المصروفات شهراً بشهر</div>
-  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
-  <tbody>${sMonthRows}</tbody>
-  <tfoot><tr><td style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">${sFmt(sTotalSpent)}</td><td></td></tr></tfoot></table></div>
-  <div><div class="sec-title">أعلى الأصناف إنفاقاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
-  <tbody>${sTopItemRows}</tbody></table></div>
+  <div>
+    <div class="sec-title">المصروفات شهراً بشهر</div>
+    <table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
+    <tbody>${sMonthRows}</tbody>
+    <tfoot><tr><td>الإجمالي</td><td style="text-align:right;">${sFmt(sTotalSpent)}</td><td></td></tr></tfoot></table>
+  </div>
+  <div>
+    <div class="sec-title">أعلى الأصناف إنفاقاً</div>
+    <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
+    <tbody>${sTopItemRows}</tbody></table>
+  </div>
 </div>
 <div class="sec-title">المصروفات حسب الإدارة</div>
 <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead>
@@ -8316,48 +8326,50 @@ function exportMonthlyPDF(){
   const month=document.getElementById('rm-month').value;
   const year=document.getElementById('rm-year').value;
   const SIG=SIG_URL;const BG=FORM_BG;
+  const monthName=MONTHS_AR[month]||month;
   const monthExp=expenses.filter(e=>expMonthKey(e)===(year+'-'+month));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,year+'-'+month));
-  const monthPC=pcGroups[year+'-'+month]||[];
+  const monthPOVal=monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
+  const cmpSavAmt=calcCmpSavings();
+  const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  // جدول الملخص
+  const summaryRows=`
+    <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td><td style="text-align:right;">ر.س — ${monthExp.length} عملية</td></tr>
+    <tr><td>إجمالي قيمة طلبات الشراء (PO)</td><td style="text-align:right;font-weight:700;">${fmt2(monthPOVal)}</td><td style="text-align:right;">ر.س — ${monthPO.length} طلب</td></tr>
+    <tr><td>إجمالي العقود الشهري (العقود النشطة)</td><td style="text-align:right;font-weight:700;">${fmt2(totalCM)}</td><td style="text-align:right;">ر.س</td></tr>
+    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAmt>0?fmt2(cmpSavAmt):'—'}</td><td style="text-align:right;">ر.س</td></tr>
+    <tr><td style="font-weight:800;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${fmt2(totalSpent+monthPOVal)}</td><td style="text-align:right;font-weight:700;">ر.س</td></tr>`;
+  // المصروفات حسب الإدارة
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{
-    const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');
-    const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';
-    return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;
-  }).join('');
-  const expRows=monthExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)} ر.س</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
-  const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=60;});
-  const cmpSavAmt=calcCmpSavings();
-  const contractSavAmt=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const monthPOVal=monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;}).join('');
+  // أعلى الأصناف
   const itemMapM={};monthExp.forEach(e=>{itemMapM[e.item_name]=(itemMapM[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const SIG_B=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG?'<img src="'+SIG+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
-  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #244062;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #244062;background:#244062;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #244062;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #244062;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#244062;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #244062;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
-  const w=window.open('','_blank');
+  const CSS='@page{size:A4 landscape;margin:32mm 13mm 20mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:8.5px;color:#000;direction:rtl;line-height:1.5;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:8.5px;font-weight:800;color:#fff;background:#244062;padding:4px 8px;margin:10px 0 0;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}thead{display:table-header-group;}thead th{padding:5px 6px;border:1px solid #244062;background:#1a5276;color:#fff;font-size:8px;font-weight:700;text-align:right;}tbody td{padding:4px 6px;border:1px solid #bbb;color:#000;font-size:8px;background:#fff;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 6px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:8px;background:#d6e4f0;color:#000;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;}.sig-area{display:flex;gap:40px;margin-top:18px;padding-top:10px;border-top:2px solid #244062;page-break-inside:avoid;}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col{page-break-inside:avoid;}}';
   const bgStyle=BG?`<style>:root{--bg-url:url('${BG}');}body{background-image:url('${BG}');background-size:297mm 210mm;background-repeat:repeat;}</style>`:'';
+  const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style>${bgStyle}</head><body class="${BG?'has-bg':''}"><div class="pdf-content">
-<h1>التقرير الشهري — ${MONTHS_AR[month]||month} ${year}</h1>
-<div class="kpi-row">
-  <div class="kpi-box"><div class="kpi-label">إجمالي المصروفات</div><div class="kpi-val">${fmt2(totalSpent)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">طلبات الشراء PO</div><div class="kpi-val">${monthPO.length}</div><div class="kpi-unit">طلب</div></div>
-  <div class="kpi-box"><div class="kpi-label">قيمة PO</div><div class="kpi-val">${fmt2(monthPOVal)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">العقود الشهري</div><div class="kpi-val">${fmt2(totalCM)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">وفر مقارنة الأسعار</div><div class="kpi-val">${fmt2(cmpSavAmt)}</div><div class="kpi-unit">ر.س</div></div>
-</div>
+<h1>التقرير الشهري — ${monthName} ${year}</h1>
+<div class="sec-title">ملخص الشهر</div>
+<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th><th style="text-align:right;">الوحدة / ملاحظة</th></tr></thead>
+<tbody>${summaryRows}</tbody></table>
 <div class="two-col">
-  <div><div class="sec-title">المصروفات حسب الإدارة</div>
-  <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead>
-  <tbody>${deptRows}</tbody>
-  <tfoot><tr><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent)}</td></tr></tfoot></table></div>
-  <div><div class="sec-title">أعلى الأصناف إنفاقاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
-  <tbody>${topItemRowsM}</tbody></table></div>
+  <div>
+    <div class="sec-title">المصروفات حسب الإدارة</div>
+    <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead>
+    <tbody>${deptRows}</tbody>
+    <tfoot><tr><td colspan="3">الإجمالي</td><td style="text-align:right;">${fmt2(totalSpent)}</td></tr></tfoot></table>
+  </div>
+  <div>
+    <div class="sec-title">أعلى الأصناف إنفاقاً</div>
+    <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
+    <tbody>${topItemRowsM}</tbody></table>
+  </div>
 </div>
 <div class="sec-title">طلبات الشراء (PO)</div>
 ${buildPOTableHTML(monthPO)}
