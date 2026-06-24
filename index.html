@@ -1475,10 +1475,24 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:8px;">مرئيات وتوصيات اللجنة</div>
       <div class="field"><label>مرئيات اللجنة</label><textarea id="cm-views" rows="3" placeholder="اكتب مرئيات اللجنة...">قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل</textarea></div>
       <div class="field" style="margin-top:8px;"><label>الشركة الفائزة (للترسية)</label><input id="cm-winner" placeholder="اسم الشركة الفائزة"></div>
-      <div class="field" style="margin-top:8px;"><label>المبلغ الإجمالي للترسية (ر.س) — يُكتب رقماً وكتابةً</label>
-        <div style="display:flex;gap:8px;">
-          <input id="cm-winner-amount" type="number" placeholder="28931.01" oninput="cmUpdateAmountWords()" style="flex:1;">
-          <input id="cm-winner-words" placeholder="المبلغ بالكلمات (تلقائي)" style="flex:2;background:#f5f5f5;" readonly>
+      <div class="field" style="margin-top:8px;">
+        <label>نوع الترسية</label>
+        <select id="cm-winner-type" onchange="cmToggleWinnerType()" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;background:#fff;">
+          <option value="fixed">قيمة ثابتة (رقم)</option>
+          <option value="revenue">تقاسم إيرادات / اتفاقية</option>
+        </select>
+      </div>
+      <div id="cm-winner-fixed-wrap" style="margin-top:8px;">
+        <div class="field"><label>المبلغ الإجمالي للترسية (ر.س) — يُكتب رقماً وكتابةً</label>
+          <div style="display:flex;gap:8px;">
+            <input id="cm-winner-amount" type="number" placeholder="28931.01" oninput="cmUpdateAmountWords()" style="flex:1;">
+            <input id="cm-winner-words" placeholder="المبلغ بالكلمات (تلقائي)" style="flex:2;background:#f5f5f5;" readonly>
+          </div>
+        </div>
+      </div>
+      <div id="cm-winner-revenue-wrap" style="display:none;margin-top:8px;">
+        <div class="field"><label>شروط تقاسم الإيرادات / وصف الاتفاقية</label>
+          <textarea id="cm-winner-revenue-text" rows="3" placeholder="مثال: تقاسم الإيراد بنسبة 60% للشركة و40% لمقدم الخدمة من إجمالي الإيرادات الشهرية..." style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;resize:vertical;"></textarea>
         </div>
       </div>
       <div class="field" style="margin-top:8px;"><label>تاريخ بداية العقد</label><input id="cm-start-date" placeholder="1/8/2025م"></div>
@@ -6978,6 +6992,14 @@ function cmUpdateAmountWords(){
   }else{
     document.getElementById('cm-winner-words').value='';
   }
+
+function cmToggleWinnerType(){
+  const t=document.getElementById('cm-winner-type').value;
+  const fixedWrap=document.getElementById('cm-winner-fixed-wrap');
+  const revWrap=document.getElementById('cm-winner-revenue-wrap');
+  if(t==='revenue'){fixedWrap.style.display='none';revWrap.style.display='block';}
+  else{fixedWrap.style.display='block';revWrap.style.display='none';}
+}
 }
 
 function cmGetData(){
@@ -7010,8 +7032,10 @@ function cmGetData(){
     members,offers,
     views:document.getElementById('cm-views').value.trim(),
     winner:document.getElementById('cm-winner').value.trim(),
+    winnerType:document.getElementById('cm-winner-type').value,
     winnerAmount:parseFloat(document.getElementById('cm-winner-amount').value)||0,
     winnerWords:document.getElementById('cm-winner-words').value.trim(),
+    winnerRevenueText:document.getElementById('cm-winner-revenue-text').value.trim(),
     startDate:document.getElementById('cm-start-date').value.trim(),
     extraNotes:document.getElementById('cm-extra-notes').value.trim(),
   };
@@ -7020,7 +7044,7 @@ function cmGetData(){
 function committeeReset(){
   committeeEditId=null;
   document.getElementById('committee-form-title').textContent='إنشاء محضر جديد';
-  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-winner-revenue-text','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('cm-winner-type').value='fixed';cmToggleWinnerType();
   document.getElementById('cm-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('cm-views').value='قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل';
   document.getElementById('cm-offers-list').innerHTML='';
@@ -7057,8 +7081,11 @@ function committeeEdit(id){
   document.getElementById('cm-chair-name').value=c.chairName||'';
   document.getElementById('cm-views').value=c.views||'';
   document.getElementById('cm-winner').value=c.winner||'';
+  document.getElementById('cm-winner-type').value=c.winnerType||'fixed';
   document.getElementById('cm-winner-amount').value=c.winnerAmount||'';
   document.getElementById('cm-winner-words').value=c.winnerWords||'';
+  document.getElementById('cm-winner-revenue-text').value=c.winnerRevenueText||'';
+  cmToggleWinnerType();
   document.getElementById('cm-start-date').value=c.startDate||'';
   document.getElementById('cm-extra-notes').value=c.extraNotes||'';
   // أعضاء
@@ -7207,7 +7234,7 @@ ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
 <p>${c.views||''}</p>
 <p><strong>توصيات لجنة فحص العروض:</strong></p>
-<p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) بقيمة إجمالية قدرها (<strong>${(c.winnerAmount||0).toLocaleString('ar-SA')}</strong>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%) وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
+<p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) ${c.winnerType==='revenue'?'وذلك وفق الآتي: <strong>'+c.winnerRevenueText+'</strong>':'بقيمة إجمالية قدرها (<strong>'+(c.winnerAmount||0).toLocaleString('ar-SA')+'</strong>) '+c.winnerWords+' شامل ضريبة القيمة المضافة (15%)'} وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
 ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}م.</p>`:''}
 <p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
@@ -7259,7 +7286,7 @@ ${techReview}
 <p><b>مرئيات لجنة فحص العروض:</b></p>
 <p>${c.views||''}</p>
 <p><b>توصيات لجنة فحص العروض:</b></p>
-<p>أولاً: ترسية المشروع على (<b>${c.winner}</b>) بقيمة إجمالية قدرها (<b>${(c.winnerAmount||0).toLocaleString('ar-SA')}</b>) ${c.winnerWords} شامل ضريبة القيمة المضافة (15%).</p>
+<p>أولاً: ترسية المشروع على (<b>${c.winner}</b>) ${c.winnerType==='revenue'?'وذلك وفق الآتي: <b>'+c.winnerRevenueText+'</b>':'بقيمة إجمالية قدرها (<b>'+(c.winnerAmount||0).toLocaleString('ar-SA')+'</b>) '+c.winnerWords+' شامل ضريبة القيمة المضافة (15%)'}.</p>
 ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}م.</p>`:''}
 <p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
