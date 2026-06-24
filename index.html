@@ -6901,21 +6901,21 @@ function exportSemiPDF(){
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   // جدول الملخص
   const summaryRows=`
-    <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
+    <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)}</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSav>0?sFmt(cmpSav)+' ر.س':'—'}</td></tr>
     <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sPOVal)} ر.س</td></tr>`;
   // شهر بشهر
-  const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)} ر.س</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
+  const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
   // أعلى الأصناف
   const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)} ر.س</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   // حسب الإدارة
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)} ر.س</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
+  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;border-right:4px solid #244062;padding-right:7px;color:#244062;padding:4px 8px;background:#f0f4f8;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#b8cce4;color:#000;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#b8cce4;color:#000;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -8095,10 +8095,10 @@ function buildPOTableHTML(poList){
   const half=Math.ceil(items.length/2);
   const left=items.slice(0,half);
   const right=items.slice(half);
-  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
+  const TH='padding:4px 6px;border:1px solid #244062;color:#000;font-size:8px;font-weight:700;background:#b8cce4;text-align:right;';
+  const TD='padding:3px 6px;border:1px solid #bbb;font-size:8px;background:rgba(255,255,255,0.75);';
   const mkRows=(arr,si)=>arr.map((it,i)=>`<tr style="background:${'transparent'};">
-    <td style="${TD}text-align:center;font-size:6px;">${it.num}</td>
+    <td style="${TD}text-align:center;">${it.num}</td>
     <td style="${TD}">${it.co}</td>
     <td style="${TD}text-align:right;font-weight:700;">${fmt(it.val)}</td>
   </tr>`).join('');
@@ -8106,7 +8106,7 @@ function buildPOTableHTML(poList){
     <thead><tr>
       <th style="${TH}text-align:center;">رقم PO</th>
       <th style="${TH}">المورد</th>
-      <th style="${TH}text-align:right;">القيمة (شامل ض)</th>
+      <th style="${TH}text-align:right;">القيمة</th>
     </tr></thead>
     <tbody>${mkRows(arr,si)}</tbody>
   </table>`;
@@ -8115,17 +8115,17 @@ function buildPOTableHTML(poList){
     <div>${mkTbl(right,half)}</div>
   </div>
   <div style="border-top:2px solid #000;padding:3px 0;text-align:center;">
-    <span style="font-size:8px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
+    <span style="font-size:9px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
     &nbsp;&nbsp;
-    <span style="font-size:14px;font-weight:900;letter-spacing:0.5px;">${fmt(totalVal)}</span>
+    <span style="font-size:15px;font-weight:900;letter-spacing:0.5px;">${fmt(totalVal)}</span>
   </div>`;
 }
 
 function buildContractsTableHTML(activeC,totalCM){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
-  const TH='padding:3px 5px;border:1px solid #244062;color:#fff;font-size:7px;font-weight:700;background:#244062;text-align:right;';
-  const TD='padding:2.5px 5px;border:1px solid #bbb;font-size:7px;background:rgba(255,255,255,0.75);';
-  const ST=(t)=>`<div style="margin:7px 0 2px;padding:2px 7px;background:#244062;color:#fff;font-size:7px;font-weight:800;">${t}</div>`;
+  const TH='padding:5px 7px;border:1px solid #244062;color:#000;font-size:9px;font-weight:700;background:#b8cce4;text-align:right;';
+  const TD='padding:4px 7px;border:1px solid #bbb;font-size:9px;background:rgba(255,255,255,0.75);';
+  const ST=(t)=>`<div style="margin:10px 0 3px;padding:4px 8px;background:#b8cce4;color:#000;font-size:9px;font-weight:800;">${t}</div>`;
 
   const noRev=activeC.filter(c=>!c.revType);
   const withRev=activeC.filter(c=>c.revType);
@@ -8133,7 +8133,6 @@ function buildContractsTableHTML(activeC,totalCM){
 
   if(noRev.length>0){
     const rows=noRev.map((c,i)=>{
-      const bg='transparent';
       return `<tr style="background:rgba(255,255,255,0.75);">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
         <td style="${TD}">${c.type||'—'}</td>
@@ -8153,9 +8152,9 @@ function buildContractsTableHTML(activeC,totalCM){
       </tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr>
-        <td colspan="2" style="${TD}font-size:8px;font-weight:800;">الإجمالي</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot)}</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot*12)}</td>
+        <td colspan="2" style="${TD}font-size:9px;font-weight:800;">الإجمالي</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:900;">${fmt(tot)}</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:900;">${fmt(tot*12)}</td>
         <td style="${TD}"></td>
       </tr></tfoot>
     </table>`;
@@ -8163,7 +8162,6 @@ function buildContractsTableHTML(activeC,totalCM){
 
   if(withRev.length>0){
     const rows=withRev.map((c,i)=>{
-      const bg='transparent';
       const rl=c.revType==='monthly'?'شهري':c.revType==='fixed'?'ثابت':c.revType==='daily'?`يومي(${c.revDays||0})`:'';
       return `<tr style="background:rgba(255,255,255,0.75);">
         <td style="${TD}font-weight:700;">${c.vendor}</td>
@@ -8184,22 +8182,21 @@ function buildContractsTableHTML(activeC,totalCM){
       </tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr>
-        <td colspan="4" style="${TD}font-size:8px;font-weight:800;">إجمالي الإيراد السنوي</td>
-        <td style="${TD}text-align:right;font-size:9px;font-weight:800;">${fmt(tot)}</td>
+        <td colspan="4" style="${TD}font-size:9px;font-weight:800;">إجمالي الإيراد السنوي</td>
+        <td style="${TD}text-align:right;font-size:10px;font-weight:900;">${fmt(tot)}</td>
       </tr></tfoot>
     </table>`;
   }
 
   if(noRev.length>0&&withRev.length>0){
     return `${ST('العقود')}
-    <div style="display:grid;grid-template-columns:3fr 2fr;gap:6px;">
-      <div><div style="font-size:7px;font-weight:700;margin-bottom:2px;padding-bottom:1px;border-bottom:1px solid #888;">العقود الأساسية</div>${noRevHTML}</div>
-      <div><div style="font-size:7px;font-weight:700;margin-bottom:2px;padding-bottom:1px;border-bottom:1px solid #888;">عقود الإيراد</div>${withRevHTML}</div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;">
+      <div><div style="font-size:9px;font-weight:700;margin-bottom:3px;padding-bottom:2px;border-bottom:1px solid #888;">العقود الأساسية</div>${noRevHTML}</div>
+      <div><div style="font-size:9px;font-weight:700;margin-bottom:3px;padding-bottom:2px;border-bottom:1px solid #888;">عقود الإيراد</div>${withRevHTML}</div>
     </div>`;
   }
   return (noRev.length>0?ST('العقود الأساسية')+noRevHTML:'')+(withRev.length>0?ST('عقود الإيراد')+withRevHTML:'');
 }
-
 function buildPCDetailsHTML(pcList){
   if(!pcList||!pcList.length)return '<p>لا توجد فواتير بيتي كاش</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
@@ -8324,7 +8321,7 @@ function exportMonthlyPDF(){
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   // جدول الملخص
   const summaryRows=`
-    <tr><td>إجمالي المصروفات (${monthExp.length} عملية)</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)} ر.س</td></tr>
+    <tr><td>إجمالي المصروفات (${monthExp.length} عملية)</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${monthPO.length} طلب)</td><td style="text-align:right;font-weight:700;">${fmt2(monthPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${fmt2(totalCM)} ر.س</td></tr>
     <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAmt>0?fmt2(cmpSavAmt)+' ر.س':'—'}</td></tr>
@@ -8332,11 +8329,11 @@ function exportMonthlyPDF(){
   // حسب الإدارة
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)} ر.س</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;}).join('');
+  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;}).join('');
   // أعلى الأصناف
   const itemMapM={};monthExp.forEach(e=>{itemMapM[e.item_name]=(itemMapM[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)} ر.س</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;border-right:4px solid #244062;padding-right:7px;color:#244062;padding:4px 8px;background:#f0f4f8;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#b8cce4;color:#000;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#b8cce4;color:#000;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
