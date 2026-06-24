@@ -1440,6 +1440,16 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <div class="field"><label>رقم قرار تشكيل اللجنة</label><input id="cm-decision" placeholder="642"></div>
         <div class="field"><label>تاريخ قرار التشكيل</label><input id="cm-decision-date" placeholder="10/09/2024"></div>
       </div>
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label style="font-weight:700;color:#244062;">🔍 نوع المنافسة</label>
+          <div style="display:flex;gap:0;border:1.5px solid #1DA9BD;border-radius:10px;overflow:hidden;margin-top:6px;">
+            <button id="cm-comp-price-btn" onclick="cmSetCompType('price')" style="flex:1;padding:10px;border:none;background:#1DA9BD;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">📊 منافسة سعرية</button>
+            <button id="cm-comp-rev-btn" onclick="cmSetCompType('revenue')" style="flex:1;padding:10px;border:none;background:#fff;color:#244062;font-size:13px;font-weight:700;cursor:pointer;border-right:1.5px solid #1DA9BD;">🤝 اتفاقية تقاسم إيرادات</button>
+          </div>
+          <input type="hidden" id="cm-comp-type" value="price">
+        </div>
+      </div>
 
       <!-- رئيس اللجنة -->
       <div class="section-title" style="font-weight:700;color:#244062;border-bottom:2px solid #1DA9BD;padding-bottom:4px;margin-bottom:12px;margin-top:16px;">رئيس اللجنة</div>
@@ -6941,31 +6951,70 @@ function cmAddMember(){
   list.appendChild(div);
 }
 
+function cmSetCompType(t){
+  document.getElementById('cm-comp-type').value=t;
+  const pBtn=document.getElementById('cm-comp-price-btn');
+  const rBtn=document.getElementById('cm-comp-rev-btn');
+  if(t==='price'){
+    pBtn.style.background='#1DA9BD';pBtn.style.color='#fff';
+    rBtn.style.background='#fff';rBtn.style.color='#244062';
+  } else {
+    rBtn.style.background='#1DA9BD';rBtn.style.color='#fff';
+    pBtn.style.background='#fff';pBtn.style.color='#244062';
+  }
+  document.getElementById('cm-offers-list').innerHTML='';
+}
+
 function cmAddOffer(){
+  const compType=document.getElementById('cm-comp-type').value;
   const list=document.getElementById('cm-offers-list');
-  const idx=list.querySelectorAll('.cm-offer-row').length;
   const div=document.createElement('div');
-  div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
-  div.innerHTML=`<div class="form-grid">
-    <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
-    <div class="field"><label>نوع العرض</label>
-      <select class="cm-offer-type" onchange="cmToggleOfferType(this)">
-        <option value="fixed">قيمة ثابتة</option>
-        <option value="agreement">اتفاقية / تقاسم</option>
-      </select>
-    </div>
-    <div class="field cm-amount-wrap"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" placeholder="0"></div>
-    <div class="field cm-notes-wrap" style="display:none;"><label>ملاحظات / شروط الاتفاقية</label><input class="cm-offer-notes" placeholder="مثال: تقاسم الإيراد بنسبة 60/40..."></div>
-    <div class="field"><label>التقييم الفني</label>
-      <select class="cm-offer-status">
-        <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
-        <option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option>
-        <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
-      </select>
-    </div>
-    <div style="display:flex;align-items:flex-end;"><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button></div>
-  </div>`;
+  div.className='cm-offer-row';
+  div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
+  if(compType==='revenue'){
+    div.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="field" style="grid-column:1/-1;"><label style="font-weight:700;color:#244062;">🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
+      <div class="field"><label>💰 قيمة الخدمة الأساسية (ر.س)</label><input type="number" class="cm-rev-service" placeholder="150" oninput="cmCalcRevOffer(this)"></div>
+      <div class="field"><label>🏛 حصة الجهة (ر.س)</label><input type="number" class="cm-rev-entity" placeholder="114" oninput="cmCalcRevOffer(this)"></div>
+      <div class="field"><label>🤝 حصة مقدم الخدمة (ر.س)</label><input type="number" class="cm-rev-provider" placeholder="36" style="background:#f5f5f5;" readonly></div>
+      <div class="field"><label>📈 صافي العائد للجهة (ر.س)</label><input type="number" class="cm-rev-net" placeholder="0" style="background:#EBF8F1;font-weight:700;color:#276749;" readonly></div>
+      <div class="field"><label>التقييم الفني</label>
+        <select class="cm-offer-status">
+          <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
+          <option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option>
+          <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
+        </select>
+      </div>
+      <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
+      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;" title="حذف">×</button></div>
+    </div>`;
+  } else {
+    div.innerHTML=`
+    <div class="form-grid">
+      <div class="field"><label>🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
+      <div class="field"><label>💵 المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" placeholder="0"></div>
+      <div class="field"><label>التقييم الفني</label>
+        <select class="cm-offer-status">
+          <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
+          <option value="مقبول وغير مطابق فنياً">مقبول وغير مطابق فنياً</option>
+          <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
+        </select>
+      </div>
+      <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
+      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;" title="حذف">×</button></div>
+    </div>`;
+  }
   list.appendChild(div);
+}
+
+function cmCalcRevOffer(el){
+  const row=el.closest('.cm-offer-row');
+  const service=parseFloat(row.querySelector('.cm-rev-service')?.value)||0;
+  const entity=parseFloat(row.querySelector('.cm-rev-entity')?.value)||0;
+  const provider=service-entity;
+  row.querySelector('.cm-rev-provider').value=provider>=0?provider.toFixed(2):'';
+  row.querySelector('.cm-rev-net').value=entity>0?entity.toFixed(2):'';
 }
 
 function numToWordsAr(n){
@@ -7023,15 +7072,22 @@ function cmGetData(){
     const title=row.querySelector('.cm-member-title')?.value?.trim();
     if(name)members.push({name,title:title||'عضو'});
   });
+  const compType=document.getElementById('cm-comp-type')?.value||'price';
   const offers=[];
   document.querySelectorAll('.cm-offer-row').forEach(row=>{
     const name=row.querySelector('.cm-offer-name')?.value?.trim();
-    const offerType=row.querySelector('.cm-offer-type')?.value||'fixed';
-    const amount=offerType==='fixed'?(parseFloat(row.querySelector('.cm-offer-amount')?.value)||0):0;
-    const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
     const status=row.querySelector('.cm-offer-status')?.value||'';
-    const displayAmount=offerType==='agreement'?notes:(amount.toLocaleString('ar-SA')+' ر.س');
-    if(name)offers.push({name,offerType,amount,notes,status,displayAmount});
+    const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
+    if(compType==='revenue'){
+      const serviceVal=parseFloat(row.querySelector('.cm-rev-service')?.value)||0;
+      const entityShare=parseFloat(row.querySelector('.cm-rev-entity')?.value)||0;
+      const providerShare=parseFloat(row.querySelector('.cm-rev-provider')?.value)||0;
+      const netReturn=parseFloat(row.querySelector('.cm-rev-net')?.value)||0;
+      if(name)offers.push({name,offerType:'revenue',serviceVal,entityShare,providerShare,netReturn,status,notes});
+    } else {
+      const amount=parseFloat(row.querySelector('.cm-offer-amount')?.value)||0;
+      if(name)offers.push({name,offerType:'price',amount,status,notes});
+    }
   });
   return{
     num:document.getElementById('cm-num').value.trim(),
@@ -7044,6 +7100,7 @@ function cmGetData(){
     chairName:document.getElementById('cm-chair-name').value.trim(),
     members,offers,
     views:document.getElementById('cm-views').value.trim(),
+    compType,
     winner:document.getElementById('cm-winner').value.trim(),
     winnerType:document.getElementById('cm-winner-type').value,
     winnerAmount:parseFloat(document.getElementById('cm-winner-amount').value)||0,
@@ -7057,7 +7114,7 @@ function cmGetData(){
 function committeeReset(){
   committeeEditId=null;
   document.getElementById('committee-form-title').textContent='إنشاء محضر جديد';
-  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-winner-revenue-text','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('cm-winner-type').value='fixed';cmToggleWinnerType();
+  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-winner-revenue-text','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('cm-winner-type').value='fixed';cmToggleWinnerType();cmSetCompType('price');
   document.getElementById('cm-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('cm-views').value='قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل';
   document.getElementById('cm-offers-list').innerHTML='';
@@ -7099,6 +7156,7 @@ function committeeEdit(id){
   document.getElementById('cm-winner-words').value=c.winnerWords||'';
   document.getElementById('cm-winner-revenue-text').value=c.winnerRevenueText||'';
   cmToggleWinnerType();
+  cmSetCompType(c.compType||'price');
   document.getElementById('cm-start-date').value=c.startDate||'';
   document.getElementById('cm-extra-notes').value=c.extraNotes||'';
   // أعضاء
@@ -7112,14 +7170,27 @@ function committeeEdit(id){
   const ol=document.getElementById('cm-offers-list');ol.innerHTML='';
   (c.offers||[]).forEach(o=>{
     const div=document.createElement('div');div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
-    const isAgr=(o.offerType==='agreement');
-    div.innerHTML=`<div class="form-grid">
-      <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
-      <div class="field"><label>نوع العرض</label><select class="cm-offer-type" onchange="cmToggleOfferType(this)"><option value="fixed"${!isAgr?' selected':''}>قيمة ثابتة</option><option value="agreement"${isAgr?' selected':''}>اتفاقية / تقاسم</option></select></div>
-      <div class="field cm-amount-wrap"${isAgr?' style="display:none;"':''}><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
-      <div class="field cm-notes-wrap"${!isAgr?' style="display:none;"':''}><label>ملاحظات / شروط الاتفاقية</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
-      <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
-    </div>`;
+    div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
+    if(o.offerType==='revenue'){
+      div.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="field" style="grid-column:1/-1;"><label style="font-weight:700;color:#244062;">🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
+        <div class="field"><label>💰 قيمة الخدمة الأساسية (ر.س)</label><input type="number" class="cm-rev-service" value="${o.serviceVal||0}" oninput="cmCalcRevOffer(this)"></div>
+        <div class="field"><label>🏛 حصة الجهة (ر.س)</label><input type="number" class="cm-rev-entity" value="${o.entityShare||0}" oninput="cmCalcRevOffer(this)"></div>
+        <div class="field"><label>🤝 حصة مقدم الخدمة (ر.س)</label><input type="number" class="cm-rev-provider" value="${o.providerShare||0}" style="background:#f5f5f5;" readonly></div>
+        <div class="field"><label>📈 صافي العائد للجهة (ر.س)</label><input type="number" class="cm-rev-net" value="${o.netReturn||0}" style="background:#EBF8F1;font-weight:700;color:#276749;" readonly></div>
+        <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
+        <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+        <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
+      </div>`;
+    } else {
+      div.innerHTML=`<div class="form-grid">
+        <div class="field"><label>🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
+        <div class="field"><label>💵 المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
+        <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
+        <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+        <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
+      </div>`;
+    }
     ol.appendChild(div);
   });
   document.getElementById('committee-form-card').scrollIntoView({behavior:'smooth'});
@@ -7222,18 +7293,51 @@ function committeeExportPDF(){
 function committeeExportPDFData(c){
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
+  const isRevComp=(c.compType==='revenue');
   const offersTable=(()=>{
-    const sorted=(c.offers||[]).slice().sort((a,b)=>(a.offerType==='agreement'?Infinity:a.amount)-(b.offerType==='agreement'?Infinity:b.amount));
-    const rows=sorted.map(o=>{
-      const colVal=o.offerType==='agreement'
-        ?`<td style="padding:6px 8px;border:1px solid #000;color:#244062;">${o.notes||'—'}</td>`
-        :`<td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>`;
-      return `<tr><td style="padding:6px 8px;border:1px solid #000;font-weight:600;">${o.name}</td>${colVal}</tr>`;
-    }).join('');
-    return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
-    <thead><tr style="background:#244062;color:#fff;"><th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th><th style="padding:6px 8px;border:1px solid #000;">المبلغ الإجمالي / الملاحظات</th></tr></thead>
-    <tbody>${rows}</tbody>
-    </table>`;
+    if(isRevComp){
+      const sorted=(c.offers||[]).slice().sort((a,b)=>(b.netReturn||0)-(a.netReturn||0));
+      const best=sorted[0];
+      const rows=sorted.map((o,i)=>{
+        const isBest=i===0;
+        const bg=isBest?'background:#EBF8F1;':'';
+        return `<tr style="${bg}">
+          <td style="padding:6px 8px;border:1px solid #000;font-weight:${isBest?'700':'500'};">${o.name}${isBest?' ⭐':''}</td>
+          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.serviceVal||0).toLocaleString('ar-SA')} ر.س</td>
+          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.entityShare||0).toLocaleString('ar-SA')} ر.س</td>
+          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.providerShare||0).toLocaleString('ar-SA')} ر.س</td>
+          <td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;color:#276749;">${(o.netReturn||0).toLocaleString('ar-SA')} ر.س</td>
+          <td style="padding:6px 8px;border:1px solid #000;font-size:9px;">${o.notes||''}</td>
+        </tr>`;
+      }).join('');
+      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5px;">
+      <thead><tr style="background:#244062;color:#fff;">
+        <th style="padding:6px 8px;border:1px solid #000;">الشركة / المؤسسة</th>
+        <th style="padding:6px 8px;border:1px solid #000;">قيمة الخدمة</th>
+        <th style="padding:6px 8px;border:1px solid #000;">حصة الجهة</th>
+        <th style="padding:6px 8px;border:1px solid #000;">حصة مقدم الخدمة</th>
+        <th style="padding:6px 8px;border:1px solid #000;">صافي العائد للجهة ▼</th>
+        <th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th>
+      </tr></thead>
+      <tbody>${rows}</tbody></table>`;
+    } else {
+      const sorted=(c.offers||[]).slice().sort((a,b)=>(a.amount||0)-(b.amount||0));
+      const rows=sorted.map((o,i)=>{
+        const isBest=i===0;
+        return `<tr${isBest?' style="background:#EBF8F1;"':''}>
+          <td style="padding:6px 8px;border:1px solid #000;font-weight:${isBest?'700':'500'};">${o.name}${isBest?' ⭐':''}</td>
+          <td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:${isBest?'700':'400'};">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>
+          <td style="padding:6px 8px;border:1px solid #000;font-size:9px;">${o.notes||''}</td>
+        </tr>`;
+      }).join('');
+      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+      <thead><tr style="background:#244062;color:#fff;">
+        <th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th>
+        <th style="padding:6px 8px;border:1px solid #000;">الإجمالي السنوي شاملاً الضريبة المضافة ▲</th>
+        <th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th>
+      </tr></thead>
+      <tbody>${rows}</tbody></table>`;
+    }
   })();
   const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
   const w=window.open('','_blank');
@@ -7252,7 +7356,7 @@ h2{text-align:center;font-size:11px;font-weight:700;margin:4px 0;}p{margin:2px 0
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p style="font-size:9px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:9px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
-<p><strong>اطلعت اللجنة على العروض المالية للشركات المقدمة لهذه المنافسة وتم ترتيب العروض من الأقل سعراً للأعلى سعراً على النحو الآتي:</strong></p>
+<p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
 <p>${c.views||''}</p>
@@ -7283,13 +7387,29 @@ async function committeeExportWordData(c){
   toast('جاري إنشاء ملف Word...');
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   // بناء محتوى Word باستخدام HTML داخل blob
-  const offersRows=(c.offers||[]).slice().sort((a,b)=>(a.offerType==='agreement'?Infinity:a.amount)-(b.offerType==='agreement'?Infinity:b.amount)).map(o=>{
-    const colVal=o.offerType==='agreement'?(o.notes||'—'):((o.amount||0).toLocaleString('ar-SA')+' ر.س');
-    return `
-    <tr>
-      <td style="border:1px solid black;padding:4px 8px;">${o.name}</td>
-      <td style="border:1px solid black;padding:4px 8px;text-align:center;">${colVal}</td>
-    </tr>`;}).join('');
+  const isRevComp=(c.compType==='revenue');
+  let offersRows='';
+  let offersTableHdr='';
+  if(isRevComp){
+    const sorted=(c.offers||[]).slice().sort((a,b)=>(b.netReturn||0)-(a.netReturn||0));
+    offersTableHdr=`<tr><th>الشركة / المؤسسة</th><th>قيمة الخدمة (ر.س)</th><th>حصة الجهة (ر.س)</th><th>حصة مقدم الخدمة (ر.س)</th><th>صافي العائد للجهة (ر.س)</th><th>ملاحظات</th></tr>`;
+    offersRows=sorted.map(o=>`<tr>
+      <td style="border:1pt solid #ccc;padding:5pt;">${o.name}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.serviceVal||0).toLocaleString('ar-SA')}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.entityShare||0).toLocaleString('ar-SA')}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.providerShare||0).toLocaleString('ar-SA')}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;font-weight:700;">${(o.netReturn||0).toLocaleString('ar-SA')}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;">${o.notes||''}</td>
+    </tr>`).join('');
+  } else {
+    const sorted=(c.offers||[]).slice().sort((a,b)=>(a.amount||0)-(b.amount||0));
+    offersTableHdr=`<tr><th>اسم الشركة أو المؤسسة</th><th>الإجمالي شاملاً الضريبة</th><th>ملاحظات</th></tr>`;
+    offersRows=sorted.map(o=>`<tr>
+      <td style="border:1pt solid #ccc;padding:5pt;">${o.name}</td>
+      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.amount||0).toLocaleString('ar-SA')} ر.س</td>
+      <td style="border:1pt solid #ccc;padding:5pt;">${o.notes||''}</td>
+    </tr>`).join('');
+  }
   const membersText=(c.members||[]).map(m=>`<p style="margin-right:20px;">- ${m.name}</p>`).join('');
   const techReview=(c.offers||[]).map(o=>`<p style="margin-right:20px;">- <b>${o.name}</b> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</p>`).join('');
 
@@ -7302,8 +7422,8 @@ async function committeeExportWordData(c){
 ${membersText}
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 ${techReview}
-<p><b>اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى:</b></p>
-<table><thead><tr><th>اسم الشركة أو المؤسسة</th><th>المبلغ الإجمالي / الملاحظات</th></tr></thead>
+<p><b>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات وتم ترتيبها بحسب أعلى عائد للجهة:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى:'}</b></p>
+<table><thead>${offersTableHdr}</thead>
 <tbody>${offersRows}</tbody></table>
 <p><b>مرئيات لجنة فحص العروض:</b></p>
 <p>${c.views||''}</p>
