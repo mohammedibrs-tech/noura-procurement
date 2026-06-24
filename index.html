@@ -6973,12 +6973,8 @@ function cmAddOffer(){
   div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
   if(compType==='revenue'){
     div.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-      <div class="field" style="grid-column:1/-1;"><label style="font-weight:700;color:#244062;">🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
-      <div class="field"><label>💰 قيمة الخدمة الأساسية (ر.س)</label><input type="number" class="cm-rev-service" placeholder="150" oninput="cmCalcRevOffer(this)"></div>
-      <div class="field"><label>🏛 حصة الجهة (ر.س)</label><input type="number" class="cm-rev-entity" placeholder="114" oninput="cmCalcRevOffer(this)"></div>
-      <div class="field"><label>🤝 حصة مقدم الخدمة (ر.س)</label><input type="number" class="cm-rev-provider" placeholder="36" style="background:#f5f5f5;" readonly></div>
-      <div class="field"><label>📈 صافي العائد للجهة (ر.س)</label><input type="number" class="cm-rev-net" placeholder="0" style="background:#EBF8F1;font-weight:700;color:#276749;" readonly></div>
+    <div class="form-grid">
+      <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
       <div class="field"><label>التقييم الفني</label>
         <select class="cm-offer-status">
           <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
@@ -6986,14 +6982,14 @@ function cmAddOffer(){
           <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
         </select>
       </div>
-      <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
-      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;" title="حذف">×</button></div>
+      <div class="field" style="grid-column:1/-1;"><label>ملاحظات / شروط الاتفاقية</label><textarea class="cm-offer-notes" rows="2" placeholder="مثال: تقاسم الإيراد بنسبة 60% للشركة و40% لمقدم الخدمة من إجمالي الإيرادات الشهرية..." style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;resize:vertical;"></textarea></div>
+      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
     </div>`;
   } else {
     div.innerHTML=`
     <div class="form-grid">
-      <div class="field"><label>🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
-      <div class="field"><label>💵 المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" placeholder="0"></div>
+      <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" placeholder="اسم الشركة"></div>
+      <div class="field"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" placeholder="0"></div>
       <div class="field"><label>التقييم الفني</label>
         <select class="cm-offer-status">
           <option value="مقبول ومطابق فنياً">مقبول ومطابق فنياً</option>
@@ -7002,7 +6998,7 @@ function cmAddOffer(){
         </select>
       </div>
       <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
-      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;" title="حذف">×</button></div>
+      <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
     </div>`;
   }
   list.appendChild(div);
@@ -7079,11 +7075,7 @@ function cmGetData(){
     const status=row.querySelector('.cm-offer-status')?.value||'';
     const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
     if(compType==='revenue'){
-      const serviceVal=parseFloat(row.querySelector('.cm-rev-service')?.value)||0;
-      const entityShare=parseFloat(row.querySelector('.cm-rev-entity')?.value)||0;
-      const providerShare=parseFloat(row.querySelector('.cm-rev-provider')?.value)||0;
-      const netReturn=parseFloat(row.querySelector('.cm-rev-net')?.value)||0;
-      if(name)offers.push({name,offerType:'revenue',serviceVal,entityShare,providerShare,netReturn,status,notes});
+      if(name)offers.push({name,offerType:'revenue',status,notes});
     } else {
       const amount=parseFloat(row.querySelector('.cm-offer-amount')?.value)||0;
       if(name)offers.push({name,offerType:'price',amount,status,notes});
@@ -7172,20 +7164,16 @@ function committeeEdit(id){
     const div=document.createElement('div');div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
     div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
     if(o.offerType==='revenue'){
-      div.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <div class="field" style="grid-column:1/-1;"><label style="font-weight:700;color:#244062;">🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
-        <div class="field"><label>💰 قيمة الخدمة الأساسية (ر.س)</label><input type="number" class="cm-rev-service" value="${o.serviceVal||0}" oninput="cmCalcRevOffer(this)"></div>
-        <div class="field"><label>🏛 حصة الجهة (ر.س)</label><input type="number" class="cm-rev-entity" value="${o.entityShare||0}" oninput="cmCalcRevOffer(this)"></div>
-        <div class="field"><label>🤝 حصة مقدم الخدمة (ر.س)</label><input type="number" class="cm-rev-provider" value="${o.providerShare||0}" style="background:#f5f5f5;" readonly></div>
-        <div class="field"><label>📈 صافي العائد للجهة (ر.س)</label><input type="number" class="cm-rev-net" value="${o.netReturn||0}" style="background:#EBF8F1;font-weight:700;color:#276749;" readonly></div>
+      div.innerHTML=`<div class="form-grid">
+        <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
         <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
-        <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+        <div class="field" style="grid-column:1/-1;"><label>ملاحظات / شروط الاتفاقية</label><textarea class="cm-offer-notes" rows="2" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;resize:vertical;">${o.notes||''}</textarea></div>
         <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
       </div>`;
     } else {
       div.innerHTML=`<div class="form-grid">
-        <div class="field"><label>🏢 اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
-        <div class="field"><label>💵 المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
+        <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
+        <div class="field"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
         <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
         <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
         <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
@@ -7295,46 +7283,31 @@ function committeeExportPDFData(c){
   const BG=FORM_BG;
   const isRevComp=(c.compType==='revenue');
   const offersTable=(()=>{
+    const tdBase='padding:6px 8px;border:1px solid #000;color:#000;';
+    const thBase='padding:6px 8px;border:1px solid #000;background:#244062;color:#fff;text-align:right;';
     if(isRevComp){
-      const sorted=(c.offers||[]).slice().sort((a,b)=>(b.netReturn||0)-(a.netReturn||0));
-      const best=sorted[0];
-      const rows=sorted.map((o,i)=>{
-        const isBest=i===0;
-        const bg=isBest?'background:#EBF8F1;':'';
-        return `<tr style="${bg}">
-          <td style="padding:6px 8px;border:1px solid #000;font-weight:${isBest?'700':'500'};">${o.name}${isBest?' ⭐':''}</td>
-          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.serviceVal||0).toLocaleString('ar-SA')} ر.س</td>
-          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.entityShare||0).toLocaleString('ar-SA')} ر.س</td>
-          <td style="padding:6px 8px;border:1px solid #000;text-align:center;">${(o.providerShare||0).toLocaleString('ar-SA')} ر.س</td>
-          <td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:700;color:#276749;">${(o.netReturn||0).toLocaleString('ar-SA')} ر.س</td>
-          <td style="padding:6px 8px;border:1px solid #000;font-size:9px;">${o.notes||''}</td>
-        </tr>`;
-      }).join('');
-      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5px;">
-      <thead><tr style="background:#244062;color:#fff;">
-        <th style="padding:6px 8px;border:1px solid #000;">الشركة / المؤسسة</th>
-        <th style="padding:6px 8px;border:1px solid #000;">قيمة الخدمة</th>
-        <th style="padding:6px 8px;border:1px solid #000;">حصة الجهة</th>
-        <th style="padding:6px 8px;border:1px solid #000;">حصة مقدم الخدمة</th>
-        <th style="padding:6px 8px;border:1px solid #000;">صافي العائد للجهة ▼</th>
-        <th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th>
+      const rows=(c.offers||[]).map(o=>`<tr>
+          <td style="${tdBase}font-weight:600;">${o.name}</td>
+          <td style="${tdBase}">${o.notes||''}</td>
+        </tr>`).join('');
+      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+      <thead><tr>
+        <th style="${thBase}">اسم الشركة أو المؤسسة</th>
+        <th style="${thBase}">ملاحظات / شروط الاتفاقية</th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`;
     } else {
       const sorted=(c.offers||[]).slice().sort((a,b)=>(a.amount||0)-(b.amount||0));
-      const rows=sorted.map((o,i)=>{
-        const isBest=i===0;
-        return `<tr${isBest?' style="background:#EBF8F1;"':''}>
-          <td style="padding:6px 8px;border:1px solid #000;font-weight:${isBest?'700':'500'};">${o.name}${isBest?' ⭐':''}</td>
-          <td style="padding:6px 8px;border:1px solid #000;text-align:center;font-weight:${isBest?'700':'400'};">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>
-          <td style="padding:6px 8px;border:1px solid #000;font-size:9px;">${o.notes||''}</td>
-        </tr>`;
-      }).join('');
+      const rows=sorted.map(o=>`<tr>
+          <td style="${tdBase}font-weight:600;">${o.name}</td>
+          <td style="${tdBase}text-align:center;">${(o.amount||0).toLocaleString('ar-SA')} ريال</td>
+          <td style="${tdBase}">${o.notes||''}</td>
+        </tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
-      <thead><tr style="background:#244062;color:#fff;">
-        <th style="padding:6px 8px;border:1px solid #000;">اسم الشركة أو المؤسسة</th>
-        <th style="padding:6px 8px;border:1px solid #000;">الإجمالي السنوي شاملاً الضريبة المضافة ▲</th>
-        <th style="padding:6px 8px;border:1px solid #000;">ملاحظات</th>
+      <thead><tr>
+        <th style="${thBase}">اسم الشركة أو المؤسسة</th>
+        <th style="${thBase}">الإجمالي السنوي شاملاً الضريبة المضافة</th>
+        <th style="${thBase}">ملاحظات</th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`;
     }
@@ -7391,14 +7364,9 @@ async function committeeExportWordData(c){
   let offersRows='';
   let offersTableHdr='';
   if(isRevComp){
-    const sorted=(c.offers||[]).slice().sort((a,b)=>(b.netReturn||0)-(a.netReturn||0));
-    offersTableHdr=`<tr><th>الشركة / المؤسسة</th><th>قيمة الخدمة (ر.س)</th><th>حصة الجهة (ر.س)</th><th>حصة مقدم الخدمة (ر.س)</th><th>صافي العائد للجهة (ر.س)</th><th>ملاحظات</th></tr>`;
-    offersRows=sorted.map(o=>`<tr>
+    offersTableHdr=`<tr><th>اسم الشركة أو المؤسسة</th><th>ملاحظات / شروط الاتفاقية</th></tr>`;
+    offersRows=(c.offers||[]).map(o=>`<tr>
       <td style="border:1pt solid #ccc;padding:5pt;">${o.name}</td>
-      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.serviceVal||0).toLocaleString('ar-SA')}</td>
-      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.entityShare||0).toLocaleString('ar-SA')}</td>
-      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.providerShare||0).toLocaleString('ar-SA')}</td>
-      <td style="border:1pt solid #ccc;padding:5pt;text-align:center;font-weight:700;">${(o.netReturn||0).toLocaleString('ar-SA')}</td>
       <td style="border:1pt solid #ccc;padding:5pt;">${o.notes||''}</td>
     </tr>`).join('');
   } else {
