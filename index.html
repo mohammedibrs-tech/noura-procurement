@@ -10232,7 +10232,7 @@ var f2LeaseOffers=[];
 function f2Fmt(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,mobile:'no',parts:'yes',sla:'8 ساعات',duration:1});f2RenderMaint();}
 function f2DelMaint(id){f2MaintOffers=f2MaintOffers.filter(function(o){return o.id!==id;});f2RenderMaint();f2Calc();}
-function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='annual'||field==='duration')?parseFloat(val)||0:val;f2Calc();}
+function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='annual'||field==='duration')?parseFloat(val)||0:val;if(field==='annual'||field==='duration'||field==='mobile'||field==='parts')f2Calc();}
 function f2RenderMaint(){
   var el=document.getElementById('f2-maint-body');if(!el)return;
   if(!f2MaintOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "+ إضافة شركة صيانة" للبدء</div>';return;}
@@ -10258,7 +10258,7 @@ function f2RenderMaint(){
 }
 function f2AddLease(){var id=Date.now();f2LeaseOffers.push({id:id,name:'',monthly:0,duration:3,inclMaint:'yes',inclIns:'yes',inclAlt:'yes'});f2RenderLease();}
 function f2DelLease(id){f2LeaseOffers=f2LeaseOffers.filter(function(o){return o.id!==id;});f2RenderLease();f2Calc();}
-function f2UpdateLease(id,field,val){var o=f2LeaseOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='monthly'||field==='duration')?parseFloat(val)||0:val;f2Calc();}
+function f2UpdateLease(id,field,val){var o=f2LeaseOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='monthly'||field==='duration')?parseFloat(val)||0:val;if(field==='monthly'||field==='duration'||field==='inclMaint'||field==='inclIns'||field==='inclAlt')f2Calc();}
 function f2RenderLease(){
   var el=document.getElementById('f2-lease-body');if(!el)return;
   if(!f2LeaseOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "+ إضافة شركة تأجير" للبدء</div>';return;}
@@ -10293,7 +10293,6 @@ function f2Calc(){
   var leaseGrowth=(parseFloat(document.getElementById('f2-lease-growth')?.value)||5)/100;
   var tb=document.getElementById('f2-total-box');
   if(tb){if(totalPurchase>0){tb.style.display='block';tb.textContent='القيمة الإجمالية لشراء الأسطول: '+f2Fmt(totalPurchase)+' ر.س';}else tb.style.display='none';}
-  f2RenderLease();f2RenderMaint();
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
   var bma=bestMaint?bestMaint.annual:0;
