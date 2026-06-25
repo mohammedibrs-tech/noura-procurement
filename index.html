@@ -733,6 +733,15 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 <!-- ══ DN ══ -->
 <div class="page" id="page-dn">
   <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>سند الاستلام (Delivery Note)</h1></div></div>
+
+  <!-- تبويبات DN -->
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
+    <button id="dn-tab-dn" onclick="dnSwitchTab('dn')" style="padding:10px 22px;border:none;background:none;font-size:13px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;cursor:pointer;">سند الاستلام</button>
+    <button id="dn-tab-cert" onclick="dnSwitchTab('cert')" style="padding:10px 22px;border:none;background:none;font-size:13px;font-weight:700;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">📋 شهادة الإنجاز</button>
+  </div>
+
+  <!-- ══ تبويب سند الاستلام ══ -->
+  <div id="dn-panel-dn">
   <div class="card">
     <div class="card-header"><h3>إنشاء سند استلام</h3></div>
     <div class="card-body">
@@ -776,6 +785,66 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     <div class="card-header"><h3>السندات المحفوظة</h3></div>
     <div class="card-body"><div class="saved-list" id="dn-saved"></div></div>
   </div>
+  </div><!-- /dn-panel-dn -->
+
+  <!-- ══ تبويب شهادة الإنجاز ══ -->
+  <div id="dn-panel-cert" style="display:none;">
+  <div class="card">
+    <div class="card-header"><h3>إنشاء شهادة إنجاز</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>اسم الشركة</label><input id="cert-co" placeholder="اسم الشركة"></div>
+        <div class="field"><label>رقم العقد</label><input id="cert-contract" placeholder="NDC-26-O-0001"></div>
+        <div class="field"><label>التاريخ</label><input id="cert-date" type="date"></div>
+        <div class="field"><label>الموافق (هـ/م)</label><input id="cert-hijri" placeholder="مثال: 1447/12/01 هـ"></div>
+      </div>
+      <div class="section-title">نطاق العمل والمخرجات</div>
+      <table class="tbl" style="margin-bottom:8px;">
+        <thead>
+          <tr>
+            <th>إسم الخدمة</th>
+            <th>المخرجات</th>
+            <th>المبلغ</th>
+            <th style="text-align:center;">نعم</th>
+            <th style="text-align:center;">لا</th>
+            <th>ملاحظات</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cert-tbody">
+          <tr>
+            <td><input class="cert-svc" placeholder="اسم الخدمة" style="width:100%;"></td>
+            <td><input class="cert-out" placeholder="المخرجات" style="width:100%;"></td>
+            <td><input class="cert-amt" placeholder="0.00" style="width:80px;text-align:right;"></td>
+            <td style="text-align:center;"><input type="checkbox" class="cert-yes"></td>
+            <td style="text-align:center;"><input type="checkbox" class="cert-no"></td>
+            <td><input class="cert-note" placeholder="" style="width:100%;"></td>
+            <td><button onclick="certDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-gray btn-sm" onclick="certAddRow()">+ إضافة صف</button>
+      <div class="section-title" style="margin-top:16px;">التواقيع</div>
+      <div class="form-grid">
+        <div class="field"><label>إستلام — الاسم</label><input id="cert-recv-name" placeholder="الاسم"></div>
+        <div class="field"><label>إستلام — الوظيفة</label><input id="cert-recv-title" placeholder="الوظيفة"></div>
+        <div class="field"><label>المسلّم — الاسم</label><input id="cert-deliv-name" value="أ.محمد ابراهيم الجمعان"></div>
+        <div class="field"><label>المسلّم — الوظيفة</label><input id="cert-deliv-title" value="مسؤول المشتريات"></div>
+        <div class="field"><label>إعتماد — الاسم</label><input id="cert-appr-name" placeholder="الاسم"></div>
+        <div class="field"><label>إعتماد — الوظيفة</label><input id="cert-appr-title" placeholder="الوظيفة"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="certSave()">حفظ</button>
+        <button class="btn btn-red" onclick="certPrint()">طباعة / PDF</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>شهادات الإنجاز المحفوظة</h3></div>
+    <div class="card-body"><div class="saved-list" id="cert-saved"></div></div>
+  </div>
+  </div><!-- /dn-panel-cert -->
+
 </div>
 
 <!-- ══ مقارنة الأسعار ══ -->
@@ -3624,6 +3693,179 @@ function dnAddPDF(inp){
   });
   inp.value='';
 }
+// ══ تبويب DN / Cert ══
+function dnSwitchTab(tab){
+  document.getElementById('dn-panel-dn').style.display=tab==='dn'?'block':'none';
+  document.getElementById('dn-panel-cert').style.display=tab==='cert'?'block':'none';
+  document.getElementById('dn-tab-dn').style.color=tab==='dn'?'var(--primary)':'var(--sub)';
+  document.getElementById('dn-tab-dn').style.borderBottom=tab==='dn'?'2px solid var(--primary)':'2px solid transparent';
+  document.getElementById('dn-tab-cert').style.color=tab==='cert'?'var(--primary)':'var(--sub)';
+  document.getElementById('dn-tab-cert').style.borderBottom=tab==='cert'?'2px solid var(--primary)':'2px solid transparent';
+}
+
+// ══ شهادة الإنجاز ══
+var certSaved=JSON.parse(localStorage.getItem('cert_saved')||'[]');
+
+function certAddRow(){
+  const tb=document.getElementById('cert-tbody');
+  const n=tb.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input class="cert-svc" placeholder="اسم الخدمة" style="width:100%;"></td>
+    <td><input class="cert-out" placeholder="المخرجات" style="width:100%;"></td>
+    <td><input class="cert-amt" placeholder="0.00" style="width:80px;text-align:right;"></td>
+    <td style="text-align:center;"><input type="checkbox" class="cert-yes"></td>
+    <td style="text-align:center;"><input type="checkbox" class="cert-no"></td>
+    <td><input class="cert-note" placeholder="" style="width:100%;"></td>
+    <td><button onclick="certDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  tb.appendChild(tr);
+}
+
+function certDelRow(btn){
+  const tr=btn.closest('tr');
+  if(document.getElementById('cert-tbody').rows.length>1) tr.remove();
+}
+
+function certGetRows(){
+  return Array.from(document.querySelectorAll('#cert-tbody tr')).map(tr=>({
+    svc:tr.querySelector('.cert-svc')?.value||'',
+    out:tr.querySelector('.cert-out')?.value||'',
+    amt:tr.querySelector('.cert-amt')?.value||'',
+    yes:tr.querySelector('.cert-yes')?.checked||false,
+    no:tr.querySelector('.cert-no')?.checked||false,
+    note:tr.querySelector('.cert-note')?.value||''
+  }));
+}
+
+async function certSave(){
+  const co=document.getElementById('cert-co').value.trim();
+  if(!co){toast('أدخل اسم الشركة',true);return;}
+  const data={
+    id:Date.now(),
+    company:co,
+    contract:document.getElementById('cert-contract').value,
+    date:document.getElementById('cert-date').value,
+    hijri:document.getElementById('cert-hijri').value,
+    recvName:document.getElementById('cert-recv-name').value,
+    recvTitle:document.getElementById('cert-recv-title').value,
+    delivName:document.getElementById('cert-deliv-name').value,
+    delivTitle:document.getElementById('cert-deliv-title').value,
+    apprName:document.getElementById('cert-appr-name').value,
+    apprTitle:document.getElementById('cert-appr-title').value,
+    rows:certGetRows()
+  };
+  try{
+    const res=await sbInsert('procurement_dn',{company:co,lpo:data.contract,date:data.date,from:data.delivName,rows:JSON.stringify(data.rows),type:'cert',extra:JSON.stringify(data)});
+    if(res&&Array.isArray(res)&&res[0]) data.db_id=res[0].id;
+  }catch(e){}
+  certSaved.unshift(data);
+  localStorage.setItem('cert_saved',JSON.stringify(certSaved));
+  renderCertSaved();
+  toast('تم حفظ شهادة الإنجاز ✅');
+}
+
+function renderCertSaved(){
+  const el=document.getElementById('cert-saved');if(!el)return;
+  if(!certSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد شهادات محفوظة</div>';return;}
+  el.innerHTML=certSaved.map((s,i)=>`<div class="saved-item">
+    <div class="saved-item-info"><strong>${s.company}</strong><span style="color:var(--sub)">${s.contract||''} — ${s.date||''}</span></div>
+    <div class="saved-item-actions">
+      <button class="btn btn-red btn-sm" onclick="certPrintById(${i})">PDF</button>
+      <button class="btn btn-gray btn-sm" onclick="certDel(${i})">×</button>
+    </div></div>`).join('');
+}
+
+function certDel(i){certSaved.splice(i,1);localStorage.setItem('cert_saved',JSON.stringify(certSaved));renderCertSaved();}
+
+function certPrintById(i){certPrintData(certSaved[i]);}
+
+function certPrint(){certPrintData({
+  company:document.getElementById('cert-co').value,
+  contract:document.getElementById('cert-contract').value,
+  date:document.getElementById('cert-date').value,
+  hijri:document.getElementById('cert-hijri').value,
+  recvName:document.getElementById('cert-recv-name').value,
+  recvTitle:document.getElementById('cert-recv-title').value,
+  delivName:document.getElementById('cert-deliv-name').value,
+  delivTitle:document.getElementById('cert-deliv-title').value,
+  apprName:document.getElementById('cert-appr-name').value,
+  apprTitle:document.getElementById('cert-appr-title').value,
+  rows:certGetRows()
+});}
+
+function certPrintData(d){
+  const BG=FORM_BG;
+  const SIG=SIG_URL;
+  const fmt=n=>parseFloat(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  const rows=(d.rows||[]).map(r=>`<tr>
+    <td style="border:1px solid #ccc;padding:6px 8px;">${r.svc||''}</td>
+    <td style="border:1px solid #ccc;padding:6px 8px;">${r.out||''}</td>
+    <td style="border:1px solid #ccc;padding:6px 8px;text-align:right;">${r.amt?fmt(r.amt):''}</td>
+    <td style="border:1px solid #ccc;padding:6px 8px;text-align:center;">${r.yes?'✓':''}</td>
+    <td style="border:1px solid #ccc;padding:6px 8px;text-align:center;">${r.no?'✓':''}</td>
+    <td style="border:1px solid #ccc;padding:6px 8px;">${r.note||''}</td>
+  </tr>`).join('');
+  const w=window.open('','_blank');
+  var html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>
+    @page{size:A4;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;}
+    .bg{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}
+    .wrap{position:relative;z-index:2;padding:28mm 14mm 20mm;}
+    h1{font-size:16px;font-weight:900;text-align:center;text-decoration:underline;margin-bottom:18px;color:#000;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+    .info-row{display:flex;gap:6px;align-items:center;}
+    .info-label{font-weight:700;font-size:9.5px;white-space:nowrap;}
+    .info-val{border-bottom:1px solid #333;flex:1;font-size:9.5px;min-width:80px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:14px;}
+    thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-size:9px;}
+    tbody td{padding:5px 7px;border:1px solid #ccc;font-size:9px;}
+    .sig-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;}
+    .sig-box{text-align:center;border-top:1px solid #244062;padding-top:8px;}
+    .sig-title{font-weight:800;font-size:10px;margin-bottom:4px;}
+    .sig-name{font-size:9.5px;margin-top:36px;}
+    .sig-job{font-size:9px;color:#555;}
+    @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>`;
+  if(BG) html+=`<img src="${BG}" class="bg">`;
+  html+=`<div class="wrap">`;
+  html+=`<h1>شهادة إنجاز</h1>`;
+  html+=`<div class="info-grid">
+    <div class="info-row"><span class="info-label">التاريخ:</span><span class="info-val">${d.date||''}</span></div>
+    <div class="info-row"><span class="info-label">أسم الشركة:</span><span class="info-val">${d.company||''}</span></div>
+    <div class="info-row"><span class="info-label">الموافق:</span><span class="info-val">${d.hijri||''}</span></div>
+    <div class="info-row"><span class="info-label">العقد:</span><span class="info-val">${d.contract||''}</span></div>
+  </div>
+  <div class="info-row" style="margin-bottom:12px;"><span class="info-label">الموضوع:</span><span class="info-val">شهادة إنجاز شهر</span></div>`;
+  html+=`<table><thead><tr><th>إسم الخدمة</th><th>المخرجات</th><th style="text-align:right;">المبلغ</th><th style="text-align:center;">نعم</th><th style="text-align:center;">لا</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>`;
+  html+=`<div class="sig-section">
+    <div class="sig-box">
+      <div class="sig-title">إستلام</div>
+      <div class="sig-name">${d.recvName||'_______________'}</div>
+      <div class="sig-job">${d.recvTitle||''}</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">المسلم</div>
+      ${SIG?`<div style="position:relative;min-height:50px;"><img src="${SIG}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:45px;object-fit:contain;"></div>`:'<div style="min-height:50px;"></div>'}
+      <div class="sig-name">${d.delivName||'أ.محمد ابراهيم الجمعان'}</div>
+      <div class="sig-job">${d.delivTitle||'مسؤول المشتريات'}</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">إعتماد</div>
+      <div class="sig-name">${d.apprName||'_______________'}</div>
+      <div class="sig-job">${d.apprTitle||''}</div>
+    </div>
+  </div>`;
+  html+=`</div><script>window.onload=function(){window.print();}<\/script></body></html>`;
+  w.document.write(html);w.document.close();
+}
+
+async function loadCertSaved(){
+  try{
+    var arr=JSON.parse(localStorage.getItem('cert_saved')||'[]');
+    certSaved=arr;renderCertSaved();
+  }catch(e){}
+}
+
 async function dnSave(){
   const co=document.getElementById('dn-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
@@ -3634,7 +3876,8 @@ async function dnSave(){
     else{dnSaved.unshift({...data,id:Date.now()});}
   }catch(e){dnSaved.unshift({...data,id:Date.now()});}
   localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
-  renderDnSaved();toast('تم الحفظ ✅');
+  renderDnSaved();
+  loadCertSaved();toast('تم الحفظ ✅');
 }
 function renderDnSaved(){
   var el=document.getElementById('dn-saved');if(!el)return;
