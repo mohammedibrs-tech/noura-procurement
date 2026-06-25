@@ -1041,7 +1041,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
           <div style="font-size:11px;opacity:.65;margin-top:5px;">أداة دعم قرار متكاملة للإدارة العليا</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <button class="btn" style="background:rgba(255,255,255,0.15);color:#fff;font-size:12px;border:1px solid rgba(255,255,255,0.3);" onclick="f2SaveData()">حفظ البيانات</button>
+          <button class="btn" style="background:rgba(255,255,255,0.15);color:#fff;font-size:12px;border:1px solid rgba(255,255,255,0.3);" onclick="f2SaveStudy()">💾 حفظ الدراسة</button>
           <button class="btn" style="background:#fff;color:#244062;font-size:12px;font-weight:700;" onclick="f2Calc()">احتساب النتائج</button>
           <button class="btn" style="background:#2d6a4f;color:#fff;font-size:12px;" onclick="f2Excel()">تصدير Excel</button>
           <button class="btn" style="background:#4a4a6a;color:#fff;font-size:12px;" onclick="f2PDF(document.getElementById('f2-report-title').value)">تصدير PDF</button>
@@ -1126,6 +1126,17 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     <div class="card" id="f2-exec-card" style="display:none;">
       <div class="card-header"><h3>ح — الملخص التنفيذي للإدارة العليا</h3></div>
       <div class="card-body" id="f2-exec-body"></div>
+    </div>
+
+    <!-- قائمة الدراسات المحفوظة -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>الدراسات المحفوظة</h3>
+        <button class="btn btn-primary btn-sm" onclick="f2NewStudy()">+ دراسة جديدة</button>
+      </div>
+      <div class="card-body">
+        <div id="f2-saved-list"><div style="text-align:center;color:#aaa;padding:16px;">لا توجد دراسات محفوظة</div></div>
+      </div>
     </div>
 
   </div><!-- /cmp-panel-fleet2 -->
@@ -10411,9 +10422,33 @@ function f2PDFPrompt(){
   f2PDF(document.getElementById('f2-report-title')?.value||'دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير');
 }
 
-async function f2SaveData(){
+var f2Studies=[];
+
+function f2NewStudy(){
+  if(!confirm('هل تريد فتح دراسة جديدة؟ تأكد من حفظ الدراسة الحالية أولاً.')) return;
+  document.getElementById('f2-report-title').value='دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير';
+  document.getElementById('f2-count').value='350';
+  document.getElementById('f2-model').value='';
+  document.getElementById('f2-year').value='';
+  document.getElementById('f2-odometer').value='';
+  document.getElementById('f2-unitprice').value='';
+  document.getElementById('f2-readiness').value='90';
+  document.getElementById('f2-annual-lease').value='';
+  document.getElementById('f2-monthly-lease').value='';
+  document.getElementById('f2-paid-total').value='';
+  document.getElementById('f2-lease-duration').value='3';
+  document.getElementById('f2-lease-growth').value='5';
+  f2MaintOffers=[];f2LeaseOffers=[];
+  f2RenderMaint();f2RenderLease();f2Calc();
+  toast('جاهز لإدخال دراسة جديدة');
+}
+
+async function f2SaveStudy(){
+  var title=document.getElementById('f2-report-title')?.value?.trim()||'دراسة جدوى';
   var data={
-    title:document.getElementById('f2-report-title')?.value||'',
+    id:Date.now(),
+    title:title,
+    savedAt:new Date().toISOString(),
     count:document.getElementById('f2-count')?.value||'',
     model:document.getElementById('f2-model')?.value||'',
     year:document.getElementById('f2-year')?.value||'',
@@ -10424,48 +10459,86 @@ async function f2SaveData(){
     monthlyLease:document.getElementById('f2-monthly-lease')?.value||'',
     paidTotal:document.getElementById('f2-paid-total')?.value||'',
     leaseDuration:document.getElementById('f2-lease-duration')?.value||'',
-    inclMaint:document.getElementById('f2-incl-maint')?.value||'',
-    inclAlt:document.getElementById('f2-incl-alt')?.value||'',
-    inclIns:document.getElementById('f2-incl-ins')?.value||'',
     leaseGrowth:document.getElementById('f2-lease-growth')?.value||'',
     maintOffers:f2MaintOffers,
-    leaseOffers:f2LeaseOffers,
-    savedAt:new Date().toISOString()
+    leaseOffers:f2LeaseOffers
   };
+  f2Studies.unshift(data);
+  localStorage.setItem('f2_studies',JSON.stringify(f2Studies));
   try{
-    localStorage.setItem('f2_analysis_data', JSON.stringify(data));
-    var sbData={key:'f2_analysis', value:JSON.stringify(data), updated_at:new Date().toISOString()};
-    var existing=await sbGet('procurement_config','key=eq.f2_analysis');
-    if(existing&&existing.length) await sbUpdate('procurement_config',existing[0].id,sbData);
-    else await sbInsert('procurement_config',sbData);
-    toast('تم حفظ بيانات دراسة الجدوى بنجاح ✓');
-  }catch(e){
-    localStorage.setItem('f2_analysis_data',JSON.stringify(data));
-    toast('تم الحفظ محلياً ✓');
-  }
+    await sbInsert('procurement_config',{key:'f2_study_'+data.id,value:JSON.stringify(data),updated_at:new Date().toISOString()});
+  }catch(e){}
+  f2RenderSaved();
+  toast('تم حفظ الدراسة: '+title+' ✅');
+}
+
+function f2LoadStudy(id){
+  var s=f2Studies.find(function(x){return x.id===id;});
+  if(!s)return;
+  document.getElementById('f2-report-title').value=s.title||'';
+  document.getElementById('f2-count').value=s.count||'';
+  document.getElementById('f2-model').value=s.model||'';
+  document.getElementById('f2-year').value=s.year||'';
+  document.getElementById('f2-odometer').value=s.odometer||'';
+  document.getElementById('f2-unitprice').value=s.unitprice||'';
+  document.getElementById('f2-readiness').value=s.readiness||'';
+  document.getElementById('f2-annual-lease').value=s.annualLease||'';
+  document.getElementById('f2-monthly-lease').value=s.monthlyLease||'';
+  document.getElementById('f2-paid-total').value=s.paidTotal||'';
+  document.getElementById('f2-lease-duration').value=s.leaseDuration||'';
+  document.getElementById('f2-lease-growth').value=s.leaseGrowth||'';
+  f2MaintOffers=s.maintOffers||[];
+  f2LeaseOffers=s.leaseOffers||[];
+  f2RenderMaint();f2RenderLease();f2Calc();
+  toast('تم تحميل: '+s.title);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function f2DelStudy(id){
+  if(!confirm('حذف هذه الدراسة؟')) return;
+  f2Studies=f2Studies.filter(function(x){return x.id!==id;});
+  localStorage.setItem('f2_studies',JSON.stringify(f2Studies));
+  f2RenderSaved();
+  toast('تم الحذف');
+}
+
+function f2RenderSaved(){
+  var el=document.getElementById('f2-saved-list');if(!el)return;
+  if(!f2Studies.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد دراسات محفوظة</div>';return;}
+  var html='';
+  f2Studies.forEach(function(s){
+    var dt=s.savedAt?new Date(s.savedAt).toLocaleDateString('ar-SA'):'';
+    html+='<div class="saved-item">'+
+      '<div class="saved-item-info">'+
+        '<strong>'+s.title+'</strong>'+
+        '<span style="color:var(--sub)">'+dt+(s.model?' — '+s.model:'')+'</span>'+
+      '</div>'+
+      '<div class="saved-item-actions">'+
+        '<button class="btn btn-primary btn-sm" onclick="f2LoadStudy('+s.id+')">تحميل</button>'+
+        '<button class="btn btn-red btn-sm" onclick="f2PDF(''+s.title.replace(/'/g,"\\'")+'')" >PDF</button>'+
+        '<button class="btn btn-gray btn-sm" onclick="f2DelStudy('+s.id+')">×</button>'+
+      '</div></div>';
+  });
+  el.innerHTML=html;
 }
 
 function f2LoadSavedData(){
   try{
-    var saved=JSON.parse(localStorage.getItem('f2_analysis_data')||'{}');
-    if(!saved.savedAt)return;
-    if(saved.title) document.getElementById('f2-report-title').value=saved.title;
-    if(saved.count) document.getElementById('f2-count').value=saved.count;
-    if(saved.model) document.getElementById('f2-model').value=saved.model;
-    if(saved.year) document.getElementById('f2-year').value=saved.year;
-    if(saved.odometer) document.getElementById('f2-odometer').value=saved.odometer;
-    if(saved.unitprice) document.getElementById('f2-unitprice').value=saved.unitprice;
-    if(saved.readiness) document.getElementById('f2-readiness').value=saved.readiness;
-    if(saved.annualLease) document.getElementById('f2-annual-lease').value=saved.annualLease;
-    if(saved.monthlyLease) document.getElementById('f2-monthly-lease').value=saved.monthlyLease;
-    if(saved.paidTotal) document.getElementById('f2-paid-total').value=saved.paidTotal;
-    if(saved.leaseDuration) document.getElementById('f2-lease-duration').value=saved.leaseDuration;
-    if(saved.leaseGrowth) document.getElementById('f2-lease-growth').value=saved.leaseGrowth;
-    if(saved.maintOffers&&saved.maintOffers.length){f2MaintOffers=saved.maintOffers;f2RenderMaint();}
-    if(saved.leaseOffers&&saved.leaseOffers.length){f2LeaseOffers=saved.leaseOffers;f2RenderLease();}
-    f2Calc();
+    // تحميل من localStorage
+    var arr=JSON.parse(localStorage.getItem('f2_studies')||'[]');
+    // دعم النظام القديم
+    var old=JSON.parse(localStorage.getItem('f2_analysis_data')||'{}');
+    if(old.savedAt&&!arr.find(function(x){return x.id==='legacy';})){
+      old.id=Date.now();old.title=old.title||'دراسة محفوظة سابقاً';
+      arr.push(old);
+    }
+    f2Studies=arr;
+    f2RenderSaved();
+    // تحميل آخر دراسة تلقائياً إن وجدت
+    if(f2Studies.length){f2LoadStudy(f2Studies[0].id);}
   }catch(e){}
 }
+
 
 function f2PDF(reportTitle){
   if(!reportTitle) reportTitle='دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير';
