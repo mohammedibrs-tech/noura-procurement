@@ -1864,8 +1864,7 @@ async function doLogin(){
   const p=document.getElementById('l-pass').value;
   const h=await sha256(p);
   if(u==='admin'&&h===ADMIN_HASH){
-    localStorage.setItem('saved_user',u);
-    localStorage.setItem('saved_pass',p);
+    try{localStorage.setItem('saved_user',u);localStorage.setItem('saved_hash',h);}catch(e){}
     document.getElementById('login-screen').style.display='none';
     init();
   }else{
@@ -10515,7 +10514,7 @@ function f2RenderSaved(){
       '</div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-primary btn-sm" onclick="f2LoadStudy('+s.id+')">تحميل</button>'+
-        '<button class="btn btn-red btn-sm" onclick="f2PDF(''+s.title.replace(/'/g,"\\'")+'')" >PDF</button>'+
+        '<button class="btn btn-red btn-sm" onclick="f2PDFById('+s.id+')">PDF</button>'+
         '<button class="btn btn-gray btn-sm" onclick="f2DelStudy('+s.id+')">×</button>'+
       '</div></div>';
   });
@@ -10540,6 +10539,12 @@ function f2LoadSavedData(){
 }
 
 
+function f2PDFById(id){
+  var s=f2Studies.find(function(x){return x.id===id;});
+  if(!s)return;
+  f2LoadStudy(id);
+  setTimeout(function(){f2PDF(s.title);},200);
+}
 function f2PDF(reportTitle){
   if(!reportTitle) reportTitle='دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير';
   f2Calc();
@@ -10671,16 +10676,16 @@ function f2PDF(reportTitle){
 }
 
 async function autoLogin(){
-  const u=localStorage.getItem('saved_user');
-  const p=localStorage.getItem('saved_pass');
-  if(!u||!p)return;
-  document.getElementById('l-user').value=u;
-  document.getElementById('l-pass').value=p;
-  const h=await sha256(p);
-  if(u==='admin'&&h===ADMIN_HASH){
-    document.getElementById('login-screen').style.display='none';
-    init();
-  }
+  try{
+    const u=localStorage.getItem('saved_user');
+    const h=localStorage.getItem('saved_hash');
+    if(!u||!h)return;
+    document.getElementById('l-user').value=u;
+    if(u==='admin'&&h===ADMIN_HASH){
+      document.getElementById('login-screen').style.display='none';
+      init();
+    }
+  }catch(e){}
 }
 window.addEventListener('load', function(){ autoLogin(); });
 </script>
