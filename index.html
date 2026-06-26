@@ -1503,6 +1503,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         <button class="btn btn-primary" onclick="buildSemiReport()">عرض التقرير</button>
         <button class="btn btn-green" onclick="exportSemiExcel()">تصدير Excel</button>
         <button class="btn btn-red" onclick="exportSemiPDF()">تصدير PDF</button>
+        <button class="btn" style="background:#244062;color:#fff;" onclick="exportSemiWord()">تصدير Word</button>
       </div>
     </div>
   </div>
@@ -7202,6 +7203,79 @@ function exportSemiPDF(){
   html+=buildContractsTableHTML(sActiveC,sTotalCM);
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
   W.document.write(html);W.document.close();
+}
+
+function exportSemiWord(){
+  buildSemiReport();
+  const half=document.getElementById('rs-half').value;
+  const year=document.getElementById('rs-year').value;
+  const halfName=half==='1'?'الأول':'الثاني';
+  const BG=FORM_BG;
+  const months=half==='1'?['01','02','03','04','05','06']:['07','08','09','10','11','12'];
+  const sExpForSum=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
+  const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
+  const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
+  const cmpSav=calcCmpSavings();
+  const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  const summaryRows=`
+    <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
+    <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
+    <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
+    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSav>0?sFmt(cmpSav)+' ر.س':'—'}</td></tr>
+    <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sPOVal)} ر.س</td></tr>`;
+  const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
+  const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
+  const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
+
+  // نفس CSS الـ PDF تماماً مع إضافة خصائص Word
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
+    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
+    +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
+    +'h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}'
+    +'h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}'
+    +'thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}'
+    +'tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}'
+    +'tbody tr:nth-child(even) td{background:#eaf2ff;}'
+    +'tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}'
+    +'.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}'
+    +'@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+
+  var bodyHTML='';
+  if(BG) bodyHTML+='<img src="'+BG+'" class="bg-img">';
+  bodyHTML+='<div class="pdf-content">';
+  bodyHTML+=`<h1>${rsTitle2}</h1>`;
+  bodyHTML+='<h2>ملخص النصف '+halfName+' '+year+'</h2>';
+  bodyHTML+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
+  bodyHTML+='<div class="two-col">';
+  bodyHTML+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
+  bodyHTML+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
+  bodyHTML+='</div>';
+  bodyHTML+='<h2>المصروفات حسب الإدارة</h2>';
+  bodyHTML+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
+  bodyHTML+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(sPOList);
+  bodyHTML+=buildContractsTableHTML(sActiveC,sTotalCM);
+  bodyHTML+='</div>';
+
+  // إنشاء ملف Word بصيغة MHTML (تحافظ على كل التنسيقات والألوان والجداول)
+  var fullHTML='<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><meta name=Generator content="Microsoft Word 15"><meta name=Originator content="Microsoft Word 15"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>'+CSS+'/* Word page setup */ @page WordSection1{size:21cm 29.7cm;margin:2cm 1.5cm 1.5cm 1.5cm;mso-header-margin:.5cm;mso-footer-margin:.5cm;mso-paper-source:0;} div.WordSection1{page:WordSection1;}</style></head><body class="WordSection1">'+bodyHTML+'</body></html>';
+
+  var blob=new Blob(['﻿'+fullHTML],{type:'application/msword;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='التقرير_النصف_سنوي_'+halfName+'_'+year+'.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  toast('تم تصدير Word بنجاح ✓');
 }
 
 function exportSemiExcel(){
