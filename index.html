@@ -7140,7 +7140,6 @@ function buildSemiReport(){
   <table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>
   <tr><td>إجمالي المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)} ر.س</td></tr>
   <tr><td>عدد العمليات النثرية</td><td style="text-align:right;">${sExp.length}</td></tr>
-  <tr><td>إجمالي التعاميد (${sTaameedSR.length} تعميد)</td><td style="text-align:right;font-weight:700;">${fmt2(sTaameedTotalSR)} ر.س</td></tr>
   <tr><td>طلبات PO (${sPO.length} طلب)</td><td style="text-align:right;font-weight:700;">${fmt2(sPOVal2)} ر.س</td></tr>
   <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavSR>0?fmt2(totalCmpSavSR)+' ر.س':'—'}</td></tr>
   </tbody></table>
@@ -7169,17 +7168,13 @@ function buildSemiReport(){
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><h3>المصروفات النثرية والتعاميد</h3></div>
+      <div class="card-header"><h3>المصروفات النثرية وطلبات الشراء PO</h3></div>
       <div class="card-body">
         <table class="tbl"><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>
         <tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">${sExp.length} عملية</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
-        <tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">${sTaameedSR.length} تعميد</td><td style="text-align:right;font-weight:700;">${fmt2(sTaameedTotalSR)}</td></tr>
-        <tr style="border-top:2px solid #244062;background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sTaameedTotalSR)}</td></tr>
+        <tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">${sPO.length} طلب</td><td style="text-align:right;font-weight:700;">${fmt2(sPOVal2)}</td></tr>
+        <tr style="border-top:2px solid #244062;background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sPOVal2)}</td></tr>
         </tbody></table>
-        ${sTaameedSR.length>0?`<div style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;"><div style="font-weight:700;font-size:12px;color:#244062;margin-bottom:6px;">تفاصيل التعاميد</div>
-        <table class="tbl"><thead><tr><th>رقم التعميد</th><th>الوصف</th><th style="text-align:right;">القيمة (ر.س)</th><th style="text-align:center;">التاريخ</th></tr></thead><tbody>
-        ${sTaameedSR.map(t=>`<tr><td style="font-size:11px;">${t.num||'—'}</td><td style="font-size:11px;">${t.desc||t.description||'—'}</td><td style="text-align:right;font-weight:600;font-size:11px;">${fmt2(t.amount||0)}</td><td style="text-align:center;font-size:11px;">${t.date||'—'}</td></tr>`).join('')}
-        </tbody></table></div>`:''}
       </div>
     </div>
   </div>
@@ -7225,7 +7220,6 @@ function exportSemiPDF(){
   // جدول الملخص
   const summaryRows=`
     <tr><td>إجمالي المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
-    <tr><td>إجمالي التعاميد (${sTaameedPDF.length} تعميد)</td><td style="text-align:right;font-weight:700;">${sFmt(sTaameedTotalPDF)} ر.س</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavPDF>0?sFmt(totalCmpSavPDF)+' ر.س':'—'}</td></tr>
@@ -7236,9 +7230,8 @@ function exportSemiPDF(){
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavPDF)+'</td><td></td></tr></tbody></table>';
   const expTaamTablePDF='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
     +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
-    +'<tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">'+sTaameedPDF.length+' تعميد</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalPDF)+'</td></tr>'
-    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalPDF)+'</td></tr>'
-    +(sTaameedPDF.length>0?sTaameedPDF.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td></tr>').join(''):'')
+    +'<tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
+    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sPOVal)+'</td></tr>'
     +'</tbody></table>';
   // شهر بشهر
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
@@ -7257,7 +7250,7 @@ function exportSemiPDF(){
   html+=`<h1>${rsTitle2}</h1>`;
   html+='<h2>ملخص النصف '+halfName+' '+year+'</h2>';
   html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
-  html+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTablePDF+'</div><div><h2>المصروفات النثرية والتعاميد</h2>'+expTaamTablePDF+'</div></div>';
+  html+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTablePDF+'</div><div><h2>المصروفات النثرية وطلبات الشراء PO</h2>'+expTaamTablePDF+'</div></div>';
   html+='<div class="two-col">';
   html+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
@@ -7271,17 +7264,17 @@ function exportSemiPDF(){
 }
 
 
-// فلترة العقود الفعالة لفترة تقرير محددة (سنة + نصف)
-// يُظهر العقد إذا كان فعالاً في أي وقت خلال الفترة المطلوبة
+// فلترة العقود لفترة تقرير محددة
+// المنطق: يُظهر أي عقد كان نشطاً خلال الفترة — بمعنى بدأ قبل نهايتها ولم ينته قبل بدايتها
+// يُجاهل status الحالي لأن التقرير يصف ما كان قائماً آنذاك
 function filterContractsForYear(year, half){
-  // تحديد نهاية الفترة: النصف الأول = يونيو، الثاني = ديسمبر
   var periodEnd=half===1?(year+'-06-30'):(year+'-12-31');
   var periodStart=half===1?(year+'-01-01'):(year+'-07-01');
   return contracts.filter(c=>{
-    if(c.status!=='active'&&c.status!=='expiring') return false;
-    // العقد بدأ بعد نهاية الفترة؟ استثنه
+    // تجاهل status — نريد كل العقود التي كانت فعالة في تلك الفترة
+    // شرط 1: العقد بدأ قبل نهاية الفترة (أو ليس له تاريخ بداية)
     if(c.start&&c.start>periodEnd) return false;
-    // العقد انتهى قبل بداية الفترة؟ استثنه
+    // شرط 2: العقد لم ينته قبل بداية الفترة (أو ليس له تاريخ انتهاء)
     if(c.end&&c.end<periodStart) return false;
     return true;
   });
@@ -7330,7 +7323,6 @@ function exportSemiWord(){
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   const summaryRows=`
     <tr><td>إجمالي المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
-    <tr><td>إجمالي التعاميد (${sTaameedW.length} تعميد)</td><td style="text-align:right;font-weight:700;">${sFmt(sTaameedTotalW)} ر.س</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavW>0?sFmt(totalCmpSavW)+' ر.س':'—'}</td></tr>
@@ -7341,9 +7333,8 @@ function exportSemiWord(){
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavW)+'</td><td></td></tr></tbody></table>';
   const expTaamTableW='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
     +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
-    +'<tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">'+sTaameedW.length+' تعميد</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalW)+'</td></tr>'
-    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalW)+'</td></tr>'
-    +(sTaameedW.length>0?sTaameedW.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td></tr>').join(''):'')
+    +'<tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
+    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sPOVal)+'</td></tr>'
     +'</tbody></table>';
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
   const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
@@ -7368,7 +7359,7 @@ function exportSemiWord(){
   bodyHTML+=`<h1>${rsTitle2}</h1>`;
   bodyHTML+='<h2>ملخص النصف '+halfName+' '+year+'</h2>';
   bodyHTML+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
-  bodyHTML+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTableW+'</div><div><h2>المصروفات النثرية والتعاميد</h2>'+expTaamTableW+'</div></div>';
+  bodyHTML+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTableW+'</div><div><h2>المصروفات النثرية وطلبات الشراء PO</h2>'+expTaamTableW+'</div></div>';
   bodyHTML+='<div class="two-col">';
   bodyHTML+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   bodyHTML+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
