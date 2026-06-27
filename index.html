@@ -2953,24 +2953,48 @@ async function poSave(){
 function renderPoSaved(){
   var el=document.getElementById('po-saved');if(!el)return;
   if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
-  var html='';
+  // تجميع حسب السنة
+  var byYear={};
   for(var i=0;i<poSaved.length;i++){
     var s=poSaved[i];
-    var tot=0;try{var rr=JSON.parse(s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
-    var totWithVat=(tot*1.15).toFixed(2);
-    html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
-      '<div class="saved-item-info">'+
-        '<strong style="font-size:13px;color:#244062;">'+(s.company||'')+'</strong>'+
-        '<span style="color:var(--sub);font-size:11px;"> | '+(s.num||'—')+' | '+(s.date||'—')+'</span>'+
-        (totWithVat>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+parseFloat(totWithVat).toLocaleString('ar-SA')+' ر.س</span>':'')+
-      '</div>'+
-      '<div class="saved-item-actions" style="display:flex;gap:4px;flex-wrap:wrap;">'+
-        '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="poEditById('+i+')">✏️ تعديل</button>'+
-        '<button class="btn btn-green btn-sm" onclick="poExcelById('+i+')">Excel</button>'+
-        '<button class="btn btn-red btn-sm" onclick="poPrintById('+i+')">PDF</button>'+
-        '<button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;border:1px solid #C53030;" onclick="poDeleteById('+i+')">🗑️ حذف</button>'+
-      '</div></div>';
+    var yr=(s.date||s.created_at||'').substring(0,4)||'غير محدد';
+    // seed data لسنة 2025
+    var sid=s.id||0;
+    if((s.date||'')==='2025-01-01'&&sid>=1700000001&&sid<=1700000099) yr='2025';
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push({s:s,i:i});
   }
+  var years=Object.keys(byYear).sort(function(a,b){return b-a;});
+  var html='';
+  years.forEach(function(yr){
+    var items=byYear[yr];
+    var yrTotal=items.reduce(function(sum,obj){
+      var tot=0;try{var rr=JSON.parse(obj.s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
+      return sum+tot*1.15;
+    },0);
+    html+='<div style="margin-bottom:6px;padding:6px 12px;background:#244062;color:#fff;font-weight:700;font-size:13px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;">'
+      +'<span>سنة '+yr+' — '+items.length+' طلب</span>'
+      +'<span style="font-size:12px;opacity:0.9;">'+yrTotal.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</span>'
+      +'</div>';
+    items.forEach(function(obj){
+      var s=obj.s; var i=obj.i;
+      var tot=0;try{var rr=JSON.parse(s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
+      var totWithVat=(tot*1.15).toFixed(2);
+      html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
+        '<div class="saved-item-info">'+
+          '<strong style="font-size:13px;color:#244062;">'+(s.company||'')+'</strong>'+
+          '<span style="color:var(--sub);font-size:11px;"> | '+(s.num||'—')+' | '+(s.date||'—')+'</span>'+
+          (tot>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+parseFloat(totWithVat).toLocaleString('ar-SA')+' ر.س</span>':'')+
+        '</div>'+
+        '<div class="saved-item-actions" style="display:flex;gap:4px;flex-wrap:wrap;">'+
+          '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="poEditById('+i+')">✏️ تعديل</button>'+
+          '<button class="btn btn-green btn-sm" onclick="poExcelById('+i+')">Excel</button>'+
+          '<button class="btn btn-red btn-sm" onclick="poPrintById('+i+')">PDF</button>'+
+          '<button class="btn btn-sm" style="background:#FEE2E2;color:#C53030;border:1px solid #C53030;" onclick="poDeleteById('+i+')">🗑️ حذف</button>'+
+        '</div></div>';
+    });
+    html+='<div style="height:14px;"></div>';
+  });
   el.innerHTML=html;
 }
 
