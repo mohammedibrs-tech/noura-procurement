@@ -7143,7 +7143,6 @@ function buildSemiReport(){
   <tr><td>إجمالي التعاميد (${sTaameedSR.length} تعميد)</td><td style="text-align:right;font-weight:700;">${fmt2(sTaameedTotalSR)} ر.س</td></tr>
   <tr><td>طلبات PO (${sPO.length} طلب)</td><td style="text-align:right;font-weight:700;">${fmt2(sPOVal2)} ر.س</td></tr>
   <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavSR>0?fmt2(totalCmpSavSR)+' ر.س':'—'}</td></tr>
-  <tr style="background:#d6e4f0;border-top:2px solid #244062;"><td style="font-weight:900;">الناتج الإجمالي (نثريات + تعاميد + PO)</td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sTaameedTotalSR+sPOVal2)} ر.س</td></tr>
   </tbody></table>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -7159,7 +7158,7 @@ function buildSemiReport(){
         ${cmpDetSR.map(d=>`<tr>
           <td style="font-weight:600;">${d.title}</td>
           <td style="text-align:right;">${d.curContract>0?fmt2(d.curContract):'—'}</td>
-          <td style="text-align:right;">${fmt2(d.best)}</td>
+          <td style="text-align:right;">${fmt2(d.bestAnnual)}</td>
           <td style="text-align:right;font-weight:700;">${fmt2(d.saving)}</td>
           <td style="text-align:center;font-weight:700;">${d.curContract>0?((d.saving/d.curContract)*100).toFixed(1)+'%':'—'}</td>
         </tr>`).join('')}
@@ -7172,10 +7171,10 @@ function buildSemiReport(){
     <div class="card">
       <div class="card-header"><h3>المصروفات النثرية والتعاميد</h3></div>
       <div class="card-body">
-        <table class="tbl"><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>
-        <tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td><td style="text-align:center;">${(totalSpent+sTaameedTotalSR)>0?((totalSpent/(totalSpent+sTaameedTotalSR))*100).toFixed(1)+'%':'—'}</td></tr>
-        <tr><td style="font-weight:700;">التعاميد (${sTaameedSR.length} تعميد)</td><td style="text-align:right;font-weight:700;">${fmt2(sTaameedTotalSR)}</td><td style="text-align:center;">${(totalSpent+sTaameedTotalSR)>0?((sTaameedTotalSR/(totalSpent+sTaameedTotalSR))*100).toFixed(1)+'%':'—'}</td></tr>
-        <tr style="border-top:2px solid #244062;background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sTaameedTotalSR)}</td><td style="text-align:center;font-weight:700;">100%</td></tr>
+        <table class="tbl"><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>
+        <tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">${sExp.length} عملية</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
+        <tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">${sTaameedSR.length} تعميد</td><td style="text-align:right;font-weight:700;">${fmt2(sTaameedTotalSR)}</td></tr>
+        <tr style="border-top:2px solid #244062;background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sTaameedTotalSR)}</td></tr>
         </tbody></table>
         ${sTaameedSR.length>0?`<div style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;"><div style="font-weight:700;font-size:12px;color:#244062;margin-bottom:6px;">تفاصيل التعاميد</div>
         <table class="tbl"><thead><tr><th>رقم التعميد</th><th>الوصف</th><th style="text-align:right;">القيمة (ر.س)</th><th style="text-align:center;">التاريخ</th></tr></thead><tbody>
@@ -7216,7 +7215,7 @@ function exportSemiPDF(){
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const sActiveC=filterContractsForYear(year);
+  const sActiveC=filterContractsForYear(year,parseInt(half));
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const sTaameedPDF=(typeof taameeds!=='undefined'?taameeds:[]).filter(t=>{const td=(t.date||'').substring(0,7);return months.some(m=>td===year+'-'+m);});
@@ -7230,16 +7229,16 @@ function exportSemiPDF(){
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavPDF>0?sFmt(totalCmpSavPDF)+' ر.س':'—'}</td></tr>
-    <tr style="background:#d6e4f0;"><td style="font-weight:900;">الناتج الإجمالي (نثريات + تعاميد + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sTaameedTotalPDF+sPOVal)} ر.س</td></tr>`;
+    `;
   const cmpSavTablePDF=cmpDetPDF.length===0?'<p style="font-size:9px;color:#888;text-align:center;">لا توجد مقارنات أسعار</p>'
-    :'<table><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي (ر.س)</th><th style="text-align:right;">أفضل عرض (ر.س)</th><th style="text-align:right;">الوفر (ر.س)</th><th style="text-align:center;">نسبة الوفر</th></tr></thead><tbody>'
-    +cmpDetPDF.map(d=>'<tr><td>'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?sFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+sFmt(d.best)+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+'</td><td style="text-align:center;font-weight:700;">'+(d.curContract>0?((d.saving/d.curContract)*100).toFixed(1)+'%':'—')+'</td></tr>').join('')
+    :'<table><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي السنوي (ر.س)</th><th style="text-align:right;">أفضل عرض السنوي (ر.س)</th><th style="text-align:right;">الوفر (ر.س)</th><th style="text-align:center;">نسبة الوفر</th></tr></thead><tbody>'
+    +cmpDetPDF.map(d=>'<tr><td>'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?sFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+sFmt(d.bestAnnual)+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+'</td><td style="text-align:center;font-weight:700;">'+(d.curContract>0?((d.saving/d.curContract)*100).toFixed(1)+'%':'—')+'</td></tr>').join('')
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavPDF)+'</td><td></td></tr></tbody></table>';
-  const expTaamTablePDF='<table><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'
-    +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td><td style="text-align:center;">'+(sTotalSpent+sTaameedTotalPDF>0?((sTotalSpent/(sTotalSpent+sTaameedTotalPDF))*100).toFixed(1)+'%':'—')+'</td></tr>'
-    +'<tr><td style="font-weight:700;">التعاميد ('+sTaameedPDF.length+' تعميد)</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalPDF)+'</td><td style="text-align:center;">'+(sTotalSpent+sTaameedTotalPDF>0?((sTaameedTotalPDF/(sTotalSpent+sTaameedTotalPDF))*100).toFixed(1)+'%':'—')+'</td></tr>'
-    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalPDF)+'</td><td style="text-align:center;font-weight:700;">100%</td></tr>'
-    +(sTaameedPDF.length>0?sTaameedPDF.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td></tr>').join(''):'')
+  const expTaamTablePDF='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
+    +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
+    +'<tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">'+sTaameedPDF.length+' تعميد</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalPDF)+'</td></tr>'
+    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalPDF)+'</td></tr>'
+    +(sTaameedPDF.length>0?sTaameedPDF.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td></tr>').join(''):'')
     +'</tbody></table>';
   // شهر بشهر
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
@@ -7272,27 +7271,41 @@ function exportSemiPDF(){
 }
 
 
-// فلترة العقود الفعالة بسنة التقرير
-function filterContractsForYear(year){
+// فلترة العقود الفعالة لفترة تقرير محددة (سنة + نصف)
+// يُظهر العقد إذا كان فعالاً في أي وقت خلال الفترة المطلوبة
+function filterContractsForYear(year, half){
+  // تحديد نهاية الفترة: النصف الأول = يونيو، الثاني = ديسمبر
+  var periodEnd=half===1?(year+'-06-30'):(year+'-12-31');
+  var periodStart=half===1?(year+'-01-01'):(year+'-07-01');
   return contracts.filter(c=>{
     if(c.status!=='active'&&c.status!=='expiring') return false;
-    if(c.start&&c.start.length>=4){var sy=parseInt(c.start.substring(0,4));if(sy>parseInt(year)) return false;}
-    if(c.end&&c.end.length>=4){var ey=parseInt(c.end.substring(0,4));if(isNaN(ey))ey=parseInt(c.end.substring(c.end.length-4));if(ey<parseInt(year)) return false;}
+    // العقد بدأ بعد نهاية الفترة؟ استثنه
+    if(c.start&&c.start>periodEnd) return false;
+    // العقد انتهى قبل بداية الفترة؟ استثنه
+    if(c.end&&c.end<periodStart) return false;
     return true;
   });
 }
 
 // إرجاع تفاصيل وفر كل مقارنة أسعار محفوظة
+// يُحوّل جميع القيم للسنوي ليكون المقارنة عادلة
 function getCmpSavingsDetail(){
   return (typeof cmpSaved!=='undefined'?cmpSaved:[]).map(function(cmp){
     if(!cmp.companies||!cmp.companies.length) return null;
-    var totals=cmp.companies.map(function(co){return (co.rows||[]).reduce(function(s,r){var base=(r.count||0)*(r.unitPrice||0);return s+(r.vatType==='added'?base*1.15:base);},0);}).filter(function(v){return v>0;});
-    if(!totals.length) return null;
-    var min=Math.min.apply(null,totals);
+    // حساب الإجمالي السنوي لكل شركة (مراعاة paymentType)
+    var annuals=cmp.companies.map(function(co){
+      var raw=(co.rows||[]).reduce(function(s,r){var base=(r.count||0)*(r.unitPrice||0);return s+(r.vatType==='added'?base*1.15:base);},0);
+      // إذا كان الإدخال شهرياً نضربه × 12 للمقارنة السنوية
+      return (co.paymentType||'total')==='monthly'?raw*12:raw;
+    }).filter(function(v){return v>0;});
+    if(!annuals.length) return null;
+    var minAnnual=Math.min.apply(null,annuals);
+    var maxAnnual=Math.max.apply(null,annuals);
     var curContract=parseFloat(cmp.currentContract)||0;
-    var saving=curContract>0?Math.max(0,curContract-min):Math.max(0,Math.max.apply(null,totals)-min);
+    // العقد الحالي مُدخَل كإجمالي سنوي
+    var saving=curContract>0?Math.max(0,curContract-minAnnual):Math.max(0,maxAnnual-minAnnual);
     if(saving<=0) return null;
-    return {title:cmp.title||'مقارنة بدون عنوان', saving:saving, curContract:curContract, best:min};
+    return {title:cmp.title||'مقارنة بدون عنوان', saving:saving, curContract:curContract, bestAnnual:minAnnual};
   }).filter(Boolean);
 }
 
@@ -7307,7 +7320,7 @@ function exportSemiWord(){
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const sActiveC=filterContractsForYear(year);
+  const sActiveC=filterContractsForYear(year,parseInt(half));
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const sTaameedW=(typeof taameeds!=='undefined'?taameeds:[]).filter(t=>{const td=(t.date||'').substring(0,7);return months.some(m=>td===year+'-'+m);});
@@ -7321,16 +7334,16 @@ function exportSemiWord(){
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavW>0?sFmt(totalCmpSavW)+' ر.س':'—'}</td></tr>
-    <tr style="background:#d6e4f0;"><td style="font-weight:900;">الناتج الإجمالي (نثريات + تعاميد + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sTaameedTotalW+sPOVal)} ر.س</td></tr>`;
+    `;
   const cmpSavTableW=cmpDetW.length===0?'<p style="font-size:9px;color:#888;text-align:center;">لا توجد مقارنات أسعار</p>'
-    :'<table><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي (ر.س)</th><th style="text-align:right;">أفضل عرض (ر.س)</th><th style="text-align:right;">الوفر (ر.س)</th><th style="text-align:center;">نسبة الوفر</th></tr></thead><tbody>'
-    +cmpDetW.map(d=>'<tr><td>'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?sFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+sFmt(d.best)+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+'</td><td style="text-align:center;font-weight:700;">'+(d.curContract>0?((d.saving/d.curContract)*100).toFixed(1)+'%':'—')+'</td></tr>').join('')
+    :'<table><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي السنوي (ر.س)</th><th style="text-align:right;">أفضل عرض السنوي (ر.س)</th><th style="text-align:right;">الوفر (ر.س)</th><th style="text-align:center;">نسبة الوفر</th></tr></thead><tbody>'
+    +cmpDetW.map(d=>'<tr><td>'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?sFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+sFmt(d.bestAnnual)+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+'</td><td style="text-align:center;font-weight:700;">'+(d.curContract>0?((d.saving/d.curContract)*100).toFixed(1)+'%':'—')+'</td></tr>').join('')
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavW)+'</td><td></td></tr></tbody></table>';
-  const expTaamTableW='<table><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'
-    +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td><td style="text-align:center;">'+(sTotalSpent+sTaameedTotalW>0?((sTotalSpent/(sTotalSpent+sTaameedTotalW))*100).toFixed(1)+'%':'—')+'</td></tr>'
-    +'<tr><td style="font-weight:700;">التعاميد ('+sTaameedW.length+' تعميد)</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalW)+'</td><td style="text-align:center;">'+(sTotalSpent+sTaameedTotalW>0?((sTaameedTotalW/(sTotalSpent+sTaameedTotalW))*100).toFixed(1)+'%':'—')+'</td></tr>'
-    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalW)+'</td><td style="text-align:center;font-weight:700;">100%</td></tr>'
-    +(sTaameedW.length>0?sTaameedW.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td></tr>').join(''):'')
+  const expTaamTableW='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
+    +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
+    +'<tr><td style="font-weight:700;">التعاميد</td><td style="text-align:center;">'+sTaameedW.length+' تعميد</td><td style="text-align:right;font-weight:700;">'+sFmt(sTaameedTotalW)+'</td></tr>'
+    +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sTaameedTotalW)+'</td></tr>'
+    +(sTaameedW.length>0?sTaameedW.map(t=>'<tr><td style="font-size:8.5px;">'+(t.num||'—')+' — '+(t.desc||t.description||'—')+'</td><td style="text-align:center;font-size:8.5px;">'+(t.date||'—')+'</td><td style="text-align:right;font-size:8.5px;font-weight:600;">'+sFmt(t.amount||0)+'</td></tr>').join(''):'')
     +'</tbody></table>';
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
   const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
