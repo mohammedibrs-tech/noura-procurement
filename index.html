@@ -7252,7 +7252,7 @@ function exportSemiPDF(){
   html+='<h2>المصروفات حسب الإدارة</h2>';
   html+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
   html+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(sPOList);
-  html+=buildContractsTableHTML(sActiveC2,sTotalCM);
+  html+=buildContractsTableHTML(sActiveC,sTotalCM);
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
   W.document.write(html);W.document.close();
 }
