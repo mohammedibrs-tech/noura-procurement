@@ -2191,11 +2191,15 @@ function poMonthKey(p){
   return '';
 }
 // فلتر POs مع دعم seed data لسنة 2025
+// SEED POs (id 1700000001-1700000099) تمثل بيانات سنة 2025 كاملة
+// لتجنب تكرارها عند فلترة النصف الأول والثاني معاً، نعيّنها للنصف الثاني (07-12) فقط
+// وعند طلب السنة كاملة تُضمَّن مرة واحدة
+var SEED_MONTHS_2025=['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12'];
 function poInMonthKey(p, key){
   var pmk=poMonthKey(p);
   if(pmk===key) return true;
-  // seed data لسنة 2025 تظهر في كل أشهر 2025
-  if(pmk==='SEED-2025' && key.startsWith('2025-')) return true;
+  // seed data: تُحسب فقط ضمن أشهر النصف الثاني 2025
+  if(pmk==='SEED-2025') return SEED_MONTHS_2025.indexOf(key)>=0;
   return false;
 }
 function poInYear(p, year){
@@ -7136,7 +7140,7 @@ function buildSemiReport(){
   <tr><td>عدد العمليات</td><td style="text-align:right;">${sExp.length}</td></tr>
   <tr><td>طلبات PO</td><td style="text-align:right;">${sPO.length}</td></tr>
   <tr><td>إجمالي قيمة طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">${fmt2(sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0))} (${sPO.length} طلب)</td></tr>
-  <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${(cmpSavings>0?cmpSavings.toLocaleString('en-US',{minimumFractionDigits:2}):'—')}</td></tr>
+  ${(()=>{const det=getCmpSavingsDetail();if(!det.length)return '<tr><td>وفر مقارنة الأسعار</td><td style=\"text-align:right;\">—</td></tr>';let h='<tr><td colspan=\"2\" style=\"font-weight:800;background:#f0f4ff;padding:4px 7px;\">وفر مقارنة الأسعار</td></tr>';det.forEach(d=>{h+='<tr><td style=\"padding-right:20px;color:#444;">↳ '+d.title+'</td><td style=\"text-align:right;font-weight:700;\">'+d.saving.toLocaleString('en-US',{minimumFractionDigits:2})+' ر.س</td></tr>';});return h;})()}
   <tr style="background:#fff;border-top:2px solid #244062;"><td style="font-weight:900;font-size:8.5px;">الناتج الإجمالي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;font-size:10px;">${(totalSpent+sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0)).toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>
   </tbody></table>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -7159,6 +7163,49 @@ function buildSemiReport(){
   `;
 }
 
+
+// إرجاع تفاصيل وفر كل مقارنة أسعار محفوظة
+function getCmpSavingsDetail(){
+  return cmpSaved.map(function(cmp){
+    if(!cmp.companies||!cmp.companies.length) return null;
+    var totals=cmp.companies.map(function(co){
+      return (co.rows||[]).reduce(function(s,r){
+        var base=(r.count||0)*(r.unitPrice||0);
+        return s+(r.vatType==='added'?base*1.15:base);
+      },0);
+    }).filter(function(v){return v>0;});
+    if(!totals.length) return null;
+    var min=Math.min.apply(null,totals);
+    var curContract=parseFloat(cmp.currentContract)||0;
+    var saving=curContract>0?Math.max(0,curContract-min):Math.max(0,Math.max.apply(null,totals)-min);
+    if(saving<=0) return null;
+    return {title:cmp.title||'مقارنة بدون عنوان', saving:saving, curContract:curContract, best:min};
+  }).filter(Boolean);
+}
+
+
+// فلترة العقود الفعالة بسنة التقرير (تجنب عرض عقود سنوات أخرى)
+function filterContractsForYear(year){
+  return contracts.filter(c=>{
+    if(c.status!=='active'&&c.status!=='expiring') return false;
+    // فحص تاريخ البداية - لا نُظهر عقداً بدأ بعد سنة التقرير
+    if(c.start&&c.start.length>=4){
+      var sy=parseInt(c.start.substring(0,4));
+      if(sy>parseInt(year)) return false;
+    }
+    // فحص تاريخ الانتهاء - نعرض العقد إذا لم ينته قبل سنة التقرير
+    if(c.end&&c.end.length>=4){
+      var ey=parseInt(c.end.substring(c.end.length>=10?c.end.length-4:0));
+      if(isNaN(ey)) {
+        // محاولة parse من البداية (format YYYY-MM-DD)
+        ey=parseInt(c.end.substring(0,4));
+      }
+      if(ey<parseInt(year)) return false;
+    }
+    return true;
+  });
+}
+
 function exportSemiPDF(){
   buildSemiReport();
   const half=document.getElementById('rs-half').value;
@@ -7170,7 +7217,7 @@ function exportSemiPDF(){
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const sActiveC=filterContractsForYear(year);
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSav=calcCmpSavings();
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
@@ -7179,7 +7226,7 @@ function exportSemiPDF(){
     <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)}</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
-    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSav>0?sFmt(cmpSav)+' ر.س':'—'}</td></tr>
+    ${(()=>{const det=getCmpSavingsDetail();if(!det.length)return '<tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;">—</td></tr>';let rows=det.map(d=>'<tr><td style="padding-right:16px;">↳ '+d.title+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+' ر.س</td></tr>').join('');return '<tr><td colspan="2" style="font-weight:800;background:#f0f4ff;padding:4px 7px;">وفر مقارنة الأسعار</td></tr>'+rows;})()}
     <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sPOVal)} ر.س</td></tr>`;
   // شهر بشهر
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
@@ -7205,7 +7252,7 @@ function exportSemiPDF(){
   html+='<h2>المصروفات حسب الإدارة</h2>';
   html+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
   html+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(sPOList);
-  html+=buildContractsTableHTML(sActiveC,sTotalCM);
+  html+=buildContractsTableHTML(sActiveC2,sTotalCM);
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
   W.document.write(html);W.document.close();
 }
@@ -7221,7 +7268,7 @@ function exportSemiWord(){
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const sActiveC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const sActiveC=filterContractsForYear(year);
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSav=calcCmpSavings();
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
@@ -7229,7 +7276,7 @@ function exportSemiWord(){
     <tr><td>إجمالي المصروفات</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
     <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
-    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSav>0?sFmt(cmpSav)+' ر.س':'—'}</td></tr>
+    ${(()=>{const det=getCmpSavingsDetail();if(!det.length)return '<tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;">—</td></tr>';let rows=det.map(d=>'<tr><td style="padding-right:16px;">↳ '+d.title+'</td><td style="text-align:right;font-weight:700;">'+sFmt(d.saving)+' ر.س</td></tr>').join('');return '<tr><td colspan="2" style="font-weight:800;background:#f0f4ff;padding:4px 7px;">وفر مقارنة الأسعار</td></tr>'+rows;})()}
     <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${sFmt(sTotalSpent+sPOVal)} ر.س</td></tr>`;
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
   const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
