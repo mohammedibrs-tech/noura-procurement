@@ -11235,7 +11235,6 @@ function f2PDF(reportTitle){
   scenarios.sort(function(a,b){return a.total-b.total;});
   var BG=FORM_BG||'';
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
-  var W=window.open('','_blank');
 
   var css='@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;direction:rtl;margin:0;padding:0;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
@@ -11400,14 +11399,18 @@ function f2PDF(reportTitle){
     body+='<table><thead><tr>'+s3H+'</tr></thead><tbody>'+s3Rank+'</tr>'+s3Ann+'</tr>'+s3Tot+'</tr>'+s3Unit+'</tr>'+s3Sav+'</tr>'+s3Pct+'</tr>'+s3Stat+'</tr></tbody></table>';
   }
 
-  body+='</div><script>window.onload=function(){window.print();}<\/script>';
-
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'+css+'</style></head><body>'
+  var fullHTML='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>'+css+'<\/style><\/head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
-    +'<div class="wrap"><h1>'+safeTitle+'</h1>'
+    +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
     +body
-    +'</body></html>');
-  W.document.close();
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'<\/body><\/html>';
+  var blob=new Blob([fullHTML],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var W=window.open(url,'_blank');
+  if(!W){var a=document.createElement('a');a.href=url;a.target='_blank';a.click();}
+  setTimeout(function(){URL.revokeObjectURL(url);},30000);
+  toast('تم فتح PDF — اطبعه من المتصفح');
 }
 
 // دالة حساب الشهري/مركبة → الكلي تلقائياً
