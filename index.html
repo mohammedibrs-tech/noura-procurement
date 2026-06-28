@@ -4145,20 +4145,22 @@ function cmpUpdateTerm(id,ti,val){
 }
 
 function cmpSyncAllInputs(){
-  // اقرأ من data attributes — أموثق وأضمن
+  // اقرأ من data attributes
   document.querySelectorAll('#cmp-companies-body [data-cid]').forEach(function(inp){
-    var cid=parseInt(inp.getAttribute('data-cid'));
+    var cid=Number(inp.getAttribute('data-cid'));
     var ri=inp.getAttribute('data-ri');
     var ti=inp.getAttribute('data-ti');
     var f=inp.getAttribute('data-field');
     var co=cmpCompanies.find(function(c){return c.id===cid;});
     if(!co)return;
+    var riN=ri!==null?parseInt(ri):null;
+    var tiN=ti!==null?parseInt(ti):null;
     if(f==='name') co.name=inp.value;
-    else if(f&&ri!==null&&co.rows[ri]){
-      if(f==='cat'||f==='nat') co.rows[ri][f]=inp.value;
-      else co.rows[ri][f]=parseFloat(String(inp.value).replace(/,/g,''))||0;
+    else if(f&&riN!==null&&co.rows[riN]){
+      if(f==='cat'||f==='nat') co.rows[riN][f]=inp.value;
+      else co.rows[riN][f]=parseFloat(String(inp.value).replace(/,/g,''))||0;
     }
-    else if(f==='term'&&ti!==null) co.terms[ti]=inp.value;
+    else if(f==='term'&&tiN!==null&&co.terms) co.terms[tiN]=inp.value;
   });
 }
 
