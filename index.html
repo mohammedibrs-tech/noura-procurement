@@ -10890,7 +10890,7 @@ function f2Calc(){
     f2MaintOffers.forEach(function(o){
       var isB=bestMaint&&o.name===bestMaint.name&&o.annual===bestMaint.annual;
       sH+='<tr style="'+(isB?'background:#F0FFF4;font-weight:700;':'')+'">';
-      sH+='<td>'+(isB?'* ')+( o.name||'—')+'</td>';
+      sH+='<td>'+(isB?'* ':'')+( o.name||'—')+'</td>';
       sH+='<td style="text-align:left;color:#276749;font-weight:700;">'+(o.annual>0?f2Fmt(o.annual):' —')+'</td>';
       sH+='<td style="text-align:center;">'+(o.duration||'—')+'</td>';
       sH+='<td style="text-align:center;">'+(o.mobile==='yes'?'نعم':'لا')+'</td>';
