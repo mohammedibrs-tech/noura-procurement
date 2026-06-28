@@ -2930,13 +2930,22 @@ async function poSave(){
     created_at:new Date().toISOString()
   };
   if(poEditIdx !== null){
-    // وضع التعديل — حدّث السجل الموجود
+    // وضع التعديل — حدّث السجل في مكانه بدون إضافة جديد
     var existing=poSaved[poEditIdx];
-    var updatedData={...existing,...data};
+    if(!existing){toast('خطأ: لم يُعثر على الطلب',true);poResetEdit();return;}
+    // احتفظ بـ id و created_at الأصليين حتماً
+    var updatedData=Object.assign({},existing,data,{
+      id:existing.id,
+      created_at:existing.created_at||data.created_at
+    });
     poSaved[poEditIdx]=updatedData;
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-    // تحديث Supabase
-    if(existing.id) sbUpdate('orders',existing.id,data).catch(function(){});
+    // تحديث Supabase بدون تغيير created_at
+    if(existing.id){
+      var sbData=Object.assign({},data);
+      delete sbData.created_at;
+      sbUpdate('orders',existing.id,sbData).catch(function(){});
+    }
     poResetEdit();
     renderPoSaved();
     toast('تم حفظ التعديلات ✅');
