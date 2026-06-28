@@ -10767,6 +10767,14 @@ function f2RenderLease(){
   el.innerHTML=h;
 }
 function f2Calc(){
+  
+  // التحقق من أن المتغيرات العامة معرفة
+  if (typeof f2MaintOffers === 'undefined') {
+    window.f2MaintOffers = [];
+  }
+  if (typeof f2LeaseOffers === 'undefined') {
+    window.f2LeaseOffers = [];
+  }
   var count=parseInt(document.getElementById('f2-count')?.value)||0;
   var unitPrice=parseFloat(document.getElementById('f2-unitprice')?.value)||0;
   var totalPurchase=count*unitPrice;
@@ -11405,29 +11413,37 @@ function f2PDF(reportTitle){
     +body
     +'<script>window.onload=function(){window.print();}<\/script>'
     +'<\/body><\/html>';
-  var blob=new Blob([fullHTML],{type:'text/html;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var W=window.open(url,'_blank');
-  if(!W){var a=document.createElement('a');a.href=url;a.target='_blank';a.click();}
-  setTimeout(function(){URL.revokeObjectURL(url);},30000);
-  toast('تم فتح PDF — اطبعه من المتصفح');
-}
-
-// دالة حساب الشهري/مركبة → الكلي تلقائياً
-function f2RenewCalcFromUnit(){
-  var unit=parseFloat(document.getElementById('f2-renew-monthly-unit')?.value)||0;
-  var cnt=parseInt(document.getElementById('f2-count')?.value)||0;
-  var mt=document.getElementById('f2-renew-monthly-total');
-  var ra=document.getElementById('f2-renew-annual');
-  if(unit>0&&cnt>0){
-    if(mt) mt.value=(unit*cnt).toFixed(2);
-    if(ra) ra.value=(unit*cnt*12).toFixed(2);
+  // طباعة عبر iframe مخفي — لا يحتاج إذن popup
+  var iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(fullHTML);
+  iframe.contentDocument.close();
+  iframe.contentWindow.focus();
+  setTimeout(function(){
+    try{iframe.contentWindow.print();}catch(e){
+      // fallback: blob download for print
+      var blob=new Blob([fullHTML],{type:'text/html;charset=utf-8'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');a.href=url;a.download=safeTitle+'.html';a.click();
+      setTimeout(function(){URL.revokeObjectURL(url);},3000);
+    }
+    setTimeout(function(){document.body.removeChild(iframe);},2000);
+  },800);
+  toast('جاري فتح نافذة الطباعة...');
+  } catch(error) {
+    console.error('خطأ في تصدير PDF:', error);
+    toast('حدث خطأ في التصدير: ' + error.message);
   }
+}
   f2Calc();
 }
 
 // تصدير دراسة الجدوى كـ Word
 function f2Word(){
+  try {
+    
   var reportTitle=document.getElementById('f2-report-title')?.value||'دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير';
   f2Calc();
   var count=parseInt(document.getElementById('f2-count')?.value)||0;
@@ -11591,19 +11607,12 @@ function f2Word(){
   a.download='دراسة_جدوى_الأسطول.doc';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
-  toast('تم تصدير دراسة الجدوى كـ Word');
+    toast('تم تصدير دراسة الجدوى كـ Word');
+  } catch(error) {
+    console.error('خطأ في تصدير Word:', error);
+    toast('حدث خطأ في التصدير: ' + error.message);
+  }
 }
-
-async function autoLogin(){
-  try{
-    const u=localStorage.getItem('saved_user');
-    const h=localStorage.getItem('saved_hash');
-    if(!u||!h)return;
-    document.getElementById('l-user').value=u;
-    if(u==='admin'&&h===ADMIN_HASH){
-      document.getElementById('login-screen').style.display='none';
-      init();
-    }
   }catch(e){}
 }
 window.addEventListener('load', function(){ autoLogin(); });
