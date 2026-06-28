@@ -1926,17 +1926,19 @@ function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  if(typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList) {
+    event.currentTarget.classList.add('active');
+    // لو جاء من السايدبار → نمسح التاريخ (بداية جديدة)
+    if(event.currentTarget.classList.contains('sb-item')){
+      navHistory=[];
+      document.querySelectorAll('.back-btn').forEach(function(btn){btn.classList.remove('visible');});
+    }
+  }
   // تحديث زر الرجوع
   document.querySelectorAll('.back-btn').forEach(function(btn){
     if(navHistory.length>0){ btn.classList.add('visible'); }
     else{ btn.classList.remove('visible'); }
   });
-  // لو جاء من السايدبار → نمسح التاريخ (بداية جديدة)
-  if(event&&event.currentTarget&&event.currentTarget.classList.contains('sb-item')){
-    navHistory=[];
-    document.querySelectorAll('.back-btn').forEach(function(btn){btn.classList.remove('visible');});
-  }
 }
 function navBack(){
   if(!navHistory.length) return;
@@ -4040,6 +4042,13 @@ function cmpDelCompany(id){
 function renderCmpCompanies(){
   var el=document.getElementById('cmp-companies-body');
   if(!el)return;
+  // تأكد من أن التبويب النشط هو الأسعار عند الرندر
+  if(document.getElementById('cmp-panel-prices').style.display === 'none' && 
+     document.getElementById('cmp-panel-revenue').style.display === 'none' &&
+     document.getElementById('cmp-panel-fleet').style.display === 'none' &&
+     document.getElementById('cmp-panel-fleet2').style.display === 'none') {
+     cmpSwitchTab('prices');
+  }
   if(!cmpCompanies.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">اضغط + إضافة شركة للبدء</div>';return;}
   var html='';
   for(var ci=0;ci<cmpCompanies.length;ci++){
@@ -9367,19 +9376,30 @@ document.getElementById('sr-modal').addEventListener('click',function(e){if(e.ta
    تبويبات صفحة المقارنة
 ══════════════════════════════════════════════ */
 function cmpSwitchTab(tab){
-  document.getElementById('cmp-panel-prices').style.display = tab==='prices'?'block':'none';
-  document.getElementById('cmp-panel-revenue').style.display = tab==='revenue'?'block':'none';
-  document.getElementById('cmp-panel-fleet').style.display = tab==='fleet'?'block':'none';
-  document.getElementById('cmp-panel-fleet2').style.display = tab==='fleet2'?'block':'none';
-  var tp=document.getElementById('cmp-tab-prices');
-  var tr=document.getElementById('cmp-tab-revenue');
-  var tf=document.getElementById('cmp-tab-fleet');
-  var tf2=document.getElementById('cmp-tab-fleet2');
-  [tp,tr,tf,tf2].forEach(function(t){if(t){t.style.color='var(--sub)';t.style.borderBottomColor='transparent';}});
-  if(tab==='prices'){tp.style.color='var(--primary)';tp.style.borderBottomColor='var(--primary)';}
-  else if(tab==='revenue'){tr.style.color='var(--primary)';tr.style.borderBottomColor='var(--primary)';}
-  else if(tab==='fleet'){tf.style.color='var(--primary)';tf.style.borderBottomColor='var(--primary)';}
-  else if(tab==='fleet2'){tf2.style.color='var(--primary)';tf2.style.borderBottomColor='var(--primary)';}
+  const panels = ['prices', 'revenue', 'fleet', 'fleet2'];
+  panels.forEach(p => {
+    const el = document.getElementById('cmp-panel-' + p);
+    if(el) el.style.display = (tab === p) ? 'block' : 'none';
+  });
+
+  const tabs = {
+    'prices': document.getElementById('cmp-tab-prices'),
+    'revenue': document.getElementById('cmp-tab-revenue'),
+    'fleet': document.getElementById('cmp-tab-fleet'),
+    'fleet2': document.getElementById('cmp-tab-fleet2')
+  };
+
+  Object.values(tabs).forEach(t => {
+    if(t) {
+      t.style.color = 'var(--sub)';
+      t.style.borderBottomColor = 'transparent';
+    }
+  });
+
+  if(tabs[tab]) {
+    tabs[tab].style.color = 'var(--primary)';
+    tabs[tab].style.borderBottomColor = 'var(--primary)';
+  }
 }
 
 /* ══════════════════════════════════════════════
