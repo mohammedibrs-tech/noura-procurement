@@ -11017,8 +11017,8 @@ function f2Calc(){
       kH+='<td style="text-align:left;">'+(buyPerUnit>0?f2Fmt(buyPerUnit):' —')+'</td>';
       kH+='<td style="text-align:left;">'+(buyMaintTotal>0?f2Fmt(buyMaintTotal):' —')+'</td>';
       
-      kH+='<td style="text-align:left;font-weight:700;color:'+bSavColor+';">'+(curTotal>0?((buySaving>=0?'+':'')+f2Fmt(buySaving)):' —')+'</td>';
-      kH+='<td style="text-align:center;font-weight:700;color:'+bSavColor+';">'+(curTotal>0?((buySavingPct>=0?'+':'')+buySavingPct.toFixed(1)+'%'):' —')+'</td>';
+      kH+='<td style="text-align:left;font-weight:700;">'+(curTotal>0?((buySaving>=0?'+':'')+f2Fmt(buySaving)):' —')+'</td>';
+      kH+='<td style="text-align:center;font-weight:700;">'+(curTotal>0?((buySavingPct>=0?'+':'')+buySavingPct.toFixed(1)+'%'):' —')+'</td>';
       kH+='</tr>';
     }
 
@@ -11031,8 +11031,8 @@ function f2Calc(){
       kH+='<td style="text-align:left;">'+(newPerUnit>0?f2Fmt(newPerUnit):' —')+'</td>';
       kH+='<td style="text-align:center;color:#94A3B8;">—</td>';
       
-      kH+='<td style="text-align:left;font-weight:700;color:'+nSavColor+';">'+(curTotal>0?((newSaving>=0?'+':'')+f2Fmt(newSaving)):' —')+'</td>';
-      kH+='<td style="text-align:center;font-weight:700;color:'+nSavColor+';">'+(curTotal>0?((newSavingPct>=0?'+':'')+newSavingPct.toFixed(1)+'%'):' —')+'</td>';
+      kH+='<td style="text-align:left;font-weight:700;">'+(curTotal>0?((newSaving>=0?'+':'')+f2Fmt(newSaving)):' —')+'</td>';
+      kH+='<td style="text-align:center;font-weight:700;">'+(curTotal>0?((newSavingPct>=0?'+':'')+newSavingPct.toFixed(1)+'%'):' —')+'</td>';
       kH+='</tr>';
     }
 
