@@ -11075,19 +11075,17 @@ function f2Calc(){
     qH+='</tr></thead><tbody>';
     scenarios.forEach(function(s,i){
       var statusTxt=i===0?'الأفضل اقتصادياً':i===scenarios.length-1?'الأعلى تكلفة':'بديل جيد';
-      
       var savTxt=s.type==='current'?'خط الأساس':(s.saving>=0?'+'+f2Fmt(s.saving):f2Fmt(s.saving));
       var pctTxt=s.type==='current'?'—':(s.saving>=0?'+'+s.savingPct.toFixed(1)+'%':s.savingPct.toFixed(1)+'%');
-      
       qH+='<tr>';
       qH+='<td style="text-align:center;font-weight:900;font-size:15px;">'+(i+1)+'</td>';
       qH+='<td>'+s.name+'</td>';
       qH+='<td style="text-align:left;">'+(s.annual>0?f2Fmt(s.annual):' —')+'</td>';
       qH+='<td style="text-align:left;font-weight:700;">'+(s.total>0?f2Fmt(s.total):' —')+'</td>';
       qH+='<td style="text-align:left;">'+(s.perUnit>0?f2Fmt(s.perUnit):' —')+'</td>';
-      qH+='<td style="text-align:left;color:'+savColor+';font-weight:700;">'+savTxt+'</td>';
-      qH+='<td style="text-align:center;color:'+savColor+';font-weight:700;">'+pctTxt+'</td>';
-      qH+='<td>'+statusEmoji+'</td>';
+      qH+='<td style="text-align:left;font-weight:700;">'+savTxt+'</td>';
+      qH+='<td style="text-align:center;font-weight:700;">'+pctTxt+'</td>';
+      qH+='<td>'+statusTxt+'</td>';
       qH+='</tr>';
     });
     qH+='</tbody></table></div>';
