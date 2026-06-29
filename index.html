@@ -11481,14 +11481,18 @@ function f2PDF(reportTitle){
     body+='<table><thead><tr>'+s3H+'</tr></thead><tbody>'+s3Rank+'</tr>'+s3Ann+'</tr>'+s3Tot+'</tr>'+s3Unit+'</tr>'+s3Sav+'</tr>'+s3Pct+'</tr>'+s3Stat+'</tr></tbody></table>';
   }
 
-  var W=window.open('','_blank');
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'<\/title><style>'+css+'<\/style><\/head><body>'
+  var htmlOut='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'<\/title><style>'+css+'<\/style><\/head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
     +body
-    +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>');
-  W.document.close();
-  toast('تم فتح PDF');
+    +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>';
+  var blob=new Blob([htmlOut],{type:'text/html;charset=utf-8'});
+  var blobUrl=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=blobUrl;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(blobUrl);},10000);
+  toast('تم فتح PDF — اطبعه من المتصفح');
 }
 
 // دالة حساب الشهري/مركبة → الكلي تلقائياً
