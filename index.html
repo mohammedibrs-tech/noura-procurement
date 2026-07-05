@@ -196,6 +196,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       التقرير النصف سنوي
     </div>
+    <div class="sb-item" onclick="nav('kpi')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+      مؤشرات الأداء
+    </div>
     <div class="sb-item" onclick="nav('committee')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><rect x="1" y="3" width="15" height="18" rx="2"/></svg>
       لجنة فحص العروض
@@ -1515,6 +1519,25 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     </div>
   </div>
   <div id="semi-report-content" style="margin-top:16px;"></div>
+</div>
+
+<!-- ══ مؤشرات الأداء ══ -->
+<div class="page" id="page-kpi">
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>مؤشرات الأداء</h1><p>مؤشرات أداء المشتريات الشهرية والربع سنوية، مُجمّعة تلقائياً من جميع خانات المنصة</p></div></div>
+  <div class="card">
+    <div class="card-header"><h3>اختر السنة</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>السنة</label><input id="kpi-year" type="number" value="2026"></div>
+        <div class="field" style="grid-column:1/-1;"><label>عنوان التقرير (اختياري)</label><input id="kpi-title" type="text" placeholder="مثال: تقرير مؤشرات أداء المشتريات 2026" style="width:100%;"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="buildKPIReport()">عرض المؤشرات</button>
+        <button class="btn btn-red" onclick="exportKPIPDF()">تصدير PDF</button>
+      </div>
+    </div>
+  </div>
+  <div id="kpi-content" style="margin-top:16px;"></div>
 </div>
 
 <!-- ══ لجنة فحص العروض ══ -->
@@ -7445,6 +7468,194 @@ function exportSemiExcel(){
   XLSX.utils.book_append_sheet(wb,ws,`نصف ${halfName}`);
   XLSX.writeFile(wb,`التقرير_النصف_${halfName}_${year}.xlsx`);
   toast('تم تصدير Excel ✅');
+}
+
+/* ══════════════ مؤشرات الأداء (KPI) ══════════════ */
+// أدوات مساعدة مستقلة تجمع البيانات من بقية خانات المنصة دون تعديل أي منطق موجود
+
+function kpiPoValue(list){
+  return list.reduce(function(s,p){
+    var rows=JSON.parse(p.rows||'[]');
+    var v=rows.reduce(function(ss,r){
+      var t=parseFloat(r.total)||0;
+      if(t>0) return ss+t*1.15;
+      var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);
+      return ss+(r.vatType==='added'?b*1.15:b);
+    },0);
+    return s+v;
+  },0);
+}
+
+function kpiCmpSavingsForList(list){
+  var totalSaving=0,count=0;
+  list.forEach(function(cmp){
+    if(!cmp.companies||!cmp.companies.length) return;
+    var annuals=cmp.companies.map(function(co){
+      var raw=(co.rows||[]).reduce(function(s,r){var base=(r.count||0)*(r.unitPrice||0);return s+(r.vatType==='added'?base*1.15:base);},0);
+      return (co.paymentType||'total')==='monthly'?raw*12:raw;
+    }).filter(function(v){return v>0;});
+    if(!annuals.length) return;
+    var minAnnual=Math.min.apply(null,annuals);
+    var maxAnnual=Math.max.apply(null,annuals);
+    var curContract=parseFloat(cmp.currentContract)||0;
+    var saving=curContract>0?Math.max(0,curContract-minAnnual):Math.max(0,maxAnnual-minAnnual);
+    if(saving>0){totalSaving+=saving;count++;}
+  });
+  return {count:count,saving:totalSaving};
+}
+
+function kpiContractsActive(startDate,endDate){
+  return contracts.filter(function(c){
+    if(c.start&&c.start>endDate) return false;
+    if(c.end&&c.end<startDate) return false;
+    return true;
+  });
+}
+
+// يجمع كل مؤشرات فترة معيّنة (شهر أو ربع) من بيانات المنصة كافة
+function kpiPeriodData(year,monthList){
+  var mExp=[],mPO=[],mCmp=[],mTaam=[],mComm=[];
+  var startDate=year+'-'+monthList[0]+'-01';
+  var lastM=monthList[monthList.length-1];
+  var lastDay=new Date(parseInt(year),parseInt(lastM),0).getDate();
+  var endDate=year+'-'+lastM+'-'+String(lastDay).padStart(2,'0');
+  monthList.forEach(function(m){
+    var mk=year+'-'+m;
+    expenses.forEach(function(e){if(expMonthKey(e)===mk)mExp.push(e);});
+    poSaved.forEach(function(p){if(poInMonthKey(p,mk))mPO.push(p);});
+    (typeof cmpSaved!=='undefined'?cmpSaved:[]).forEach(function(c){if((c.date||'').substring(0,7)===mk)mCmp.push(c);});
+    (typeof taameeds!=='undefined'?taameeds:[]).forEach(function(t){if((t.date||'').substring(0,7)===mk)mTaam.push(t);});
+    (typeof committees!=='undefined'?committees:[]).forEach(function(c){var d=(c.decisionDate||c.date||'').substring(0,7);if(d===mk)mComm.push(c);});
+  });
+  var expTotal=mExp.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  var poValue=kpiPoValue(mPO);
+  var cmpRes=kpiCmpSavingsForList(mCmp);
+  var activeContracts=kpiContractsActive(startDate,endDate);
+  var contractsMonthlyTotal=activeContracts.reduce(function(s,c){return s+(c.monthly||0);},0);
+  var taamTotal=mTaam.reduce(function(s,t){return s+(parseFloat(t.amount)||0);},0);
+  var commValue=mComm.reduce(function(s,c){return s+(parseFloat(c.winnerAmount)||0);},0);
+  return {
+    expTotal:expTotal, expCount:mExp.length,
+    poCount:mPO.length, poValue:poValue,
+    cmpCount:cmpRes.count, cmpSaving:cmpRes.saving,
+    contractsCount:activeContracts.length, contractsMonthlyTotal:contractsMonthlyTotal,
+    taamCount:mTaam.length, taamTotal:taamTotal,
+    commCount:mComm.length, commValue:commValue
+  };
+}
+
+function computeKPIData(year){
+  var months=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  var qMonths={1:['01','02','03'],2:['04','05','06'],3:['07','08','09'],4:['10','11','12']};
+  var qName={1:'الأول',2:'الثاني',3:'الثالث',4:'الرابع'};
+  var monthly=months.map(function(m){var d=kpiPeriodData(year,[m]);d.key=year+'-'+m;d.label=MONTHS_AR[m]||m;return d;});
+  var quarterly=[1,2,3,4].map(function(q){var d=kpiPeriodData(year,qMonths[q]);d.key='Q'+q;d.label='الربع '+qName[q];return d;});
+  var yearTotals=kpiPeriodData(year,months);
+  return {monthly:monthly,quarterly:quarterly,yearTotals:yearTotals};
+}
+
+// مؤشرات نسبية عامة (لا ترتبط بفترة محدّدة بل بالوضع الحالي للعقود + إجمالي السنة)
+function computeKPIRatios(yearTotals){
+  var totalSpend=yearTotals.expTotal+yearTotals.poValue;
+  var savingsBase=totalSpend+yearTotals.cmpSaving;
+  var savingsRate=savingsBase>0?(yearTotals.cmpSaving/savingsBase)*100:0;
+  var avgPO=yearTotals.poCount>0?yearTotals.poValue/yearTotals.poCount:0;
+  var activeNow=contracts.filter(function(c){return c.status==='active'||c.status==='expiring';});
+  var expiringNow=activeNow.filter(function(c){var d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
+  var expiringRate=activeNow.length>0?(expiringNow.length/activeNow.length)*100:0;
+  return {savingsRate:savingsRate,avgPO:avgPO,activeContractsNow:activeNow.length,expiringNow:expiringNow.length,expiringRate:expiringRate};
+}
+
+function kpiFmt(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});}
+
+function kpiRowHTML(d){
+  return '<tr><td style="font-weight:600;">'+d.label+'</td>'
+    +'<td style="text-align:right;">'+kpiFmt(d.expTotal)+'</td>'
+    +'<td style="text-align:center;">'+d.poCount+'</td>'
+    +'<td style="text-align:right;">'+kpiFmt(d.poValue)+'</td>'
+    +'<td style="text-align:center;">'+d.contractsCount+'</td>'
+    +'<td style="text-align:right;">'+kpiFmt(d.contractsMonthlyTotal)+'</td>'
+    +'<td style="text-align:center;">'+d.cmpCount+'</td>'
+    +'<td style="text-align:right;font-weight:700;">'+(d.cmpSaving>0?kpiFmt(d.cmpSaving):'—')+'</td>'
+    +'<td style="text-align:center;">'+d.taamCount+'</td>'
+    +'<td style="text-align:center;">'+d.commCount+'</td>'
+    +'</tr>';
+}
+
+function kpiTableHead(){
+  return '<thead><tr>'
+    +'<th>الفترة</th><th style="text-align:right;">المصروفات النثرية</th>'
+    +'<th style="text-align:center;">عدد PO</th><th style="text-align:right;">قيمة PO</th>'
+    +'<th style="text-align:center;">عقود فعّالة</th><th style="text-align:right;">قيمتها الشهرية</th>'
+    +'<th style="text-align:center;">مقارنات أسعار</th><th style="text-align:right;">وفر المقارنات</th>'
+    +'<th style="text-align:center;">التعاميد</th><th style="text-align:center;">محاضر اللجنة</th>'
+    +'</tr></thead>';
+}
+
+function buildKPIReport(){
+  var year=document.getElementById('kpi-year').value;
+  var data=computeKPIData(year);
+  var ratios=computeKPIRatios(data.yearTotals);
+  var y=data.yearTotals;
+  var el=document.getElementById('kpi-content');if(!el)return;
+  var kpiCardsHTML=''
+    +kpiCardHTML('إجمالي المصروفات + PO','ر.س',kpiFmt(y.expTotal+y.poValue))
+    +kpiCardHTML('إجمالي وفر مقارنة الأسعار','ر.س',kpiFmt(y.cmpSaving))
+    +kpiCardHTML('نسبة الوفر إلى الإنفاق','%',ratios.savingsRate.toFixed(1))
+    +kpiCardHTML('متوسط قيمة أمر الشراء','ر.س',kpiFmt(ratios.avgPO))
+    +kpiCardHTML('العقود الفعّالة حالياً','عقد',ratios.activeContractsNow)
+    +kpiCardHTML('عقود قريبة من الانتهاء (90 يوم)','عقد ('+ratios.expiringRate.toFixed(0)+'%)',ratios.expiringNow);
+  el.innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">'+kpiCardsHTML+'</div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>المؤشرات الشهرية — '+year+'</h3></div>'
+    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
+    +data.monthly.map(kpiRowHTML).join('')
+    +'</tbody></table></div></div>'
+    +'<div class="card"><div class="card-header"><h3>المؤشرات الربع سنوية — '+year+'</h3></div>'
+    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
+    +data.quarterly.map(kpiRowHTML).join('')
+    +'</tbody></table></div></div>';
+}
+
+function kpiCardHTML(label,unit,value){
+  return '<div class="card" style="text-align:center;padding:16px 8px;">'
+    +'<div style="font-size:12px;color:#64748B;margin-bottom:6px;">'+label+'</div>'
+    +'<div style="font-size:22px;font-weight:900;color:#244062;">'+value+'</div>'
+    +'<div style="font-size:11px;color:#94A3B8;margin-top:2px;">'+unit+'</div>'
+    +'</div>';
+}
+
+function exportKPIPDF(){
+  var year=document.getElementById('kpi-year').value;
+  var kpiTitle=document.getElementById('kpi-title')?.value?.trim()||('تقرير مؤشرات أداء المشتريات — '+year);
+  var data=computeKPIData(year);
+  var ratios=computeKPIRatios(data.yearTotals);
+  var y=data.yearTotals;
+  var BG=FORM_BG;
+  var summaryRows=
+    '<tr><td>إجمالي المصروفات النثرية + طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">'+kpiFmt(y.expTotal+y.poValue)+' ر.س</td></tr>'
+    +'<tr><td>إجمالي وفر مقارنة الأسعار ('+y.cmpCount+' مقارنة)</td><td style="text-align:right;font-weight:700;">'+(y.cmpSaving>0?kpiFmt(y.cmpSaving)+' ر.س':'—')+'</td></tr>'
+    +'<tr><td>نسبة الوفر إلى إجمالي الإنفاق</td><td style="text-align:right;font-weight:700;">'+ratios.savingsRate.toFixed(1)+'%</td></tr>'
+    +'<tr><td>متوسط قيمة أمر الشراء (PO)</td><td style="text-align:right;font-weight:700;">'+kpiFmt(ratios.avgPO)+' ر.س</td></tr>'
+    +'<tr><td>عدد العقود الفعّالة حالياً</td><td style="text-align:right;font-weight:700;">'+ratios.activeContractsNow+'</td></tr>'
+    +'<tr><td>عقود قريبة من الانتهاء خلال 90 يوماً</td><td style="text-align:right;font-weight:700;">'+ratios.expiringNow+' ('+ratios.expiringRate.toFixed(0)+'%)</td></tr>'
+    +'<tr><td>عدد محاضر لجنة فحص العروض المعتمدة</td><td style="text-align:right;font-weight:700;">'+y.commCount+'</td></tr>'
+    +'<tr><td>عدد التعاميد الصادرة</td><td style="text-align:right;font-weight:700;">'+y.taamCount+'</td></tr>';
+  var monthlyRowsPDF=data.monthly.map(kpiRowHTML).join('');
+  var quarterlyRowsPDF=data.quarterly.map(kpiRowHTML).join('');
+  var tableHeadPDF=kpiTableHead();
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 5px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var W=window.open('','_blank');
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  if(BG) html+='<img src="'+BG+'" class="bg-img">';
+  html+='<div class="pdf-content">';
+  html+='<h1>'+kpiTitle+'</h1>';
+  html+='<h2>ملخص مؤشرات الأداء لعام '+year+'</h2>';
+  html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
+  html+='<h2>المؤشرات الشهرية</h2><table>'+tableHeadPDF+'<tbody>'+monthlyRowsPDF+'</tbody></table>';
+  html+='<h2>المؤشرات الربع سنوية</h2><table>'+tableHeadPDF+'<tbody>'+quarterlyRowsPDF+'</tbody></table>';
+  html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
+  W.document.write(html);W.document.close();
 }
 
 /* ══════════════ لجنة فحص العروض ══════════════ */
