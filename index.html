@@ -1534,6 +1534,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="buildKPIReport()">عرض المؤشرات</button>
         <button class="btn btn-red" onclick="exportKPIPDF()">تصدير PDF</button>
+        <button class="btn" style="background:#244062;color:#fff;" onclick="exportKPIWord()">تصدير Word</button>
       </div>
     </div>
   </div>
@@ -7504,21 +7505,9 @@ function kpiCmpSavingsForList(list){
   return {count:count,saving:totalSaving};
 }
 
-function kpiContractsActive(startDate,endDate){
-  return contracts.filter(function(c){
-    if(c.start&&c.start>endDate) return false;
-    if(c.end&&c.end<startDate) return false;
-    return true;
-  });
-}
-
-// يجمع كل مؤشرات فترة معيّنة (شهر أو ربع) من بيانات المنصة كافة
+// يجمع مؤشرات فترة معيّنة (شهر أو ربع) من المصروفات وطلبات الشراء ومقارنات الأسعار والتعاميد ومحاضر اللجنة
 function kpiPeriodData(year,monthList){
   var mExp=[],mPO=[],mCmp=[],mTaam=[],mComm=[];
-  var startDate=year+'-'+monthList[0]+'-01';
-  var lastM=monthList[monthList.length-1];
-  var lastDay=new Date(parseInt(year),parseInt(lastM),0).getDate();
-  var endDate=year+'-'+lastM+'-'+String(lastDay).padStart(2,'0');
   monthList.forEach(function(m){
     var mk=year+'-'+m;
     expenses.forEach(function(e){if(expMonthKey(e)===mk)mExp.push(e);});
@@ -7530,15 +7519,12 @@ function kpiPeriodData(year,monthList){
   var expTotal=mExp.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
   var poValue=kpiPoValue(mPO);
   var cmpRes=kpiCmpSavingsForList(mCmp);
-  var activeContracts=kpiContractsActive(startDate,endDate);
-  var contractsMonthlyTotal=activeContracts.reduce(function(s,c){return s+(c.monthly||0);},0);
   var taamTotal=mTaam.reduce(function(s,t){return s+(parseFloat(t.amount)||0);},0);
   var commValue=mComm.reduce(function(s,c){return s+(parseFloat(c.winnerAmount)||0);},0);
   return {
     expTotal:expTotal, expCount:mExp.length,
     poCount:mPO.length, poValue:poValue,
     cmpCount:cmpRes.count, cmpSaving:cmpRes.saving,
-    contractsCount:activeContracts.length, contractsMonthlyTotal:contractsMonthlyTotal,
     taamCount:mTaam.length, taamTotal:taamTotal,
     commCount:mComm.length, commValue:commValue
   };
@@ -7554,67 +7540,47 @@ function computeKPIData(year){
   return {monthly:monthly,quarterly:quarterly,yearTotals:yearTotals};
 }
 
-// مؤشرات نسبية عامة (لا ترتبط بفترة محدّدة بل بالوضع الحالي للعقود + إجمالي السنة)
-function computeKPIRatios(yearTotals){
+function kpiPct(part,whole){return whole>0?(part/whole)*100:0;}
+
+// مؤشرات نسبية عامة — كلها بالنِّسَب المئوية لتُقرأ من أول نظرة (لا تركيز على العقود)
+function computeKPIRatios(yearTotals,monthlyArr){
   var totalSpend=yearTotals.expTotal+yearTotals.poValue;
-  var savingsBase=totalSpend+yearTotals.cmpSaving;
-  var savingsRate=savingsBase>0?(yearTotals.cmpSaving/savingsBase)*100:0;
+  var savingsRate=kpiPct(yearTotals.cmpSaving,totalSpend+yearTotals.cmpSaving);
+  var poShare=kpiPct(yearTotals.poValue,totalSpend);
+  var expShare=kpiPct(yearTotals.expTotal,totalSpend);
   var avgPO=yearTotals.poCount>0?yearTotals.poValue/yearTotals.poCount:0;
-  var activeNow=contracts.filter(function(c){return c.status==='active'||c.status==='expiring';});
-  var expiringNow=activeNow.filter(function(c){var d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
-  var expiringRate=activeNow.length>0?(expiringNow.length/activeNow.length)*100:0;
-  return {savingsRate:savingsRate,avgPO:avgPO,activeContractsNow:activeNow.length,expiringNow:expiringNow.length,expiringRate:expiringRate};
+  var activeMonths=monthlyArr.filter(function(m){return m.expTotal>0||m.poCount>0||m.cmpCount>0;}).length;
+  var coverageRate=(activeMonths/12)*100;
+  return {savingsRate:savingsRate,poShare:poShare,expShare:expShare,avgPO:avgPO,activeMonths:activeMonths,coverageRate:coverageRate};
 }
 
 function kpiFmt(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});}
+function kpiPctFmt(n){return (parseFloat(n)||0).toFixed(1)+'%';}
 
-function kpiRowHTML(d){
+function kpiRowHTML(d,y){
+  var expPct=kpiPct(d.expTotal,y.expTotal);
+  var poPct=kpiPct(d.poValue,y.poValue);
+  var savPct=kpiPct(d.cmpSaving,y.cmpSaving);
+  var periodSpend=d.expTotal+d.poValue;
+  var periodSavRate=kpiPct(d.cmpSaving,periodSpend+d.cmpSaving);
   return '<tr><td style="font-weight:600;">'+d.label+'</td>'
     +'<td style="text-align:right;">'+kpiFmt(d.expTotal)+'</td>'
-    +'<td style="text-align:center;">'+d.poCount+'</td>'
+    +'<td style="text-align:center;">'+(d.expTotal>0?kpiPctFmt(expPct):'—')+'</td>'
     +'<td style="text-align:right;">'+kpiFmt(d.poValue)+'</td>'
-    +'<td style="text-align:center;">'+d.contractsCount+'</td>'
-    +'<td style="text-align:right;">'+kpiFmt(d.contractsMonthlyTotal)+'</td>'
-    +'<td style="text-align:center;">'+d.cmpCount+'</td>'
+    +'<td style="text-align:center;">'+(d.poValue>0?kpiPctFmt(poPct):'—')+'</td>'
     +'<td style="text-align:right;font-weight:700;">'+(d.cmpSaving>0?kpiFmt(d.cmpSaving):'—')+'</td>'
-    +'<td style="text-align:center;">'+d.taamCount+'</td>'
-    +'<td style="text-align:center;">'+d.commCount+'</td>'
+    +'<td style="text-align:center;">'+(d.cmpSaving>0?kpiPctFmt(savPct):'—')+'</td>'
+    +'<td style="text-align:center;font-weight:700;">'+(d.cmpSaving>0?kpiPctFmt(periodSavRate):'—')+'</td>'
     +'</tr>';
 }
 
 function kpiTableHead(){
   return '<thead><tr>'
-    +'<th>الفترة</th><th style="text-align:right;">المصروفات النثرية</th>'
-    +'<th style="text-align:center;">عدد PO</th><th style="text-align:right;">قيمة PO</th>'
-    +'<th style="text-align:center;">عقود فعّالة</th><th style="text-align:right;">قيمتها الشهرية</th>'
-    +'<th style="text-align:center;">مقارنات أسعار</th><th style="text-align:right;">وفر المقارنات</th>'
-    +'<th style="text-align:center;">التعاميد</th><th style="text-align:center;">محاضر اللجنة</th>'
+    +'<th>الفترة</th><th style="text-align:right;">المصروفات (ر.س)</th><th style="text-align:center;">٪ من إجمالي السنة</th>'
+    +'<th style="text-align:right;">قيمة PO (ر.س)</th><th style="text-align:center;">٪ من إجمالي السنة</th>'
+    +'<th style="text-align:right;">وفر مقارنة الأسعار (ر.س)</th><th style="text-align:center;">٪ من إجمالي السنة</th>'
+    +'<th style="text-align:center;">نسبة الوفر لإنفاق الفترة</th>'
     +'</tr></thead>';
-}
-
-function buildKPIReport(){
-  var year=document.getElementById('kpi-year').value;
-  var data=computeKPIData(year);
-  var ratios=computeKPIRatios(data.yearTotals);
-  var y=data.yearTotals;
-  var el=document.getElementById('kpi-content');if(!el)return;
-  var kpiCardsHTML=''
-    +kpiCardHTML('إجمالي المصروفات + PO','ر.س',kpiFmt(y.expTotal+y.poValue))
-    +kpiCardHTML('إجمالي وفر مقارنة الأسعار','ر.س',kpiFmt(y.cmpSaving))
-    +kpiCardHTML('نسبة الوفر إلى الإنفاق','%',ratios.savingsRate.toFixed(1))
-    +kpiCardHTML('متوسط قيمة أمر الشراء','ر.س',kpiFmt(ratios.avgPO))
-    +kpiCardHTML('العقود الفعّالة حالياً','عقد',ratios.activeContractsNow)
-    +kpiCardHTML('عقود قريبة من الانتهاء (90 يوم)','عقد ('+ratios.expiringRate.toFixed(0)+'%)',ratios.expiringNow);
-  el.innerHTML=
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">'+kpiCardsHTML+'</div>'
-    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>المؤشرات الشهرية — '+year+'</h3></div>'
-    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
-    +data.monthly.map(kpiRowHTML).join('')
-    +'</tbody></table></div></div>'
-    +'<div class="card"><div class="card-header"><h3>المؤشرات الربع سنوية — '+year+'</h3></div>'
-    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
-    +data.quarterly.map(kpiRowHTML).join('')
-    +'</tbody></table></div></div>';
 }
 
 function kpiCardHTML(label,unit,value){
@@ -7625,26 +7591,57 @@ function kpiCardHTML(label,unit,value){
     +'</div>';
 }
 
+function kpiSummaryRows(y,ratios){
+  return '<tr><td>إجمالي المصروفات النثرية + طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">'+kpiFmt(y.expTotal+y.poValue)+' ر.س</td></tr>'
+    +'<tr><td>إجمالي وفر مقارنة الأسعار ('+y.cmpCount+' مقارنة محقِّقة للوفر)</td><td style="text-align:right;font-weight:700;">'+(y.cmpSaving>0?kpiFmt(y.cmpSaving)+' ر.س':'—')+'</td></tr>'
+    +'<tr><td>نسبة الوفر إلى إجمالي الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.savingsRate)+'</td></tr>'
+    +'<tr><td>نسبة مساهمة طلبات الشراء PO من الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.poShare)+'</td></tr>'
+    +'<tr><td>نسبة مساهمة المصروفات النثرية من الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.expShare)+'</td></tr>'
+    +'<tr><td>متوسط قيمة أمر الشراء (PO)</td><td style="text-align:right;font-weight:700;">'+kpiFmt(ratios.avgPO)+' ر.س</td></tr>'
+    +'<tr><td>نسبة تغطية البيانات الشهرية ('+ratios.activeMonths+' من 12 شهراً)</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.coverageRate)+'</td></tr>'
+    +'<tr><td>عدد التعاميد الصادرة خلال السنة</td><td style="text-align:right;font-weight:700;">'+y.taamCount+'</td></tr>'
+    +'<tr><td>عدد محاضر لجنة فحص العروض المعتمدة</td><td style="text-align:right;font-weight:700;">'+y.commCount+'</td></tr>';
+}
+
+function buildKPIReport(){
+  var year=document.getElementById('kpi-year').value;
+  var data=computeKPIData(year);
+  var ratios=computeKPIRatios(data.yearTotals,data.monthly);
+  var y=data.yearTotals;
+  var el=document.getElementById('kpi-content');if(!el)return;
+  var kpiCardsHTML=''
+    +kpiCardHTML('نسبة الوفر إلى إجمالي الإنفاق','النسبة',kpiPctFmt(ratios.savingsRate))
+    +kpiCardHTML('نسبة مساهمة PO من الإنفاق','النسبة',kpiPctFmt(ratios.poShare))
+    +kpiCardHTML('نسبة مساهمة المصروفات النثرية','النسبة',kpiPctFmt(ratios.expShare))
+    +kpiCardHTML('نسبة تغطية البيانات الشهرية','النسبة',kpiPctFmt(ratios.coverageRate))
+    +kpiCardHTML('إجمالي وفر مقارنة الأسعار','ر.س',kpiFmt(y.cmpSaving))
+    +kpiCardHTML('متوسط قيمة أمر الشراء','ر.س',kpiFmt(ratios.avgPO));
+  el.innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">'+kpiCardsHTML+'</div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>المؤشرات الشهرية بالنِّسَب — '+year+'</h3></div>'
+    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
+    +data.monthly.map(function(d){return kpiRowHTML(d,y);}).join('')
+    +'</tbody></table></div></div>'
+    +'<div class="card"><div class="card-header"><h3>المؤشرات الربع سنوية بالنِّسَب — '+year+'</h3></div>'
+    +'<div class="card-body" style="overflow-x:auto;"><table class="tbl">'+kpiTableHead()+'<tbody>'
+    +data.quarterly.map(function(d){return kpiRowHTML(d,y);}).join('')
+    +'</tbody></table></div></div>';
+}
+
+var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 5px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
+
 function exportKPIPDF(){
   var year=document.getElementById('kpi-year').value;
   var kpiTitle=document.getElementById('kpi-title')?.value?.trim()||('تقرير مؤشرات أداء المشتريات — '+year);
   var data=computeKPIData(year);
-  var ratios=computeKPIRatios(data.yearTotals);
+  var ratios=computeKPIRatios(data.yearTotals,data.monthly);
   var y=data.yearTotals;
   var BG=FORM_BG;
-  var summaryRows=
-    '<tr><td>إجمالي المصروفات النثرية + طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">'+kpiFmt(y.expTotal+y.poValue)+' ر.س</td></tr>'
-    +'<tr><td>إجمالي وفر مقارنة الأسعار ('+y.cmpCount+' مقارنة)</td><td style="text-align:right;font-weight:700;">'+(y.cmpSaving>0?kpiFmt(y.cmpSaving)+' ر.س':'—')+'</td></tr>'
-    +'<tr><td>نسبة الوفر إلى إجمالي الإنفاق</td><td style="text-align:right;font-weight:700;">'+ratios.savingsRate.toFixed(1)+'%</td></tr>'
-    +'<tr><td>متوسط قيمة أمر الشراء (PO)</td><td style="text-align:right;font-weight:700;">'+kpiFmt(ratios.avgPO)+' ر.س</td></tr>'
-    +'<tr><td>عدد العقود الفعّالة حالياً</td><td style="text-align:right;font-weight:700;">'+ratios.activeContractsNow+'</td></tr>'
-    +'<tr><td>عقود قريبة من الانتهاء خلال 90 يوماً</td><td style="text-align:right;font-weight:700;">'+ratios.expiringNow+' ('+ratios.expiringRate.toFixed(0)+'%)</td></tr>'
-    +'<tr><td>عدد محاضر لجنة فحص العروض المعتمدة</td><td style="text-align:right;font-weight:700;">'+y.commCount+'</td></tr>'
-    +'<tr><td>عدد التعاميد الصادرة</td><td style="text-align:right;font-weight:700;">'+y.taamCount+'</td></tr>';
-  var monthlyRowsPDF=data.monthly.map(kpiRowHTML).join('');
-  var quarterlyRowsPDF=data.quarterly.map(kpiRowHTML).join('');
+  var summaryRows=kpiSummaryRows(y,ratios);
+  var monthlyRowsPDF=data.monthly.map(function(d){return kpiRowHTML(d,y);}).join('');
+  var quarterlyRowsPDF=data.quarterly.map(function(d){return kpiRowHTML(d,y);}).join('');
   var tableHeadPDF=kpiTableHead();
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 5px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS=KPI_PDF_CSS+'@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   var W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -7652,10 +7649,41 @@ function exportKPIPDF(){
   html+='<h1>'+kpiTitle+'</h1>';
   html+='<h2>ملخص مؤشرات الأداء لعام '+year+'</h2>';
   html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
-  html+='<h2>المؤشرات الشهرية</h2><table>'+tableHeadPDF+'<tbody>'+monthlyRowsPDF+'</tbody></table>';
-  html+='<h2>المؤشرات الربع سنوية</h2><table>'+tableHeadPDF+'<tbody>'+quarterlyRowsPDF+'</tbody></table>';
+  html+='<h2>المؤشرات الشهرية بالنِّسَب</h2><table>'+tableHeadPDF+'<tbody>'+monthlyRowsPDF+'</tbody></table>';
+  html+='<h2>المؤشرات الربع سنوية بالنِّسَب</h2><table>'+tableHeadPDF+'<tbody>'+quarterlyRowsPDF+'</tbody></table>';
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
   W.document.write(html);W.document.close();
+}
+
+function exportKPIWord(){
+  var year=document.getElementById('kpi-year').value;
+  var kpiTitle=document.getElementById('kpi-title')?.value?.trim()||('تقرير مؤشرات أداء المشتريات — '+year);
+  var data=computeKPIData(year);
+  var ratios=computeKPIRatios(data.yearTotals,data.monthly);
+  var y=data.yearTotals;
+  var BG=FORM_BG;
+  var summaryRows=kpiSummaryRows(y,ratios);
+  var monthlyRowsW=data.monthly.map(function(d){return kpiRowHTML(d,y);}).join('');
+  var quarterlyRowsW=data.quarterly.map(function(d){return kpiRowHTML(d,y);}).join('');
+  var tableHeadW=kpiTableHead();
+  var CSS=KPI_PDF_CSS+'@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var bodyHTML='';
+  if(BG) bodyHTML+='<img src="'+BG+'" class="bg-img">';
+  bodyHTML+='<div class="pdf-content">';
+  bodyHTML+='<h1>'+kpiTitle+'</h1>';
+  bodyHTML+='<h2>ملخص مؤشرات الأداء لعام '+year+'</h2>';
+  bodyHTML+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
+  bodyHTML+='<h2>المؤشرات الشهرية بالنِّسَب</h2><table>'+tableHeadW+'<tbody>'+monthlyRowsW+'</tbody></table>';
+  bodyHTML+='<h2>المؤشرات الربع سنوية بالنِّسَب</h2><table>'+tableHeadW+'<tbody>'+quarterlyRowsW+'</tbody></table>';
+  bodyHTML+='</div>';
+  var fullHTML='<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>'+CSS+'div.WordSection1{page:WordSection1;} @page WordSection1{size:21cm 29.7cm;margin:2.8cm 1.2cm 1.5cm 1.2cm;}</style></head><body class="WordSection1">'+bodyHTML+'</body></html>';
+  var blob=new Blob(['\ufeff'+fullHTML],{type:'application/msword;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='مؤشرات_الأداء_'+year+'.doc';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  toast('تم تصدير Word بنجاح');
 }
 
 /* ══════════════ لجنة فحص العروض ══════════════ */
