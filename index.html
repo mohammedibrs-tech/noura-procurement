@@ -2696,7 +2696,7 @@ function expPrint(){
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
-  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#244062;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #244062;padding-right:8px;color:#244062;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#244062;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
+  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#244062;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #244062;padding-right:8px;color:#244062;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <img src="${BG}" class="bg-img">
@@ -3902,7 +3902,7 @@ function certPrintData(d){
     .info-label{font-weight:700;font-size:9.5px;white-space:nowrap;}
     .info-val{border-bottom:1px solid #333;flex:1;font-size:9.5px;min-width:80px;}
     table{width:100%;border-collapse:collapse;margin-bottom:14px;}
-    thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-size:9px;}
+    thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-size:9px;}
     tbody td{padding:5px 7px;border:1px solid #ccc;font-size:9px;}
     .sig-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;}
     .sig-box{text-align:center;border-top:1px solid #244062;padding-top:8px;}
@@ -7349,7 +7349,7 @@ function exportSemiPDF(){
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -7454,7 +7454,7 @@ function exportSemiWord(){
     +'h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}'
     +'h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}'
-    +'thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}'
+    +'thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}'
     +'tbody tr:nth-child(even) td{background:#eaf2ff;}'
     +'tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}'
@@ -7674,7 +7674,7 @@ function buildKPIReport(){
     +'</tbody></table></div></div>';
 }
 
-var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 5px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
+var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
 function exportKPIPDF(){
   var year=document.getElementById('kpi-year').value;
@@ -8031,7 +8031,7 @@ function committeeExportTechPDFData(c){
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
 .content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
-h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#244062;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #244062;}</style>
+h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#2E9896;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #2E9896;}</style>
 </head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
         <div style="text-align:right;font-size:10px;margin-bottom:16px;">
           <div>التاريخ: ${dt}</div>
@@ -8176,7 +8176,7 @@ async function committeeExportWordData(c){
   const techReview=(c.offers||[]).map(o=>`<p style="margin-right:20px;">- <b>${o.name}</b> &nbsp;&nbsp;&nbsp; العرض المقدم ${o.status}</p>`).join('');
 
   const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>
-@page{size:A4;margin:2cm 1.5cm;}body{font-family:Arial;font-size:11pt;direction:rtl;text-align:right;}h2{text-align:center;font-size:13pt;}p{margin:4pt 0;line-height:1.8;}table{width:100%;border-collapse:collapse;margin:8pt 0;}th{background:#1A2B4A;color:white;padding:5pt 8pt;border:1pt solid #1A2B4A;font-size:10pt;}td{padding:5pt 8pt;border:1pt solid #ccc;font-size:10pt;}.meta{display:flex;justify-content:space-between;margin-bottom:12pt;font-size:10pt;}
+@page{size:A4;margin:2cm 1.5cm;}body{font-family:Arial;font-size:11pt;direction:rtl;text-align:right;}h2{text-align:center;font-size:13pt;}p{margin:4pt 0;line-height:1.8;}table{width:100%;border-collapse:collapse;margin:8pt 0;}th{background:#2E9896;color:white;padding:5pt 8pt;border:1pt solid #2E9896;font-size:10pt;}td{padding:5pt 8pt;border:1pt solid #ccc;font-size:10pt;}.meta{display:flex;justify-content:space-between;margin-bottom:12pt;font-size:10pt;}
 </style></head><body>
 <div class="meta"><span>التاريخ: ${dt}</span><span>رقم المحضر: ${c.num||'—'}</span></div>
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
@@ -9021,7 +9021,7 @@ function exportQuarterlyPDF(){
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
   const SIG_Q=SIG_URL||'';
   const SIG_BQ=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
-  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #244062;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #244062;background:#244062;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #244062;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #244062;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#244062;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #244062;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
+  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #244062;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #2E9896;background:#2E9896;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #244062;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #244062;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#244062;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #244062;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg-p1" src="'+BG+'"><img class="bg-footer" src="'+BG+'">':''}<div class="pdf-content">
 <h1>التقرير الربع سنوي — الربع ${qName[q]} ${year}</h1>
@@ -9099,7 +9099,7 @@ function exportMonthlyPDF(){
   // أعلى الأصناف
   const itemMapM={};monthExp.forEach(e=>{itemMapM[e.item_name]=(itemMapM[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -10057,7 +10057,7 @@ function fleetPDF(reportTitle){
     ?'في حال اختيار التملك، تجدر الإشارة إلى أن مسؤولية الصيانة وإدارة الأعطال ستقع على الجهة مباشرة، وهو ما يستلزم توفير عقد صيانة شامل مع جهة مختصة.'
     :'الاستمرار في التأجير يُبقي على مرونة التشغيل ويُخفف من تبعات الأعطال، غير أن الاعتماد على مورد واحد يشكّل خطراً تعاقدياً ينبغي مراعاته عند التفاوض على شروط التجديد.';
   var W=window.open('','_blank');
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
+  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap">'
     +'<h1>'+safeTitle+'</h1>'
@@ -10228,7 +10228,7 @@ function cmpPDF(){
   html+='h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #244062;padding-right:7px;color:#244062;}';
   html+='p{text-align:center;color:#555;font-size:10px;margin-bottom:14px;}';
   html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;border:1px solid #000;background:#fff;}';
-  html+='th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
+  html+='th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
   html+='td{padding:4px 7px;border:1px solid #000;}';
   html+='@media print{.bg-img{position:fixed;}}';
   html+='</style></head><body>';
@@ -10305,7 +10305,7 @@ function cmpWord(){
     +'h1{font-size:14px;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;color:#244062;}'
     +'h2{font-size:11px;margin:14px 0 5px;border-right:4px solid #244062;padding-right:7px;color:#244062;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;}'
-    +'th{background:#244062;color:#fff;padding:4px 6px;text-align:right;border:1px solid #244062;}'
+    +'th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;}'
     +'td{padding:3px 6px;border:1px solid #bbb;}'
     +'tr:nth-child(even) td{background:#f2f6fb;}'
     +'div.WordSection1{page:WordSection1;}'
@@ -11049,7 +11049,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +'h3{font-size:10px;}'
     +'p{text-align:center;color:#555;font-size:9px;margin-bottom:10px;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;border:1px solid #000;background:#fff;}'
-    +'th{background:#244062;color:#fff;padding:4px 7px;text-align:right;border:1px solid #000;}'
+    +'th{background:#2E9896;color:#fff;padding:4px 7px;text-align:right;border:1px solid #000;}'
     +'td{padding:3px 7px;border:1px solid #000;background:transparent;}'
     +'@media print{.bg-img{position:fixed;}}'
     +'</style></head><body>'
@@ -11280,6 +11280,7 @@ function f2Calc(){
   sH+='<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>';
   sH+='<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>';
   sH+='</tr></tbody></table></div>';
+  sH+='<div style="font-size:11px;color:#C53030;font-weight:700;margin:-14px 0 18px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</div>';
 
   // ── جدول 2: قيمة شراء الأسطول مقابل تمديد عقد التأجير ──
   if(unitPrice>0||totalPurchase>0){
@@ -11628,7 +11629,7 @@ function f2PDF(reportTitle){
     +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 10px;background:#244062;color:#fff;border-radius:3px;}'
     +'h3{font-size:8.5pt;font-weight:700;margin:10px 0 4px;padding:3px 8px;background:#e8eef7;color:#244062;border-right:3px solid #244062;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8pt;}'
-    +'thead th{background:#244062;color:#fff;padding:5px 7px;text-align:right;border:1px solid #244062;font-weight:700;}'
+    +'thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:4px 7px;border:1px solid #ccc;color:#111;background:#fff;}'
     +'tbody tr:nth-child(even) td{background:#f2f6fb;}'
     +'.best td{font-weight:700;}'
@@ -11661,6 +11662,7 @@ function f2PDF(reportTitle){
     +'<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>'
     +'<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>'
     +'</tr></tbody></table>';
+  body+='<p style="font-size:8pt;color:#C53030;font-weight:700;margin:-6px 0 10px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</p>';
 
   // جدول 2: قيمة شراء الأسطول مقابل تمديد عقد التأجير
   if(unitPrice>0||totalPurchase>0){
@@ -11822,7 +11824,7 @@ function f2Word(){
     +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;}'
     +'h3{font-size:8.5px;font-weight:700;margin:8px 0 3px;padding:3px 8px;background:#e8eef7;color:#244062;border-right:3px solid #244062;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5px;}'
-    +'thead th{background:#244062;color:#fff;padding:4px 6px;text-align:right;border:1px solid #244062;font-weight:700;}'
+    +'thead th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:3px 6px;border:1px solid #ccc;color:#000;}'
     +'tbody tr:nth-child(even) td{background:#f2f6fb;}'
     +'.best td{font-weight:700;}'
@@ -11846,6 +11848,7 @@ function f2Word(){
     +'<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>'
     +'<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>'
     +'</tr></tbody></table>';
+  body+='<p style="font-size:8px;color:#C53030;font-weight:700;margin:-6px 0 10px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</p>';
 
   if(renewDuration>0||renewAnnual>0){
     body+='<h3>بيانات تمديد العقد الحالي</h3>';
