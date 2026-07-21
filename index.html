@@ -2696,7 +2696,7 @@ function expPrint(){
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
-  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#244062;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #244062;padding-right:8px;color:#244062;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
+  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#2E9896;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #2E9896;padding-right:8px;color:#2E9896;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <img src="${BG}" class="bg-img">
@@ -3129,7 +3129,7 @@ body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:ltr;backgr
 .page{position:relative;width:210mm;min-height:297mm;overflow:hidden;}
 .bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;}
 .content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}
-.blue{background:#244062 !important;color:#fff !important;font-weight:700;padding:6px 10px;}
+.blue{background:#2E9896 !important;color:#fff !important;font-weight:700;padding:6px 10px;}
 .lbl{background:#f0f0f0;font-weight:600;padding:5px 7px;border:1px solid #ccc;white-space:nowrap;font-size:10px;}
 .val{padding:5px 7px;border:1px solid #ccc;font-size:11px;}
 table{border-collapse:collapse;width:100%;}
@@ -3141,7 +3141,7 @@ table{border-collapse:collapse;width:100%;}
 
   <!-- عنوان -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <div><div style="font-size:18px;font-weight:900;color:#244062;">Purchase Order</div><div style="font-size:14px;font-weight:700;color:#244062;">طلب شراء</div></div>
+    <div><div style="font-size:18px;font-weight:900;color:#2E9896;">Purchase Order</div><div style="font-size:14px;font-weight:700;color:#2E9896;">طلب شراء</div></div>
     <table style="width:240px;border-collapse:collapse;">
       <tr><td class="lbl">Date / التاريخ</td><td class="val">${ds}</td></tr>
       <tr><td class="lbl">PO # / تعميد رقم</td><td class="val">${d.num||'—'}</td></tr>
@@ -3170,7 +3170,7 @@ table{border-collapse:collapse;width:100%;}
   <!-- جدول البنود -->
   <table style="margin-bottom:6px;">
     <thead>
-      <tr style="background:#244062;color:#fff;">
+      <tr style="background:#2E9896;color:#fff;">
         <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:5%;">S.N<br><span style="font-size:9px;">الرقم</span></th>
         <th style="border:1px solid #bbb;padding:6px 4px;width:12%;">Item<br><span style="font-size:9px;">الصنف</span></th>
         <th style="border:1px solid #bbb;padding:6px 4px;">Description<br><span style="font-size:9px;">الوصف</span></th>
@@ -3195,11 +3195,11 @@ table{border-collapse:collapse;width:100%;}
       <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${tax.toFixed(2)}</td>
     </tr>
     <tr>
-      <td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;color:#244062;">
+      <td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;color:#2E9896;">
         Net Amount / المبلغ الإجمالي<br>
         <span style="font-size:10px;font-weight:400;color:#555;font-style:italic;">In Words: ${numToWords(Math.floor(tot))} Riyals and ${Math.round((tot%1)*100)} Halalas</span>
       </td>
-      <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:700;color:#244062;">${tot.toFixed(2)}</td>
+      <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:700;color:#2E9896;">${tot.toFixed(2)}</td>
     </tr>
   </table>
 
@@ -3739,7 +3739,7 @@ function rfqPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body><div class="page"><img class="bg" src="${FORM_BG}"><div class="content"><div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Request For Quotation (RFQ)</div><div style="font-size:12px;color:#244062;margin-bottom:12px;">الرقم المرجعي: ${d.refNum||'—'}</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;"><div><strong>السادة / ${d.company||'___'}</strong></div><div>التاريخ: ${ds}</div></div><p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p><table style="margin-bottom:10px;"><thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead><tbody>${rows}</tbody></table><table style="margin-bottom:10px;"><tr><td class="blue" colspan="2">Terms & Conditions</td></tr><tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr><tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr><tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr></table></div></div></body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#2E9896;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body><div class="page"><img class="bg" src="${FORM_BG}"><div class="content"><div style="font-size:16px;font-weight:900;color:#2E9896;margin-bottom:4px;">Request For Quotation (RFQ)</div><div style="font-size:12px;color:#2E9896;margin-bottom:12px;">الرقم المرجعي: ${d.refNum||'—'}</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;"><div><strong>السادة / ${d.company||'___'}</strong></div><div>التاريخ: ${ds}</div></div><p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p><table style="margin-bottom:10px;"><thead><tr style="background:#2E9896;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead><tbody>${rows}</tbody></table><table style="margin-bottom:10px;"><tr><td class="blue" colspan="2">Terms & Conditions</td></tr><tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr><tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr><tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr></table></div></div></body></html>`;
   const w=window.open('','_blank');if(!w){toast('يرجى السماح بالنوافذ المنبثقة',true);return;}
   w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -3905,7 +3905,7 @@ function certPrintData(d){
     thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-size:9px;}
     tbody td{padding:5px 7px;border:1px solid #ccc;font-size:9px;}
     .sig-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;}
-    .sig-box{text-align:center;border-top:1px solid #244062;padding-top:8px;}
+    .sig-box{text-align:center;border-top:1px solid #2E9896;padding-top:8px;}
     .sig-title{font-weight:800;font-size:10px;margin-bottom:4px;}
     .sig-name{font-size:9.5px;margin-top:36px;}
     .sig-job{font-size:9px;color:#555;}
@@ -3991,16 +3991,16 @@ function dnPrintData(d){
   const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
   const SIG=SIG_URL;
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#244062;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#2E9896;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body>
 <div class="page"><img class="bg" src="${FORM_BG}">
 <div class="content">
-<div style="font-size:16px;font-weight:900;color:#244062;margin-bottom:4px;">Delivery Note</div>
-<div style="font-size:12px;color:#244062;margin-bottom:12px;">سند الاستلام</div>
+<div style="font-size:16px;font-weight:900;color:#2E9896;margin-bottom:4px;">Delivery Note</div>
+<div style="font-size:12px;color:#2E9896;margin-bottom:12px;">سند الاستلام</div>
 <div style="display:flex;gap:8px;margin-bottom:10px;">
   <table style="flex:1;"><tr><td class="lbl">اسم الشركة المورّدة</td><td class="val">${d.company}</td></tr><tr><td class="lbl">رقم التعميد</td><td class="val">${d.lpo||'—'}</td></tr><tr><td class="lbl">التاريخ</td><td class="val">${ds}</td></tr><tr><td class="lbl">تم التسليم من قبل</td><td class="val">${d.from||'—'}</td></tr></table>
 </div>
 <table style="margin-bottom:12px;">
-  <thead><tr style="background:#244062;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">المنتج / Product & Service Description</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:12%;">الكمية / Qty</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات / Notes</th></tr></thead>
+  <thead><tr style="background:#2E9896;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">المنتج / Product & Service Description</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:12%;">الكمية / Qty</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات / Notes</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 <div style="display:flex;justify-content:space-between;margin-top:30px;gap:20px;">
@@ -6412,7 +6412,7 @@ function exportContractsPDF(){
     const stClr=c.status==='expired'?'#64748B':c.status==='expiring'?'#C53030':'#276749';
     return`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td style="text-align:right;color:#276749;">${c.revMonthly>0?c.revMonthly.toLocaleString('ar-SA'):'—'}</td><td style="text-align:right;color:#276749;">${c.revAnnual>0?c.revAnnual.toLocaleString('ar-SA'):'—'}</td><td class="muted" style="text-align:center;">${c.start||'—'}</td><td style="text-align:center;color:${endClr};">${c.end||'—'}</td><td style="text-align:center;color:${stClr};font-weight:600;">${STATUS_LABELS[c.status]||c.status}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`;
   }).join('');
-  const CSS=`@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:4px;margin-bottom:8px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:24px;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
+  const CSS=`@page{size:A4 landscape;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#2E9896;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#2E9896;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#2E9896;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#2E9896;border-bottom:2px solid #2E9896;padding-bottom:4px;margin-bottom:8px;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}.sig-area{display:flex;gap:24px;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}.sig-box{flex:1;text-align:center;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <div class="page"><img class="bg" src="${BG}"><div class="content">
@@ -6429,7 +6429,7 @@ function exportContractsPDF(){
 <div class="section-title">تفاصيل العقود</div>
 <table><thead><tr><th>الشركة</th><th>نوع الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">السنوي</th><th style="text-align:right;color:#276749;">إيراد شهري</th><th style="text-align:right;color:#276749;">إيراد سنوي</th><th style="text-align:center;">بداية</th><th style="text-align:center;">نهاية</th><th style="text-align:center;">الحالة</th><th style="text-align:right;">وفر التفاوض</th></tr></thead>
 <tbody>${rows}
-<tr style="border-top:2px solid #244062;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
+<tr style="border-top:2px solid #2E9896;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
 </tbody></table>
 
 </div></div></body></html>`);
@@ -6451,7 +6451,7 @@ function exportContractsWord(){
     const stClr=c.status==='expired'?'#64748B':c.status==='expiring'?'#C53030':'#276749';
     return`<tr><td class="val">${c.vendor}</td><td class="muted">${c.type}</td><td class="teal val" style="text-align:right;">${(c.monthly||0).toLocaleString('ar-SA')}</td><td style="text-align:right;">${(c.annual||0).toLocaleString('ar-SA')}</td><td style="text-align:right;color:#276749;">${c.revMonthly>0?c.revMonthly.toLocaleString('ar-SA'):'—'}</td><td style="text-align:right;color:#276749;">${c.revAnnual>0?c.revAnnual.toLocaleString('ar-SA'):'—'}</td><td class="muted" style="text-align:center;">${c.start||'—'}</td><td style="text-align:center;color:${endClr};">${c.end||'—'}</td><td style="text-align:center;color:${stClr};font-weight:600;">${STATUS_LABELS[c.status]||c.status}</td><td style="text-align:right;color:#276749;font-weight:600;">${c.saving>0?c.saving.toLocaleString('ar-SA'):'—'}</td></tr>`;
   }).join('');
-  const CSS=`*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#1A2B4A;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#244062;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#244062;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#244062;border-bottom:2px solid #244062;padding-bottom:4px;margin-bottom:8px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}`;
+  const CSS=`*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#2E9896;direction:rtl;}.page{position:relative;width:297mm;min-height:210mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:32mm 20mm 28mm 20mm;}.report-title{font-size:15px;font-weight:700;color:#2E9896;margin-bottom:2px;}.report-sub{font-size:9px;color:#64748B;margin-bottom:14px;}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #E2E8F0;margin-bottom:14px;}.kpi-box{padding:8px 10px;border-left:1px solid #E2E8F0;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:8px;color:#64748B;margin-bottom:4px;}.kpi-val{font-size:16px;font-weight:700;color:#2E9896;line-height:1;}.kpi-unit{font-size:9px;color:#1DA9BD;margin-top:3px;}.section-title{font-size:11px;font-weight:700;color:#2E9896;border-bottom:2px solid #2E9896;padding-bottom:4px;margin-bottom:8px;}table{width:100%;border-collapse:collapse;font-size:10px;}thead th{padding:5px 8px;text-align:right;font-size:9px;color:#64748B;font-weight:500;border-bottom:1px solid #E2E8F0;}tbody tr{border-bottom:0.5px solid #F1F5F9;}td{padding:5px 8px;}.val{font-weight:600;}.muted{color:#64748B;}.teal{color:#1DA9BD;}`;
   const bodyHTML=`<div class="page"><img class="bg" src="${BG}"><div class="content">
 <div class="report-title">سجل العقود</div>
 <div class="report-sub">تاريخ الإصدار: ${today} | إدارة المشتريات — نورة لتعليم القيادة</div>
@@ -6466,7 +6466,7 @@ function exportContractsWord(){
 <div class="section-title">تفاصيل العقود</div>
 <table><thead><tr><th>الشركة</th><th>نوع الخدمة</th><th style="text-align:right;">الشهري</th><th style="text-align:right;">السنوي</th><th style="text-align:right;color:#276749;">إيراد شهري</th><th style="text-align:right;color:#276749;">إيراد سنوي</th><th style="text-align:center;">بداية</th><th style="text-align:center;">نهاية</th><th style="text-align:center;">الحالة</th><th style="text-align:right;">وفر التفاوض</th></tr></thead>
 <tbody>${rows}
-<tr style="border-top:2px solid #244062;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
+<tr style="border-top:2px solid #2E9896;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
 </tbody></table>
 </div></div>`;
   const fullHTML=`<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>${CSS}div.WordSection1{page:WordSection1;} @page WordSection1{size:29.7cm 21cm;margin:0;}</style></head><body class="WordSection1">${bodyHTML}</body></html>`;
@@ -7349,7 +7349,7 @@ function exportSemiPDF(){
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -7451,13 +7451,13 @@ function exportSemiWord(){
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
-    +'h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}'
-    +'h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}'
+    +'h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}'
+    +'h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}'
     +'thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}'
     +'tbody tr:nth-child(even) td{background:#eaf2ff;}'
-    +'tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}'
+    +'tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}'
     +'.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}'
     +'@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   var bodyHTML='';
@@ -7674,7 +7674,7 @@ function buildKPIReport(){
     +'</tbody></table></div></div>';
 }
 
-var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
+var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
 function exportKPIPDF(){
   var year=document.getElementById('kpi-year').value;
@@ -8078,7 +8078,7 @@ function committeeExportPDFData(c){
   const isRevComp=(c.compType==='revenue');
   const offersTable=(()=>{
     const tdBase='padding:6px 8px;border:1px solid #000;color:#000;';
-    const thBase='padding:6px 8px;border:1px solid #000;background:#244062;color:#fff;text-align:right;';
+    const thBase='padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:right;';
     if(isRevComp){
       const rows=(c.offers||[]).map(o=>`<tr>
           <td style="${tdBase}font-weight:600;">${o.name}</td>
@@ -9020,8 +9020,8 @@ function exportQuarterlyPDF(){
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(parseFloat(e.amount)||0)}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
   const SIG_Q=SIG_URL||'';
-  const SIG_BQ=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #1A2B4A;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
-  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#244062;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #244062;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #244062;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #2E9896;background:#2E9896;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #244062;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #244062;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#244062;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #244062;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
+  const SIG_BQ=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #2E9896;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #2E9896;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
+  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}body.has-bg{background-image:var(--bg-url);background-size:297mm 210mm;background-repeat:repeat;}.bg-fixed{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:0;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#2E9896;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #2E9896;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #2E9896;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #2E9896;background:#2E9896;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #2E9896;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #2E9896;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#2E9896;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #2E9896;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}body.has-bg{-webkit-print-color-adjust:exact;print-color-adjust:exact;background-image:var(--bg-url)!important;background-size:297mm 210mm!important;background-repeat:repeat!important;}.bg-fixed{display:none;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?'<img class="bg-p1" src="'+BG+'"><img class="bg-footer" src="'+BG+'">':''}<div class="pdf-content">
 <h1>التقرير الربع سنوي — الربع ${qName[q]} ${year}</h1>
@@ -9091,7 +9091,7 @@ function exportMonthlyPDF(){
     <tr><td>إجمالي قيمة طلبات الشراء PO (${monthPO.length} طلب)</td><td style="text-align:right;font-weight:700;">${fmt2(monthPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${fmt2(totalCM)} ر.س</td></tr>
     <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAmt>0?fmt2(cmpSavAmt)+' ر.س':'—'}</td></tr>
-    <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#244062;">${fmt2(totalSpent+monthPOVal)} ر.س</td></tr>`;
+    <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#2E9896;">${fmt2(totalSpent+monthPOVal)} ر.س</td></tr>`;
   // حسب الإدارة
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
@@ -9099,7 +9099,7 @@ function exportMonthlyPDF(){
   // أعلى الأصناف
   const itemMapM={};monthExp.forEach(e=>{itemMapM[e.item_name]=(itemMapM[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;border-right:4px solid #244062;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #244062;border-top:2px solid #244062;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -10057,7 +10057,7 @@ function fleetPDF(reportTitle){
     ?'في حال اختيار التملك، تجدر الإشارة إلى أن مسؤولية الصيانة وإدارة الأعطال ستقع على الجهة مباشرة، وهو ما يستلزم توفير عقد صيانة شامل مع جهة مختصة.'
     :'الاستمرار في التأجير يُبقي على مرونة التشغيل ويُخفف من تبعات الأعطال، غير أن الاعتماد على مورد واحد يشكّل خطراً تعاقدياً ينبغي مراعاته عند التفاوض على شروط التجديد.';
   var W=window.open('','_blank');
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#244062;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
+  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap">'
     +'<h1>'+safeTitle+'</h1>'
@@ -10216,7 +10216,7 @@ function cmpPDF(){
       return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(t.payType==='monthly'?total*12:total)+' ر.س</td></tr>';
     }).join('');
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="7" style="padding:5px 10px;">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
-    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #244062;padding-bottom:4px;color:#244062;">'+(ci+1)+'. '+t.name+(t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>'+(t.payType==='monthly'?'الإجمالي السنوي':'الإجمالي الكلي')+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="7">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #2E9896;padding-bottom:4px;color:#2E9896;">'+(ci+1)+'. '+t.name+(t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>'+(t.payType==='monthly'?'الإجمالي السنوي':'الإجمالي الكلي')+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="7">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
@@ -10224,8 +10224,8 @@ function cmpPDF(){
   html+='body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}';
   html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}';
   html+='.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}';
-  html+='h1{font-size:15px;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:4px;color:#244062;}';
-  html+='h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #244062;padding-right:7px;color:#244062;}';
+  html+='h1{font-size:15px;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:4px;color:#2E9896;}';
+  html+='h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #2E9896;padding-right:7px;color:#2E9896;}';
   html+='p{text-align:center;color:#555;font-size:10px;margin-bottom:14px;}';
   html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;border:1px solid #000;background:#fff;}';
   html+='th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
@@ -10302,8 +10302,8 @@ function cmpWord(){
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
-    +'h1{font-size:14px;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;color:#244062;}'
-    +'h2{font-size:11px;margin:14px 0 5px;border-right:4px solid #244062;padding-right:7px;color:#244062;}'
+    +'h1{font-size:14px;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;color:#2E9896;}'
+    +'h2{font-size:11px;margin:14px 0 5px;border-right:4px solid #2E9896;padding-right:7px;color:#2E9896;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;}'
     +'th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;}'
     +'td{padding:3px 6px;border:1px solid #bbb;}'
@@ -11044,8 +11044,8 @@ function revPDFFromData(title,date,serviceType,companies,cur){
     +'body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
-    +'h1{font-size:14px;text-align:center;border-bottom:1.5px solid #244062;padding-bottom:4px;margin-bottom:4px;color:#244062;}'
-    +'h2{font-size:11px;margin:12px 0 5px;border-right:3.5px solid #244062;padding-right:7px;color:#244062;}'
+    +'h1{font-size:14px;text-align:center;border-bottom:1.5px solid #2E9896;padding-bottom:4px;margin-bottom:4px;color:#2E9896;}'
+    +'h2{font-size:11px;margin:12px 0 5px;border-right:3.5px solid #2E9896;padding-right:7px;color:#2E9896;}'
     +'h3{font-size:10px;}'
     +'p{text-align:center;color:#555;font-size:9px;margin-bottom:10px;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;border:1px solid #000;background:#fff;}'
@@ -11159,7 +11159,7 @@ function f2PurchaseVsRenewTableHTML(count,unitPrice,totalPurchase,renewMonthlyUn
   if(cmp.extend1<=0&&cmp.extend2<=0){
     rows+='<tr><td colspan="6" style="text-align:center;color:#94A3B8;">أدخل بيانات تمديد العقد الحالي (القسم هـ) لعرض المقارنة مع الشراء</td></tr>';
   }
-  return '<table class="tbl"><thead><tr><th>الخيار</th><th style="text-align:center;">عدد المركبات</th><th style="text-align:left;">قيمة المركبة الواحدة (ر.س)</th><th style="text-align:left;">التكلفة الإجمالية (ر.س)</th><th style="text-align:left;">الفرق مقارنة بالشراء (ر.س)</th><th style="text-align:center;">نسبة الوفر من الشراء</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  return '<table class="tbl"><thead><tr><th>الخيار</th><th style="text-align:center;">عدد المركبات</th><th style="text-align:left;">قيمة المركبة الواحدة (ر.س، غير شامل الضريبة)</th><th style="text-align:left;">التكلفة الإجمالية (ر.س، غير شامل الضريبة)</th><th style="text-align:left;">الفرق مقارنة بالشراء (ر.س، غير شامل الضريبة)</th><th style="text-align:center;">نسبة الوفر من الشراء</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 // جدول صغير مستقل لكل سيناريو (مؤشر + قيمة) — توضع الجداول جنب بعض أفقياً وليست فوق بعض
@@ -11170,11 +11170,11 @@ function f2ScenarioMiniTableHTML(col,Y,curTotal){
     +(col.sub?'<div style="font-weight:400;font-size:9px;opacity:.75;margin-top:2px;">'+col.sub+'</div>':'')+'</div>';
   return '<div style="flex:1;min-width:0;">'+head
     +'<table class="tbl" style="margin-top:0;"><tbody>'
-    +'<tr><td>التكلفة السنوية (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.annual>0?f2Fmt(col.annual):'—')+'</td></tr>'
-    +'<tr><td>إجمالي '+Y+' سنوات (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.total>0?f2Fmt(col.total):'—')+'</td></tr>'
-    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.perUnit>0?f2Fmt(col.perUnit):'—')+'</td></tr>'
-    +'<tr><td>إجمالي عقد الصيانة (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.maintTotal>0?f2Fmt(col.maintTotal):'—')+'</td></tr>'
-    +'<tr><td>مقدار الوفر (ر.س)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
+    +'<tr><td>التكلفة السنوية (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(col.annual>0?f2Fmt(col.annual):'—')+'</td></tr>'
+    +'<tr><td>إجمالي '+Y+' سنوات (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(col.total>0?f2Fmt(col.total):'—')+'</td></tr>'
+    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(col.perUnit>0?f2Fmt(col.perUnit):'—')+'</td></tr>'
+    +'<tr><td>إجمالي عقد الصيانة (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(col.maintTotal>0?f2Fmt(col.maintTotal):'—')+'</td></tr>'
+    +'<tr><td>مقدار الوفر (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
     +'<tr><td>نسبة الوفر</td><td style="text-align:left;font-weight:700;">'+pctTxt+'</td></tr>'
     +'</tbody></table></div>';
 }
@@ -11192,10 +11192,10 @@ function f2ScenarioRankMiniTableHTML(name,sub,rank,statusTxt,annual,total,perUni
   return '<div style="flex:1;min-width:0;">'+head
     +'<table class="tbl" style="margin-top:0;"><tbody>'
     +'<tr><td>الترتيب</td><td style="text-align:left;font-weight:900;">'+rank+'</td></tr>'
-    +'<tr><td>التكلفة السنوية (ر.س)</td><td style="text-align:left;font-weight:700;">'+(annual>0?f2Fmt(annual):'—')+'</td></tr>'
-    +'<tr><td>إجمالي '+Y+' سنوات (ر.س)</td><td style="text-align:left;font-weight:700;">'+(total>0?f2Fmt(total):'—')+'</td></tr>'
-    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س)</td><td style="text-align:left;font-weight:700;">'+(perUnit>0?f2Fmt(perUnit):'—')+'</td></tr>'
-    +'<tr><td>مقدار الوفر (ر.س)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
+    +'<tr><td>التكلفة السنوية (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(annual>0?f2Fmt(annual):'—')+'</td></tr>'
+    +'<tr><td>إجمالي '+Y+' سنوات (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(total>0?f2Fmt(total):'—')+'</td></tr>'
+    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+(perUnit>0?f2Fmt(perUnit):'—')+'</td></tr>'
+    +'<tr><td>مقدار الوفر (ر.س، غير شامل الضريبة)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
     +'<tr><td>نسبة الوفر</td><td style="text-align:left;font-weight:700;">'+pctTxt+'</td></tr>'
     +'<tr><td>الحالة</td><td style="text-align:left;font-weight:700;">'+statusTxt+'</td></tr>'
     +'</tbody></table></div>';
@@ -11280,7 +11280,6 @@ function f2Calc(){
   sH+='<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>';
   sH+='<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>';
   sH+='</tr></tbody></table></div>';
-  sH+='<div style="font-size:11px;color:#C53030;font-weight:700;margin:-14px 0 18px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</div>';
 
   // ── جدول 2: قيمة شراء الأسطول مقابل تمديد عقد التأجير ──
   if(unitPrice>0||totalPurchase>0){
@@ -11296,7 +11295,7 @@ function f2Calc(){
     sH+='<div style="font-weight:800;font-size:13px;color:#7C3AED;margin-bottom:8px;border-right:4px solid #7C3AED;padding-right:10px;">عروض أسعار التأجير الجديدة</div>';
     sH+='<div style="overflow-x:auto;margin-bottom:20px;">';
     sH+='<table class="tbl"><thead><tr>';
-    sH+='<th>الشركة</th><th>إيجار / مركبة / شهر (ر.س)</th><th>إجمالي الأسطول السنوي (ر.س)</th>';
+    sH+='<th>الشركة</th><th>إيجار / مركبة / شهر (ر.س، غير شامل الضريبة)</th><th>إجمالي الأسطول السنوي (ر.س، غير شامل الضريبة)</th>';
     sH+='<th>مدة العقد</th><th>صيانة مشمولة</th><th>تأمين مشمول</th><th>سيارة بديلة</th><th>ملاحظة</th>';
     sH+='</tr></thead><tbody>';
     f2LeaseOffers.forEach(function(o,i){
@@ -11320,7 +11319,7 @@ function f2Calc(){
     sH+='<div style="font-weight:800;font-size:13px;color:#276749;margin-bottom:8px;border-right:4px solid #276749;padding-right:10px;">عروض أسعار عقود الصيانة</div>';
     sH+='<div style="overflow-x:auto;margin-bottom:20px;">';
     sH+='<table class="tbl"><thead><tr>';
-    sH+='<th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س)</th><th>مدة العقد</th>';
+    sH+='<th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س، غير شامل الضريبة)</th><th>مدة العقد</th>';
     sH+='<th>فريق متنقل</th><th>قطع الغيار مشمولة</th><th>مستوى SLA</th><th>ملاحظة</th>';
     sH+='</tr></thead><tbody>';
     f2MaintOffers.forEach(function(o){
@@ -11367,10 +11366,10 @@ function f2Calc(){
   if(scenarios.length>0){
     qH='<div style="overflow-x:auto;"><table class="tbl"><thead><tr>';
     qH+='<th>الترتيب</th><th>السيناريو</th>';
-    qH+='<th>التكلفة السنوية (ر.س)</th>';
-    qH+='<th>إجمالي '+Y+' سنوات (ر.س)</th>';
-    qH+='<th>متوسط تكلفة المركبة / سنة (ر.س)</th>';
-    qH+='<th>مقدار الوفر (ر.س)</th>';
+    qH+='<th>التكلفة السنوية (ر.س، غير شامل الضريبة)</th>';
+    qH+='<th>إجمالي '+Y+' سنوات (ر.س، غير شامل الضريبة)</th>';
+    qH+='<th>متوسط تكلفة المركبة / سنة (ر.س، غير شامل الضريبة)</th>';
+    qH+='<th>مقدار الوفر (ر.س، غير شامل الضريبة)</th>';
     qH+='<th>نسبة الوفر</th>';
     qH+='<th>الحالة</th>';
     qH+='</tr></thead><tbody>';
@@ -11419,15 +11418,15 @@ function f2Excel(){
   var s1=[
     ['دراسة جدوى تملك أسطول التدريب'],[''],
     ['مدة الدراسة',Y+' سنوات'],[''],
-    ['السيناريو','إجمالي مدة الدراسة (ر.س)','الوفر مقابل التمديد (ر.س)','نسبة الوفر'],
+    ['السيناريو','إجمالي مدة الدراسة (ر.س، غير شامل الضريبة)','الوفر مقابل التمديد (ر.س، غير شامل الضريبة)','نسبة الوفر'],
     ['شراء الأسطول + أفضل صيانة',buyTotal,curTotal-buyTotal,curTotal>0?((curTotal-buyTotal)/curTotal*100).toFixed(1)+'%':'—'],
     ['تأجير جديد — أفضل عرض',newTotal,curTotal-newTotal,curTotal>0?((curTotal-newTotal)/curTotal*100).toFixed(1)+'%':'—'],
     ['تمديد العقد الحالي (خط الأساس)',curTotal,'خط الأساس','—'],[''],
-    ['عدد المركبات',count],['سعر الشراء / مركبة (ر.س)',unitPrice],
-    ['إجمالي تكلفة الشراء (ر.س)',totalPurchase],
-    ['التأجير السنوي الحالي (ر.س)',annualLease],
-    ['أفضل صيانة سنوياً (ر.س)',bma],
-    ['أفضل إيجار شهري / مركبة (ر.س)',blm],
+    ['عدد المركبات',count],['سعر الشراء / مركبة (ر.س، غير شامل الضريبة)',unitPrice],
+    ['إجمالي تكلفة الشراء (ر.س، غير شامل الضريبة)',totalPurchase],
+    ['التأجير السنوي الحالي (ر.س، غير شامل الضريبة)',annualLease],
+    ['أفضل صيانة سنوياً (ر.س، غير شامل الضريبة)',bma],
+    ['أفضل إيجار شهري / مركبة (ر.س، غير شامل الضريبة)',blm],
     ['معدل النمو السنوي للتكاليف',(leaseGrowth*100).toFixed(0)+'%']
   ];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'ملخص الدراسة');
@@ -11625,9 +11624,9 @@ function f2PDF(reportTitle){
   var css='@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;direction:rtl;margin:0;padding:0;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 11mm 14mm;}'
-    +'h1{font-size:12pt;font-weight:900;text-align:center;border-bottom:2.5px solid #244062;padding-bottom:6px;margin-bottom:14px;color:#244062;}'
-    +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 10px;background:#244062;color:#fff;border-radius:3px;}'
-    +'h3{font-size:8.5pt;font-weight:700;margin:10px 0 4px;padding:3px 8px;background:#e8eef7;color:#244062;border-right:3px solid #244062;}'
+    +'h1{font-size:12pt;font-weight:900;text-align:center;border-bottom:2.5px solid #2E9896;padding-bottom:6px;margin-bottom:14px;color:#2E9896;}'
+    +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 10px;background:#2E9896;color:#fff;border-radius:3px;}'
+    +'h3{font-size:8.5pt;font-weight:700;margin:10px 0 4px;padding:3px 8px;background:#e8eef7;color:#2E9896;border-right:3px solid #2E9896;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8pt;}'
     +'thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:4px 7px;border:1px solid #ccc;color:#111;background:#fff;}'
@@ -11662,7 +11661,6 @@ function f2PDF(reportTitle){
     +'<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>'
     +'<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>'
     +'</tr></tbody></table>';
-  body+='<p style="font-size:8pt;color:#C53030;font-weight:700;margin:-6px 0 10px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</p>';
 
   // جدول 2: قيمة شراء الأسطول مقابل تمديد عقد التأجير
   if(unitPrice>0||totalPurchase>0){
@@ -11675,7 +11673,7 @@ function f2PDF(reportTitle){
     var sortedL=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;});
     body+='<h3>عروض أسعار التأجير الجديدة</h3>';
     body+='<table><thead><tr>'
-      +'<th>الشركة</th><th>إيجار / مركبة / شهر (ر.س)</th><th>إجمالي الأسطول السنوي (ر.س)</th>'
+      +'<th>الشركة</th><th>إيجار / مركبة / شهر (ر.س، غير شامل الضريبة)</th><th>إجمالي الأسطول السنوي (ر.س، غير شامل الضريبة)</th>'
       +'<th>مدة العقد</th><th>صيانة مشمولة</th><th>تأمين مشمول</th><th>سيارة بديلة</th>'
       +'</tr></thead><tbody>';
     f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).forEach(function(o,i){
@@ -11697,7 +11695,7 @@ function f2PDF(reportTitle){
   if(f2MaintOffers.length>0){
     body+='<h3>عروض أسعار عقود الصيانة</h3>';
     body+='<table><thead><tr>'
-      +'<th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س)</th><th>مدة العقد</th>'
+      +'<th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س، غير شامل الضريبة)</th><th>مدة العقد</th>'
       +'<th>فريق متنقل</th><th>قطع الغيار مشمولة</th><th>مستوى SLA</th>'
       +'</tr></thead><tbody>';
     f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;}).forEach(function(o){
@@ -11737,7 +11735,7 @@ function f2PDF(reportTitle){
   var htmlOut='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'<\/title><style>'+css+'<\/style><\/head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
-    +(leaseEnd?'<div style="text-align:center;font-size:9pt;font-weight:700;color:#244062;margin:-8px 0 14px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'<\/div>':'')
+    +(leaseEnd?'<div style="text-align:center;font-size:9pt;font-weight:700;color:#2E9896;margin:-8px 0 14px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'<\/div>':'')
     +body
     +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>';
   var blob=new Blob([htmlOut],{type:'text/html;charset=utf-8'});
@@ -11820,9 +11818,9 @@ function f2Word(){
   var CSS='@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 11mm 14mm;}'
-    +'h1{font-size:12px;font-weight:900;text-align:center;border-bottom:2px solid #244062;padding-bottom:6px;margin-bottom:12px;color:#244062;}'
-    +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#244062;color:#fff;}'
-    +'h3{font-size:8.5px;font-weight:700;margin:8px 0 3px;padding:3px 8px;background:#e8eef7;color:#244062;border-right:3px solid #244062;}'
+    +'h1{font-size:12px;font-weight:900;text-align:center;border-bottom:2px solid #2E9896;padding-bottom:6px;margin-bottom:12px;color:#2E9896;}'
+    +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}'
+    +'h3{font-size:8.5px;font-weight:700;margin:8px 0 3px;padding:3px 8px;background:#e8eef7;color:#2E9896;border-right:3px solid #2E9896;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5px;}'
     +'thead th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:3px 6px;border:1px solid #ccc;color:#000;}'
@@ -11834,7 +11832,7 @@ function f2Word(){
   var body='';
   if(BG) body+='<img src="'+BG+'" class="bg-img">';
   body+='<div class="wrap"><h1>'+reportTitle.replace(/[<>&"]/g,'')+'</h1>';
-  if(leaseEnd) body+='<div style="text-align:center;font-size:9px;font-weight:700;color:#244062;margin:-6px 0 12px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'</div>';
+  if(leaseEnd) body+='<div style="text-align:center;font-size:9px;font-weight:700;color:#2E9896;margin:-6px 0 12px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'</div>';
 
   body+='<h2>القسم الأول — بيانات الأسطول الحالية</h2>';
   body+='<h3>بيانات الأسطول الحالي</h3>';
@@ -11848,17 +11846,16 @@ function f2Word(){
     +'<td style="text-align:center;font-weight:700;">'+(leaseEnd||'—')+'</td>'
     +'<td style="text-align:center;font-weight:700;">'+Y+' سنوات</td>'
     +'</tr></tbody></table>';
-  body+='<p style="font-size:8px;color:#C53030;font-weight:700;margin:-6px 0 10px;">⚠ جميع الأسعار والقيم الواردة في هذا التقرير غير شاملة ضريبة القيمة المضافة (15%)</p>';
 
   if(renewDuration>0||renewAnnual>0){
     body+='<h3>بيانات تمديد العقد الحالي</h3>';
-    body+='<table><thead><tr><th>قيمة مركبة/شهر (ر.س)</th><th>الشهري الكلي (ر.س)</th><th>السنوي الكلي (ر.س)</th><th>مدة التمديد</th><th>نسبة التغير</th><th>إجمالي التمديد (ر.س)</th></tr></thead><tbody><tr>'
+    body+='<table><thead><tr><th>قيمة مركبة/شهر (ر.س، غير شامل الضريبة)</th><th>الشهري الكلي (ر.س، غير شامل الضريبة)</th><th>السنوي الكلي (ر.س، غير شامل الضريبة)</th><th>مدة التمديد</th><th>نسبة التغير</th><th>إجمالي التمديد (ر.س، غير شامل الضريبة)</th></tr></thead><tbody><tr>'
       +'<td style="font-weight:700;">'+(renewMonthlyUnit>0?f2Fmt(renewMonthlyUnit):'—')+'</td>'
       +'<td style="font-weight:700;">'+(renewMonthlyTotal>0?f2Fmt(renewMonthlyTotal):'—')+'</td>'
       +'<td style="font-weight:700;">'+(renewAnnual>0?f2Fmt(renewAnnual):'—')+'</td>'
       +'<td style="text-align:center;">'+renewDuration+' سنة</td>'
       +'<td style="text-align:center;">'+(renewGrowth>=0?'+':'')+(renewGrowth*100).toFixed(0)+'%</td>'
-      +'<td style="font-weight:700;color:#244062;">'+(renewTotal>0?f2Fmt(renewTotal):'—')+'</td>'
+      +'<td style="font-weight:700;color:#2E9896;">'+(renewTotal>0?f2Fmt(renewTotal):'—')+'</td>'
       +'</tr>';
     if(renewNotes) body+='<tr><td colspan="6" style="font-size:8px;color:#555;">ملاحظات: '+renewNotes+'</td></tr>';
     body+='</tbody></table>';
@@ -11871,7 +11868,7 @@ function f2Word(){
 
   if(f2LeaseOffers.length>0){
     body+='<h3>عروض أسعار التأجير الجديدة</h3>';
-    body+='<table><thead><tr><th>الشركة</th><th>إيجار / مركبة / شهر (ر.س)</th><th>إجمالي الأسطول السنوي (ر.س)</th><th>مدة العقد</th><th>صيانة</th><th>تأمين</th><th>بديلة</th></tr></thead><tbody>';
+    body+='<table><thead><tr><th>الشركة</th><th>إيجار / مركبة / شهر (ر.س، غير شامل الضريبة)</th><th>إجمالي الأسطول السنوي (ر.س، غير شامل الضريبة)</th><th>مدة العقد</th><th>صيانة</th><th>تأمين</th><th>بديلة</th></tr></thead><tbody>';
     f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).forEach(function(o){
       var isB=bestLease&&o.name===bestLease.name&&o.monthly===bestLease.monthly;
       body+='<tr><td>'+(isB?'* ':'')+(o.name||'—')+'</td><td>'+f2Fmt(o.monthly)+'</td>'
@@ -11886,7 +11883,7 @@ function f2Word(){
 
   if(f2MaintOffers.length>0){
     body+='<h3>عروض أسعار عقود الصيانة</h3>';
-    body+='<table><thead><tr><th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س)</th><th>مدة العقد</th><th>فريق متنقل</th><th>قطع الغيار</th><th>SLA</th></tr></thead><tbody>';
+    body+='<table><thead><tr><th>الشركة</th><th>التكلفة السنوية للأسطول (ر.س، غير شامل الضريبة)</th><th>مدة العقد</th><th>فريق متنقل</th><th>قطع الغيار</th><th>SLA</th></tr></thead><tbody>';
     f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;}).forEach(function(o){
       var isB=bestMaint&&o.name===bestMaint.name&&o.annual===bestMaint.annual;
       body+='<tr><td>'+(isB?'* ':'')+(o.name||'—')+'</td><td style="font-weight:700;">'+f2Fmt(o.annual)+'</td>'
