@@ -11145,49 +11145,60 @@ function f2RenewCompare(totalPurchase,renewAnnual,renewGrowth){
 }
 
 function f2PurchaseVsRenewTableHTML(count,unitPrice,totalPurchase,renewMonthlyUnit,cmp){
-  var rows='<tr><td>شراء الأسطول ('+count+' مركبة × '+(unitPrice>0?f2Fmt(unitPrice):'0')+' ر.س/مركبة)</td><td style="font-weight:700;">'+f2Fmt(totalPurchase)+'</td><td>—</td><td>—</td></tr>';
+  var rows='<tr><td style="font-weight:700;">شراء الأسطول</td><td style="text-align:center;">'+(count||'—')+'</td><td>'+(unitPrice>0?f2Fmt(unitPrice):'—')+'</td><td style="font-weight:700;">'+f2Fmt(totalPurchase)+'</td><td>—</td><td style="text-align:center;">—</td></tr>';
   if(cmp.extend1>0){
-    rows+='<tr><td>تمديد عقد التأجير سنة واحدة'+(renewMonthlyUnit>0?' ('+f2Fmt(renewMonthlyUnit)+' ر.س/مركبة شهرياً)':'')+'</td><td>'+f2Fmt(cmp.extend1)+'</td>'
+    rows+='<tr><td style="font-weight:700;">تمديد عقد التأجير سنة واحدة</td><td style="text-align:center;">'+(count||'—')+'</td><td>'+(renewMonthlyUnit>0?f2Fmt(renewMonthlyUnit)+' / شهرياً':'—')+'</td><td>'+f2Fmt(cmp.extend1)+'</td>'
       +'<td style="font-weight:700;">'+(cmp.save1>=0?'+':'')+f2Fmt(cmp.save1)+'</td>'
       +'<td style="text-align:center;font-weight:700;">'+(cmp.save1Pct>=0?'+':'')+cmp.save1Pct.toFixed(1)+'%</td></tr>';
   }
   if(cmp.extend2>0){
-    rows+='<tr><td>تمديد عقد التأجير سنتين</td><td>'+f2Fmt(cmp.extend2)+'</td>'
+    rows+='<tr><td style="font-weight:700;">تمديد عقد التأجير سنتين</td><td style="text-align:center;">'+(count||'—')+'</td><td>'+(renewMonthlyUnit>0?f2Fmt(renewMonthlyUnit)+' / شهرياً':'—')+'</td><td>'+f2Fmt(cmp.extend2)+'</td>'
       +'<td style="font-weight:700;">'+(cmp.save2>=0?'+':'')+f2Fmt(cmp.save2)+'</td>'
       +'<td style="text-align:center;font-weight:700;">'+(cmp.save2Pct>=0?'+':'')+cmp.save2Pct.toFixed(1)+'%</td></tr>';
   }
   if(cmp.extend1<=0&&cmp.extend2<=0){
-    rows+='<tr><td colspan="4" style="text-align:center;color:#94A3B8;">أدخل بيانات تمديد العقد الحالي (القسم هـ) لعرض المقارنة مع الشراء</td></tr>';
+    rows+='<tr><td colspan="6" style="text-align:center;color:#94A3B8;">أدخل بيانات تمديد العقد الحالي (القسم هـ) لعرض المقارنة مع الشراء</td></tr>';
   }
-  return '<table class="tbl"><thead><tr><th>البند</th><th style="text-align:left;">التكلفة الإجمالية (ر.س)</th><th style="text-align:left;">الفرق مقارنة بالشراء (ر.س)</th><th style="text-align:center;">نسبة الوفر من الشراء</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  return '<table class="tbl"><thead><tr><th>الخيار</th><th style="text-align:center;">عدد المركبات</th><th style="text-align:left;">قيمة المركبة الواحدة (ر.س)</th><th style="text-align:left;">التكلفة الإجمالية (ر.س)</th><th style="text-align:left;">الفرق مقارنة بالشراء (ر.س)</th><th style="text-align:center;">نسبة الوفر من الشراء</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
-// رأس عمود مقسوم لقسمين: العنوان الرئيسي + التفصيل الفرعي (اسم الشركة / خط الأساس)
-function f2ThTwoPart(main,sub){
-  return '<th><div>'+main+'</div>'+(sub?'<div style="font-weight:400;font-size:10px;opacity:.75;margin-top:2px;">'+sub+'</div>':'')+'</th>';
+// جدول صغير مستقل لكل سيناريو (مؤشر + قيمة) — توضع الجداول جنب بعض أفقياً وليست فوق بعض
+function f2ScenarioMiniTableHTML(col,Y,curTotal){
+  var savTxt=col.isBase?'خط الأساس':(curTotal>0?((col.saving>=0?'+':'')+f2Fmt(col.saving)):'—');
+  var pctTxt=col.isBase?'—':(curTotal>0?((col.savingPct>=0?'+':'')+col.savingPct.toFixed(1)+'%'):'—');
+  var head='<div style="font-weight:800;font-size:11px;color:#244062;background:#e8eef7;border-right:3px solid #244062;padding:5px 8px;">'+col.main
+    +(col.sub?'<div style="font-weight:400;font-size:9px;opacity:.75;margin-top:2px;">'+col.sub+'</div>':'')+'</div>';
+  return '<div style="flex:1;min-width:0;">'+head
+    +'<table class="tbl" style="margin-top:0;"><tbody>'
+    +'<tr><td>التكلفة السنوية (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.annual>0?f2Fmt(col.annual):'—')+'</td></tr>'
+    +'<tr><td>إجمالي '+Y+' سنوات (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.total>0?f2Fmt(col.total):'—')+'</td></tr>'
+    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.perUnit>0?f2Fmt(col.perUnit):'—')+'</td></tr>'
+    +'<tr><td>إجمالي عقد الصيانة (ر.س)</td><td style="text-align:left;font-weight:700;">'+(col.maintTotal>0?f2Fmt(col.maintTotal):'—')+'</td></tr>'
+    +'<tr><td>مقدار الوفر (ر.س)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
+    +'<tr><td>نسبة الوفر</td><td style="text-align:left;font-weight:700;">'+pctTxt+'</td></tr>'
+    +'</tbody></table></div>';
 }
 
-// جدول واحد بالسيناريوهات كأعمدة والمؤشرات كصفوف — نفس تصميم القسم الثاني الأصلي
-function f2ScenariosWideTableHTML(cols,Y,curTotal){
-  var head='<th>المؤشر</th>';
-  var rAnn='<tr><td style="font-weight:700;">التكلفة السنوية (ر.س)</td>';
-  var rTot='<tr><td style="font-weight:700;">إجمالي '+Y+' سنوات (ر.س)</td>';
-  var rUnit='<tr><td style="font-weight:700;">متوسط تكلفة المركبة / سنة (ر.س)</td>';
-  var rMaint='<tr><td style="font-weight:700;">إجمالي عقد الصيانة (ر.س)</td>';
-  var rSav='<tr><td style="font-weight:700;">مقدار الوفر (ر.س)</td>';
-  var rPct='<tr><td style="font-weight:700;">نسبة الوفر</td>';
-  cols.forEach(function(c){
-    head+=f2ThTwoPart(c.main,c.sub);
-    rAnn+='<td>'+(c.annual>0?f2Fmt(c.annual):'—')+'</td>';
-    rTot+='<td style="font-weight:700;">'+(c.total>0?f2Fmt(c.total):'—')+'</td>';
-    rUnit+='<td>'+(c.perUnit>0?f2Fmt(c.perUnit):'—')+'</td>';
-    rMaint+='<td>'+(c.maintTotal>0?f2Fmt(c.maintTotal):'—')+'</td>';
-    var savTxt=c.isBase?'خط الأساس':(curTotal>0?((c.saving>=0?'+':'')+f2Fmt(c.saving)):'—');
-    var pctTxt=c.isBase?'—':(curTotal>0?((c.savingPct>=0?'+':'')+c.savingPct.toFixed(1)+'%'):'—');
-    rSav+='<td style="font-weight:700;">'+savTxt+'</td>';
-    rPct+='<td style="text-align:center;font-weight:700;">'+pctTxt+'</td>';
-  });
-  return '<table class="tbl"><thead><tr>'+head+'</tr></thead><tbody>'+rAnn+'</tr>'+rTot+'</tr>'+rUnit+'</tr>'+rMaint+'</tr>'+rSav+'</tr>'+rPct+'</tr></tbody></table>';
+function f2ScenariosSideBySideHTML(cols,Y,curTotal){
+  return '<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">'+cols.map(function(c){return f2ScenarioMiniTableHTML(c,Y,curTotal);}).join('')+'</div>';
+}
+
+// جدول صغير مستقل لكل سيناريو في القسم الثالث (يضيف الترتيب والحالة)
+function f2ScenarioRankMiniTableHTML(name,sub,rank,statusTxt,annual,total,perUnit,saving,savingPct,isBase,curTotal,Y){
+  var savTxt=isBase?'خط الأساس':(curTotal>0?((saving>=0?'+':'')+f2Fmt(saving)):'—');
+  var pctTxt=isBase?'—':(curTotal>0?((savingPct>=0?'+':'')+savingPct.toFixed(1)+'%'):'—');
+  var head='<div style="font-weight:800;font-size:11px;color:#244062;background:#e8eef7;border-right:3px solid #244062;padding:5px 8px;">'+name
+    +(sub?'<div style="font-weight:400;font-size:9px;opacity:.75;margin-top:2px;">'+sub+'</div>':'')+'</div>';
+  return '<div style="flex:1;min-width:0;">'+head
+    +'<table class="tbl" style="margin-top:0;"><tbody>'
+    +'<tr><td>الترتيب</td><td style="text-align:left;font-weight:900;">'+rank+'</td></tr>'
+    +'<tr><td>التكلفة السنوية (ر.س)</td><td style="text-align:left;font-weight:700;">'+(annual>0?f2Fmt(annual):'—')+'</td></tr>'
+    +'<tr><td>إجمالي '+Y+' سنوات (ر.س)</td><td style="text-align:left;font-weight:700;">'+(total>0?f2Fmt(total):'—')+'</td></tr>'
+    +'<tr><td>تكلفة المركبة الواحدة سنوياً (ر.س)</td><td style="text-align:left;font-weight:700;">'+(perUnit>0?f2Fmt(perUnit):'—')+'</td></tr>'
+    +'<tr><td>مقدار الوفر (ر.س)</td><td style="text-align:left;font-weight:700;">'+savTxt+'</td></tr>'
+    +'<tr><td>نسبة الوفر</td><td style="text-align:left;font-weight:700;">'+pctTxt+'</td></tr>'
+    +'<tr><td>الحالة</td><td style="text-align:left;font-weight:700;">'+statusTxt+'</td></tr>'
+    +'</tbody></table></div>';
 }
 
 function f2Calc(){
@@ -11213,9 +11224,9 @@ function f2Calc(){
   var buyAnnual=Y>0?buyTotal/Y:0;
   var curAnnual=Y>0?curTotal/Y:0;
   var newAnnual=Y>0?newTotal/Y:0;
-  var buyPerUnit=(count>0&&Y>0)?buyTotal/(count*Y):0;
-  var curPerUnit=(count>0&&Y>0)?curTotal/(count*Y):0;
-  var newPerUnit=(count>0&&Y>0)?newTotal/(count*Y):0;
+  var buyPerUnit=(count>0)?buyAnnual/count:0;
+  var curPerUnit=(count>0)?curAnnual/count:0;
+  var newPerUnit=(count>0)?newAnnual/count:0;
   var buyMaintTotal=bma*Y;
   var buySaving=curTotal>0&&buyTotal>0?curTotal-buyTotal:0;
   var newSaving=curTotal>0&&newTotal>0?curTotal-newTotal:0;
@@ -11338,7 +11349,7 @@ function f2Calc(){
     if(buyTotal>0) kCols.push({main:'شراء الأسطول + أفضل عقد صيانة',sub:bestMaint?bestMaint.name:'',annual:buyAnnual,total:buyTotal,perUnit:buyPerUnit,maintTotal:buyMaintTotal,saving:buySaving,savingPct:buySavingPct,isBase:false});
     if(newTotal>0) kCols.push({main:'تأجير جديد — أفضل عرض',sub:bestLease?bestLease.name:'',annual:newAnnual,total:newTotal,perUnit:newPerUnit,maintTotal:0,saving:newSaving,savingPct:newSavingPct,isBase:false});
     if(curTotal>0) kCols.push({main:'تمديد العقد الحالي',sub:'خط الأساس',annual:curAnnual,total:curTotal,perUnit:curPerUnit,maintTotal:0,saving:0,savingPct:0,isBase:true});
-    kH+='<div style="overflow-x:auto;">'+f2ScenariosWideTableHTML(kCols,Y,curTotal)+'</div>';
+    kH+='<div style="overflow-x:auto;">'+f2ScenariosSideBySideHTML(kCols,Y,curTotal)+'</div>';
   }
   var kEl=document.getElementById('f2-kpi-body');
   if(kEl){kEl.innerHTML=kH;document.getElementById('f2-kpi-card').style.display='block';}
@@ -11593,9 +11604,9 @@ function f2PDF(reportTitle){
   function newLeaseTCO(y){var t=0;for(var i=1;i<=y;i++)t+=blm*12*count*Math.pow(1+leaseGrowth,i-1);return t;}
   var buyTotal=buyTCO(Y), curTotal=curLeaseTCO(Y), newTotal=newLeaseTCO(Y);
   var buyAnnual=Y>0?buyTotal/Y:0, curAnnual=Y>0?curTotal/Y:0, newAnnual=Y>0?newTotal/Y:0;
-  var buyPerUnit=(count>0&&Y>0)?buyTotal/(count*Y):0;
-  var curPerUnit=(count>0&&Y>0)?curTotal/(count*Y):0;
-  var newPerUnit=(count>0&&Y>0)?newTotal/(count*Y):0;
+  var buyPerUnit=(count>0)?buyAnnual/count:0;
+  var curPerUnit=(count>0)?curAnnual/count:0;
+  var newPerUnit=(count>0)?newAnnual/count:0;
   var buyMaintTotal=bma*Y;
   var buySaving=curTotal>0&&buyTotal>0?curTotal-buyTotal:0;
   var newSaving=curTotal>0&&newTotal>0?curTotal-newTotal:0;
@@ -11707,33 +11718,18 @@ function f2PDF(reportTitle){
   if(buyTotal>0) s2Cols.push({main:'شراء الأسطول + أفضل صيانة',sub:bestMaint?bestMaint.name:'',annual:buyAnnual,total:buyTotal,perUnit:buyPerUnit,maintTotal:buyMaintTotal,saving:buySaving,savingPct:buySavingPct,isBase:false});
   if(newTotal>0) s2Cols.push({main:'تأجير جديد — أفضل عرض',sub:bestLease?bestLease.name:'',annual:newAnnual,total:newTotal,perUnit:newPerUnit,maintTotal:0,saving:newSaving,savingPct:newSavingPct,isBase:false});
   if(curTotal>0) s2Cols.push({main:'تمديد العقد الحالي',sub:'خط الأساس',annual:curAnnual,total:curTotal,perUnit:curPerUnit,maintTotal:0,saving:0,savingPct:0,isBase:true});
-  body+=f2ScenariosWideTableHTML(s2Cols,Y,curTotal);
+  body+=f2ScenariosSideBySideHTML(s2Cols,Y,curTotal);
 
   // ══ القسم الثالث: جدول مقارنة القرار ══
   if(scenarios.length>0){
     body+='<h2>القسم الثالث — جدول مقارنة القرار</h2>';
-    var s3H='<th>المؤشر</th>';
-    var s3Rank='<tr><td style="font-weight:700;">الترتيب</td>';
-    var s3Ann='<tr><td style="font-weight:700;">التكلفة السنوية (ر.س)</td>';
-    var s3Tot='<tr><td style="font-weight:700;">إجمالي '+Y+' سنوات (ر.س)</td>';
-    var s3Unit='<tr><td style="font-weight:700;">متوسط تكلفة المركبة / سنة (ر.س)</td>';
-    var s3Sav='<tr><td style="font-weight:700;">مقدار الوفر (ر.س)</td>';
-    var s3Pct='<tr><td style="font-weight:700;">نسبة الوفر</td>';
-    var s3Stat='<tr><td style="font-weight:700;">الحالة</td>';
+    var s3Blocks='';
     scenarios.forEach(function(s,i){
       var statusTxt=i===0?'الأفضل اقتصادياً':i===scenarios.length-1?'الأعلى تكلفة':'بديل جيد';
-      var savTxt=s.type==='current'?'خط الأساس':(s.saving>=0?'+'+f2Fmt(s.saving):f2Fmt(s.saving));
-      var pctTxt=s.type==='current'?'—':(s.saving>=0?'+'+s.savingPct.toFixed(1)+'%':s.savingPct.toFixed(1)+'%');
-      s3H+=f2ThTwoPart(s.name,statusTxt);
-      s3Rank+='<td style="text-align:center;font-weight:900;">'+(i+1)+'</td>';
-      s3Ann+='<td>'+(s.annual>0?f2Fmt(s.annual):'—')+'</td>';
-      s3Tot+='<td style="font-weight:700;">'+(s.total>0?f2Fmt(s.total):'—')+'</td>';
-      s3Unit+='<td>'+(s.perUnit>0?f2Fmt(s.perUnit):'—')+'</td>';
-      s3Sav+='<td style="font-weight:700;">'+savTxt+'</td>';
-      s3Pct+='<td style="text-align:center;font-weight:700;">'+pctTxt+'</td>';
-      s3Stat+='<td>'+statusTxt+'</td>';
+      var sub=s.type==='buy'?(bestMaint?bestMaint.name:''):s.type==='newlease'?(bestLease?bestLease.name:''):'خط الأساس';
+      s3Blocks+=f2ScenarioRankMiniTableHTML(s.name,sub,i+1,statusTxt,s.annual,s.total,s.perUnit,s.saving,s.savingPct,s.type==='current',curTotal,Y);
     });
-    body+='<table><thead><tr>'+s3H+'</tr></thead><tbody>'+s3Rank+'</tr>'+s3Ann+'</tr>'+s3Tot+'</tr>'+s3Unit+'</tr>'+s3Sav+'</tr>'+s3Pct+'</tr>'+s3Stat+'</tr></tbody></table>';
+    body+='<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">'+s3Blocks+'</div>';
   }
 
   var htmlOut='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'<\/title><style>'+css+'<\/style><\/head><body>'
@@ -11803,9 +11799,9 @@ function f2Word(){
   function newLeaseTCO(y){var t=0;for(var i=1;i<=y;i++)t+=blm*12*count*Math.pow(1+leaseGrowth,i-1);return t;}
   var buyTotal=buyTCO(Y), curTotal=curLeaseTCO(Y), newTotal=newLeaseTCO(Y);
   var buyAnnual=Y>0?buyTotal/Y:0, curAnnual=Y>0?curTotal/Y:0, newAnnual=Y>0?newTotal/Y:0;
-  var buyPerUnit=(count>0&&Y>0)?buyTotal/(count*Y):0;
-  var curPerUnit=(count>0&&Y>0)?curTotal/(count*Y):0;
-  var newPerUnit=(count>0&&Y>0)?newTotal/(count*Y):0;
+  var buyPerUnit=(count>0)?buyAnnual/count:0;
+  var curPerUnit=(count>0)?curAnnual/count:0;
+  var newPerUnit=(count>0)?newAnnual/count:0;
   var buyMaintTotal=bma*Y;
   var buySaving=curTotal>0&&buyTotal>0?curTotal-buyTotal:0;
   var newSaving=curTotal>0&&newTotal>0?curTotal-newTotal:0;
@@ -11904,21 +11900,17 @@ function f2Word(){
   if(buyTotal>0) s2Cols.push({main:'شراء الأسطول + أفضل صيانة',sub:bestMaint?bestMaint.name:'',annual:buyAnnual,total:buyTotal,perUnit:buyPerUnit,maintTotal:buyMaintTotal,saving:buySaving,savingPct:buySavingPct,isBase:false});
   if(newTotal>0) s2Cols.push({main:'تأجير جديد — أفضل عرض',sub:bestLease?bestLease.name:'',annual:newAnnual,total:newTotal,perUnit:newPerUnit,maintTotal:0,saving:newSaving,savingPct:newSavingPct,isBase:false});
   if(curTotal>0) s2Cols.push({main:'تمديد العقد الحالي',sub:'خط الأساس',annual:curAnnual,total:curTotal,perUnit:curPerUnit,maintTotal:0,saving:0,savingPct:0,isBase:true});
-  body+=f2ScenariosWideTableHTML(s2Cols,Y,curTotal);
+  body+=f2ScenariosSideBySideHTML(s2Cols,Y,curTotal);
 
   if(scenarios.length>0){
     body+='<h2>القسم الثالث — جدول مقارنة القرار</h2>';
-    var s3H='<th>المؤشر</th>',s3Rank='<tr><td style="font-weight:700;">الترتيب</td>',s3Ann='<tr><td style="font-weight:700;">التكلفة السنوية (ر.س)</td>',s3Tot='<tr><td style="font-weight:700;">إجمالي '+Y+' سنوات (ر.س)</td>',s3Unit='<tr><td style="font-weight:700;">متوسط تكلفة المركبة / سنة (ر.س)</td>',s3Sav='<tr><td style="font-weight:700;">مقدار الوفر (ر.س)</td>',s3Pct='<tr><td style="font-weight:700;">نسبة الوفر</td>',s3Stat='<tr><td style="font-weight:700;">الحالة</td>';
+    var s3Blocks='';
     scenarios.forEach(function(s,i){
       var statusTxt=i===0?'الأفضل اقتصادياً':i===scenarios.length-1?'الأعلى تكلفة':'بديل جيد';
-      var savTxt=s.type==='current'?'خط الأساس':(s.saving>=0?'+'+f2Fmt(s.saving):f2Fmt(s.saving));
-      var pctTxt=s.type==='current'?'—':(s.saving>=0?'+'+s.savingPct.toFixed(1)+'%':s.savingPct.toFixed(1)+'%');
-      s3H+=f2ThTwoPart(s.name,statusTxt);s3Rank+='<td style="text-align:center;font-weight:900;">'+(i+1)+'</td>';
-      s3Ann+='<td>'+(s.annual>0?f2Fmt(s.annual):'—')+'</td>';s3Tot+='<td style="font-weight:700;">'+(s.total>0?f2Fmt(s.total):'—')+'</td>';
-      s3Unit+='<td>'+(s.perUnit>0?f2Fmt(s.perUnit):'—')+'</td>';s3Sav+='<td style="font-weight:700;">'+savTxt+'</td>';
-      s3Pct+='<td style="text-align:center;font-weight:700;">'+pctTxt+'</td>';s3Stat+='<td>'+statusTxt+'</td>';
+      var sub=s.type==='buy'?(bestMaint?bestMaint.name:''):s.type==='newlease'?(bestLease?bestLease.name:''):'خط الأساس';
+      s3Blocks+=f2ScenarioRankMiniTableHTML(s.name,sub,i+1,statusTxt,s.annual,s.total,s.perUnit,s.saving,s.savingPct,s.type==='current',curTotal,Y);
     });
-    body+='<table><thead><tr>'+s3H+'</tr></thead><tbody>'+s3Rank+'</tr>'+s3Ann+'</tr>'+s3Tot+'</tr>'+s3Unit+'</tr>'+s3Sav+'</tr>'+s3Pct+'</tr>'+s3Stat+'</tr></tbody></table>';
+    body+='<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">'+s3Blocks+'</div>';
   }
 
   body+='</div>';
