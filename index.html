@@ -11741,12 +11741,8 @@ function f2PDF(reportTitle){
     +body
     +'<\/div><\/div>'
     +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>';
-  var blob=new Blob([htmlOut],{type:'text/html;charset=utf-8'});
-  var blobUrl=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=blobUrl;a.target='_blank';a.rel='noopener';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(blobUrl);},10000);
+  var W=window.open('','_blank');
+  W.document.write(htmlOut);W.document.close();
   toast('تم فتح PDF — اطبعه من المتصفح');
 }
 
@@ -11819,7 +11815,8 @@ function f2Word(){
   var BG=FORM_BG||'';
 
   var CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:landscape;}'
-    +'.bg-img{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
+    +'.page{position:relative;width:297mm;min-height:210mm;}'
+    +'.bg-img{position:absolute;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 14mm 12mm;}'
     +'h1{font-size:12px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}'
     +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}'
@@ -11832,7 +11829,7 @@ function f2Word(){
     +'div.WordSection1{page:WordSection1;}'
     +'@page WordSection1{size:29.7cm 21cm;margin:2.4cm 1.3cm 1.2cm 1.3cm;}';
 
-  var body='';
+  var body='<div class="page">';
   if(BG) body+='<img src="'+BG+'" class="bg-img">';
   body+='<div class="wrap"><h1>'+reportTitle.replace(/[<>&"]/g,'')+'</h1>';
   if(leaseEnd) body+='<div style="text-align:center;font-size:9px;font-weight:700;color:#000;margin:-6px 0 12px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'</div>';
@@ -11916,7 +11913,7 @@ function f2Word(){
     body+='<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">'+s3Blocks+'</div>';
   }
 
-  body+='</div>';
+  body+='</div></div>';
 
   var fullHTML='<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>'+CSS+'div.WordSection1{page:WordSection1;} @page WordSection1{size:29.7cm 21cm;margin:2.4cm 1.3cm 1.2cm 1.3cm;}</style></head><body class="WordSection1">'+body+'</body></html>';
   var blob=new Blob(['\ufeff'+fullHTML],{type:'application/msword;charset=utf-8'});
