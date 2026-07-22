@@ -11622,7 +11622,8 @@ function f2PDF(reportTitle){
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
 
   var css='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;direction:rtl;margin:0;padding:0;}'
-    +'.bg-img{position:fixed;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
+    +'.page{position:relative;width:297mm;min-height:210mm;}'
+    +'.bg-img{position:absolute;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 14mm 12mm;}'
     +'h1{font-size:12pt;font-weight:900;text-align:center;border-bottom:2.5px solid #000;padding-bottom:6px;margin-bottom:14px;color:#000;}'
     +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 10px;background:#2E9896;color:#fff;border-radius:3px;}'
@@ -11733,10 +11734,12 @@ function f2PDF(reportTitle){
   }
 
   var htmlOut='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'<\/title><style>'+css+'<\/style><\/head><body>'
+    +'<div class="page">'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
     +(leaseEnd?'<div style="text-align:center;font-size:9pt;font-weight:700;color:#000;margin:-8px 0 14px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'<\/div>':'')
     +body
+    +'<\/div><\/div>'
     +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>';
   var blob=new Blob([htmlOut],{type:'text/html;charset=utf-8'});
   var blobUrl=URL.createObjectURL(blob);
