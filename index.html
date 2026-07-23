@@ -2209,6 +2209,16 @@ async function initBudget(){
 // ── مساعد: يُعيد مفتاح الشهر للـ PO (YYYY-MM) مع دعم created_at كـ fallback ──
 // ملاحظة: POs الـ seed لسنة 2025 كلها تحمل تاريخ 2025-01-01 (تاريخ بيانات افتراضي)
 // لذا نعيد '2025' بدلاً من '2025-01' للتمييز، وفي الفلترة نعالجها كسنوية فقط
+// يُرجع صفوف أمر الشراء بأمان بغض النظر عن شكلها (نص JSON، أو مصفوفة مُحلَّلة مسبقاً من Supabase/JSONB، أو قيمة فاسدة)
+// بعض السجلات القادمة من Supabase (عمود JSONB) تُرجَع كمصفوفة جاهزة لا كنص، و JSON.parse على مصفوفة يفشل بصمت ويكسر التقرير كامل
+function poRowsOf(p){
+  var r = p && p.rows;
+  if(Array.isArray(r)) return r;
+  if(typeof r === 'string'){
+    try{ var parsed = JSON.parse(r||'[]'); return Array.isArray(parsed) ? parsed : []; }catch(e){ return []; }
+  }
+  return [];
+}
 function poMonthKey(p){
   var d=(p.date||'').trim();
   // تعرف على seed data لسنة 2025: تاريخها 2025-01-01 وid في نطاق الـ seed
@@ -2876,7 +2886,7 @@ function poEditById(i){
 
   // البنود
   var rows=[];
-  try{rows=JSON.parse(s.rows||'[]');}catch(e){}
+  try{rows=poRowsOf(s);}catch(e){}
   var tbody=document.getElementById('po-tbody');
   tbody.innerHTML='';
   rows.forEach(function(r,ri){
@@ -2996,6 +3006,9 @@ async function poSave(){
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
     renderPoSaved();
     toast(res?'تم الحفظ ✅':'تم الحفظ محلياً — تعذّر الاتصال بالخادم، سيُزامن لاحقاً ⚠️');
+    // أعد تعيين حقل التاريخ لليوم الحالي حتى لا يُستخدم تاريخ قديم بالخطأ بالأمر التالي
+    var poDateEl=document.getElementById('po-date');
+    if(poDateEl) poDateEl.value=new Date().toISOString().split('T')[0];
   }
 }
 
@@ -3027,7 +3040,7 @@ function renderPoSaved(){
       +'</div>';
     items.forEach(function(obj){
       var s=obj.s; var i=obj.i;
-      var tot=0;try{var rr=JSON.parse(s.rows||'[]');rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
+      var tot=0;try{var rr=poRowsOf(s);rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
       var totWithVat=(tot*1.15).toFixed(2);
       html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
         '<div class="saved-item-info">'+
@@ -3055,7 +3068,7 @@ function poExcel(){poExcelData({
   rows:poGetRows()
 });}
 
-function poExcelById(i){const s=poSaved[i];if(!s)return;poExcelData({...s,rows:JSON.parse(s.rows||'[]')});}
+function poExcelById(i){const s=poSaved[i];if(!s)return;poExcelData({...s,rows:poRowsOf(s)});}
 
 function poExcelData(d){
   const bin=atob(LPO_B64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
@@ -3111,7 +3124,7 @@ function poPrint(){poPrintData({
   sig3:document.getElementById('po-sig3')?.value||''
 });}
 
-function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:JSON.parse(s.rows||'[]')});}
+function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:poRowsOf(s)});}
 
 function poPrintData(d){
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
@@ -7261,7 +7274,7 @@ function buildSemiReport(){
   const sDeptItemMap={};sAllPC.forEach(e=>{const d=e.department||'أخرى';if(!sDeptItemMap[d])sDeptItemMap[d]={total:0,items:{}};sDeptItemMap[d].total+=parseFloat(e.amount)||0;sDeptItemMap[d].items[e.item_name]=(sDeptItemMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sTaameedSR=(typeof taameeds!=='undefined'?taameeds:[]).filter(t=>{const td=(t.date||'').substring(0,7);return months.some(m=>td===year+'-'+m);});
   const sTaameedTotalSR=sTaameedSR.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
-  const sPOVal2=sPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0);
+  const sPOVal2=sPO.reduce((s,p)=>{const r2=poRowsOf(p);const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0);
   const cmpDetSR=getCmpSavingsDetail();
   const totalCmpSavSR=cmpDetSR.reduce((s,d)=>s+d.saving,0);
   const cumSavStartSR=year+'-'+months[0]+'-01';
@@ -7346,7 +7359,7 @@ function exportSemiPDF(){
   const sExpForSum=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
-  const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const sPOVal=sPOList.reduce((s,p)=>{const r2=poRowsOf(p);return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const sActiveC=filterContractsForYear(year,parseInt(half));
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
@@ -7512,7 +7525,7 @@ function exportSemiWord(){
   const sExpForSum=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const sTotalSpent=sExpForSum.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPOList=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
-  const sPOVal=sPOList.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const sPOVal=sPOList.reduce((s,p)=>{const r2=poRowsOf(p);return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const sActiveC=filterContractsForYear(year,parseInt(half));
   const sTotalCM=sActiveC.reduce((s,c)=>s+(c.monthly||0),0);
   const sFmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
@@ -7618,7 +7631,7 @@ function exportSemiExcel(){
 
 function kpiPoValue(list){
   return list.reduce(function(s,p){
-    var rows=JSON.parse(p.rows||'[]');
+    var rows=poRowsOf(p);
     var v=rows.reduce(function(ss,r){
       var t=parseFloat(r.total)||0;
       if(t>0) return ss+t*1.15;
@@ -8997,7 +9010,7 @@ function buildPOTableHTML(poList){
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   let totalVal=0;
   const items=poList.map(p=>{
-    const r2=JSON.parse(p.rows||'[]');
+    const r2=poRowsOf(p);
     const val=r2.reduce((s,r)=>{
       const t=parseFloat(r.total)||0;
       if(t>0)return s+t*1.15;
@@ -9164,7 +9177,7 @@ function exportQuarterlyPDF(){
   const deptMap={};qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const monthBreak=months.map(m=>{const t=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
-  const qPOVal=qPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0);
+  const qPOVal=qPO.reduce((s,p)=>{const r2=poRowsOf(p);const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);return s+v;},0);
   const deptRows=deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topI||'—'}</td></tr>`;}).join('');
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -9210,7 +9223,7 @@ ${SIG_BQ}
 function buildItemSummaryHTML(expList, poList) {
   var totalExp = expList.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
   var totalPO = poList.reduce(function(s,p){
-    var rows=[];try{rows=JSON.parse(p.rows||'[]');}catch(e){}
+    var rows=[];try{rows=poRowsOf(p);}catch(e){}
     return s+rows.reduce(function(ss,r){
       var t=parseFloat(r.total)||0;
       if(t>0)return ss+t*1.15;
@@ -9234,7 +9247,7 @@ function exportMonthlyPDF(){
   const monthExp=expenses.filter(e=>expMonthKey(e)===(year+'-'+month));
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,year+'-'+month));
-  const monthPOVal=monthPO.reduce((s,p)=>{const r2=JSON.parse(p.rows||'[]');return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
+  const monthPOVal=monthPO.reduce((s,p)=>{const r2=poRowsOf(p);return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const cmpSavAmt=calcCmpSavings();
