@@ -200,6 +200,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
       مؤشرات الأداء
     </div>
+    <div class="sb-item" onclick="nav('pma')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      مساعد مدير المشتريات
+    </div>
     <div class="sb-item" onclick="nav('committee')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><rect x="1" y="3" width="15" height="18" rx="2"/></svg>
       لجنة فحص العروض
@@ -1542,6 +1546,18 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     </div>
   </div>
   <div id="kpi-content" style="margin-top:16px;"></div>
+</div>
+
+<!-- ══ مساعد مدير المشتريات ══ -->
+<div class="page" id="page-pma">
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>مساعد مدير المشتريات</h1><p>لوحة تنفيذية مبنية بالكامل من بيانات المنصة الحالية — عقود، طلبات شراء، مقارنات أسعار، وموردون</p></div></div>
+  <div class="card">
+    <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:12px;color:#64748B;">يحلّل المساعد كل البيانات المُدخلة بالمنصة لحظة الضغط على "تحديث التحليل" — لا يراقب شيئاً تلقائياً بالخلفية.</div>
+      <button class="btn btn-primary" onclick="buildPMA()">🔄 تحديث التحليل</button>
+    </div>
+  </div>
+  <div id="pma-content" style="margin-top:16px;"></div>
 </div>
 
 <!-- ══ لجنة فحص العروض ══ -->
@@ -7788,6 +7804,142 @@ function buildKPIReport(){
     +'</tbody></table></div></div>';
 }
 
+/* ══════════════ مساعد مدير المشتريات — لوحة تنفيذية من بيانات المنصة الحالية ══════════════ */
+
+function pmaFmt(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+
+function pmaStatCard(label,val,color){
+  return '<div class="card" style="text-align:center;padding:14px 6px;">'
+    +'<div style="font-size:22px;font-weight:900;color:'+(color||'#244062')+';">'+val+'</div>'
+    +'<div style="font-size:11px;color:#64748B;margin-top:4px;">'+label+'</div>'
+    +'</div>';
+}
+
+// يحدد توصية العقد بناءً على الأيام المتبقية وسجل الوفر
+function pmaContractRecommendation(c,daysLeft){
+  if(daysLeft===null) return {label:'راجع بيانات العقد — لا يوجد تاريخ انتهاء مسجّل',action:'مراجعة بيانات',urgency:'data'};
+  if(daysLeft<0) return {label:'⚠️ العقد منتهٍ فعلياً — قرار فوري: تجديد أو إنهاء',action:'قرار عاجل',urgency:'critical'};
+  if(daysLeft<=15) return {label:'عاجل جداً — تفاوض فوري على التجديد أو ابدأ إعادة منافسة',action:(c.saving>0?'تجديد فوري':'إعادة منافسة عاجلة'),urgency:'critical'};
+  if(daysLeft<=30) return {label:'ابدأ إجراءات التجديد أو المنافسة الآن',action:(c.saving>0?'تجديد بشروط محسّنة':'إعادة منافسة'),urgency:'critical'};
+  if(daysLeft<=60) return {label:'خطط للتجديد خلال الشهر القادم',action:'تخطيط تجديد',urgency:'warn'};
+  return {label:'راقب — ابدأ التحضير المبدئي',action:'مراقبة',urgency:'watch'};
+}
+
+function pmaUrgencyColor(u){return u==='critical'?'#C53030':u==='warn'?'#B7791F':u==='data'?'#7C3AED':'#276749';}
+
+function buildPMA(){
+  var el=document.getElementById('pma-content');if(!el)return;
+  var today=new Date();
+
+  // ── العقود الحرجة (خلال 90 يوم أو منتهية) ──
+  var contractRows=contracts.map(function(c){
+    var d=contractDaysLeft(c.end);
+    return {c:c,days:d,rec:pmaContractRecommendation(c,d)};
+  }).filter(function(x){return x.days===null || x.days<=90;})
+    .sort(function(a,b){
+      var av=a.days===null?9999:a.days, bv=b.days===null?9999:b.days;
+      return av-bv;
+    });
+  var critical30=contractRows.filter(function(x){return x.days!==null&&x.days>=0&&x.days<=30;}).length;
+  var critical60=contractRows.filter(function(x){return x.days!==null&&x.days>30&&x.days<=60;}).length;
+  var critical90=contractRows.filter(function(x){return x.days!==null&&x.days>60&&x.days<=90;}).length;
+  var expiredNow=contractRows.filter(function(x){return x.days!==null&&x.days<0;}).length;
+
+  // ── فرص التوفير (من مقارنات الأسعار المحفوظة) ──
+  var cmpOps=getCmpSavingsDetail();
+  var totalCmpSaving=cmpOps.reduce(function(s,d){return s+d.saving;},0);
+  var totalContractSaving=contracts.reduce(function(s,c){return s+(c.saving||0);},0);
+  var noSavingContracts=contracts.filter(function(c){return !(c.saving>0)&&(c.status==='active'||c.status==='expiring');});
+
+  // ── تركّز الموردين (مخاطرة الاعتماد على مورد واحد) ──
+  var vendorSpend={};
+  contracts.forEach(function(c){var v=c.vendor||'—';vendorSpend[v]=(vendorSpend[v]||0)+((c.annual||0)||(c.monthly||0)*12);});
+  poSaved.forEach(function(p){
+    var v=p.company||'—';
+    var val=poRowsOf(p).reduce(function(s,r){var t=parseFloat(r.total)||0;if(t>0)return s+t*1.15;var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return s+(r.vatType==='added'?b*1.15:b);},0);
+    vendorSpend[v]=(vendorSpend[v]||0)+val;
+  });
+  var totalVendorSpend=Object.values(vendorSpend).reduce(function(s,v){return s+v;},0);
+  var vendorSorted=Object.entries(vendorSpend).sort(function(a,b){return b[1]-a[1];});
+  var topVendorShare=totalVendorSpend>0&&vendorSorted.length?(vendorSorted[0][1]/totalVendorSpend*100):0;
+  var concentrationRisk=topVendorShare>=30&&vendorSorted.length>1;
+
+  // ── تحليل تنفيذي: أعلى بنود إنفاق وإدارات (من المصروفات النثرية) ──
+  var itemMap={};expenses.forEach(function(e){itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
+  var topItems=Object.entries(itemMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  var deptMap={};expenses.forEach(function(e){var d=e.department||'أخرى';deptMap[d]=(deptMap[d]||0)+(parseFloat(e.amount)||0);});
+  var deptSorted=Object.entries(deptMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  var highValueContracts=contracts.slice().sort(function(a,b){return (b.annual||0)-(a.annual||0);}).slice(0,5);
+
+  // ── مهام اليوم (مُولّدة تلقائياً من كل ما سبق) ──
+  var tasks=[];
+  contractRows.filter(function(x){return x.rec.urgency==='critical';}).forEach(function(x){
+    tasks.push({text:'راجع عقد '+(x.c.vendor||'—')+' ('+(x.c.type||'—')+') — '+(x.days<0?'منتهٍ منذ '+Math.abs(x.days)+' يوم':x.days+' يوم متبقي')+' — '+x.rec.action,urgency:'critical'});
+  });
+  if(concentrationRisk) tasks.push({text:'راجع الاعتماد على المورد "'+vendorSorted[0][0]+'" — يمثّل '+topVendorShare.toFixed(0)+'% من إجمالي الإنفاق مع الموردين',urgency:'warn'});
+  if(cmpOps.length) tasks.push({text:'اعتمد نتائج '+cmpOps.length+' مقارنة أسعار محفوظة بوفر محتمل '+pmaFmt(totalCmpSaving)+' ر.س',urgency:'watch'});
+  if(noSavingContracts.length) tasks.push({text:noSavingContracts.length+' عقد فعّال بدون سجل تفاوض على الوفر — فرصة لمراجعتها',urgency:'watch'});
+  if(!tasks.length) tasks.push({text:'لا توجد مهام عاجلة حالياً — كل العقود والبيانات ضمن النطاق الآمن',urgency:'ok'});
+
+  // ══ التجميع والعرض ══
+  var summaryCards=''
+    +pmaStatCard(critical30,'عقود حرجة (≤30 يوم)','#C53030')
+    +pmaStatCard(critical60,'تنتهي خلال 60 يوم','#B7791F')
+    +pmaStatCard(critical90,'تنتهي خلال 90 يوم','#0D7A8A')
+    +pmaStatCard(expiredNow,'عقود منتهية فعلياً','#C53030')
+    +pmaStatCard(cmpOps.length,'فرص توفير مكتشفة','#276749')
+    +pmaStatCard(pmaFmt(totalCmpSaving+totalContractSaving)+' ر.س','إجمالي الوفر (محقّق + محتمل)','#276749');
+
+  var tasksHTML=tasks.map(function(t){
+    var icon=t.urgency==='critical'?'🔴':t.urgency==='warn'?'🟡':t.urgency==='ok'?'🟢':'🔵';
+    return '<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span>'+icon+'</span><span>'+t.text+'</span></div>';
+  }).join('');
+
+  var contractsHTML=contractRows.length?('<table class="tbl"><thead><tr>'
+    +'<th>المورد</th><th>نوع العقد</th><th style="text-align:right;">القيمة السنوية</th><th style="text-align:center;">تاريخ الانتهاء</th><th style="text-align:center;">الأيام المتبقية</th><th>التوصية</th>'
+    +'</tr></thead><tbody>'
+    +contractRows.map(function(x){
+      var clr=pmaUrgencyColor(x.rec.urgency);
+      var daysTxt=x.days===null?'—':(x.days<0?'منتهٍ منذ '+Math.abs(x.days)+' يوم':x.days+' يوم');
+      return '<tr><td style="font-weight:700;">'+(x.c.vendor||'—')+'</td><td>'+(x.c.type||'—')+'</td>'
+        +'<td style="text-align:right;">'+pmaFmt(x.c.annual||0)+' ر.س</td>'
+        +'<td style="text-align:center;">'+(x.c.end||'—')+'</td>'
+        +'<td style="text-align:center;color:'+clr+';font-weight:700;">'+daysTxt+'</td>'
+        +'<td style="color:'+clr+';font-weight:600;">'+x.rec.label+'</td></tr>';
+    }).join('')
+    +'</tbody></table>') : '<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد عقود ضمن نطاق الـ 90 يوماً القادمة</div>';
+
+  var savingsHTML=cmpOps.length?('<table class="tbl"><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي</th><th style="text-align:right;">أفضل عرض</th><th style="text-align:right;">الوفر المحتمل</th></tr></thead><tbody>'
+    +cmpOps.map(function(d){return '<tr><td style="font-weight:600;">'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?pmaFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+pmaFmt(d.bestAnnual)+'</td><td style="text-align:right;font-weight:700;color:#276749;">'+pmaFmt(d.saving)+' ر.س</td></tr>';}).join('')
+    +'</tbody></table>') : '<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد مقارنات أسعار محفوظة بوفر محتمل حالياً</div>';
+
+  var riskHTML='';
+  if(concentrationRisk) riskHTML+='<div style="padding:10px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:8px;font-size:12px;color:#C53030;">⚠️ تركّز الاعتماد: المورد "'+vendorSorted[0][0]+'" يمثّل <b>'+topVendorShare.toFixed(0)+'%</b> من إجمالي إنفاق العقود وطلبات الشراء ('+pmaFmt(vendorSorted[0][1])+' ر.س) — مخاطرة اعتماد على مصدر واحد.</div>';
+  if(expiredNow>0) riskHTML+='<div style="padding:10px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:8px;font-size:12px;color:#C53030;">⚠️ يوجد <b>'+expiredNow+'</b> عقد تجاوز تاريخ انتهائه المسجّل بدون تحديث الحالة — يحتاج مراجعة فورية.</div>';
+  if(noSavingContracts.length>0) riskHTML+='<div style="padding:10px 12px;background:#FFF8E1;border-radius:8px;margin-bottom:8px;font-size:12px;color:#B7791F;">📋 <b>'+noSavingContracts.length+'</b> عقد فعّال بدون أي سجل تفاوض على الوفر.</div>';
+  if(!riskHTML) riskHTML='<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد مخاطر واضحة ضمن البيانات الحالية</div>';
+
+  var topItemsHTML=topItems.length?topItems.map(function(x){return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td></tr>';}).join(''):'<tr><td colspan="2" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
+  var deptHTML=deptSorted.length?deptSorted.map(function(x){return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td></tr>';}).join(''):'<tr><td colspan="2" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
+  var vendorHTML=vendorSorted.length?vendorSorted.slice(0,5).map(function(x){var pct=totalVendorSpend>0?(x[1]/totalVendorSpend*100).toFixed(1):'0';return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td><td style="text-align:center;">'+pct+'%</td></tr>';}).join(''):'<tr><td colspan="3" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
+  var highValHTML=highValueContracts.length?highValueContracts.map(function(c){return '<tr><td style="font-weight:600;">'+(c.vendor||'—')+'</td><td>'+(c.type||'—')+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(c.annual||0)+' ر.س</td></tr>';}).join(''):'<tr><td colspan="3" style="text-align:center;color:#94A3B8;">لا توجد عقود</td></tr>';
+
+  el.innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">'+summaryCards+'</div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>📋 مهام اليوم</h3></div><div class="card-body">'+tasksHTML+'</div></div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>⏰ العقود الحرجة (خلال 90 يوماً)</h3></div><div class="card-body" style="overflow-x:auto;">'+contractsHTML+'</div></div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>💰 فرص التوفير</h3></div><div class="card-body" style="overflow-x:auto;">'+savingsHTML+'</div></div>'
+    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>⚠️ المخاطر</h3></div><div class="card-body">'+riskHTML+'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">'
+      +'<div class="card"><div class="card-header"><h3>أعلى الموردين اعتماداً (عقود + PO)</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>المورد</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+vendorHTML+'</tbody></table></div></div>'
+      +'<div class="card"><div class="card-header"><h3>أعلى العقود قيمة</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>المورد</th><th>النوع</th><th style="text-align:right;">القيمة السنوية</th></tr></thead><tbody>'+highValHTML+'</tbody></table></div></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'
+      +'<div class="card"><div class="card-header"><h3>أعلى بنود الإنفاق</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+topItemsHTML+'</tbody></table></div></div>'
+      +'<div class="card"><div class="card-header"><h3>أعلى الإدارات إنفاقاً</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+deptHTML+'</tbody></table></div></div>'
+    +'</div>'
+    +'<div class="card" style="margin-top:14px;border:1px solid #E2E8F0;"><div class="card-body" style="font-size:11px;color:#64748B;">💡 هذه اللوحة تحليل لحظي من بيانات المنصة الحالية فقط. لبحث موردين بدلاء، رادار سوق، أو إعداد خطة تفاوض — اطلبها مني مباشرة بالمحادثة وسأنفذها فوراً.</div></div>';
+}
 var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
 function exportKPIPDF(){
