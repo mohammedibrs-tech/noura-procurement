@@ -91,9 +91,14 @@ function extractJSON(text) {
 
 export default async function handler(req, res) {
   // ── حماية الـ endpoint: لازم يجي من Vercel Cron أو بسر معروف ──
+  // يقبل السر إما كـ Header (Authorization: Bearer ...) وإما كـ query param (?secret=...)
+  // القبول بالـ query param مقصود لتسهيل الاختبار اليدوي من شريط عنوان المتصفح مباشرة
   if (CRON_SECRET) {
     const authHeader = req.headers['authorization'] || '';
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    const querySecret = req.query && req.query.secret;
+    const okHeader = authHeader === `Bearer ${CRON_SECRET}`;
+    const okQuery = querySecret === CRON_SECRET;
+    if (!okHeader && !okQuery) {
       return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
   }
