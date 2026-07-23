@@ -2159,11 +2159,15 @@ async function initBudget(){
   try {
     const sbExp = await sbGetAll('expenses');
     if(sbExp && sbExp.length > 0){
-      expenses = sbExp.map(function(e){
+      const sbMapped = sbExp.map(function(e){
         var dk = (e.expense_date||'').substring(0,7);
         if(dk.length===7) e = Object.assign({},e,{month_key:dk});
         return e;
       });
+      // دمج آمن: أي مصروف محلي لسه ما وصل للسيرفر (تأخير مزامنة/انقطاع اتصال) يبقى ظاهر ولا يُفقد
+      const sbIds = new Set(sbMapped.map(function(e){return String(e.id);}));
+      const localOnly = expenses.filter(function(e){return !sbIds.has(String(e.id));});
+      expenses = localOnly.concat(sbMapped);
       localStorage.setItem('expenses_cache', JSON.stringify(expenses));
       // ← أعد رسم الواجهة بعد جلب كل البيانات
       budgetCalcMonth();
@@ -2387,29 +2391,30 @@ async function expAdd(){
   };
 
   toast('جاري الحفظ...');
+  let res=null, insertFailed=false, failMsg='';
   try {
-    const res = await sbInsert('expenses', row);
-    if(res && Array.isArray(res) && res[0]){
-      expenses.unshift(res[0]);
-      localStorage.setItem('expenses_cache', JSON.stringify(expenses));
-      toast('تمت الإضافة بنجاح ✅');
-    } else {
-      toast('خطأ في الحفظ، حاول مرة أخرى', true);
-      return;
-    }
+    res = await sbInsert('expenses', row);
   } catch(e){
+    insertFailed = true;
+    failMsg = e.message || '';
     console.error('expAdd failed', e);
-    const msg = e.message || '';
-    if(msg.includes('NETWORK_ERROR') || msg.includes('Failed to fetch')){
-      toast('لا يوجد اتصال بالإنترنت أو Supabase محجوب', true);
-    } else if(msg.includes('42501') || msg.includes('permission') || msg.includes('policy')){
-      toast('خطأ في صلاحيات Supabase (RLS) — راجع إعدادات الجدول', true);
-    } else if(msg.includes('HTTP_4')){
-      toast('خطأ: ' + msg.substring(0,80), true);
-    } else {
-      toast('تعذر الحفظ — ' + (msg.substring(0,60)||'تحقق من الاتصال'), true);
-    }
-    return;
+  }
+  if(res && Array.isArray(res) && res[0]){
+    expenses.unshift(res[0]);
+  } else {
+    // احفظ محلياً حتى لو فشل الاتصال بالخادم — لا نفقد بيانات المستخدم أبداً
+    expenses.unshift(Object.assign({},row,{id:Date.now()}));
+  }
+  localStorage.setItem('expenses_cache', JSON.stringify(expenses));
+
+  if(res && Array.isArray(res) && res[0]){
+    toast('تمت الإضافة بنجاح ✅');
+  } else if(insertFailed && (failMsg.includes('NETWORK_ERROR')||failMsg.includes('Failed to fetch'))){
+    toast('تم الحفظ محلياً — لا يوجد اتصال بالإنترنت ⚠️', true);
+  } else if(insertFailed && (failMsg.includes('42501')||failMsg.includes('permission')||failMsg.includes('policy'))){
+    toast('تم الحفظ محلياً — خطأ صلاحيات Supabase (RLS) ⚠️', true);
+  } else {
+    toast('تم الحفظ محلياً — تعذر الاتصال بالخادم، سيُزامن لاحقاً ⚠️', true);
   }
 
   // تنظيف الحقول
@@ -7297,11 +7302,11 @@ function buildSemiReport(){
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><h3>المصروفات النثرية وطلبات الشراء PO</h3></div>
+      <div class="card-header"><h3>المصروفات النثرية وأوامر الشراء</h3></div>
       <div class="card-body">
         <table class="tbl"><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>
         <tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">${sExp.length} عملية</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
-        <tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">${sPO.length} طلب</td><td style="text-align:right;font-weight:700;">${fmt2(sPOVal2)}</td></tr>
+        <tr><td style="font-weight:700;">أوامر الشراء</td><td style="text-align:center;">${sPO.length} طلب</td><td style="text-align:right;font-weight:700;">${fmt2(sPOVal2)}</td></tr>
         <tr style="border-top:2px solid #244062;background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent+sPOVal2)}</td></tr>
         </tbody></table>
       </div>
@@ -7354,7 +7359,7 @@ function exportSemiPDF(){
   // جدول الملخص
   const summaryRows=`
     <tr><td>إجمالي المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
-    <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
+    <tr><td>إجمالي قيمة أوامر الشراء شامل الضريبة (${sPOList.length} أمر)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavPDF>0?sFmt(totalCmpSavPDF)+' ر.س':'—'}</td></tr>
     `;
@@ -7364,7 +7369,7 @@ function exportSemiPDF(){
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavPDF)+'</td><td></td></tr></tbody></table>';
   const expTaamTablePDF='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
     +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
-    +'<tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
+    +'<tr><td style="font-weight:700;">أوامر الشراء</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
     +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sPOVal)+'</td></tr>'
     +'</tbody></table>';
   // شهر بشهر
@@ -7384,14 +7389,14 @@ function exportSemiPDF(){
   html+=`<h1>${rsTitle2}</h1>`;
   html+='<h2>ملخص النصف '+halfName+' '+year+'</h2>';
   html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
-  html+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTablePDF+'</div><div><h2>المصروفات النثرية وطلبات الشراء PO</h2>'+expTaamTablePDF+'</div></div>';
+  html+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTablePDF+'</div><div><h2>المصروفات النثرية وأوامر الشراء</h2>'+expTaamTablePDF+'</div></div>';
   html+='<div class="two-col">';
   html+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
   html+='</div>';
   html+='<h2>المصروفات حسب الإدارة</h2>';
   html+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
-  html+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(sPOList);
+  html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(sPOList);
   html+=buildContractsTableHTML(sActiveC,sTotalCM);
   html+='<h2>التوفير التراكمي</h2>'+cumulativeSavingsTableHTML(cumSavRowsPDF);
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
@@ -7520,7 +7525,7 @@ function exportSemiWord(){
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   const summaryRows=`
     <tr><td>إجمالي المصروفات النثرية</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalSpent)} ر.س</td></tr>
-    <tr><td>إجمالي قيمة طلبات الشراء PO (${sPOList.length} طلب)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
+    <tr><td>إجمالي قيمة أوامر الشراء شامل الضريبة (${sPOList.length} أمر)</td><td style="text-align:right;font-weight:700;">${sFmt(sPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${sFmt(sTotalCM)} ر.س</td></tr>
     <tr><td>إجمالي وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${totalCmpSavW>0?sFmt(totalCmpSavW)+' ر.س':'—'}</td></tr>
     `;
@@ -7530,7 +7535,7 @@ function exportSemiWord(){
     +'<tr style="background:#d6e4f0;"><td colspan="3" style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">'+sFmt(totalCmpSavW)+'</td><td></td></tr></tbody></table>';
   const expTaamTableW='<table><thead><tr><th>البند</th><th style="text-align:center;">العدد</th><th style="text-align:right;">الإجمالي (ر.س)</th></tr></thead><tbody>'
     +'<tr><td style="font-weight:700;">المصروفات النثرية</td><td style="text-align:center;">'+sExpForSum.length+' عملية</td><td style="text-align:right;font-weight:700;">'+sFmt(sTotalSpent)+'</td></tr>'
-    +'<tr><td style="font-weight:700;">طلبات الشراء PO</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
+    +'<tr><td style="font-weight:700;">أوامر الشراء</td><td style="text-align:center;">'+sPOList.length+' طلب</td><td style="text-align:right;font-weight:700;">'+sFmt(sPOVal)+'</td></tr>'
     +'<tr style="background:#d6e4f0;"><td style="font-weight:900;">الإجمالي</td><td></td><td style="text-align:right;font-weight:900;">'+sFmt(sTotalSpent+sPOVal)+'</td></tr>'
     +'</tbody></table>';
   const sMonthRows=months.map(m=>{const t=sExpForSum.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return`<tr><td>${MONTHS_AR[m]||m}</td><td style="text-align:right;">${sFmt(t)}</td><td style="text-align:center;">${sTotalSpent>0?((t/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`;}).join('');
@@ -7556,14 +7561,14 @@ function exportSemiWord(){
   bodyHTML+=`<h1>${rsTitle2}</h1>`;
   bodyHTML+='<h2>ملخص النصف '+halfName+' '+year+'</h2>';
   bodyHTML+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
-  bodyHTML+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTableW+'</div><div><h2>المصروفات النثرية وطلبات الشراء PO</h2>'+expTaamTableW+'</div></div>';
+  bodyHTML+='<div class="two-col"><div><h2>تفاصيل وفر مقارنة الأسعار</h2>'+cmpSavTableW+'</div><div><h2>المصروفات النثرية وأوامر الشراء</h2>'+expTaamTableW+'</div></div>';
   bodyHTML+='<div class="two-col">';
   bodyHTML+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   bodyHTML+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
   bodyHTML+='</div>';
   bodyHTML+='<h2>المصروفات حسب الإدارة</h2>';
   bodyHTML+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
-  bodyHTML+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(sPOList);
+  bodyHTML+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(sPOList);
   bodyHTML+=buildContractsTableHTML(sActiveC,sTotalCM);
   bodyHTML+='<h2>التوفير التراكمي</h2>'+cumulativeSavingsTableHTML(cumSavRowsW);
   bodyHTML+='</div>';
@@ -7729,10 +7734,10 @@ function kpiCardHTML(label,unit,value){
 }
 
 function kpiSummaryRows(y,ratios){
-  return '<tr><td>إجمالي المصروفات النثرية + طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">'+kpiFmt(y.expTotal+y.poValue)+' ر.س</td></tr>'
+  return '<tr><td>إجمالي المصروفات النثرية + أوامر الشراء</td><td style="text-align:right;font-weight:700;">'+kpiFmt(y.expTotal+y.poValue)+' ر.س</td></tr>'
     +'<tr><td>إجمالي وفر مقارنة الأسعار ('+y.cmpCount+' مقارنة محقِّقة للوفر)</td><td style="text-align:right;font-weight:700;">'+(y.cmpSaving>0?kpiFmt(y.cmpSaving)+' ر.س':'—')+'</td></tr>'
     +'<tr><td>نسبة الوفر إلى إجمالي الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.savingsRate)+'</td></tr>'
-    +'<tr><td>نسبة مساهمة طلبات الشراء PO من الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.poShare)+'</td></tr>'
+    +'<tr><td>نسبة مساهمة أوامر الشراء من الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.poShare)+'</td></tr>'
     +'<tr><td>نسبة مساهمة المصروفات النثرية من الإنفاق</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.expShare)+'</td></tr>'
     +'<tr><td>متوسط قيمة أمر الشراء (PO)</td><td style="text-align:right;font-weight:700;">'+kpiFmt(ratios.avgPO)+' ر.س</td></tr>'
     +'<tr><td>نسبة تغطية البيانات الشهرية ('+ratios.activeMonths+' من 12 شهراً)</td><td style="text-align:right;font-weight:700;">'+kpiPctFmt(ratios.coverageRate)+'</td></tr>'
@@ -8543,7 +8548,7 @@ function exportAnnualPDF(){
   // جدول الملخص
   const summaryRowsA=`
     <tr><td>إجمالي المصروفات (${yExp.length} عملية)</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)} ر.س</td></tr>
-    <tr><td>طلبات الشراء PO</td><td style="text-align:right;font-weight:700;">${yPO.length} طلب</td></tr>
+    <tr><td>أوامر الشراء</td><td style="text-align:right;font-weight:700;">${yPO.length} طلب</td></tr>
     <tr><td>فواتير Petty Cash</td><td style="text-align:right;font-weight:700;">${yPCInvoices} فاتورة</td></tr>
     <tr><td>إجمالي العقود السنوي</td><td style="text-align:right;font-weight:700;">${fmt2(totalCMonthly*12)} ر.س</td></tr>
     <tr><td>وفر التفاوض من العقود</td><td style="text-align:right;font-weight:700;">${totalSaving>0?fmt2(totalSaving)+' ر.س':'—'}</td></tr>
@@ -8569,7 +8574,7 @@ function exportAnnualPDF(){
   html+='<table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+monthRowsA+'</tbody></table>';
   html+='<h2>أكثر الإدارات صرفاً</h2>';
   html+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+deptRowsA+'</tbody></table>';
-  html+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(yPO);
+  html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(yPO);
   html+=buildContractsTableHTML(activeC,totalCMonthly);
   if(expiringCA.length){
     html+='<h2>عقود تنتهي خلال 90 يوم</h2>';
@@ -8988,7 +8993,7 @@ function buildMonthlyReport(){
 
 
 function buildPOTableHTML(poList){
-  if(!poList||!poList.length) return '<p style="font-size:7.5px;color:#555;margin:3px 0;">لا توجد طلبات شراء في هذه الفترة.</p>';
+  if(!poList||!poList.length) return '<p style="font-size:7.5px;color:#555;margin:3px 0;">لا توجد أوامر شراء في هذه الفترة.</p>';
   const fmt=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   let totalVal=0;
   const items=poList.map(p=>{
@@ -9015,9 +9020,9 @@ function buildPOTableHTML(poList){
   </tr>`).join('');
   const mkTbl=(arr,si)=>`<table style="width:100%;border-collapse:collapse;margin-bottom:0;">
     <thead><tr>
-      <th style="${TH}text-align:center;">رقم PO</th>
+      <th style="${TH}text-align:center;">رقم أمر الشراء</th>
       <th style="${TH}">المورد</th>
-      <th style="${TH}text-align:right;">القيمة</th>
+      <th style="${TH}text-align:right;">القيمة (شامل الضريبة)</th>
     </tr></thead>
     <tbody>${mkRows(arr,si)}</tbody>
   </table>`;
@@ -9026,7 +9031,7 @@ function buildPOTableHTML(poList){
     <div>${mkTbl(right,half)}</div>
   </div>
   <div style="border-top:2px solid #000;padding:3px 0;text-align:center;">
-    <span style="font-size:9px;font-weight:700;">إجمالي طلبات الشراء (${poList.length} طلب شراء)</span>
+    <span style="font-size:9px;font-weight:700;">إجمالي أوامر الشراء شامل الضريبة (${poList.length} أمر شراء)</span>
     &nbsp;&nbsp;
     <span style="font-size:15px;font-weight:900;letter-spacing:0.5px;">${fmt(totalVal)}</span>
   </div>`;
@@ -9191,7 +9196,7 @@ function exportQuarterlyPDF(){
 <div class="sec-title">المصروفات حسب الإدارة</div>
 <table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead>
 <tbody>${deptRows}</tbody></table>
-<div class="sec-title">طلبات الشراء (PO)</div>
+<div class="sec-title">أوامر الشراء</div>
 ${buildPOTableHTML(qPO)}
 ${buildContractsTableHTML(activeC,totalCM)}
 <div class="sec-title">التوفير التراكمي</div>
@@ -9237,7 +9242,7 @@ function exportMonthlyPDF(){
   // جدول الملخص
   const summaryRows=`
     <tr><td>إجمالي المصروفات (${monthExp.length} عملية)</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
-    <tr><td>إجمالي قيمة طلبات الشراء PO (${monthPO.length} طلب)</td><td style="text-align:right;font-weight:700;">${fmt2(monthPOVal)} ر.س</td></tr>
+    <tr><td>إجمالي قيمة أوامر الشراء شامل الضريبة (${monthPO.length} أمر)</td><td style="text-align:right;font-weight:700;">${fmt2(monthPOVal)} ر.س</td></tr>
     <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${fmt2(totalCM)} ر.س</td></tr>
     <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAmt>0?fmt2(cmpSavAmt)+' ر.س':'—'}</td></tr>
     <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#000;">${fmt2(totalSpent+monthPOVal)} ر.س</td></tr>`;
@@ -9262,7 +9267,7 @@ function exportMonthlyPDF(){
   html+='<div><h2>المصروفات حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody><tfoot><tr><td colspan="3">الإجمالي</td><td style="text-align:right;">'+fmt2(totalSpent)+' ر.س</td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+topItemRowsM+'</tbody></table></div>';
   html+='</div>';
-  html+='<h2>طلبات الشراء (PO)</h2>'+buildPOTableHTML(monthPO);
+  html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(monthPO);
   html+=buildContractsTableHTML(activeC,totalCM);
   html+='<h2>التوفير التراكمي</h2>'+cumulativeSavingsTableHTML(cumSavRowsM);
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
