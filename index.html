@@ -152,7 +152,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     <div class="sb-label">المستندات</div>
     <div class="sb-item" onclick="nav('po')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      طلبات الشراء (PO)
+      أوامر الشراء
     </div>
     <div class="sb-item" onclick="nav('rfq')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -411,9 +411,9 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ PO ══ -->
 <div class="page" id="page-po">
-  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>طلبات الشراء (PO)</h1><p>Local Purchase Order</p></div></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>أوامر الشراء</h1><p>Local Purchase Order</p></div></div>
   <div class="card">
-    <div class="card-header"><h3>إنشاء طلب شراء جديد</h3></div>
+    <div class="card-header"><h3>إنشاء أمر شراء جديد</h3></div>
     <div class="card-body">
       <div class="section-title">بيانات التسليم</div>
       <div class="form-grid">
@@ -514,7 +514,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     </div>
   </div>
   <div class="card">
-    <div class="card-header"><h3>الطلبات المحفوظة</h3></div>
+    <div class="card-header"><h3>الأوامر المحفوظة</h3></div>
     <div class="card-body"><div class="saved-list" id="po-saved"></div></div>
   </div>
 </div>
@@ -2980,17 +2980,23 @@ async function poSave(){
     toast('تم حفظ التعديلات ✅');
   } else {
     // إضافة جديدة
-    const res=await sbInsert('orders',data);
+    let res=null;
+    try{
+      res=await sbInsert('orders',data);
+    }catch(err){
+      console.error('sbInsert(orders) failed — سيتم الحفظ محلياً بدلاً من فقدان البيانات:',err);
+    }
     if(res&&Array.isArray(res)&&res[0]){poSaved.unshift(res[0]);}
     else{poSaved.unshift({...data,id:Date.now()});}
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
-    renderPoSaved();toast('تم الحفظ ✅');
+    renderPoSaved();
+    toast(res?'تم الحفظ ✅':'تم الحفظ محلياً — تعذّر الاتصال بالخادم، سيُزامن لاحقاً ⚠️');
   }
 }
 
 function renderPoSaved(){
   var el=document.getElementById('po-saved');if(!el)return;
-  if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد طلبات محفوظة</div>';return;}
+  if(!poSaved.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:16px;">لا توجد أوامر محفوظة</div>';return;}
   // تجميع حسب السنة
   var byYear={};
   for(var i=0;i<poSaved.length;i++){
