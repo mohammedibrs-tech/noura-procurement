@@ -2410,7 +2410,8 @@ async function expAdd(){
     console.error('expAdd failed', e);
   }
   if(res && Array.isArray(res) && res[0]){
-    expenses.unshift(res[0]);
+    // لا نثق باستجابة الخادم بالكامل — نحافظ على البيانات اللي أدخلها المستخدم ونأخذ id من الخادم فقط
+    expenses.unshift(Object.assign({},row,{id:(res[0].id!=null?res[0].id:Date.now())}));
   } else {
     // احفظ محلياً حتى لو فشل الاتصال بالخادم — لا نفقد بيانات المستخدم أبداً
     expenses.unshift(Object.assign({},row,{id:Date.now()}));
@@ -3001,7 +3002,11 @@ async function poSave(){
     }catch(err){
       console.error('sbInsert(orders) failed — سيتم الحفظ محلياً بدلاً من فقدان البيانات:',err);
     }
-    if(res&&Array.isArray(res)&&res[0]){poSaved.unshift(res[0]);}
+    if(res&&Array.isArray(res)&&res[0]){
+      // لا نثق باستجابة الخادم بالكامل — أعمدة قد تكون فارغة/غير متطابقة بالمخطط تُفقد بصمت (مثل التاريخ)
+      // نحافظ على كل البيانات اللي أدخلها المستخدم فعلياً، ونأخذ من الخادم رقم المعرّف (id) فقط
+      poSaved.unshift(Object.assign({},data,{id:(res[0].id!=null?res[0].id:Date.now())}));
+    }
     else{poSaved.unshift({...data,id:Date.now()});}
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
     renderPoSaved();
@@ -8484,9 +8489,8 @@ function buildAnnualReport(){
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const cmpSavAnnual=calcCmpSavings();
+  const cmpSavAnnual=cumulativeSavingsRows(year+'-01-01',year+'-12-31').reduce((s,r)=>s+r.saving,0);
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
-  const cmpSavingsAmt=calcCmpSavings();
   const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
   const quarters=[
     {name:'الربع الأول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},
@@ -8547,7 +8551,7 @@ function exportAnnualPDF(){
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const cmpSavAnnual=calcCmpSavings();
+  const cmpSavAnnual=cumulativeSavingsRows(year+'-01-01',year+'-12-31').reduce((s,r)=>s+r.saving,0);
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
   const quarters=[{name:'ق١',months:['01','02','03']},{name:'ق٢',months:['04','05','06']},{name:'ق٣',months:['07','08','09']},{name:'ق٤',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{...q,total:t};});
   const deptMap={};yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
@@ -9170,7 +9174,8 @@ function exportQuarterlyPDF(){
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
-  const cmpSavAmtQ=calcCmpSavings();
+  const qLastDayForCmp=new Date(parseInt(year),parseInt(months[months.length-1]),0).getDate();
+  const cmpSavAmtQ=cumulativeSavingsRows(year+'-'+months[0]+'-01',year+'-'+months[months.length-1]+'-'+String(qLastDayForCmp).padStart(2,'0')).reduce((s,r)=>s+r.saving,0);
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const itemMap={};qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
@@ -9250,7 +9255,8 @@ function exportMonthlyPDF(){
   const monthPOVal=monthPO.reduce((s,p)=>{const r2=poRowsOf(p);return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
   const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
-  const cmpSavAmt=calcCmpSavings();
+  const monthLastDayForCmp=new Date(parseInt(year),parseInt(month),0).getDate();
+  const cmpSavAmt=cumulativeSavingsRows(year+'-'+month+'-01',year+'-'+month+'-'+String(monthLastDayForCmp).padStart(2,'0')).reduce((s,r)=>s+r.saving,0);
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2});
   // جدول الملخص
   const summaryRows=`
