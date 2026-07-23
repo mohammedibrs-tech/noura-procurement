@@ -7925,7 +7925,8 @@ function buildPMA(){
   var highValHTML=highValueContracts.length?highValueContracts.map(function(c){return '<tr><td style="font-weight:600;">'+(c.vendor||'—')+'</td><td>'+(c.type||'—')+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(c.annual||0)+' ر.س</td></tr>';}).join(''):'<tr><td colspan="3" style="text-align:center;color:#94A3B8;">لا توجد عقود</td></tr>';
 
   el.innerHTML=
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">'+summaryCards+'</div>'
+    '<div id="pma-agent-run" style="margin-bottom:14px;"></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">'+summaryCards+'</div>'
     +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>📋 مهام اليوم</h3></div><div class="card-body">'+tasksHTML+'</div></div>'
     +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>⏰ العقود الحرجة (خلال 90 يوماً)</h3></div><div class="card-body" style="overflow-x:auto;">'+contractsHTML+'</div></div>'
     +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>💰 فرص التوفير</h3></div><div class="card-body" style="overflow-x:auto;">'+savingsHTML+'</div></div>'
@@ -7938,7 +7939,55 @@ function buildPMA(){
       +'<div class="card"><div class="card-header"><h3>أعلى بنود الإنفاق</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+topItemsHTML+'</tbody></table></div></div>'
       +'<div class="card"><div class="card-header"><h3>أعلى الإدارات إنفاقاً</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+deptHTML+'</tbody></table></div></div>'
     +'</div>'
-    +'<div class="card" style="margin-top:14px;border:1px solid #E2E8F0;"><div class="card-body" style="font-size:11px;color:#64748B;">💡 هذه اللوحة تحليل لحظي من بيانات المنصة الحالية فقط. لبحث موردين بدلاء، رادار سوق، أو إعداد خطة تفاوض — اطلبها مني مباشرة بالمحادثة وسأنفذها فوراً.</div></div>';
+    +'<div class="card" style="margin-top:14px;border:1px solid #E2E8F0;"><div class="card-body" style="font-size:11px;color:#64748B;">💡 الأقسام أعلاه تحليل لحظي من بيانات المنصة الحالية. لبحث موردين بدلاء، رادار سوق، أو إعداد خطة تفاوض بالإنترنت — اطلبها مني مباشرة بالمحادثة وسأنفذها فوراً، أو فعّل الوكيل التلقائي اليومي (راجع ملف الإعداد المرفق) ليضيفها تلقائياً بقسم "آخر تحليل تلقائي" أعلى الصفحة.</div></div>';
+  loadPMAAgentRun();
+}
+
+// يجلب آخر نتيجة محفوظة من الوكيل التلقائي (Agent) اللي يشتغل يومياً بالخلفية عبر Vercel Cron
+// المنصة هنا لا تنفّذ أي بحث بنفسها — فقط تعرض آخر ما حفظه الوكيل بجدول procurement_agent_runs
+async function loadPMAAgentRun(){
+  var box=document.getElementById('pma-agent-run');
+  if(!box) return;
+  try{
+    var res=await fetch(SB+'/rest/v1/procurement_agent_runs?select=*&order=run_at.desc&limit=1',{
+      headers:{apikey:SK,Authorization:'Bearer '+SK}
+    });
+    if(!res.ok){
+      // الجدول غير موجود بعد أو خطأ اتصال — ما نعرض شي مزعج، فقط ملاحظة هادئة
+      box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 الوكيل التلقائي اليومي غير مفعّل بعد على هذا المشروع. راجع ملف "إعداد الوكيل" لتفعيله.</div></div>';
+      return;
+    }
+    var rows=await res.json();
+    if(!rows||!rows.length){
+      box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 الوكيل التلقائي مُفعّل لكن لم يشتغل بعد — أول نتيجة هتظهر هنا بعد أول تشغيل مجدول.</div></div>';
+      return;
+    }
+    var run=rows[0];
+    var runDate=new Date(run.run_at).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});
+    if(run.status==='error'){
+      box.innerHTML='<div class="card" style="border:1px solid #C53030;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">🤖 آخر تحليل تلقائي — '+runDate+' (فشل)</h3></div><div class="card-body" style="font-size:12px;color:#C53030;">'+(run.error||'خطأ غير معروف')+'</div></div>';
+      return;
+    }
+    var critList=(run.critical_contracts||[]);
+    var suppList=(run.supplier_suggestions||[]);
+    var suppHTML=suppList.length?suppList.map(function(s){
+      var alts=(s.alternatives||[]).map(function(a){return '<li><b>'+(a.name||'—')+'</b>'+(a.website?' — <a href="'+a.website+'" target="_blank" rel="noopener">'+a.website+'</a>':'')+(a.reason?'<br><span style="color:#64748B;">'+a.reason+'</span>':'')+'</li>';}).join('');
+      return '<div style="margin-bottom:10px;padding:8px 12px;background:#F8FAFB;border-radius:8px;">'
+        +'<div style="font-weight:700;font-size:12px;margin-bottom:4px;">بديل لعقد: '+(s.contract_vendor||'—')+' ('+s.days_left+' يوم متبقي)</div>'
+        +(alts?('<ul style="margin:0;padding-right:18px;font-size:11px;">'+alts+'</ul>'):'<div style="font-size:11px;color:#C53030;">'+(s.error||'لا توجد نتائج')+'</div>')
+        +'</div>';
+    }).join(''):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
+
+    box.innerHTML='<div class="card" style="border:1px solid #2E9896;">'
+      +'<div class="card-header" style="background:#EBF8FA;"><h3 style="color:#0D7A8A;">🤖 آخر تحليل تلقائي — '+runDate+'</h3></div>'
+      +'<div class="card-body">'
+      +(run.summary?('<p style="font-size:12px;margin-bottom:12px;line-height:1.7;">'+run.summary+'</p>'):'')
+      +'<div style="font-weight:700;font-size:12px;margin-bottom:8px;">فحص الوكيل '+critList.length+' عقد حرج، وبحث عن بدائل لأعلى '+suppList.length+' منها:</div>'
+      +suppHTML
+      +'</div></div>';
+  }catch(e){
+    box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 تعذّر تحميل نتائج الوكيل التلقائي حالياً.</div></div>';
+  }
 }
 var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
