@@ -156,7 +156,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     </div>
     <div class="sb-item" onclick="nav('rfq')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      عروض الأسعار (RFQ)
+      طلبات عروض الأسعار (RFQ)
     </div>
     <div class="sb-item" onclick="nav('dn')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
@@ -525,7 +525,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
 <!-- ══ RFQ ══ -->
 <div class="page" id="page-rfq">
-  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>طلبات عرض السعر (RFQ)</h1><p>Request For Quotation</p></div></div>
+  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>طلبات عروض الأسعار (RFQ)</h1><p>Request For Quotation</p></div></div>
 
   <!-- ══ فورم إنشاء الطلب ══ -->
   <div class="card">
@@ -8077,7 +8077,7 @@ async function loadPMAAgentRun(){
     var altRows=[];
     suppList.forEach(function(s){
       if(s.error){
-        altRows.push('<tr><td style="font-weight:700;">'+(s.contract_vendor||'—')+'</td><td colspan="3" style="color:#C53030;">'+s.error+'</td></tr>');
+        altRows.push('<tr><td style="font-weight:700;">'+(s.contract_vendor||'—')+'</td><td colspan="5" style="color:#C53030;">'+s.error+'</td></tr>');
         return;
       }
       (s.alternatives||[]).forEach(function(a,idx){
@@ -8085,11 +8085,13 @@ async function loadPMAAgentRun(){
           +(idx===0?'<td style="font-weight:700;" rowspan="'+(s.alternatives.length)+'">'+(s.contract_vendor||'—')+' <span style="color:#94A3B8;font-weight:400;">('+s.days_left+' يوم)</span></td>':'')
           +'<td style="font-weight:600;">'+(a.name||'—')+'</td>'
           +'<td>'+(a.website?('<a href="'+a.website+'" target="_blank" rel="noopener" style="color:#0D7A8A;">'+a.website+'</a>'):'—')+'</td>'
+          +'<td style="font-size:11px;white-space:nowrap;">'+(a.phone||'—')+'</td>'
+          +'<td style="font-size:11px;white-space:nowrap;">'+(a.email||'—')+'</td>'
           +'<td style="font-size:11px;color:#64748B;">'+(a.reason||'—')+'</td>'
           +'</tr>');
       });
     });
-    var altTbl=altRows.length?('<table class="tbl"><thead><tr><th>العقد الحالي</th><th>المورد البديل</th><th>الموقع</th><th>سبب الترشيح</th></tr></thead><tbody>'+altRows.join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
+    var altTbl=altRows.length?('<table class="tbl"><thead><tr><th>العقد الحالي</th><th>المورد البديل</th><th>الموقع</th><th>الهاتف</th><th>البريد الإلكتروني</th><th>سبب الترشيح</th></tr></thead><tbody>'+altRows.join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
 
     // جدول 3: ملاحظات السوق
     var mktTbl=mktList.length?('<table class="tbl"><thead><tr><th>المورد المرتبط</th><th>ملاحظة السوق</th></tr></thead><tbody>'
@@ -8100,9 +8102,10 @@ async function loadPMAAgentRun(){
     var rfqTbl='';
     if(rfqList.length){
       rfqTbl='<div class="section-title" style="margin-top:16px;">📋 طلبات عروض الأسعار المفتوحة</div>'
-        +'<table class="tbl"><thead><tr><th>الصنف المطلوب</th><th>الموردون المرسل لهم</th><th>نطاق السعر بالسوق</th><th>مورد إضافي مقترح</th></tr></thead><tbody>'
+        +'<table class="tbl"><thead><tr><th>الصنف المطلوب</th><th>الموردون المرسل لهم</th><th>نطاق السعر بالسوق</th><th>مورد إضافي مقترح</th><th>الهاتف</th><th>البريد الإلكتروني</th></tr></thead><tbody>'
         +rfqList.map(function(r){
-          return '<tr><td style="font-weight:700;">'+(r.item||'—')+'</td><td style="font-size:11px;">'+((r.sent_to||[]).join('، ')||'—')+'</td><td>'+(r.market_price_range||'—')+'</td><td style="font-size:11px;">'+(r.suggested_vendor?(r.suggested_vendor.name+(r.suggested_vendor.email?' ('+r.suggested_vendor.email+')':'')):'—')+'</td></tr>';
+          var sv=r.suggested_vendor||{};
+          return '<tr><td style="font-weight:700;">'+(r.item||'—')+'</td><td style="font-size:11px;">'+((r.sent_to||[]).join('، ')||'—')+'</td><td>'+(r.market_price_range||'—')+'</td><td style="font-size:11px;">'+(sv.name||'—')+'</td><td style="font-size:11px;white-space:nowrap;">'+(sv.phone||'—')+'</td><td style="font-size:11px;white-space:nowrap;">'+(sv.email||'—')+'</td></tr>';
         }).join('')
         +'</tbody></table>';
     }
