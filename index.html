@@ -3386,17 +3386,19 @@ function rfqSave(){
 async function rfqSyncAllToSupabase(){
   if(!rfqSaved.length){toast('لا توجد طلبات محفوظة للمزامنة',true);return;}
   toast('⏳ جاري مزامنة '+rfqSaved.length+' طلب مع قاعدة البيانات...');
-  var ok=0,fail=0;
+  var ok=0,fail=0,lastErr='';
   for(const r of rfqSaved){
     try{
       await sbInsert('procurement_rfq',{rfq_id:r.id,data:JSON.stringify(r)});
       ok++;
     }catch(e){
       fail++;
+      lastErr=e.message||String(e);
+      console.error('rfqSyncAllToSupabase failed for rfq id='+r.id+':',e);
     }
   }
   if(fail===0) toast('✅ تمت مزامنة '+ok+' طلب بنجاح — الوكيل يقدر يشوفها الحين');
-  else toast('تمت مزامنة '+ok+' طلب، وفشل '+fail+' — تحقق من الاتصال',true);
+  else toast('تمت مزامنة '+ok+' طلب، وفشل '+fail+' — الخطأ: '+lastErr.substring(0,150),true);
 }
 // يبني رابط تركيب رسالة جاهزة (مرسل ومحتوى) لمورد معيّن حسب بيانات طلب عرض السعر
 function rfqBuildMailto(rfq,vendor){
