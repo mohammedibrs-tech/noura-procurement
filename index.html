@@ -578,7 +578,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
   <!-- ══ الطلبات المحفوظة ══ -->
   <div class="card">
-    <div class="card-header"><h3>الطلبات المحفوظة</h3></div>
+    <div class="card-header"><h3>الطلبات المحفوظة</h3><button class="btn btn-gray btn-sm" onclick="rfqSyncAllToSupabase()" title="ارفع الطلبات القديمة اللي محفوظة محلياً فقط لقاعدة البيانات، حتى يقدر الوكيل التلقائي يشوفها">🔄 مزامنة مع الوكيل</button></div>
     <div class="card-body"><div class="saved-list" id="rfq-saved"></div></div>
   </div>
 
@@ -3380,6 +3380,23 @@ function rfqSave(){
   document.getElementById('rfq-notes').value='';
   var vtbody=document.getElementById('rfq-vendors-tbody');
   if(vtbody){vtbody.innerHTML='<tr><td>1</td><td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';rfqVendorRows=1;}
+}
+// مزامنة لمرة واحدة: يرفع كل طلبات عروض الأسعار المحفوظة محلياً (اللي كانت قبل تفعيل المزامنة التلقائية) لقاعدة البيانات
+// حتى يقدر الوكيل التلقائي يشوفها ويبحث عنها
+async function rfqSyncAllToSupabase(){
+  if(!rfqSaved.length){toast('لا توجد طلبات محفوظة للمزامنة',true);return;}
+  toast('⏳ جاري مزامنة '+rfqSaved.length+' طلب مع قاعدة البيانات...');
+  var ok=0,fail=0;
+  for(const r of rfqSaved){
+    try{
+      await sbInsert('procurement_rfq',{rfq_id:r.id,data:JSON.stringify(r)});
+      ok++;
+    }catch(e){
+      fail++;
+    }
+  }
+  if(fail===0) toast('✅ تمت مزامنة '+ok+' طلب بنجاح — الوكيل يقدر يشوفها الحين');
+  else toast('تمت مزامنة '+ok+' طلب، وفشل '+fail+' — تحقق من الاتصال',true);
 }
 // يبني رابط تركيب رسالة جاهزة (مرسل ومحتوى) لمورد معيّن حسب بيانات طلب عرض السعر
 function rfqBuildMailto(rfq,vendor){
