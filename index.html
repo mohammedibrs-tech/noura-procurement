@@ -573,8 +573,24 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
         </tbody>
       </table>
       <button class="btn btn-gray btn-sm" onclick="rfqAddRow()">+ إضافة صف</button>
+
+      <div class="section-title" style="margin-top:16px;">الموردون المستلمون (سيصلهم طلب عرض السعر بالبريد الإلكتروني تلقائياً عند الحفظ)</div>
+      <table class="tbl" style="margin-bottom:8px;">
+        <thead><tr><th style="width:8%;">م</th><th>اسم المورد</th><th>البريد الإلكتروني</th><th style="width:8%;"></th></tr></thead>
+        <tbody id="rfq-vendors-tbody">
+          <tr>
+            <td>1</td>
+            <td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td>
+            <td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td>
+            <td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-gray btn-sm" onclick="rfqAddVendorRow()">+ إضافة مورد</button>
+
       <div class="actions">
         <button class="btn btn-primary" onclick="rfqSave()">💾 حفظ الطلب</button>
+        <div style="font-size:11px;color:#64748B;margin-top:4px;">بعد الحفظ، بتلقى زر "افتح البريد" لكل مورد أضفته — يفتح لك رسالة جاهزة بتفاصيل الطلب، وتضغط إرسال من بريدك مباشرة.</div>
         <button class="btn btn-red" onclick="rfqPrint()">🖨️ طباعة / PDF</button>
       </div>
     </div>
@@ -3323,12 +3339,39 @@ function rfqGetRows(){
     notes:tr.querySelector('.rfq-notes')?.value||''
   }));
 }
+var rfqVendorRows=1;
+function rfqAddVendorRow(){
+  rfqVendorRows++;
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td>'+rfqVendorRows+'</td><td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
+  document.getElementById('rfq-vendors-tbody').appendChild(tr);
+}
+function rfqDelVendorRow(btn){btn.closest('tr').remove();}
+// لو المورد موجود بقائمة الموردين وعنده إيميل محفوظ، عبّيه تلقائياً (بدون ما يستبدل قيمة كتبها المستخدم يدوياً)
+function rfqAutoFillVendorEmail(nameInput){
+  var name=nameInput.value.trim();
+  if(!name)return;
+  var row=nameInput.closest('tr');if(!row)return;
+  var emailInput=row.querySelector('.rfq-vendor-email');
+  if(!emailInput||emailInput.value.trim())return;
+  var sup=suppliers.find(function(s){return (s.name||'').trim()===name;});
+  if(sup&&sup.email)emailInput.value=sup.email;
+}
+function rfqGetVendors(){
+  return Array.from(document.querySelectorAll('#rfq-vendors-tbody tr')).map(function(tr){
+    return {
+      name:tr.querySelector('.rfq-vendor-name')?.value.trim()||'',
+      email:tr.querySelector('.rfq-vendor-email')?.value.trim()||''
+    };
+  }).filter(function(v){return v.name&&v.email;});
+}
 function rfqSave(){
   const co=document.getElementById('rfq-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
   const ref=document.getElementById('rfq-ref-num').value||rfqGenRef();
   const expected=parseInt(document.getElementById('rfq-expected-count').value)||3;
   const existingIdx=rfqSaved.findIndex(r=>r.refNum===ref);
+  const vendors=rfqGetVendors();
   const data={
     id:existingIdx>=0?rfqSaved[existingIdx].id:Date.now(),
     refNum:ref,company:co,
@@ -3336,6 +3379,7 @@ function rfqSave(){
     notes:document.getElementById('rfq-notes').value,
     expectedCount:expected,
     rows:rfqGetRows(),
+    vendors:vendors,
     quotes:existingIdx>=0?(rfqSaved[existingIdx].quotes||[]):[],
     type:existingIdx>=0?rfqSaved[existingIdx].type:null,
     status:'open'
@@ -3344,9 +3388,39 @@ function rfqSave(){
   else rfqSaved.unshift(data);
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
   renderRfqSaved();
-  toast('تم حفظ الطلب — '+ref);
+  toast(vendors.length?'تم حفظ الطلب — افتح البريد لكل مورد من القائمة أدناه ✉️':'تم حفظ الطلب — '+ref);
   rfqOpenQuotes(data.id);
   setTimeout(()=>{const el=document.getElementById('rfq-ref-num');if(el)el.value=rfqGenRef();},300);
+}
+// يبني نص بريد جاهز (مرسل ومحتوى) لمورد معيّن حسب بيانات طلب عرض السعر
+function rfqBuildMailto(rfq,vendor){
+  var subject='طلب عرض سعر'+(rfq.refNum?' - '+rfq.refNum:'');
+  var lines=[];
+  lines.push('السادة / '+(vendor.name||'')+' المحترمين،');
+  lines.push('');
+  lines.push('نأمل التكرم بتزويدنا بعرض سعر للأصناف التالية:');
+  lines.push('');
+  (rfq.rows||[]).forEach(function(r,i){
+    lines.push((i+1)+'. '+(r.item||'')+' — الكمية: '+(r.qty||'')+(r.notes?(' — ملاحظات: '+r.notes):''));
+  });
+  lines.push('');
+  if(rfq.notes) lines.push('تفاصيل إضافية: '+rfq.notes+'\n');
+  lines.push('تاريخ الطلب: '+(rfq.date||'—'));
+  lines.push('الجهة الطالبة: '+(rfq.company||'—'));
+  lines.push('');
+  lines.push('مع الشكر والتقدير');
+  var body=lines.join('\n');
+  return 'mailto:'+vendor.email+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+// يفتح تطبيق/صفحة البريد الافتراضية عند المستخدم مع رسالة جاهزة لمورد معيّن — يبقى الإرسال الفعلي بضغطة المستخدم
+function rfqOpenMailto(rfqId,vendorIdx){
+  var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqId);});
+  if(!rfq||!rfq.vendors||!rfq.vendors[vendorIdx])return;
+  var vendor=rfq.vendors[vendorIdx];
+  var url=rfqBuildMailto(rfq,vendor);
+  var a=document.createElement('a');
+  a.href=url;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function rfqOpenQuotes(id){
   const rfq=rfqSaved.find(r=>String(r.id)===String(id));
@@ -3749,12 +3823,18 @@ function renderRfqSaved(){
     var bar='<div style="display:flex;gap:4px;margin-top:4px;">';
     for(var p=0;p<qTotal;p++)bar+='<div style="width:18px;height:6px;border-radius:3px;background:'+(p<qDone?'#1DA9BD':'#E2E8F0')+'"></div>';
     bar+='</div>';
+    var vendorBtns='';
+    if(s.vendors&&s.vendors.length){
+      vendorBtns='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'+s.vendors.map(function(v,vi){
+        return '<button class="btn btn-sm" style="background:#EBF8FA;color:#0D7A8A;border:1px solid #BEE3E8;" onclick="rfqOpenMailto(\''+s.id+'\','+vi+')">✉️ افتح بريد لـ '+(v.name||v.email)+'</button>';
+      }).join('')+'</div>';
+    }
     html+='<div class="saved-item" style="border-right:3px solid '+(isComplete?'#276749':'#1DA9BD')+';">'+
       '<div class="saved-item-info">'+
         '<strong style="color:var(--primary);">'+(s.refNum||'RFQ')+'</strong> '+typeBadge+
         '<strong> — '+(s.company||'')+'</strong>'+
         '<span style="color:var(--sub);font-size:11px;display:block;">'+(s.date||'')+(s.rows&&s.rows.length?' | '+s.rows.length+' بنود':'')+'</span>'+
-        '<span style="font-size:10px;color:var(--sub);">العروض: '+qDone+'/'+qTotal+'</span>'+bar+
+        '<span style="font-size:10px;color:var(--sub);">العروض: '+qDone+'/'+qTotal+'</span>'+bar+vendorBtns+
       '</div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-primary btn-sm" onclick="rfqOpenQuotes(\''+s.id+'\')">📥 العروض</button>'+
@@ -3774,6 +3854,8 @@ function rfqEditHeader(i){
   document.getElementById('rfq-expected-count').value=String(s.expectedCount||3);
   const tbody=document.getElementById('rfq-tbody');
   if(tbody){tbody.innerHTML='';rfqRows=0;(s.rows||[]).forEach(r=>{rfqRows++;const tr=document.createElement('tr');tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" value="${r.item||''}"></td><td><input class="rfq-qty" value="${r.qty||1}" style="width:60px;"></td><td><input class="rfq-notes" value="${r.notes||''}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;tbody.appendChild(tr);});}
+  const vtbody=document.getElementById('rfq-vendors-tbody');
+  if(vtbody){vtbody.innerHTML='';rfqVendorRows=0;((s.vendors&&s.vendors.length)?s.vendors:[{name:'',email:''}]).forEach(function(v){rfqVendorRows++;var tr=document.createElement('tr');tr.innerHTML='<td>'+rfqVendorRows+'</td><td><input class="rfq-vendor-name" list="suppliers-datalist" value="'+(v.name||'')+'" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" value="'+(v.email||'')+'"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';vtbody.appendChild(tr);});}
   document.getElementById('rfq-co').scrollIntoView({behavior:'smooth'});
   toast('✏️ وضع تعديل بيانات الطلب');
 }
