@@ -3371,6 +3371,8 @@ function rfqSave(){
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
   renderRfqSaved();
   toast('تم حفظ الطلب — اضغط زر "إرسال بالبريد" لكل مورد بالقائمة أدناه ✉️');
+  // مزامنة مع Supabase (لا تعطّل الحفظ المحلي أبداً مهما صار بالاتصال) — يحتاجها الوكيل التلقائي ليقرأ الطلبات المفتوحة
+  sbInsert('procurement_rfq',{rfq_id:data.id,data:JSON.stringify(data)}).catch(()=>{});
   // تنظيف الفورم لطلب جديد
   document.getElementById('rfq-co').value='';
   document.getElementById('rfq-item').value='';
@@ -8025,7 +8027,6 @@ async function loadPMAAgentRun(){
       headers:{apikey:SK,Authorization:'Bearer '+SK}
     });
     if(!res.ok){
-      // الجدول غير موجود بعد أو خطأ اتصال — ما نعرض شي مزعج، فقط ملاحظة هادئة
       box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 الوكيل التلقائي اليومي غير مفعّل بعد على هذا المشروع. راجع ملف "إعداد الوكيل" لتفعيله.</div></div>';
       return;
     }
@@ -8042,22 +8043,64 @@ async function loadPMAAgentRun(){
     }
     var critList=(run.critical_contracts||[]);
     var suppList=(run.supplier_suggestions||[]);
-    var suppHTML=suppList.length?suppList.map(function(s){
-      var alts=(s.alternatives||[]).map(function(a){return '<li><b>'+(a.name||'—')+'</b>'+(a.website?' — <a href="'+a.website+'" target="_blank" rel="noopener">'+a.website+'</a>':'')+(a.reason?'<br><span style="color:#64748B;">'+a.reason+'</span>':'')+'</li>';}).join('');
-      return '<div style="margin-bottom:10px;padding:8px 12px;background:#F8FAFB;border-radius:8px;">'
-        +'<div style="font-weight:700;font-size:12px;margin-bottom:4px;">بديل لعقد: '+(s.contract_vendor||'—')+' ('+s.days_left+' يوم متبقي)</div>'
-        +(alts?('<ul style="margin:0;padding-right:18px;font-size:11px;">'+alts+'</ul>'):'<div style="font-size:11px;color:#C53030;">'+(s.error||'لا توجد نتائج')+'</div>')
-        +'</div>';
-    }).join(''):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
+    var mktList=(run.market_notes||[]);
+    var rfqList=(run.rfq_suggestions||[]);
+    var pmaFmt2=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA');};
+
+    // جدول 1: العقود الحرجة اللي فحصها الوكيل
+    var contractsTbl=critList.length?('<table class="tbl"><thead><tr><th>المورد</th><th>نوع الخدمة</th><th style="text-align:center;">الأيام المتبقية</th><th style="text-align:right;">القيمة السنوية</th></tr></thead><tbody>'
+      +critList.map(function(c){
+        var clr=c.days_left<0?'#C53030':c.days_left<=30?'#C53030':c.days_left<=60?'#B7791F':'#0D7A8A';
+        return '<tr><td style="font-weight:700;">'+(c.vendor||'—')+'</td><td>'+(c.type||'—')+'</td><td style="text-align:center;color:'+clr+';font-weight:700;">'+(c.days_left<0?'منتهٍ منذ '+Math.abs(c.days_left)+' يوم':c.days_left+' يوم')+'</td><td style="text-align:right;">'+pmaFmt2(c.annual)+' ر.س</td></tr>';
+      }).join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد عقود حرجة حالياً</div>';
+
+    // جدول 2: الموردون البدلاء المقترحون (صف مستقل لكل بديل)
+    var altRows=[];
+    suppList.forEach(function(s){
+      if(s.error){
+        altRows.push('<tr><td style="font-weight:700;">'+(s.contract_vendor||'—')+'</td><td colspan="3" style="color:#C53030;">'+s.error+'</td></tr>');
+        return;
+      }
+      (s.alternatives||[]).forEach(function(a,idx){
+        altRows.push('<tr>'
+          +(idx===0?'<td style="font-weight:700;" rowspan="'+(s.alternatives.length)+'">'+(s.contract_vendor||'—')+' <span style="color:#94A3B8;font-weight:400;">('+s.days_left+' يوم)</span></td>':'')
+          +'<td style="font-weight:600;">'+(a.name||'—')+'</td>'
+          +'<td>'+(a.website?('<a href="'+a.website+'" target="_blank" rel="noopener" style="color:#0D7A8A;">'+a.website+'</a>'):'—')+'</td>'
+          +'<td style="font-size:11px;color:#64748B;">'+(a.reason||'—')+'</td>'
+          +'</tr>');
+      });
+    });
+    var altTbl=altRows.length?('<table class="tbl"><thead><tr><th>العقد الحالي</th><th>المورد البديل</th><th>الموقع</th><th>سبب الترشيح</th></tr></thead><tbody>'+altRows.join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
+
+    // جدول 3: ملاحظات السوق
+    var mktTbl=mktList.length?('<table class="tbl"><thead><tr><th>المورد المرتبط</th><th>ملاحظة السوق</th></tr></thead><tbody>'
+      +mktList.map(function(m){return '<tr><td style="font-weight:700;">'+(m.vendor||'—')+'</td><td style="font-size:11px;">'+(m.note||'—')+'</td></tr>';}).join('')
+      +'</tbody></table>'):'';
+
+    // جدول 4: طلبات عروض الأسعار المفتوحة (يظهر فقط لو الوكيل يدعمها)
+    var rfqTbl='';
+    if(rfqList.length){
+      rfqTbl='<div class="section-title" style="margin-top:16px;">📋 طلبات عروض الأسعار المفتوحة</div>'
+        +'<table class="tbl"><thead><tr><th>الصنف المطلوب</th><th>الموردون المرسل لهم</th><th>نطاق السعر بالسوق</th><th>مورد إضافي مقترح</th></tr></thead><tbody>'
+        +rfqList.map(function(r){
+          return '<tr><td style="font-weight:700;">'+(r.item||'—')+'</td><td style="font-size:11px;">'+((r.sent_to||[]).join('، ')||'—')+'</td><td>'+(r.market_price_range||'—')+'</td><td style="font-size:11px;">'+(r.suggested_vendor?(r.suggested_vendor.name+(r.suggested_vendor.email?' ('+r.suggested_vendor.email+')':'')):'—')+'</td></tr>';
+        }).join('')
+        +'</tbody></table>';
+    }
 
     box.innerHTML='<div class="card" style="border:1px solid #2E9896;">'
       +'<div class="card-header" style="background:#EBF8FA;"><h3 style="color:#0D7A8A;">🤖 آخر تحليل تلقائي — '+runDate+'</h3></div>'
       +'<div class="card-body">'
-      +(run.summary?('<p style="font-size:12px;margin-bottom:12px;line-height:1.7;">'+run.summary+'</p>'):'')
-      +'<div style="font-weight:700;font-size:12px;margin-bottom:8px;">فحص الوكيل '+critList.length+' عقد حرج، وبحث عن بدائل لأعلى '+suppList.length+' منها:</div>'
-      +suppHTML
+      +(run.summary?('<p style="font-size:12px;margin-bottom:14px;line-height:1.8;padding:10px 12px;background:#F8FAFB;border-radius:8px;border-right:3px solid #2E9896;">'+run.summary+'</p>'):'')
+      +'<div class="section-title">العقود الحرجة المفحوصة ('+critList.length+')</div>'
+      +'<div style="overflow-x:auto;margin-bottom:16px;">'+contractsTbl+'</div>'
+      +'<div class="section-title">الموردون البدلاء المقترحون</div>'
+      +'<div style="overflow-x:auto;margin-bottom:'+(mktTbl?'8px':'0')+';">'+altTbl+'</div>'
+      +(mktTbl?('<div class="section-title" style="margin-top:12px;">ملاحظات السوق</div><div style="overflow-x:auto;">'+mktTbl+'</div>'):'')
+      +rfqTbl
       +'</div></div>';
   }catch(e){
+    console.error('loadPMAAgentRun failed',e);
     box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 تعذّر تحميل نتائج الوكيل التلقائي حالياً.</div></div>';
   }
 }
