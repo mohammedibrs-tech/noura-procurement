@@ -570,7 +570,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
       <div class="actions">
         <button class="btn btn-primary" onclick="rfqSave()">💾 حفظ الطلب</button>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">بعد الحفظ، بتلقى زر "إرسال بالبريد" لكل مورد أضفته — يفتح لك Outlook بالمتصفح برسالة جاهزة، وتضغط إرسال.</div>
+        <div style="font-size:11px;color:#64748B;margin-top:4px;">بعد الحفظ، بتلقى زر "إرسال بالبريد" لكل مورد أضفته — يفتح لك تبويب PDF للطلب وتبويب Outlook برسالة جاهزة معاً؛ احفظ الـ PDF واسحبه لتبويب Outlook قبل الإرسال (المتصفح لا يسمح بإرفاق ملفات تلقائياً لأسباب أمنية).</div>
         <button class="btn btn-red" onclick="rfqPrint()">🖨️ طباعة / PDF</button>
       </div>
     </div>
@@ -3407,7 +3407,10 @@ function rfqOpenMailto(rfqId,vendorIdx){
   if(!rfq||!rfq.vendors||!rfq.vendors[vendorIdx])return;
   var vendor=rfq.vendors[vendorIdx];
   var url=rfqBuildMailto(rfq,vendor);
+  // نفتح نسخة PDF من الطلب أولاً (تبويب منفصل) — المتصفح لا يسمح بإرفاق ملفات تلقائياً برسائل الويب لأسباب أمنية
+  rfqPrintData(rfq);
   window.open(url,'_blank');
+  toast('📄 فُتحت نسخة PDF بتبويب — احفظها (طباعة → حفظ كـ PDF) واسحبها لتبويب Outlook قبل الإرسال');
 }
 function rfqOpenQuotes(id){
   const rfq=rfqSaved.find(r=>String(r.id)===String(id));
