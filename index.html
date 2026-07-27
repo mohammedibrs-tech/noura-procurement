@@ -1119,7 +1119,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     <div style="background:#244062;border-radius:12px;padding:16px 20px;margin-bottom:20px;color:#fff;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
         <div style="flex:1;min-width:260px;">
-          <div style="font-size:11px;opacity:.7;margin-bottom:6px;">عنوان التقرير</div>
+          <input class="f2-editable-label" data-key="lbl_f2_report_title_caption" value="عنوان التقرير" oninput="f2LabelEdit(this)" style="background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,0.3);color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:6px;padding:0 0 2px;width:auto;min-width:100px;">
           <input id="f2-report-title" type="text" value="دراسة جدوى تملك أسطول التدريب مقابل الاستمرار في التأجير"
             style="width:100%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 12px;color:#fff;font-size:14px;font-weight:700;outline:none;"
             placeholder="أدخل عنوان التقرير...">
@@ -2050,6 +2050,25 @@ var LBL_GROUPS=[
     lbl_f2_card_qual:'ز — جدول مقارنة القرار',
     lbl_f2_card_exec:'ح — التوصية النهائية',
     lbl_f2_card_saved:'الدراسات المحفوظة',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — عنوان التقرير',keys:{
+    lbl_f2_report_title_caption:'عنوان التقرير',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — عروض شركات الصيانة (لكل شركة)',keys:{
+    lbl_f2_maint_name:'اسم الشركة',
+    lbl_f2_maint_annual:'قيمة العقد السنوية الإجمالية (ر.س)',
+    lbl_f2_maint_duration:'مدة العقد (سنوات)',
+    lbl_f2_maint_mobile:'مركبات متنقلة للصيانة؟',
+    lbl_f2_maint_parts:'قطع الغيار مشمولة؟',
+    lbl_f2_maint_sla:'مستوى SLA',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — عروض شركات التأجير الجديدة (لكل شركة)',keys:{
+    lbl_f2_lease_name:'اسم الشركة',
+    lbl_f2_lease_monthly:'الإيجار الشهري / مركبة (ر.س)',
+    lbl_f2_lease_duration:'مدة العقد (سنوات)',
+    lbl_f2_lease_maint:'يشمل صيانة؟',
+    lbl_f2_lease_ins:'يشمل تأمين؟',
+    lbl_f2_lease_alt:'يشمل مركبة بديلة؟',
   }},
 ];
 var LBL_DEFAULTS={};
@@ -11847,12 +11866,12 @@ function f2RenderMaint(){
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;font-size:13px;color:var(--navy);">شركة صيانة '+(idx+1)+'</span>';
     h+='<button onclick="f2DelMaint('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
     h+='<div class="form-grid-3">';
-    h+='<div class="field"><label>اسم الشركة</label><input value="'+(o.name||'')+'" oninput="f2UpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
-    h+='<div class="field"><label>قيمة العقد السنوية الإجمالية (ر.س)</label><input type="number" value="'+(o.annual||'')+'" oninput="f2UpdateMaint('+o.id+',\'annual\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>مدة العقد (سنوات)</label><input type="number" value="'+(o.duration||1)+'" oninput="f2UpdateMaint('+o.id+',\'duration\',this.value)"></div>';
-    h+='<div class="field"><label>مركبات متنقلة للصيانة؟</label><select onchange="f2UpdateMaint('+o.id+',\'mobile\',this.value)"><option value="yes"'+(o.mobile==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.mobile==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><label>قطع الغيار مشمولة؟</label><select onchange="f2UpdateMaint('+o.id+',\'parts\',this.value)"><option value="yes"'+(o.parts==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.parts==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><label>مستوى SLA</label><input value="'+(o.sla||'8 ساعات')+'" oninput="f2UpdateMaint('+o.id+',\'sla\',this.value)"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_name" value="'+L('lbl_f2_maint_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" oninput="f2UpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_annual" value="'+L('lbl_f2_maint_annual')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.annual||'')+'" oninput="f2UpdateMaint('+o.id+',\'annual\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_duration" value="'+L('lbl_f2_maint_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" oninput="f2UpdateMaint('+o.id+',\'duration\',this.value)"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_mobile" value="'+L('lbl_f2_maint_mobile')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateMaint('+o.id+',\'mobile\',this.value)"><option value="yes"'+(o.mobile==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.mobile==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_parts" value="'+L('lbl_f2_maint_parts')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateMaint('+o.id+',\'parts\',this.value)"><option value="yes"'+(o.parts==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.parts==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_sla" value="'+L('lbl_f2_maint_sla')+'" oninput="f2LabelEdit(this)"><input value="'+(o.sla||'8 ساعات')+'" oninput="f2UpdateMaint('+o.id+',\'sla\',this.value)"></div>';
     h+='</div></div>';
   });
   el.innerHTML=h;
@@ -11874,12 +11893,12 @@ function f2RenderLease(){
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;font-size:13px;color:var(--navy);">شركة تأجير '+(idx+1)+'</span>';
     h+='<button onclick="f2DelLease('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
     h+='<div class="form-grid-3">';
-    h+='<div class="field"><label>اسم الشركة</label><input value="'+(o.name||'')+'" oninput="f2UpdateLease('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
-    h+='<div class="field"><label>الإيجار الشهري / مركبة (ر.س)</label><input type="number" value="'+(o.monthly||'')+'" oninput="f2UpdateLease('+o.id+',\'monthly\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>مدة العقد (سنوات)</label><input type="number" value="'+(o.duration||3)+'" oninput="f2UpdateLease('+o.id+',\'duration\',this.value)"></div>';
-    h+='<div class="field"><label>يشمل صيانة؟</label><select onchange="f2UpdateLease('+o.id+',\'inclMaint\',this.value)"><option value="yes"'+(o.inclMaint==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclMaint==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><label>يشمل تأمين؟</label><select onchange="f2UpdateLease('+o.id+',\'inclIns\',this.value)"><option value="yes"'+(o.inclIns==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclIns==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><label>يشمل مركبة بديلة؟</label><select onchange="f2UpdateLease('+o.id+',\'inclAlt\',this.value)"><option value="yes"'+(o.inclAlt==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclAlt==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_name" value="'+L('lbl_f2_lease_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" oninput="f2UpdateLease('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_monthly" value="'+L('lbl_f2_lease_monthly')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.monthly||'')+'" oninput="f2UpdateLease('+o.id+',\'monthly\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_duration" value="'+L('lbl_f2_lease_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||3)+'" oninput="f2UpdateLease('+o.id+',\'duration\',this.value)"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_maint" value="'+L('lbl_f2_lease_maint')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclMaint\',this.value)"><option value="yes"'+(o.inclMaint==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclMaint==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_ins" value="'+L('lbl_f2_lease_ins')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclIns\',this.value)"><option value="yes"'+(o.inclIns==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclIns==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_alt" value="'+L('lbl_f2_lease_alt')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclAlt\',this.value)"><option value="yes"'+(o.inclAlt==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclAlt==='no'?' selected':'')+'>لا</option></select></div>';
     h+='</div>';
     if(o.monthly>0)h+='<div style="margin-top:8px;padding:6px 12px;background:#F8F5FF;border-radius:6px;font-size:11px;color:#7C3AED;font-weight:700;">الإيجار السنوي الإجمالي للأسطول: '+f2Fmt(o.monthly*12*count)+' ر.س</div>';
     h+='</div>';
