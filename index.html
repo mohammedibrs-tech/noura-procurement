@@ -62,6 +62,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .field label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+.f2-editable-label{display:block;width:100%;font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:600;border:none;border-bottom:1px dashed transparent;background:transparent;padding:0 0 2px;font-family:inherit;}
+.f2-editable-label:hover{border-bottom-color:#CBD5E1;}
+.f2-editable-label:focus{outline:none;border-bottom-color:#2E9896;color:#0D7A8A;}
+h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:14px;color:inherit;font-weight:700;margin-bottom:0;}
 .field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;background:#fff;}
 .field textarea{height:70px;resize:vertical;}
 .section-title{font-size:13px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:6px;margin:16px 0 12px;}
@@ -1134,15 +1138,15 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
     <!-- أ: بيانات الأسطول -->
     <div class="card">
-      <div class="card-header"><h3>أ — بيانات الأسطول الحالي</h3></div>
+      <div class="card-header"><h3>أ — <input class="f2-editable-label" data-key="lbl_f2_table1_title" value="بيانات الأسطول الحالي" oninput="f2LabelEdit(this)"></h3></div>
       <div class="card-body">
         <div class="form-grid-3">
-          <div class="field"><label>عدد المركبات</label><input id="f2-count" type="number" value="350" oninput="f2Calc()"></div>
-          <div class="field"><label>نوع / موديل المركبة</label><input id="f2-model" placeholder="مثال: تويوتا كامري 2022"></div>
-          <div class="field"><label>سنة الصنع</label><input id="f2-year" type="number" placeholder="2022"></div>
-          <div class="field"><label>العداد الحالي (كم)</label><input id="f2-odometer" type="number" placeholder="50000"></div>
-          <div class="field"><label>سعر الشراء المقترح / مركبة (ر.س)</label><input id="f2-unitprice" type="number" placeholder="0" oninput="f2Calc()"></div>
-          <div class="field"><label>نسبة الجاهزية الحالية %</label><input id="f2-readiness" type="number" value="90" min="0" max="100"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_col_count" value="عدد المركبات" oninput="f2LabelEdit(this)"><input id="f2-count" type="number" value="350" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_col_model" value="نوع / موديل المركبة" oninput="f2LabelEdit(this)"><input id="f2-model" placeholder="مثال: تويوتا كامري 2022"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_col_year" value="سنة الصنع" oninput="f2LabelEdit(this)"><input id="f2-year" type="number" placeholder="2022"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_field_odometer" value="العداد الحالي (كم)" oninput="f2LabelEdit(this)"><input id="f2-odometer" type="number" placeholder="50000"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_field_unitprice" value="سعر الشراء المقترح / مركبة (ر.س)" oninput="f2LabelEdit(this)"><input id="f2-unitprice" type="number" placeholder="0" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_col_readiness" value="نسبة الجاهزية الحالية %" oninput="f2LabelEdit(this)"><input id="f2-readiness" type="number" value="90" min="0" max="100"></div>
         </div>
         <div id="f2-total-box" style="display:none;margin-top:12px;padding:10px 16px;background:#EEF9FB;border:1px solid #1DA9BD;border-radius:8px;font-size:13px;font-weight:700;color:#0D7A8A;"></div>
       </div>
@@ -1150,18 +1154,18 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
     <!-- ب: بيانات عقود التأجير -->
     <div class="card">
-      <div class="card-header"><h3>ب — بيانات عقود التأجير الحالية</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_b" value="ب — بيانات عقود التأجير الحالية" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body">
         <div class="form-grid-3">
-          <div class="field"><label>قيمة العقد السنوية الإجمالية (ر.س)</label><input id="f2-annual-lease" type="number" placeholder="0" oninput="f2Calc()"></div>
-          <div class="field"><label>قيمة العقد الشهرية الإجمالية (ر.س)</label><input id="f2-monthly-lease" type="number" placeholder="0" oninput="f2Calc()"></div>
-          <div class="field"><label>إجمالي ما تم دفعه خلال العقد (ر.س)</label><input id="f2-paid-total" type="number" placeholder="0"></div>
-          <div class="field"><label>مدة العقد (سنوات)</label><input id="f2-lease-duration" type="number" value="3" oninput="f2Calc()"></div>
-          <div class="field"><label>تاريخ انتهاء العقد الحالي</label><input id="f2-lease-end" type="date" oninput="f2Calc()"></div>
-          <div class="field"><label>صيانة مشمولة؟</label><select id="f2-incl-maint"><option value="yes">نعم</option><option value="no">لا</option></select></div>
-          <div class="field"><label>مركبات بديلة مشمولة؟</label><select id="f2-incl-alt"><option value="yes">نعم</option><option value="no">لا</option></select></div>
-          <div class="field"><label>تأمين مشامل؟</label><select id="f2-incl-ins"><option value="yes">نعم</option><option value="no">لا</option></select></div>
-          <div class="field"><label>نسبة الزيادة المتوقعة في الإيجار %</label><input id="f2-lease-growth" type="number" value="5" min="0" max="30" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_annual" value="قيمة العقد السنوية الإجمالية (ر.س)" oninput="f2LabelEdit(this)"><input id="f2-annual-lease" type="number" placeholder="0" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_monthly" value="قيمة العقد الشهرية الإجمالية (ر.س)" oninput="f2LabelEdit(this)"><input id="f2-monthly-lease" type="number" placeholder="0" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_paidtotal" value="إجمالي ما تم دفعه خلال العقد (ر.س)" oninput="f2LabelEdit(this)"><input id="f2-paid-total" type="number" placeholder="0"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_duration" value="مدة العقد (سنوات)" oninput="f2LabelEdit(this)"><input id="f2-lease-duration" type="number" value="3" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_leaseend" value="تاريخ انتهاء العقد الحالي" oninput="f2LabelEdit(this)"><input id="f2-lease-end" type="date" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_maint" value="صيانة مشمولة؟" oninput="f2LabelEdit(this)"><select id="f2-incl-maint"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_alt" value="مركبات بديلة مشمولة؟" oninput="f2LabelEdit(this)"><select id="f2-incl-alt"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_ins" value="تأمين مشامل؟" oninput="f2LabelEdit(this)"><select id="f2-incl-ins"><option value="yes">نعم</option><option value="no">لا</option></select></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldB_growth" value="نسبة الزيادة المتوقعة في الإيجار %" oninput="f2LabelEdit(this)"><input id="f2-lease-growth" type="number" value="5" min="0" max="30" oninput="f2Calc()"></div>
         </div>
       </div>
     </div>
@@ -1169,7 +1173,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     <!-- ج: عروض شركات الصيانة -->
     <div class="card">
       <div class="card-header">
-        <h3>ج — عروض شركات الصيانة (حالة الشراء)</h3>
+        <h3><input class="f2-editable-label" data-key="lbl_f2_card_c" value="ج — عروض شركات الصيانة (حالة الشراء)" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3>
         <button class="btn btn-primary btn-sm" onclick="f2AddMaint()">+ إضافة شركة صيانة</button>
       </div>
       <div class="card-body" id="f2-maint-body">
@@ -1180,7 +1184,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
     <!-- د: عروض شركات التأجير الجديدة -->
     <div class="card">
       <div class="card-header">
-        <h3>د — عروض شركات التأجير الجديدة</h3>
+        <h3><input class="f2-editable-label" data-key="lbl_f2_card_d" value="د — عروض شركات التأجير الجديدة" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3>
         <button class="btn btn-primary btn-sm" onclick="f2AddLease()">+ إضافة شركة تأجير</button>
       </div>
       <div class="card-body" id="f2-lease-body">
@@ -1190,17 +1194,17 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
     <!-- هـ-1: بيانات تمديد العقد الحالي -->
     <div class="card">
-      <div class="card-header"><h3>هـ — بيانات تمديد العقد الحالي</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_e" value="هـ — بيانات تمديد العقد الحالي" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body">
         <div class="form-grid-3">
-          <div class="field"><label>مدة التمديد المقترحة (سنوات)</label><input id="f2-renew-duration" type="number" placeholder="1" min="1" oninput="f2Calc()"></div>
-          <div class="field"><label>قيمة المركبة الواحدة شهرياً (ر.س)</label><input id="f2-renew-monthly-unit" type="number" placeholder="0" oninput="f2RenewCalcFromUnit()"></div>
-          <div class="field"><label>الشهري الكلي للأسطول (ر.س) — محسوب</label><input id="f2-renew-monthly-total" type="number" placeholder="0" readonly style="background:#f3f4f6;"></div>
-          <div class="field"><label>قيمة التمديد السنوية الإجمالية (ر.س) — محسوب</label><input id="f2-renew-annual" type="number" placeholder="0" oninput="f2Calc()"></div>
-          <div class="field"><label>نسبة التغير المتوقع في سعر التمديد % (سالب = نقص)</label><input id="f2-renew-growth" type="number" value="0" min="-50" max="50" oninput="f2Calc()"></div>
-          <div class="field"><label>بنود إضافية / ملاحظات التمديد</label><input id="f2-renew-notes" placeholder="مثال: تشمل الصيانة، تمديد بنفس الشروط..."></div>
-          <div class="field"><label>تاريخ بداية التمديد المقترح</label><input id="f2-renew-start" type="date"></div>
-          <div class="field"><label>تاريخ انتهاء التمديد المقترح</label><input id="f2-renew-end" type="date"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_duration" value="مدة التمديد المقترحة (سنوات)" oninput="f2LabelEdit(this)"><input id="f2-renew-duration" type="number" placeholder="1" min="1" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_unit" value="قيمة المركبة الواحدة شهرياً (ر.س)" oninput="f2LabelEdit(this)"><input id="f2-renew-monthly-unit" type="number" placeholder="0" oninput="f2RenewCalcFromUnit()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_monthlytotal" value="الشهري الكلي للأسطول (ر.س) — محسوب" oninput="f2LabelEdit(this)"><input id="f2-renew-monthly-total" type="number" placeholder="0" readonly style="background:#f3f4f6;"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_annual" value="قيمة التمديد السنوية الإجمالية (ر.س) — محسوب" oninput="f2LabelEdit(this)"><input id="f2-renew-annual" type="number" placeholder="0" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_growth" value="نسبة التغير المتوقع في سعر التمديد % (سالب = نقص)" oninput="f2LabelEdit(this)"><input id="f2-renew-growth" type="number" value="0" min="-50" max="50" oninput="f2Calc()"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_notes" value="بنود إضافية / ملاحظات التمديد" oninput="f2LabelEdit(this)"><input id="f2-renew-notes" placeholder="مثال: تشمل الصيانة، تمديد بنفس الشروط..."></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_start" value="تاريخ بداية التمديد المقترح" oninput="f2LabelEdit(this)"><input id="f2-renew-start" type="date"></div>
+          <div class="field"><input class="f2-editable-label" data-key="lbl_f2_fldE_end" value="تاريخ انتهاء التمديد المقترح" oninput="f2LabelEdit(this)"><input id="f2-renew-end" type="date"></div>
         </div>
         <div id="f2-renew-total-box" style="display:none;margin-top:12px;padding:10px 16px;background:#EEF9FB;border:1px solid #1DA9BD;border-radius:8px;font-size:13px;font-weight:700;color:#0D7A8A;"></div>
       </div>
@@ -1208,32 +1212,32 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);directi
 
     <!-- و: نتائج السيناريوهات -->
     <div class="card" id="f2-scenarios-card" style="display:none;">
-      <div class="card-header"><h3>هـ — بيانات الأسطول الحالية</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_scenarios" value="و — نتائج تحليل السيناريوهات" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body" id="f2-scenarios-body"></div>
     </div>
 
     <!-- و: مؤشرات القرار -->
     <div class="card" id="f2-kpi-card" style="display:none;">
-      <div class="card-header"><h3>و — مقارنة تكاليف الخيارات</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_kpi" value="و — مقارنة تكاليف الخيارات" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body" id="f2-kpi-body"></div>
     </div>
 
     <!-- ز: التقييم النوعي -->
     <div class="card" id="f2-qual-card" style="display:none;">
-      <div class="card-header"><h3>ز — جدول مقارنة القرار</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_qual" value="ز — جدول مقارنة القرار" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body" id="f2-qual-body"></div>
     </div>
 
     <!-- ح: التقرير التنفيذي -->
     <div class="card" id="f2-exec-card" style="display:none;">
-      <div class="card-header"><h3>ح — التوصية النهائية</h3></div>
+      <div class="card-header"><h3><input class="f2-editable-label" data-key="lbl_f2_card_exec" value="ح — التوصية النهائية" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;width:100%;"></h3></div>
       <div class="card-body" id="f2-exec-body"></div>
     </div>
 
     <!-- قائمة الدراسات المحفوظة -->
     <div class="card" style="margin-top:20px;">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <h3>الدراسات المحفوظة</h3>
+        <input class="f2-editable-label" data-key="lbl_f2_card_saved" value="الدراسات المحفوظة" oninput="f2LabelEdit(this)" style="font-size:14px;font-weight:700;color:#1A2B4A;width:auto;flex:1;">
         <button class="btn btn-primary btn-sm" onclick="f2NewStudy()">+ دراسة جديدة</button>
       </div>
       <div class="card-body">
@@ -1973,7 +1977,10 @@ var LBL_GROUPS=[
   }},
   {group:'دراسة جدوى تملك الأسطول — بيانات الأسطول الحالي',keys:{
     lbl_f2_sec1_title:'القسم الأول — بيانات الأسطول الحالية',
+    lbl_f2_card_b:'ب — بيانات عقود التأجير الحالية',
     lbl_f2_table1_title:'بيانات الأسطول الحالي',
+    lbl_f2_field_odometer:'العداد الحالي (كم)',
+    lbl_f2_field_unitprice:'سعر الشراء المقترح / مركبة (ر.س)',
     lbl_f2_col_count:'عدد المركبات',
     lbl_f2_col_model:'النوع / الموديل',
     lbl_f2_col_year:'سنة الصنع',
@@ -2011,6 +2018,39 @@ var LBL_GROUPS=[
     lbl_f2_metric_rank:'الترتيب',
     lbl_f2_metric_status:'الحالة',
   }},
+  {group:'دراسة جدوى تملك الأسطول — بيانات عقود التأجير الحالية (ب)',keys:{
+    lbl_f2_fldB_annual:'قيمة العقد السنوية الإجمالية (ر.س)',
+    lbl_f2_fldB_monthly:'قيمة العقد الشهرية الإجمالية (ر.س)',
+    lbl_f2_fldB_paidtotal:'إجمالي ما تم دفعه خلال العقد (ر.س)',
+    lbl_f2_fldB_duration:'مدة العقد (سنوات)',
+    lbl_f2_fldB_leaseend:'تاريخ انتهاء العقد الحالي',
+    lbl_f2_fldB_maint:'صيانة مشمولة؟',
+    lbl_f2_fldB_alt:'مركبات بديلة مشمولة؟',
+    lbl_f2_fldB_ins:'تأمين مشامل؟',
+    lbl_f2_fldB_growth:'نسبة الزيادة المتوقعة في الإيجار %',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — عناوين أقسام ج، د، هـ',keys:{
+    lbl_f2_card_c:'ج — عروض شركات الصيانة (حالة الشراء)',
+    lbl_f2_card_d:'د — عروض شركات التأجير الجديدة',
+    lbl_f2_card_e:'هـ — بيانات تمديد العقد الحالي',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — بيانات تمديد العقد الحالي (هـ)',keys:{
+    lbl_f2_fldE_duration:'مدة التمديد المقترحة (سنوات)',
+    lbl_f2_fldE_unit:'قيمة المركبة الواحدة شهرياً (ر.س)',
+    lbl_f2_fldE_monthlytotal:'الشهري الكلي للأسطول (ر.س) — محسوب',
+    lbl_f2_fldE_annual:'قيمة التمديد السنوية الإجمالية (ر.س) — محسوب',
+    lbl_f2_fldE_growth:'نسبة التغير المتوقع في سعر التمديد % (سالب = نقص)',
+    lbl_f2_fldE_notes:'بنود إضافية / ملاحظات التمديد',
+    lbl_f2_fldE_start:'تاريخ بداية التمديد المقترح',
+    lbl_f2_fldE_end:'تاريخ انتهاء التمديد المقترح',
+  }},
+  {group:'دراسة جدوى تملك الأسطول — عناوين نتائج التحليل (و، ز، ح)',keys:{
+    lbl_f2_card_scenarios:'و — نتائج تحليل السيناريوهات',
+    lbl_f2_card_kpi:'و — مقارنة تكاليف الخيارات',
+    lbl_f2_card_qual:'ز — جدول مقارنة القرار',
+    lbl_f2_card_exec:'ح — التوصية النهائية',
+    lbl_f2_card_saved:'الدراسات المحفوظة',
+  }},
 ];
 var LBL_DEFAULTS={};
 LBL_GROUPS.forEach(function(g){Object.keys(g.keys).forEach(function(k){LBL_DEFAULTS[k]=g.keys[k];});});
@@ -2034,6 +2074,15 @@ function LSaveAll(){
   LApplyOnScreenTitles();
   toast('✅ تم حفظ التعديلات — تظهر بكل مكان بالمنصة والتقارير من الآن');
 }
+// تعديل مباشر لأي نص/عنوان من مكانه بالصفحة (بدون المرور بصفحة الإعدادات)
+function f2LabelEdit(el){
+  var key=el.dataset.key;
+  if(!key)return;
+  var val=el.value.trim();
+  if(val===''||val===LBL_DEFAULTS[key]) delete LBL_OVERRIDES[key];
+  else LBL_OVERRIDES[key]=val;
+  localStorage.setItem('lbl_overrides',JSON.stringify(LBL_OVERRIDES));
+}
 function LResetOne(key){
   var el=document.getElementById('lbl-input-'+key);
   if(el) el.value=LBL_DEFAULTS[key];
@@ -2043,6 +2092,9 @@ function LApplyOnScreenTitles(){
   Object.keys(map).forEach(function(elId){
     var el=document.getElementById(elId);
     if(el) el.textContent=L(map[elId]);
+  });
+  document.querySelectorAll('.f2-editable-label[data-key]').forEach(function(el){
+    el.value=L(el.dataset.key);
   });
 }
 function LRenderSettingsPage(){
