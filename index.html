@@ -12032,13 +12032,15 @@ function f2ReportHTML(m){
   /* 7) عروض التأجير */
   H+=secTitle('٧. عروض التأجير الجديدة المستلمة');
   if(f2LeaseOffers.length){
-    H+='<table><thead><tr><th>الشركة</th><th>الإيجار الشهري / مركبة</th><th>مدة العقد</th><th>صيانة</th><th>تأمين</th><th>مركبة بديلة</th></tr></thead><tbody>';
+    H+='<table><thead><tr><th>الشركة</th><th>الإيجار الشهري / مركبة</th><th>القيمة السنوية (الأسطول كامل)</th><th>القيمة خلال 4 سنوات (الأسطول كامل)</th><th>مدة العقد</th><th>صيانة</th><th>تأمين</th><th>مركبة بديلة</th></tr></thead><tbody>';
     f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;}).forEach(function(o){
       var isB=m.bestLease&&o.name===m.bestLease.name&&o.monthly===m.bestLease.monthly;
-      H+='<tr style="'+(isB?'background:#F0FFF4;font-weight:700;':'')+'"><td>'+(isB?'* ':'')+(o.name||'—')+'</td><td style="font-weight:700;">'+f2Fmt(o.monthly)+' ر.س</td><td style="text-align:center;">'+(o.duration||'—')+'</td><td style="text-align:center;">'+(o.inclMaint==='yes'?'نعم':'لا')+'</td><td style="text-align:center;">'+(o.inclIns==='yes'?'نعم':'لا')+'</td><td style="text-align:center;">'+(o.inclAlt==='yes'?'نعم':'لا')+'</td></tr>';
+      var annualVal=o.monthly*12*m.count;
+      var fourYearVal=annualVal*4;
+      H+='<tr style="'+(isB?'background:#F0FFF4;font-weight:700;':'')+'"><td>'+(isB?'* ':'')+(o.name||'—')+'</td><td style="font-weight:700;">'+f2Fmt(o.monthly)+' ر.س</td><td style="font-weight:700;">'+f2Fmt(annualVal)+' ر.س</td><td style="font-weight:800;color:#2E9896;">'+f2Fmt(fourYearVal)+' ر.س</td><td style="text-align:center;">'+(o.duration||'—')+'</td><td style="text-align:center;">'+(o.inclMaint==='yes'?'نعم':'لا')+'</td><td style="text-align:center;">'+(o.inclIns==='yes'?'نعم':'لا')+'</td><td style="text-align:center;">'+(o.inclAlt==='yes'?'نعم':'لا')+'</td></tr>';
     });
     H+='</tbody></table>';
-    H+=noteBox('أفضل عرض تأجير مستلم: <b>'+(m.bestLease?m.bestLease.name:'—')+'</b> بقيمة '+(m.blm>0?f2Fmt(m.blm)+' ر.س/مركبة شهرياً':'—')+'، وهو المُعتمد بحسابات خيار "تأجير جديد".');
+    H+=noteBox('أفضل عرض تأجير مستلم: <b>'+(m.bestLease?m.bestLease.name:'—')+'</b> بقيمة '+(m.blm>0?f2Fmt(m.blm)+' ر.س/مركبة شهرياً':'—')+'، وهو المُعتمد بحسابات خيار "تأجير جديد". عمودا "القيمة السنوية" و"القيمة خلال 4 سنوات" أعلاه ثابتان بمرجع 4 سنوات دائماً، بغض النظر عن مدة الدراسة المحددة بالحقل العلوي.');
   } else {
     H+=noteBox('لم يتم إدخال أي عروض تأجير جديدة حتى الآن.');
   }
