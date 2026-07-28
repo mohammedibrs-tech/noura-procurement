@@ -10906,6 +10906,11 @@ function fleetPDF(reportTitle){
 /* ══════════════════════════════════════════════
    تصدير PDF — مقارنة الأسعار
 ══════════════════════════════════════════════ */
+// يحوّل نص مدة العقد (3 أشهر، 6 أشهر، سنة، سنتين، إلخ) إلى عدد أشهر — يستخدم لحساب الإجمالي المطابق فعلياً للمدة المختارة
+function cmpDurationToMonths(dur){
+  var map={'3 أشهر':3,'6 أشهر':6,'سنة':12,'سنتين':24,'3 سنوات':36,'4 سنوات':48,'5 سنوات':60};
+  return (dur&&map[dur]!==undefined)?map[dur]:null;
+}
 function cmpPDF(){
   cmpSyncAllInputs();
   var title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
@@ -10951,6 +10956,8 @@ function cmpPDF(){
     return '<tr style="background:#fff;"><td>'+(isLowest?'<b>':'')+t.name+(isLowest?' — أقل عرض سعر مطروح</b>':'')+'</td><td style="text-align:center;">'+dur+'</td><td style="text-align:right;">'+fmt(t.annual)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
+    var durMonths=cmpDurationToMonths(t.duration);
+    var periodLabel=durMonths!==null?('الإجمالي خلال '+t.duration+' (شامل الضريبة)'):'الإجمالي السنوي (شامل الضريبة)';
     var drows=t.rows.map(function(r,ri){
       var base=(r.count||0)*(r.unitPrice||0);
       var vt=r.vatType||'none';
@@ -10958,11 +10965,11 @@ function cmpPDF(){
       var total=vt==='added'?base+vatAmt:base;
       var vatLabel=vt==='added'?'VAT 15%':(vt==='included'?'شامل VAT':'—');
       var monthlyTotal=t.payType==='monthly'?total:total/12;
-      var annualTotal=t.payType==='monthly'?total*12:total;
-      return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(monthlyTotal)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(annualTotal)+' ر.س</td></tr>';
+      var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
+      return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(monthlyTotal)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="8" style="padding:5px 10px;">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
-    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>الإجمالي السنوي (شامل الضريبة)</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="8">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="8">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
@@ -11034,17 +11041,19 @@ function cmpWord(){
     return '<tr><td>'+(isLowest?'* ':'')+t.name+(isLowest?' — أقل عرض':'')+'</td><td>'+(t.duration||'—')+'</td><td>'+fmt(t.annual)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
+    var durMonths=cmpDurationToMonths(t.duration);
+    var periodLabel=durMonths!==null?('الإجمالي خلال '+t.duration+' (شامل الضريبة)'):'الإجمالي السنوي (شامل الضريبة)';
     var drows=t.rows.map(function(r,ri){
       var base=(r.count||0)*(r.unitPrice||0);
       var vt=r.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
       var monthlyTotal=t.payType==='monthly'?total:total/12;
-      var annualTotal=t.payType==='monthly'?total*12:total;
-      return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(monthlyTotal)+' ر.س</td><td>'+fmt(annualTotal)+' ر.س</td></tr>';
+      var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
+      return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(monthlyTotal)+' ر.س</td><td>'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="6">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
-    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>الإجمالي السنوي (شامل الضريبة)</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="6">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="6">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG=FORM_BG||'';
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;}'
