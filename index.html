@@ -10924,8 +10924,13 @@ function cmpPDF(){
     var monthly=0; var exPT=co.paymentType||'total';
     co.rows.forEach(function(r){var b=(r.count||0)*(r.unitPrice||0);monthly+=r.vatType==='added'?b*1.15:b;});
     var annual=exPT==='monthly'?monthly*12:monthly;
-    return{name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,payType:exPT,rows:co.rows,terms:co.terms||[],duration:co.duration||'—'};
+    var dur=co.duration||'—';
+    var durMonths=cmpDurationToMonths(dur);
+    var periodTotal=durMonths!==null?(exPT==='monthly'?monthly*durMonths:annual):annual;
+    return{name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,periodTotal:periodTotal,payType:exPT,rows:co.rows,terms:co.terms||[],duration:dur};
   });
+  // مقارنة شراء لمرة واحدة (بدون عقد أو مدة) — لا معنى لحساب شهري/سنوي هنا، نعرض الإجمالي فقط
+  var isOneTimeStudy=totals.every(function(t){return t.payType==='total'&&(!t.duration||t.duration==='—');});
   var sorted=totals.slice().sort(function(a,b){return a.annual-b.annual;});
   var minAnn=sorted.length?sorted[0].annual:0;
   var W=window.open('','_blank');
@@ -10953,7 +10958,8 @@ function cmpPDF(){
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س عن الأقل':'—')+'</td>';
       pctCell2='<td style="text-align:center;">—</td>';
     }
-    return '<tr style="background:#fff;"><td>'+(isLowest?'<b>':'')+t.name+(isLowest?' — أقل عرض سعر مطروح</b>':'')+'</td><td style="text-align:center;">'+dur+'</td><td style="text-align:right;">'+fmt(t.annual)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
+    var durCell=isOneTimeStudy?'':'<td style="text-align:center;">'+dur+'</td>';
+    return '<tr style="background:#fff;"><td>'+(isLowest?'<b>':'')+t.name+(isLowest?' — أقل عرض سعر مطروح</b>':'')+'</td>'+durCell+'<td style="text-align:right;">'+fmt(t.periodTotal)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
     var durMonths=cmpDurationToMonths(t.duration);
@@ -10964,12 +10970,19 @@ function cmpPDF(){
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
       var vatLabel=vt==='added'?'VAT 15%':(vt==='included'?'شامل VAT':'—');
+      if(isOneTimeStudy){
+        return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(total)+' ر.س</td></tr>';
+      }
       var monthlyTotal=t.payType==='monthly'?total:total/12;
       var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
       return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(monthlyTotal)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="8" style="padding:5px 10px;">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
-    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="8">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    var theadCols=isOneTimeStudy
+      ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي (شامل الضريبة)</th>'
+      :'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th>';
+    var colspanNum=isOneTimeStudy?7:8;
+    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(!isOneTimeStudy&&t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr>'+theadCols+'</tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="'+colspanNum+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
@@ -10993,7 +11006,9 @@ function cmpPDF(){
     html+='<table><thead><tr><th>الشركة الحالية</th><th>مدة العقد</th><th>قيمة العقد الحالي السنوي</th><th>أقل عرض سعر مطروح</th><th>الفرق</th><th>نسبة الفرق</th></tr></thead><tbody>'+curRow+'</tbody></table>';
   }
   html+='<h2>تفاصيل العروض المقدمة</h2>';
-  html+='<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي السنوي</th><th>الفرق عن العقد الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>';
+  html+=isOneTimeStudy
+    ?'<table><thead><tr><th>الشركة</th><th>الإجمالي</th><th>الفرق عن السعر الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>'
+    :'<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي (حسب مدة العقد)</th><th>الفرق عن العقد الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>';
   html+='<h2>تفاصيل الأسعار</h2>'+detailSections;
   html+='<\/div><script>window.onload=function(){window.print();}<\/script></body></html>';
   W.document.write(html);
@@ -11013,8 +11028,13 @@ function cmpWord(){
     var monthly=0; var exPT=co.paymentType||'total';
     co.rows.forEach(function(r){var b=(r.count||0)*(r.unitPrice||0);monthly+=r.vatType==='added'?b*1.15:b;});
     var annual=exPT==='monthly'?monthly*12:monthly;
-    return{name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,payType:exPT,rows:co.rows,terms:co.terms||[],duration:co.duration||'—'};
+    var dur=co.duration||'—';
+    var durMonths=cmpDurationToMonths(dur);
+    var periodTotal=durMonths!==null?(exPT==='monthly'?monthly*durMonths:annual):annual;
+    return{name:co.name||'شركة '+(ci+1),monthly:monthly,annual:annual,periodTotal:periodTotal,payType:exPT,rows:co.rows,terms:co.terms||[],duration:dur};
   });
+  // مقارنة شراء لمرة واحدة (بدون عقد أو مدة) — لا معنى لحساب شهري/سنوي هنا، نعرض الإجمالي فقط
+  var isOneTimeStudy=totals.every(function(t){return t.payType==='total'&&(!t.duration||t.duration==='—');});
   var sorted=totals.slice().sort(function(a,b){return a.annual-b.annual;});
   var minAnn=sorted.length?sorted[0].annual:0;
   var curRow='';
@@ -11038,7 +11058,8 @@ function cmpWord(){
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س':'—')+'</td>';
       pctCell2='<td>—</td>';
     }
-    return '<tr><td>'+(isLowest?'* ':'')+t.name+(isLowest?' — أقل عرض':'')+'</td><td>'+(t.duration||'—')+'</td><td>'+fmt(t.annual)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
+    var durCell2=isOneTimeStudy?'':'<td>'+(t.duration||'—')+'</td>';
+    return '<tr><td>'+(isLowest?'* ':'')+t.name+(isLowest?' — أقل عرض':'')+'</td>'+durCell2+'<td>'+fmt(t.periodTotal)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
   }).join('');
   var detailSections=sorted.map(function(t,ci){
     var durMonths=cmpDurationToMonths(t.duration);
@@ -11048,12 +11069,19 @@ function cmpWord(){
       var vt=r.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
+      if(isOneTimeStudy){
+        return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(total)+' ر.س</td></tr>';
+      }
       var monthlyTotal=t.payType==='monthly'?total:total/12;
       var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
       return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(monthlyTotal)+' ر.س</td><td>'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
-    var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="6">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
-    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr><th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th></tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="6">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    var colspanNum2=isOneTimeStudy?5:6;
+    var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="'+colspanNum2+'">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
+    var theadCols2=isOneTimeStudy
+      ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي (شامل الضريبة)</th>'
+      :'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th>';
+    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr>'+theadCols2+'</tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="'+colspanNum2+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG=FORM_BG||'';
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;}'
@@ -11075,7 +11103,9 @@ function cmpWord(){
     body+='<table><thead><tr><th>الشركة الحالية</th><th>مدة العقد</th><th>قيمة العقد الحالي السنوي</th><th>أقل عرض سنوي</th><th>الفرق</th><th>النسبة</th></tr></thead><tbody>'+curRow+'</tbody></table>';
   }
   body+='<h2>تفاصيل العروض المقدمة</h2>';
-  body+='<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي السنوي</th><th>الفرق عن الحالي</th><th>النسبة</th></tr></thead><tbody>'+compRows+'</tbody></table>';
+  body+=isOneTimeStudy
+    ?'<table><thead><tr><th>الشركة</th><th>الإجمالي</th><th>الفرق عن الحالي</th><th>النسبة</th></tr></thead><tbody>'+compRows+'</tbody></table>'
+    :'<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي (حسب مدة العقد)</th><th>الفرق عن الحالي</th><th>النسبة</th></tr></thead><tbody>'+compRows+'</tbody></table>';
   body+='<h2>تفاصيل الأسعار</h2>'+detailSections+'</div>';
   var fullHTML='<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>'+CSS+'</style></head><body class="WordSection1">'+body+'</body></html>';
   var blob=new Blob(['﻿'+fullHTML],{type:'application/msword;charset=utf-8'});
