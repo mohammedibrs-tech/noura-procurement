@@ -12117,7 +12117,8 @@ function f2ReportHTML(m){
   H+=secTitle('١١. مقارنة جميع الخيارات');
   H+='<table><thead><tr><th>الترتيب</th><th>الخيار</th><th>التكلفة السنوية</th><th>إجمالي '+m.Y+' سنوات</th><th>المقارنة بخط الأساس</th></tr></thead><tbody>';
   m.scenarios.forEach(function(s){
-    H+='<tr'+(s.rank===1?' style="background:#F0FFF4;"':'')+'><td style="text-align:center;font-weight:900;">'+s.rank+'</td><td style="font-weight:700;">'+s.name+'</td><td>'+f2Fmt(s.annual)+' ر.س</td><td style="font-weight:800;">'+f2Fmt(s.total)+' ر.س</td><td>'+f2SavingBadge(s.saving,s.savingPct,s.isBase)+'</td></tr>';
+    var subNote=(s.key==='buy'&&m.buyYear2>0)?'<div style="font-size:10.5px;color:#276749;font-weight:600;margin-top:4px;">من السنة الثانية فأكثر: '+f2Fmt(m.buyYear2)+' ر.س/سنة (عقد الصيانة + عقد التأمين فقط، بدون تكرار ثمن الشراء)</div>':'';
+    H+='<tr'+(s.rank===1?' style="background:#F0FFF4;"':'')+'><td style="text-align:center;font-weight:900;">'+s.rank+'</td><td style="font-weight:700;">'+s.name+subNote+'</td><td>'+f2Fmt(s.annual)+' ر.س</td><td style="font-weight:800;">'+f2Fmt(s.total)+' ر.س</td><td>'+f2SavingBadge(s.saving,s.savingPct,s.isBase)+'</td></tr>';
   });
   H+='</tbody></table>';
   H+=noteBox('الخيار الأول بالترتيب هو الأقل تكلفة إجمالية على مدى '+m.Y+' سنوات، وجميع نسب المقارنة محسوبة نسبةً لخط الأساس (تمديد العقد الحالي).');
