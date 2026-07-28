@@ -1610,6 +1610,14 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
           </div>
           <input type="hidden" id="cm-comp-type" value="price">
         </div>
+        <div class="field" style="grid-column:1/-1;margin-top:10px;">
+          <label style="font-weight:700;color:#244062;">💰 طبيعة القيمة المالية</label>
+          <div style="display:flex;gap:0;border:1.5px solid #2E9896;border-radius:10px;overflow:hidden;margin-top:6px;">
+            <button id="cm-value-annual-btn" onclick="cmSetValueType('annual')" style="flex:1;padding:10px;border:none;background:#2E9896;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">📅 عقد سنوي متكرر</button>
+            <button id="cm-value-onetime-btn" onclick="cmSetValueType('onetime')" style="flex:1;padding:10px;border:none;background:#fff;color:#244062;font-size:13px;font-weight:700;cursor:pointer;border-right:1.5px solid #2E9896;">🧾 شراء لمرة واحدة</button>
+          </div>
+          <input type="hidden" id="cm-value-type" value="annual">
+        </div>
       </div>
 
       <!-- رئيس اللجنة -->
@@ -8437,6 +8445,19 @@ function cmSetCompType(t){
   document.getElementById('cm-offers-list').innerHTML='';
 }
 
+function cmSetValueType(t){
+  document.getElementById('cm-value-type').value=t;
+  const aBtn=document.getElementById('cm-value-annual-btn');
+  const oBtn=document.getElementById('cm-value-onetime-btn');
+  if(t==='annual'){
+    aBtn.style.background='#2E9896';aBtn.style.color='#fff';
+    oBtn.style.background='#fff';oBtn.style.color='#244062';
+  } else {
+    oBtn.style.background='#2E9896';oBtn.style.color='#fff';
+    aBtn.style.background='#fff';aBtn.style.color='#244062';
+  }
+}
+
 function cmAddOffer(){
   const compType=document.getElementById('cm-comp-type').value;
   const list=document.getElementById('cm-offers-list');
@@ -8541,6 +8562,7 @@ function cmGetData(){
     if(name)members.push({name,title:title||'عضو'});
   });
   const compType=document.getElementById('cm-comp-type')?.value||'price';
+  const valueType=document.getElementById('cm-value-type')?.value||'annual';
   const offers=[];
   document.querySelectorAll('.cm-offer-row').forEach(row=>{
     const name=row.querySelector('.cm-offer-name')?.value?.trim();
@@ -8564,7 +8586,7 @@ function cmGetData(){
     chairName:document.getElementById('cm-chair-name').value.trim(),
     members,offers,
     views:document.getElementById('cm-views').value.trim(),
-    compType,
+    compType,valueType,
     winner:document.getElementById('cm-winner').value.trim(),
     winnerType:document.getElementById('cm-winner-type').value,
     winnerAmount:parseFloat(document.getElementById('cm-winner-amount').value)||0,
@@ -8578,7 +8600,7 @@ function cmGetData(){
 function committeeReset(){
   committeeEditId=null;
   document.getElementById('committee-form-title').textContent='إنشاء محضر جديد';
-  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-winner-revenue-text','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('cm-winner-type').value='fixed';cmToggleWinnerType();cmSetCompType('price');
+  ['cm-num','cm-subject','cm-decision','cm-decision-date','cm-winner','cm-winner-amount','cm-winner-words','cm-winner-revenue-text','cm-start-date','cm-extra-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('cm-winner-type').value='fixed';cmToggleWinnerType();cmSetCompType('price');cmSetValueType('annual');
   document.getElementById('cm-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('cm-views').value='قامت اللجنة بدراسة العروض فنياً ومالياً لبيان مدى تطابقها مع نطاق العمل';
   document.getElementById('cm-offers-list').innerHTML='';
@@ -8621,6 +8643,7 @@ function committeeEdit(id){
   document.getElementById('cm-winner-revenue-text').value=c.winnerRevenueText||'';
   cmToggleWinnerType();
   cmSetCompType(c.compType||'price');
+  cmSetValueType(c.valueType||'annual');
   document.getElementById('cm-start-date').value=c.startDate||'';
   document.getElementById('cm-extra-notes').value=c.extraNotes||'';
   // أعضاء
@@ -8770,6 +8793,7 @@ function committeeExportPDFData(c){
       <tbody>${rows}</tbody></table>`;
     } else {
       const sorted=(c.offers||[]).slice().sort((a,b)=>(a.amount||0)-(b.amount||0));
+      const amtLabel=(c.valueType==='onetime')?'الإجمالي شاملاً الضريبة المضافة':'الإجمالي السنوي شاملاً الضريبة المضافة';
       const rows=sorted.map(o=>`<tr>
           <td style="${tdBase}font-weight:600;">${o.name}</td>
           <td style="${tdBase}text-align:center;">${(o.amount||0).toLocaleString('en-US')} ريال</td>
@@ -8778,7 +8802,7 @@ function committeeExportPDFData(c){
       return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
       <thead><tr>
         <th style="${thBase}">اسم الشركة أو المؤسسة</th>
-        <th style="${thBase}">الإجمالي السنوي شاملاً الضريبة المضافة</th>
+        <th style="${thBase}">${amtLabel}</th>
         <th style="${thBase}">ملاحظات</th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`;
@@ -8843,7 +8867,8 @@ async function committeeExportWordData(c){
     </tr>`).join('');
   } else {
     const sorted=(c.offers||[]).slice().sort((a,b)=>(a.amount||0)-(b.amount||0));
-    offersTableHdr=`<tr><th>اسم الشركة أو المؤسسة</th><th>الإجمالي شاملاً الضريبة</th><th>ملاحظات</th></tr>`;
+    const amtLabelW=(c.valueType!=='onetime')?'الإجمالي السنوي شاملاً الضريبة':'الإجمالي شاملاً الضريبة';
+    offersTableHdr=`<tr><th>اسم الشركة أو المؤسسة</th><th>${amtLabelW}</th><th>ملاحظات</th></tr>`;
     offersRows=sorted.map(o=>`<tr>
       <td style="border:1pt solid #ccc;padding:5pt;">${o.name}</td>
       <td style="border:1pt solid #ccc;padding:5pt;text-align:center;">${(o.amount||0).toLocaleString('en-US')} ر.س</td>
