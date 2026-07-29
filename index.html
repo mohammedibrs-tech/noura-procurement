@@ -8796,8 +8796,8 @@ function committeeExportPDFData(c){
         </tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
       <thead><tr>
-        <th style="${thBase}">اسم الشركة أو المؤسسة</th>
-        <th style="${thBase}">ملاحظات / شروط الاتفاقية</th>
+        <th style="${thBase}width:35%;">اسم الشركة أو المؤسسة</th>
+        <th style="${thBase}width:65%;">ملاحظات / شروط الاتفاقية</th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`;
     } else {
@@ -8810,9 +8810,9 @@ function committeeExportPDFData(c){
         </tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
       <thead><tr>
-        <th style="${thBase}">اسم الشركة أو المؤسسة</th>
-        <th style="${thBase}">${amtLabel}</th>
-        <th style="${thBase}">ملاحظات</th>
+        <th style="${thBase}width:35%;">اسم الشركة أو المؤسسة</th>
+        <th style="${thBase}width:35%;">${amtLabel}</th>
+        <th style="${thBase}width:30%;">ملاحظات</th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`;
     }
@@ -8841,8 +8841,8 @@ h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0
 ${offersTable}
 <table style="width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13px;">
 <thead><tr>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;">اسم الشركة</th>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;">الحالة</th>
+  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;width:35%;">اسم الشركة</th>
+  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;width:65%;">الحالة</th>
 </tr></thead>
 <tbody>${(c.offers||[]).map(o=>`<tr>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;text-align:center;">${o.name}</td>
