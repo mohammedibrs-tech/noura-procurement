@@ -8836,10 +8836,10 @@ h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0
 <p style="font-size:13px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 <p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:13px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+<div style="margin:6px 20px;font-size:13px;">${(c.offers||[]).map(o=>`<div style="margin:3px 0;">- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 </div></div>
 <div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
-<p><strong>مرئيات لجنة فحص العروض:</strong></p>
+<p style="margin-top:30px;"><strong>مرئيات لجنة فحص العروض:</strong></p>
 <p>${c.views||''}</p>
 <p><strong>توصيات لجنة فحص العروض:</strong></p>
 <p>أولاً: ترسية المشروع على (<strong>${c.winner}</strong>) ${c.winnerType==='revenue'?'وذلك وفق الآتي: <strong>'+c.winnerRevenueText+'</strong>':'بقيمة إجمالية قدرها (<strong>'+(c.winnerAmount||0).toLocaleString('en-US')+'</strong>) '+c.winnerWords+' شامل ضريبة القيمة المضافة (15%)'} وذلك لمطابقته الشروط والمواصفات الفنية والمستوفي للشروط.</p>
@@ -8848,8 +8848,8 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
 <div style="margin-top:12px;"><strong style="font-size:14px;">أعضاء اللجنة:</strong>
-                        <div style="text-align:center;margin-top:8px;">
-                                <div style="font-size:16px;font-weight:700;margin-bottom:160px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:15px;">${c.chairName}</strong></div>
+                        <div style="text-align:center;margin-top:20px;">
+                                <div style="font-size:16px;font-weight:700;margin-bottom:200px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:15px;">${c.chairName}</strong></div>
                                 <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;padding:0 10px;">
                                 ${(c.members||[]).map(m=>`<div style="text-align:center;flex:1;min-width:110px;"><div style="position:relative;border-top:1px solid #000;padding-top:4px;font-size:14px;font-weight:700;margin-top:16px;">${m.name==='أ.محمد ابراهيم الجمعان'?`<img src="${MAJ_SIG}" style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-12deg);width:70px;object-fit:contain;z-index:5;pointer-events:none;opacity:0.92;">`:''}${m.name}<br><span style="font-size:11px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
                                 </div>
