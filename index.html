@@ -8818,11 +8818,14 @@ function committeeExportPDFData(c){
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
 <style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:14px;color:#000;direction:rtl;line-height:1.6;margin:0;}
-.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+.page{position:relative;width:210mm;min-height:297mm;page-break-after:always;break-after:page;}
+.page:last-child{page-break-after:auto;break-after:auto;}
+.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
 .footer-mask{position:absolute;bottom:0;left:0;width:60%;height:30mm;background:#fff;z-index:0;}
 .content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
 h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:13px;}</style>
-</head><body><div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
+</head><body>
+<div class="page"><img class="bg" src="${BG}"><div class="content">
         <div style="text-align:right;font-size:14px;margin-bottom:16px;">
           <div>التاريخ: ${dt}</div>
           <div>رقم المحضر: ${c.num||'—'}</div>
@@ -8831,9 +8834,11 @@ h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p style="font-size:13px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:13px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 <p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:13px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+</div></div>
+<div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
 <p>${c.views||''}</p>
 <p><strong>توصيات لجنة فحص العروض:</strong></p>
@@ -8850,7 +8855,8 @@ ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
                                 </div>
                         </div>
 </div>
-</div></div></body></html>`);
+</div></div>
+</body></html>`);
   w.document.close();w.onload=()=>{w.focus();w.print();};
 }
 
