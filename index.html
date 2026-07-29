@@ -8787,8 +8787,8 @@ function committeeExportPDFData(c){
   const BG=FORM_BG;
   const isRevComp=(c.compType==='revenue');
   const offersTable=(()=>{
-    const tdBase='padding:6px 8px;border:1px solid #000;color:#000;';
-    const thBase='padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:right;';
+    const tdBase='padding:6px 8px;border:1px solid #000;color:#000;text-align:center;';
+    const thBase='padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;';
     if(isRevComp){
       const rows=(c.offers||[]).map(o=>`<tr>
           <td style="${tdBase}font-weight:600;">${o.name}</td>
@@ -8805,7 +8805,7 @@ function committeeExportPDFData(c){
       const amtLabel=(c.valueType==='onetime')?'الإجمالي شاملاً الضريبة المضافة':'الإجمالي السنوي شاملاً الضريبة المضافة';
       const rows=sorted.map(o=>`<tr>
           <td style="${tdBase}font-weight:600;">${o.name}</td>
-          <td style="${tdBase}text-align:center;">${(o.amount||0).toLocaleString('en-US')} ريال</td>
+          <td style="${tdBase}">${(o.amount||0).toLocaleString('en-US')} ريال</td>
           <td style="${tdBase}">${o.notes||''}</td>
         </tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
@@ -8841,14 +8841,12 @@ h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0
 ${offersTable}
 <table style="width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13px;">
 <thead><tr>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:right;">اسم الشركة</th>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:right;">الحالة الفنية</th>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:right;">ملاحظات</th>
+  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;">اسم الشركة</th>
+  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;">الحالة</th>
 </tr></thead>
 <tbody>${(c.offers||[]).map(o=>`<tr>
-  <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;">${o.name}</td>
-  <td style="padding:6px 8px;border:1px solid #000;color:#000;">العرض المقدم ${o.status}</td>
-  <td style="padding:6px 8px;border:1px solid #000;color:#000;">${o.notes2||''}</td>
+  <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;text-align:center;">${o.name}</td>
+  <td style="padding:6px 8px;border:1px solid #000;color:#000;text-align:center;">العرض المقدم ${o.status}</td>
 </tr>`).join('')}</tbody></table>
 </div></div>
 <div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
