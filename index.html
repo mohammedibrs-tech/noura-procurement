@@ -8840,10 +8840,7 @@ h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0
 <p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
 <table style="width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13px;">
-<thead><tr>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;width:35%;">اسم الشركة</th>
-  <th style="padding:6px 8px;border:1px solid #000;background:#2E9896;color:#fff;text-align:center;width:65%;">الحالة</th>
-</tr></thead>
+<colgroup><col style="width:35%;"><col style="width:65%;"></colgroup>
 <tbody>${(c.offers||[]).map(o=>`<tr>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;text-align:center;">${o.name}</td>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;text-align:center;">العرض المقدم ${o.status}</td>
