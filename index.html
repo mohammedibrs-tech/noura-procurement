@@ -8626,56 +8626,62 @@ async function committeeSave(){
 function committeeEdit(id){
   const c=committees.find(x=>x.id===id);if(!c)return;
   committeeEditId=id;
-  document.getElementById('committee-form-title').textContent='تعديل المحضر: '+c.subject;
-  document.getElementById('cm-num').value=c.num||'';
-  document.getElementById('cm-subject').value=c.subject||'';
-  document.getElementById('cm-day-name').value=c.dayName||'الأحد';
-  document.getElementById('cm-date').value=c.date||'';
-  document.getElementById('cm-decision').value=c.decision||'';
-  document.getElementById('cm-decision-date').value=c.decisionDate||'';
-  document.getElementById('cm-chair-title').value=c.chairTitle||'';
-  document.getElementById('cm-chair-name').value=c.chairName||'';
-  document.getElementById('cm-views').value=c.views||'';
-  document.getElementById('cm-winner').value=c.winner||'';
-  document.getElementById('cm-winner-type').value=c.winnerType||'fixed';
-  document.getElementById('cm-winner-amount').value=c.winnerAmount||'';
-  document.getElementById('cm-winner-words').value=c.winnerWords||'';
-  document.getElementById('cm-winner-revenue-text').value=c.winnerRevenueText||'';
-  cmToggleWinnerType();
-  cmSetCompType(c.compType||'price');
-  cmSetValueType(c.valueType||'annual');
-  document.getElementById('cm-start-date').value=c.startDate||'';
-  document.getElementById('cm-extra-notes').value=c.extraNotes||'';
+  try{
+    document.getElementById('committee-form-title').textContent='تعديل المحضر: '+c.subject;
+    document.getElementById('cm-num').value=c.num||'';
+    document.getElementById('cm-subject').value=c.subject||'';
+    document.getElementById('cm-day-name').value=c.dayName||'الأحد';
+    document.getElementById('cm-date').value=c.date||'';
+    document.getElementById('cm-decision').value=c.decision||'';
+    document.getElementById('cm-decision-date').value=c.decisionDate||'';
+    document.getElementById('cm-chair-title').value=c.chairTitle||'';
+    document.getElementById('cm-chair-name').value=c.chairName||'';
+    document.getElementById('cm-views').value=c.views||'';
+    document.getElementById('cm-winner').value=c.winner||'';
+    document.getElementById('cm-winner-type').value=c.winnerType||'fixed';
+    document.getElementById('cm-winner-amount').value=c.winnerAmount||'';
+    document.getElementById('cm-winner-words').value=c.winnerWords||'';
+    document.getElementById('cm-winner-revenue-text').value=c.winnerRevenueText||'';
+    document.getElementById('cm-start-date').value=c.startDate||'';
+    document.getElementById('cm-extra-notes').value=c.extraNotes||'';
+  }catch(e){console.error('committeeEdit: فشل تعبئة الحقول الأساسية',e);}
+  try{ cmToggleWinnerType(); }catch(e){console.error('committeeEdit: فشل cmToggleWinnerType',e);}
+  try{ cmSetCompType(c.compType||'price'); }catch(e){console.error('committeeEdit: فشل cmSetCompType',e);}
+  try{ cmSetValueType(c.valueType||'annual'); }catch(e){console.error('committeeEdit: فشل cmSetValueType',e);}
   // أعضاء
-  const ml=document.getElementById('cm-members-list');ml.innerHTML='';
-  (c.members||[]).forEach((m,i)=>{
-    const div=document.createElement('div');div.className='form-grid';div.style.marginBottom='8px';div.setAttribute('data-member',i);
-    div.innerHTML=`<div class="field"><label>العضو ${i+1}</label><input class="cm-member-name" value="${m.name||''}"></div><div class="field"><label>المسمى</label><input class="cm-member-title" value="${m.title||'عضو'}"></div>`;
-    ml.appendChild(div);
-  });
+  try{
+    const ml=document.getElementById('cm-members-list');ml.innerHTML='';
+    (c.members||[]).forEach((m,i)=>{
+      const div=document.createElement('div');div.className='form-grid';div.style.marginBottom='8px';div.setAttribute('data-member',i);
+      div.innerHTML=`<div class="field"><label>العضو ${i+1}</label><input class="cm-member-name" value="${m.name||''}"></div><div class="field"><label>المسمى</label><input class="cm-member-title" value="${m.title||'عضو'}"></div>`;
+      ml.appendChild(div);
+    });
+  }catch(e){console.error('committeeEdit: فشل استرجاع الأعضاء',e);}
   // عروض
-  const ol=document.getElementById('cm-offers-list');ol.innerHTML='';
-  (c.offers||[]).forEach(o=>{
-    const div=document.createElement('div');div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
-    div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
-    if(o.offerType==='revenue'){
-      div.innerHTML=`<div class="form-grid">
-        <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
-        <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
-        <div class="field" style="grid-column:1/-1;"><label>ملاحظات / شروط الاتفاقية</label><textarea class="cm-offer-notes" rows="2" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;resize:vertical;">${o.notes||''}</textarea></div>
-        <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
-      </div>`;
-    } else {
-      div.innerHTML=`<div class="form-grid">
-        <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
-        <div class="field"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
-        <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
-        <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
-        <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
-      </div>`;
-    }
-    ol.appendChild(div);
-  });
+  try{
+    const ol=document.getElementById('cm-offers-list');ol.innerHTML='';
+    (c.offers||[]).forEach(o=>{
+      const div=document.createElement('div');div.className='cm-offer-row';div.style.cssText='border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;';
+      div.style.cssText='border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FAFCFF;';
+      if(o.offerType==='revenue'){
+        div.innerHTML=`<div class="form-grid">
+          <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
+          <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
+          <div class="field" style="grid-column:1/-1;"><label>ملاحظات / شروط الاتفاقية</label><textarea class="cm-offer-notes" rows="2" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;direction:rtl;resize:vertical;">${o.notes||''}</textarea></div>
+          <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
+        </div>`;
+      } else {
+        div.innerHTML=`<div class="form-grid">
+          <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
+          <div class="field"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
+          <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
+          <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+          <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
+        </div>`;
+      }
+      ol.appendChild(div);
+    });
+  }catch(e){console.error('committeeEdit: فشل استرجاع بيانات الشركات/العروض',e);toast('⚠️ صار خطأ باسترجاع بيانات الشركات — افحص الـ Console',true);}
   document.getElementById('committee-form-card').scrollIntoView({behavior:'smooth'});
 }
 
@@ -8785,7 +8791,7 @@ function committeeExportPDFData(c){
           <td style="${tdBase}font-weight:600;">${o.name}</td>
           <td style="${tdBase}">${o.notes||''}</td>
         </tr>`).join('');
-      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
       <thead><tr>
         <th style="${thBase}">اسم الشركة أو المؤسسة</th>
         <th style="${thBase}">ملاحظات / شروط الاتفاقية</th>
@@ -8799,7 +8805,7 @@ function committeeExportPDFData(c){
           <td style="${tdBase}text-align:center;">${(o.amount||0).toLocaleString('en-US')} ريال</td>
           <td style="${tdBase}">${o.notes||''}</td>
         </tr>`).join('');
-      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px;">
+      return `<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
       <thead><tr>
         <th style="${thBase}">اسم الشركة أو المؤسسة</th>
         <th style="${thBase}">${amtLabel}</th>
@@ -8811,20 +8817,20 @@ function committeeExportPDFData(c){
   const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;line-height:1.6;margin:0;}
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:14px;color:#000;direction:rtl;line-height:1.6;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
 .content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
-h2{text-align:center;font-size:11px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:9.5px;}</style>
+h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:13px;}</style>
 </head><body><div class="page"><img class="bg" src="${BG}"><div class="content">
-        <div style="text-align:right;font-size:10px;margin-bottom:16px;">
+        <div style="text-align:right;font-size:14px;margin-bottom:16px;">
           <div>التاريخ: ${dt}</div>
           <div>رقم المحضر: ${c.num||'—'}</div>
         </div>
 <h2>محضر لجنة فحص العروض لطلب (${c.subject})</h2>
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
-<p style="font-size:9px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:9px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
+<p style="font-size:13px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin:6px 20px;font-size:13px;">${(c.offers||[]).map(o=>`<div>- <strong>${o.name}</strong> &nbsp; العرض المقدم ${o.status}</div>`).join('')}</div>
 <p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
 <p><strong>مرئيات لجنة فحص العروض:</strong></p>
@@ -8835,11 +8841,11 @@ ${c.startDate?`<p>ثانياً: يبدأ العقد بتاريخ ${c.startDate}�
 <p>${c.startDate?'ثالثاً':'ثانياً'}: استكمال الإجراءات النظامية.</p>
 <p>${c.startDate?'رابعاً':'ثالثاً'}: ترفع اللجنة محضرها إلى رئيس اللجنة.</p>
 ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
-<div style="margin-top:12px;"><strong style="font-size:10px;">أعضاء اللجنة:</strong>
+<div style="margin-top:12px;"><strong style="font-size:14px;">أعضاء اللجنة:</strong>
                         <div style="text-align:center;margin-top:8px;">
-                                <div style="font-size:12px;font-weight:700;margin-bottom:150px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:11px;">${c.chairName}</strong></div>
+                                <div style="font-size:16px;font-weight:700;margin-bottom:100px;">${c.chairTitle||'الرئيس التنفيذي'}<br><strong style="font-size:15px;">${c.chairName}</strong></div>
                                 <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;padding:0 10px;">
-                                ${(c.members||[]).map(m=>`<div style="text-align:center;flex:1;min-width:110px;"><div style="position:relative;border-top:1px solid #000;padding-top:4px;font-size:10px;font-weight:700;margin-top:20px;">${m.name==='أ.محمد ابراهيم الجمعان'?`<img src="${MAJ_SIG}" style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-12deg);width:70px;object-fit:contain;z-index:5;pointer-events:none;opacity:0.92;">`:''}${m.name}<br><span style="font-size:8px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
+                                ${(c.members||[]).map(m=>`<div style="text-align:center;flex:1;min-width:110px;"><div style="position:relative;border-top:1px solid #000;padding-top:4px;font-size:14px;font-weight:700;margin-top:16px;">${m.name==='أ.محمد ابراهيم الجمعان'?`<img src="${MAJ_SIG}" style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-12deg);width:70px;object-fit:contain;z-index:5;pointer-events:none;opacity:0.92;">`:''}${m.name}<br><span style="font-size:11px;font-weight:400;">${m.title||'عضو'}</span></div></div>`).join('')}
                                 </div>
                         </div>
 </div>
