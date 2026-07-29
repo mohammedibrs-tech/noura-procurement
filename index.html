@@ -8490,7 +8490,8 @@ function cmAddOffer(){
           <option value="غير مقبول وغير مطابق فنياً">غير مقبول وغير مطابق فنياً</option>
         </select>
       </div>
-      <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
+      <div class="field"><label>ملاحظات (تظهر بجدول العروض الأول)</label><input class="cm-offer-notes" placeholder="ملاحظات..."></div>
+      <div class="field"><label>ملاحظات (تظهر بجدول حالة العروض)</label><input class="cm-offer-notes2" placeholder="ملاحظات..."></div>
       <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
     </div>`;
   }
@@ -8568,11 +8569,12 @@ function cmGetData(){
     const name=row.querySelector('.cm-offer-name')?.value?.trim();
     const status=row.querySelector('.cm-offer-status')?.value||'';
     const notes=row.querySelector('.cm-offer-notes')?.value?.trim()||'';
+    const notes2=row.querySelector('.cm-offer-notes2')?.value?.trim()||'';
     if(compType==='revenue'){
       if(name)offers.push({name,offerType:'revenue',status,notes});
     } else {
       const amount=parseFloat(row.querySelector('.cm-offer-amount')?.value)||0;
-      if(name)offers.push({name,offerType:'price',amount,status,notes});
+      if(name)offers.push({name,offerType:'price',amount,status,notes,notes2});
     }
   });
   return{
@@ -8675,7 +8677,8 @@ function committeeEdit(id){
           <div class="field"><label>اسم الشركة / المؤسسة</label><input class="cm-offer-name" value="${o.name||''}"></div>
           <div class="field"><label>المبلغ الإجمالي شامل الضريبة (ر.س)</label><input type="number" class="cm-offer-amount" value="${o.amount||0}"></div>
           <div class="field"><label>التقييم الفني</label><select class="cm-offer-status"><option${o.status==='مقبول ومطابق فنياً'?' selected':''}>مقبول ومطابق فنياً</option><option${o.status==='مقبول وغير مطابق فنياً'?' selected':''}>مقبول وغير مطابق فنياً</option><option${o.status==='غير مقبول وغير مطابق فنياً'?' selected':''}>غير مقبول وغير مطابق فنياً</option></select></div>
-          <div class="field"><label>ملاحظات</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+          <div class="field"><label>ملاحظات (تظهر بجدول العروض الأول)</label><input class="cm-offer-notes" value="${o.notes||''}"></div>
+          <div class="field"><label>ملاحظات (تظهر بجدول حالة العروض)</label><input class="cm-offer-notes2" value="${o.notes2||''}"></div>
           <div style="display:flex;align-items:flex-end;"><button onclick="this.closest('.cm-offer-row').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;">×</button></div>
         </div>`;
       }
@@ -8845,7 +8848,7 @@ ${offersTable}
 <tbody>${(c.offers||[]).map(o=>`<tr>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;">${o.name}</td>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;">العرض المقدم ${o.status}</td>
-  <td style="padding:6px 8px;border:1px solid #000;color:#000;">${o.notes||''}</td>
+  <td style="padding:6px 8px;border:1px solid #000;color:#000;">${o.notes2||''}</td>
 </tr>`).join('')}</tbody></table>
 </div></div>
 <div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
