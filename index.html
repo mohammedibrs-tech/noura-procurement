@@ -2483,12 +2483,14 @@ function poMonthKey(p){
 // SEED POs تُعيَّن للنصف الثاني فقط لتجنب التكرار عند النصفين
 var SEED_MONTHS_2025=['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12'];
 function poInMonthKey(p, key){
+  if(p&&p.showInReports===false) return false;
   var pmk=poMonthKey(p);
   if(pmk===key) return true;
   if(pmk==='SEED-2025') return SEED_MONTHS_2025.indexOf(key)>=0;
   return false;
 }
 function poInYear(p, year){
+  if(p&&p.showInReports===false) return false;
   var pmk=poMonthKey(p);
   if(pmk==='SEED-2025') return year==='2025'||year===2025;
   return pmk.startsWith(year+'-');
@@ -3041,18 +3043,18 @@ async function poToggleCustomPayment(val){
 
 function poGetTerms(){
   var delivery='';
-  var days=document.getElementById('po-delivery-days').value;
-  var unit=document.getElementById('po-delivery-unit').value;
+  var days=document.getElementById('po-delivery-days')?.value||'';
+  var unit=document.getElementById('po-delivery-unit')?.value||'';
   if(days) delivery=days+' '+unit;
 
   var warranty='';
-  var wval=document.getElementById('po-warranty-val').value;
-  var wunit=document.getElementById('po-warranty-unit').value;
+  var wval=document.getElementById('po-warranty-val')?.value||'';
+  var wunit=document.getElementById('po-warranty-unit')?.value||'';
   if(wunit==='لا يوجد ضمان') warranty='لا يوجد ضمان';
   else if(wval) warranty=wval+' '+wunit;
 
-  var payTerms=document.getElementById('po-payment-terms').value;
-  var payment=payTerms==='custom'?(document.getElementById('po-payment-custom').value||''):payTerms;
+  var payTerms=document.getElementById('po-payment-terms')?.value||'';
+  var payment=payTerms==='custom'?(document.getElementById('po-payment-custom')?.value||''):payTerms;
 
   return {delivery:delivery, warranty:warranty, payment:payment};
 }
@@ -3203,30 +3205,33 @@ async function poDeleteById(i){
 }
 
 async function poSave(){
-  const co=document.getElementById('po-co').value.trim();
+  const co=document.getElementById('po-co')?.value.trim()||'';
   if(!co){toast('أدخل اسم الشركة',true);return;}
+  try{
   autoAddSupplier(co);
   const terms=poGetTerms();
   const data={
-    company:co,num:document.getElementById('po-num').value,date:document.getElementById('po-date').value,
-    vat:document.getElementById('po-vat').value,terms:terms,email:document.getElementById('po-email').value,
-    phone:document.getElementById('po-phone').value,addr:document.getElementById('po-addr').value,
-    del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
-    del_addr:document.getElementById('po-del-addr').value,del_vat:document.getElementById('po-del-vat').value,
-    quote:document.getElementById('po-quote').value,rows:JSON.stringify(poGetRows()),
+    company:co,num:document.getElementById('po-num')?.value||'',date:document.getElementById('po-date')?.value||'',
+    vat:document.getElementById('po-vat')?.value||'',terms:terms,email:document.getElementById('po-email')?.value||'',
+    phone:document.getElementById('po-phone')?.value||'',addr:document.getElementById('po-addr')?.value||'',
+    del_email:document.getElementById('po-del-email')?.value||'',del_phone:document.getElementById('po-del-phone')?.value||'',
+    del_addr:document.getElementById('po-del-addr')?.value||'',del_vat:document.getElementById('po-del-vat')?.value||'',
+    quote:document.getElementById('po-quote')?.value||'',rows:JSON.stringify(poGetRows()),
     sig1:document.getElementById('po-sig1')?.value||'',
     sig2:document.getElementById('po-sig2')?.value||'',
     sig3:document.getElementById('po-sig3')?.value||'',
+    showInReports:true,
     created_at:new Date().toISOString()
   };
   if(poEditIdx !== null){
     // وضع التعديل — حدّث السجل في مكانه بدون إضافة جديد
     var existing=poSaved[poEditIdx];
     if(!existing){toast('خطأ: لم يُعثر على الطلب',true);poResetEdit();return;}
-    // احتفظ بـ id و created_at الأصليين حتماً
+    // احتفظ بـ id و created_at الأصليين حتماً، وبقيمة showInReports الحالية (لا نعيدها true تلقائياً كل تعديل)
     var updatedData=Object.assign({},existing,data,{
       id:existing.id,
-      created_at:existing.created_at||data.created_at
+      created_at:existing.created_at||data.created_at,
+      showInReports:(existing.showInReports!==undefined?existing.showInReports:true)
     });
     poSaved[poEditIdx]=updatedData;
     localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
@@ -3260,6 +3265,11 @@ async function poSave(){
     var poDateEl=document.getElementById('po-date');
     if(poDateEl) poDateEl.value=new Date().toISOString().split('T')[0];
   }
+  }catch(err){
+    // شبكة أمان أخيرة: أي خطأ غير متوقع بأي خطوة يظهر لك بدل ما يختفي بصمت بدون ما يُحفظ شي
+    console.error('poSave: خطأ غير متوقع أوقف الحفظ',err);
+    toast('⚠️ صار خطأ غير متوقع أثناء الحفظ — افحص الـ Console وأرسل لي رسالة الخطأ',true);
+  }
 }
 
 function renderPoSaved(){
@@ -3292,11 +3302,18 @@ function renderPoSaved(){
       var s=obj.s; var i=obj.i;
       var tot=0;try{var rr=poRowsOf(s);rr.forEach(function(r){tot+=(r.total||0);});}catch(e){}
       var totWithVat=(tot*1.15).toFixed(2);
+      var showRpt=(s.showInReports!==false);
       html+='<div class="saved-item" style="border-right:3px solid #244062;">'+
         '<div class="saved-item-info">'+
           '<strong style="font-size:13px;color:#244062;">'+(s.company||'')+'</strong>'+
           '<span style="color:var(--sub);font-size:11px;"> | '+(s.num||'—')+' | '+(s.date||'—')+'</span>'+
           (tot>0?'<span style="font-size:11px;color:#C53030;font-weight:700;"> | '+parseFloat(totWithVat).toLocaleString('ar-SA')+' ر.س</span>':'')+
+          '<div style="margin-top:4px;">'+
+            '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#64748B;cursor:pointer;">'+
+              '<input type="checkbox" '+(showRpt?'checked':'')+' onchange="poToggleReportVisibility('+i+',this.checked)" style="cursor:pointer;">'+
+              'عرضه بالتقارير (الشهري/الربعي/النصفي/السنوي)'+
+            '</label>'+
+          '</div>'+
         '</div>'+
         '<div class="saved-item-actions" style="display:flex;gap:4px;flex-wrap:wrap;">'+
           '<button class="btn btn-sm" style="background:#EFF6FF;color:#244062;border:1px solid #244062;" onclick="poEditById('+i+')">✏️ تعديل</button>'+
@@ -3308,6 +3325,14 @@ function renderPoSaved(){
     html+='<div style="height:14px;"></div>';
   });
   el.innerHTML=html;
+}
+// يتحكم إذا كان أمر الشراء يظهر بتقارير الشهري/الربع سنوي/النصف سنوي/السنوي أو لا
+function poToggleReportVisibility(idx,val){
+  var s=poSaved[idx];if(!s)return;
+  s.showInReports=val;
+  localStorage.setItem('po_saved_local',JSON.stringify(poSaved));
+  if(s.id) sbUpdate('orders',s.id,{showInReports:val}).catch(function(){});
+  toast(val?'✅ سيظهر بالتقارير':'تم إخفاؤه من التقارير');
 }
 
 function poExcel(){poExcelData({
@@ -4606,14 +4631,17 @@ async function cmpSaveData(){
   if(cmpEditId){
     // تعديل موجود
     const idx=cmpSaved.findIndex(s=>s.id===cmpEditId);
-    if(idx!==-1) cmpSaved[idx]={id:cmpEditId,title,date,currentContract,currentVendor,currentDuration,companies:JSON.parse(JSON.stringify(cmpCompanies))};
+    if(idx!==-1){
+      var prevShow=(cmpSaved[idx].showInReports!==undefined?cmpSaved[idx].showInReports:true);
+      cmpSaved[idx]={id:cmpEditId,title,date,currentContract,currentVendor,currentDuration,companies:JSON.parse(JSON.stringify(cmpCompanies)),showInReports:prevShow};
+    }
     cmpEditId=null;
     toast('تم تحديث المقارنة ✅');
   }else{
-    const cmpData={title,date,currentContract,currentVendor,currentDuration,companies:JSON.parse(JSON.stringify(cmpCompanies))};
+    const cmpData={title,date,currentContract,currentVendor,currentDuration,companies:JSON.parse(JSON.stringify(cmpCompanies)),showInReports:true};
     try{
       const cmpRes=await sbInsert('procurement_cmp',{title,date,companies:JSON.stringify(cmpData.companies)});
-      if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies,currentContract,currentVendor});
+      if(cmpRes&&Array.isArray(cmpRes)&&cmpRes[0])cmpSaved.unshift({...cmpRes[0],companies:cmpData.companies,currentContract,currentVendor,showInReports:true});
       else cmpSaved.unshift({...cmpData,id:Date.now()});
     }catch(e){
       cmpSaved.unshift({...cmpData,id:Date.now()});
@@ -4639,8 +4667,16 @@ function renderCmpSaved(){
   for(var i=0;i<cmpSaved.length;i++){
     var s=cmpSaved[i];
     var cnt=(s.companies&&s.companies.length)||0;
+    var showRpt=(s.showInReports!==false);
     html+='<div class="saved-item">'+
-      '<div class="saved-item-info"><strong>'+(s.title||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+' — '+cnt+' شركات</span></div>'+
+      '<div class="saved-item-info"><strong>'+(s.title||'')+'</strong><span style="color:var(--sub)">'+(s.date||'')+' — '+cnt+' شركات</span>'+
+        '<div style="margin-top:4px;">'+
+          '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#64748B;cursor:pointer;">'+
+            '<input type="checkbox" '+(showRpt?'checked':'')+' onchange="cmpToggleReportVisibility('+i+',this.checked)" style="cursor:pointer;">'+
+            'عرضه بالتقارير (الشهري/الربعي/النصفي/السنوي)'+
+          '</label>'+
+        '</div>'+
+      '</div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-primary btn-sm" onclick="cmpLoad('+i+')">تعديل</button>'+
         '<button class="btn btn-green btn-sm" onclick="cmpExcelById('+i+')">Excel</button>'+
@@ -4650,6 +4686,14 @@ function renderCmpSaved(){
   }
   el.innerHTML=html;
 
+}
+// يتحكم إذا كانت مقارنة الأسعار تظهر بتقارير الشهري/الربع سنوي/النصف سنوي/السنوي أو لا
+function cmpToggleReportVisibility(idx,val){
+  var s=cmpSaved[idx];if(!s)return;
+  s.showInReports=val;
+  localStorage.setItem('cmp_saved',JSON.stringify(cmpSaved));
+  if(s.id) sbUpdate('procurement_cmp',s.id,{showInReports:val}).catch(function(){});
+  toast(val?'✅ ستظهر بالتقارير':'تم إخفاؤها من التقارير');
 }
 
 function cmpLoad(i){
@@ -7787,6 +7831,7 @@ function filterContractsForYear(year, half){
 // يبني صفوف التوفير من بيانات مقارنات الأسعار المحفوظة (cmpSaved) ضمن فترة زمنية محددة
 function cumulativeSavingsRows(startDate,endDate){
   return (typeof cmpSaved!=='undefined'?cmpSaved:[]).filter(function(cmp){
+    if(cmp.showInReports===false) return false;
     var d=cmp.date||'';
     return d && d>=startDate && d<=endDate;
   }).map(function(cmp){
