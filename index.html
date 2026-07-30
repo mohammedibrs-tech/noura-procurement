@@ -2964,7 +2964,7 @@ function expPrint(){
   filtered.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expTotal(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const expRows=filtered.map(e=>`<tr><td class="muted">${e.department||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;font-weight:600;">${(parseFloat(e.amount)||0).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('ar-SA')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td><td class="muted">${e.notes||'—'}</td></tr>`).join('');
-  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
+  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <img src="${BG}" class="bg-img">
@@ -4294,7 +4294,7 @@ function certPrintData(d){
   var html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>
     @page{size:A4;margin:0;}
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;}
+    body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;}
     .bg{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}
     .wrap{position:relative;z-index:2;padding:28mm 14mm 20mm;}
     h1{font-size:16px;font-weight:900;text-align:center;text-decoration:underline;margin-bottom:18px;color:#000;}
@@ -7790,7 +7790,7 @@ function exportSemiPDF(){
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -7953,7 +7953,7 @@ function exportSemiWord(){
   const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=parseFloat(e.amount)||0;sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
     +'h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}'
@@ -8409,7 +8409,7 @@ async function loadPMAAgentRun(){
     box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 تعذّر تحميل نتائج الوكيل التلقائي حالياً.</div></div>';
   }
 }
-var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
+var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
 function exportKPIPDF(){
   var year=document.getElementById('kpi-year').value;
@@ -9165,10 +9165,10 @@ function buildAnnualReport(){
   const el=document.getElementById('annual-report-content');if(!el)return;
   el.innerHTML=`
   <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E2E8F0;margin-bottom:14px;">
-    <div style="padding:12px 16px;border-left:1px solid #E2E8F0;"><div style="font-size:9px;color:#555;margin-bottom:4px;">إجمالي المصروفات</div><div style="font-size:24px;font-weight:700;color:#111;">${totalSpent.toLocaleString('en-US')}</div><div style="font-size:9px;color:#333;">ريال — ${yExp.length} عملية</div></div>
+    <div style="padding:12px 16px;border-left:1px solid #E2E8F0;"><div style="font-size:9px;color:#000;margin-bottom:4px;">إجمالي المصروفات</div><div style="font-size:24px;font-weight:700;color:#111;">${totalSpent.toLocaleString('en-US')}</div><div style="font-size:9px;color:#333;">ريال — ${yExp.length} عملية</div></div>
     <div style="padding:12px 16px;border-left:1px solid #E2E8F0;"><div style="font-size:9px;color:#555;margin-bottom:4px;">طلبات شراء PO</div><div style="font-size:24px;font-weight:700;color:#111;">${yPO.length}</div><div style="font-size:9px;color:#333;">طلب خلال السنة</div></div>
     <div style="padding:12px 16px;border-left:1px solid #E2E8F0;"><div style="font-size:9px;color:#555;margin-bottom:4px;">فواتير Petty Cash</div><div style="font-size:24px;font-weight:700;color:#111;">${yPCInvoices}</div><div style="font-size:9px;color:#333;">فاتورة</div></div>
-    <div style="padding:12px 16px;"><div style="font-size:9px;color:#555;margin-bottom:4px;">إجمالي العقود السنوي</div><div style="font-size:24px;font-weight:700;color:#111;">${(totalCMonthly*12).toLocaleString('en-US')}</div><div style="font-size:9px;color:#333;">ريال — وفر ${totalSaving.toLocaleString('en-US')}</div></div>
+    <div style="padding:12px 16px;"><div style="font-size:9px;color:#000;margin-bottom:4px;">إجمالي العقود السنوي</div><div style="font-size:24px;font-weight:700;color:#111;">${(totalCMonthly*12).toLocaleString('en-US')}</div><div style="font-size:9px;color:#333;">ريال — وفر ${totalSaving.toLocaleString('en-US')}</div></div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
     <div style="border:1px solid #E2E8F0;padding:10px 14px;"><div style="font-size:9px;color:#555;">متوسط الإنفاق الشهري</div><div style="font-size:18px;font-weight:700;color:#333;">${Math.round(totalSpent/12).toLocaleString('en-US')}</div><div style="font-size:9px;color:#555;">ريال</div></div>
@@ -9234,7 +9234,7 @@ function exportAnnualPDF(){
   const topItemRowsA=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const monthRowsA=monthlyData.map(m=>`<tr><td>${m.m}</td><td style="text-align:right;">${fmt2(m.t)}</td><td style="text-align:center;">${totalSpent>0?((m.t/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expiringRowsA=expiringCA.map(c=>`<tr><td style="font-weight:700;">${c.vendor}</td><td>${c.type}</td><td style="text-align:center;color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم</td><td style="text-align:right;">${fmt2(c.monthly||0)} ر.س/شهر</td></tr>`).join('');
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -9933,7 +9933,7 @@ function exportMonthlyPDF(){
   const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const cumSavLastDayM=new Date(parseInt(year),parseInt(month),0).getDate();
   const cumSavRowsM=cumulativeSavingsRows(year+'-'+month+'-01',year+'-'+month+'-'+String(cumSavLastDayM).padStart(2,'0'));
-  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{.bg-img{position:fixed;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<img src="'+BG+'" class="bg-img">';
@@ -10706,8 +10706,8 @@ function fleetCalc(){
   decHTML+='<div style="font-size:20px;font-weight:900;">'+winner+' هو الخيار الأقل تكلفة</div>';
   decHTML+='<div style="font-size:12px;opacity:.85;margin-top:4px;">الفرق المالي: '+flFmt(Math.abs(sav2))+' ريال سعودي خلال '+years2+' سنوات</div></div>';
   decHTML+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">';
-  decHTML+='<div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:#555;margin-bottom:4px;">إجمالي تكلفة التملك ('+years2+' سنة)</div><div style="font-weight:900;font-size:15px;color:#1A2B4A;">'+flFmt(buy2.total)+'</div></div>';
-  decHTML+='<div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:#555;margin-bottom:4px;">إجمالي تكلفة التأجير ('+years2+' سنة)</div><div style="font-weight:900;font-size:15px;color:#333;">'+flFmt(lease2.total)+'</div></div>';
+  decHTML+='<div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:#000;margin-bottom:4px;">إجمالي تكلفة التملك ('+years2+' سنة)</div><div style="font-weight:900;font-size:15px;color:#1A2B4A;">'+flFmt(buy2.total)+'</div></div>';
+  decHTML+='<div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:#000;margin-bottom:4px;">إجمالي تكلفة التأجير ('+years2+' سنة)</div><div style="font-weight:900;font-size:15px;color:#333;">'+flFmt(lease2.total)+'</div></div>';
   decHTML+='<div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:#555;margin-bottom:4px;">فترة الاسترداد</div><div style="font-weight:900;font-size:15px;color:#1A2B4A;">'+(breakEven>0?breakEven.toFixed(1)+' سنة':'—')+'</div></div>';
   decHTML+='</div>';
   if(bestMaint) decHTML+='<div style="background:#f0f4f8;border:1px solid #c8d6e5;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px;"><strong>أفضل عرض صيانة:</strong> '+(bestMaint.name||'—')+' — '+flFmt(bestMaint.annualCost)+' ريال سعودي / سنة — مستوى الخدمة: '+(bestMaint.sla||'—')+'</div>';
@@ -10896,7 +10896,7 @@ function fleetPDF(reportTitle){
     ?'في حال اختيار التملك، تجدر الإشارة إلى أن مسؤولية الصيانة وإدارة الأعطال ستقع على الجهة مباشرة، وهو ما يستلزم توفير عقد صيانة شامل مع جهة مختصة.'
     :'الاستمرار في التأجير يُبقي على مرونة التشغيل ويُخفف من تبعات الأعطال، غير أن الاعتماد على مورد واحد يشكّل خطراً تعاقدياً ينبغي مراعاته عند التفاوض على شروط التجديد.';
   var W=window.open('','_blank');
-  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
+  W.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>'+safeTitle+'</title><style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9pt;color:#000;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.wrap{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:13pt;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:9.5pt;font-weight:800;margin:12px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}p{font-size:8.5pt;color:#222;line-height:1.6;margin:0 0 6px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt;}thead th,th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td,td{padding:4px 7px;border:1px solid #bbb;color:#000;background:#fff;}tbody tr:nth-child(even) td,tr:nth-child(even) td{background:#eaf2ff;}.hl td{background:#d6e4f0 !important;font-weight:700;}ul{margin:2px 0 8px;padding-right:16px;} li{font-size:8.5pt;color:#222;line-height:1.8;}.note{font-size:7.5pt;color:#555;margin:0 0 7px;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap">'
     +'<h1>'+safeTitle+'</h1>'
@@ -11082,7 +11082,7 @@ function cmpPDF(){
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
   html+='@page{size:A4;margin:0;}';
-  html+='body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}';
+  html+='body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;margin:0;padding:0;}';
   html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}';
   html+='.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}';
   html+='h1{font-size:15px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:4px;color:#000;}';
@@ -11187,12 +11187,12 @@ function cmpWord(){
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px;}'
     +'th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;}'
     +'td{padding:3px 6px;border:1px solid #bbb;}'
-    +'tr:nth-child(even) td{background:#f2f6fb;}'
+    
     +'div.WordSection1{page:WordSection1;}'
     +'@page WordSection1{size:21cm 29.7cm;margin:2.8cm 1.2cm 1.5cm 1.2cm;}';
   var body='';
   if(BG) body+='<img src="'+BG+'" class="bg-img">';
-  body+='<div class="wrap"><h1>'+title+'</h1><p style="text-align:center;color:#555;font-size:9px;">'+date+'</p>';
+  body+='<div class="wrap"><h1>'+title+'</h1><p style="text-align:center;color:#000;font-size:9px;">'+date+'</p>';
   if(curContract>0){
     body+='<h2>مقارنة العقد الحالي بأقل عرض</h2>';
     body+='<table><thead><tr><th>الشركة الحالية</th><th>مدة العقد</th><th>قيمة العقد الحالي السنوي</th><th>أقل عرض سنوي</th><th>الفرق</th><th>النسبة</th></tr></thead><tbody>'+curRow+'</tbody></table>';
@@ -11923,7 +11923,7 @@ function revPDFFromData(title,date,serviceType,companies,cur){
   var W=window.open('','_blank');
   W.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>'
     +'@page{size:A4;margin:0;}'
-    +'body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;}'
+    +'body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;margin:0;padding:0;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
     +'h1{font-size:14px;text-align:center;border-bottom:1.5px solid #000;padding-bottom:4px;margin-bottom:4px;color:#000;}'
@@ -12105,10 +12105,10 @@ function f2SavingBadge(saving,pct,isBase){
 
 function f2ReportHTML(m){
   var H='';
-  var secTitle=function(n,txt){return '<h2 style="font-size:13px;font-weight:800;margin:16px 0 8px;padding:6px 12px;background:#2E9896;color:#fff;border-radius:3px;">'+n+'- '+txt+'</h2>';};
+  var secTitle=function(n,txt){return '<h2 style="font-size:13px;font-weight:800;margin:16px 0 8px;padding:6px 12px;color:#000;border-bottom:1px solid #000;">'+n+'- '+txt+'</h2>'';};
   var kv=function(rows){
     return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:12.5px;">'
-      +rows.map(function(r){return '<tr><td style="padding:6px 10px;border:1px solid #333;font-weight:700;width:45%;background:#F7F9FA;">'+r[0]+'</td><td style="padding:6px 10px;border:1px solid #333;">'+r[1]+'</td></tr>';}).join('')
+      +rows.map(function(r){return '<tr><td style="padding:6px 10px;border:1px solid #333;font-weight:700;width:45%;background:#fff;color:#000;">'+r[0]+'</td><td style="padding:6px 10px;border:1px solid #333;color:#000;background:#fff;">''+r[1]+'</td></tr>';}).join('')
       +'</table>';
   };
   var dataTable=function(headers,rows,emptyMsg){
@@ -12191,7 +12191,7 @@ function f2ReportHTML(m){
     [[f2Fmt(m.totalPurchase)+' ر.س', f2Fmt(m.bma)+' ر.س', f2Fmt(m.binsurance)+' ر.س', '<b>'+f2Fmt(ownershipTotal)+' ر.س</b>']],
     '—'
   );
-  H+='<div style="font-size:11px;color:#555;margin-bottom:4px;">إجمالي تكلفة التملك = قيمة شراء المركبات + تكلفة الصيانة السنوية + تكلفة التأمين السنوية</div>';
+  H+='<div style="font-size:11px;color:#000;margin-bottom:4px;">إجمالي تكلفة التملك = قيمة شراء المركبات + تكلفة الصيانة السنوية + تكلفة التأمين السنوية</div>';
 
   /* 9) الوفر السنوي */
   H+=secTitle('9','الوفر السنوي');
@@ -12200,7 +12200,7 @@ function f2ReportHTML(m){
     [[f2Fmt(m.annualLease)+' ر.س', f2Fmt(ownershipTotal)+' ر.س', '<b>'+f2Fmt(annualSaving)+' ر.س</b>']],
     '—'
   );
-  H+='<div style="font-size:11px;color:#555;">الوفر السنوي = تكلفة التأجير السنوية - تكلفة التملك السنوية</div>';
+  H+='<div style="font-size:11px;color:#000;">الوفر السنوي = تكلفة التأجير السنوية - تكلفة التملك السنوية</div>';
 
   return H;
 }
@@ -12395,7 +12395,7 @@ function f2Calc(){
   if(rtb){if(renewTotal>0){rtb.style.display='block';rtb.textContent='إجمالي تكلفة التمديد المقترح: '+f2Fmt(renewTotal)+' ر.س لمدة '+renewDuration+' سنة';}else rtb.style.display='none';}
   var leaseEnd=document.getElementById('f2-lease-end')?.value||'';
   var leaseBadge=document.getElementById('f2-lease-end-badge');
-  if(leaseBadge) leaseBadge.textContent=leaseEnd?('📅 تاريخ انتهاء العقد الحالي: '+leaseEnd):'';
+  if(leaseBadge) leaseBadge.textContent=leaseEnd?('تاريخ انتهاء العقد الحالي: '+leaseEnd):'';
   var monthlyLeaseTotal=parseFloat(document.getElementById('f2-monthly-lease')?.value)||0;
   var perVehicleMonthly=monthlyLeaseTotal>0&&count>0?monthlyLeaseTotal/count:(annualLease>0&&count>0?annualLease/12/count:0);
   var cmp=f2RenewCompare(totalPurchase,renewAnnual,renewGrowth);
@@ -12641,20 +12641,17 @@ function f2PDF(reportTitle){
   var BG=FORM_BG||'';
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
 
-  var css='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;direction:rtl;margin:0;padding:0;}'
+  var css='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#000;direction:rtl;margin:0;padding:0;}'
     +'.page{position:relative;width:297mm;min-height:210mm;}'
     +'.bg-img{position:absolute;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 14mm 12mm;}'
     +'h1{font-size:12pt;font-weight:900;text-align:center;border-bottom:2.5px solid #000;padding-bottom:6px;margin-bottom:14px;color:#000;}'
-    +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 10px;background:#2E9896;color:#fff;border-radius:3px;}'
-    +'h3{font-size:8.5pt;font-weight:700;margin:10px 0 4px;padding:3px 8px;background:#e8eef7;color:#000;border-right:3px solid #000;}'
+    +'h2{font-size:9pt;font-weight:800;margin:14px 0 5px;padding:4px 8px;color:#000;border-bottom:1px solid #000;}'
+    +'h3{font-size:8.5pt;font-weight:700;margin:10px 0 4px;padding:3px 8px;color:#000;border-right:3px solid #000;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8pt;}'
     +'thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
-    +'tbody td{padding:4px 7px;border:1px solid #ccc;color:#111;background:#fff;}'
-    +'tbody tr:nth-child(even) td{background:#f2f6fb;}'
-    +'.best td{font-weight:700;}'
-    +'.rank1{font-weight:900;}'
-    +'.rank3{font-weight:700;}'
+    +'tbody td{padding:4px 7px;border:1px solid #ccc;color:#000;background:#fff;}'
+    
     +'@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
 
   var m=f2BuildModel();
@@ -12664,7 +12661,7 @@ function f2PDF(reportTitle){
     +'<div class="page">'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
     +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
-    +(leaseEnd?'<div style="text-align:center;font-size:9pt;font-weight:700;color:#000;margin:-8px 0 14px;">📅 تاريخ انتهاء العقد الحالي: '+leaseEnd+'<\/div>':'')
+    +(leaseEnd?'<div style="text-align:center;font-size:9pt;font-weight:700;color:#000;margin:-8px 0 14px;">تاريخ انتهاء العقد الحالي: '+leaseEnd+'<\/div>':'')
     +body
     +'<\/div><\/div>'
     +'<script>window.onload=function(){window.print();}<\/script><\/body><\/html>';
@@ -12749,18 +12746,17 @@ function f2Word(){
   scenarios.sort(function(a,b){return a.total-b.total;});
   var BG=FORM_BG||'';
 
-  var CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:landscape;}'
+  var CSS='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;margin:0;padding:0;mso-page-orientation:landscape;}'
     +'.page{position:relative;width:297mm;min-height:210mm;}'
     +'.bg-img{position:absolute;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.wrap{position:relative;z-index:2;padding:26mm 14mm 12mm;}'
     +'h1{font-size:12px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}'
-    +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;}'
-    +'h3{font-size:8.5px;font-weight:700;margin:8px 0 3px;padding:3px 8px;background:#e8eef7;color:#000;border-right:3px solid #000;}'
+    +'h2{font-size:9px;font-weight:800;margin:14px 0 4px;padding:4px 8px;color:#000;border-bottom:1px solid #000;}'
+    +'h3{font-size:8.5px;font-weight:700;margin:8px 0 3px;padding:3px 8px;color:#000;border-right:3px solid #000;}'
     +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5px;}'
     +'thead th{background:#2E9896;color:#fff;padding:4px 6px;text-align:right;border:1px solid #2E9896;font-weight:700;}'
     +'tbody td{padding:3px 6px;border:1px solid #ccc;color:#000;}'
-    +'tbody tr:nth-child(even) td{background:#f2f6fb;}'
-    +'.best td{font-weight:700;}'
+    
     +'div.WordSection1{page:WordSection1;}'
     +'@page WordSection1{size:29.7cm 21cm;margin:2.4cm 1.3cm 1.2cm 1.3cm;}';
 
