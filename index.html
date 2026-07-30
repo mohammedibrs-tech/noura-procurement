@@ -10503,7 +10503,7 @@ function cmpSwitchTab(tab){
   if(tab==='prices'){tp.style.color='var(--primary)';tp.style.borderBottomColor='var(--primary)';}
   else if(tab==='revenue'){tr.style.color='var(--primary)';tr.style.borderBottomColor='var(--primary)';}
   else if(tab==='fleet'){tf.style.color='var(--primary)';tf.style.borderBottomColor='var(--primary)';}
-  else if(tab==='fleet2'){tf2.style.color='var(--primary)';tf2.style.borderBottomColor='var(--primary)';}
+  else if(tab==='fleet2'){tf2.style.color='var(--primary)';tf2.style.borderBottomColor='var(--primary)';if(typeof f2Calc==='function')f2Calc();}
 }
 
 /* ══════════════════════════════════════════════
@@ -12779,15 +12779,10 @@ function f2Word(){
 }
 
 async function autoLogin(){
+  // تم تعطيل الدخول التلقائي — يجب إدخال بيانات الدخول في كل مرة
   try{
-    const u=localStorage.getItem('saved_user');
-    const h=localStorage.getItem('saved_hash');
-    if(!u||!h)return;
-    document.getElementById('l-user').value=u;
-    if(u==='admin'&&h===ADMIN_HASH){
-      document.getElementById('login-screen').style.display='none';
-      init();
-    }
+    localStorage.removeItem('saved_user');
+    localStorage.removeItem('saved_hash');
   }catch(e){}
 }
 window.addEventListener('load', function(){ autoLogin(); });
