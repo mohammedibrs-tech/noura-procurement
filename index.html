@@ -12271,7 +12271,10 @@ function f2ReportHTML(m){
     +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر مقارنة بالعقد الجديد</td>'+savingVsNew.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
     +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر التراكمي (مقارنة بالعقد الحالي)</td>'+cumSaving.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
     +'</tbody></table>';
-  H+='<div style="font-size:11px;color:#000;">ملاحظة: قيمة الشراء تُدفع مرة واحدة بالسنة الأولى فقط؛ الصيانة والتأمين ثابتتان طوال السنوات الأربع دون افتراض نمو إضافي.</div>';
+  H+='<div style="font-size:11px;color:#000;margin-bottom:6px;">ملاحظة: قيمة الشراء تُدفع مرة واحدة بالسنة الأولى فقط؛ الصيانة والتأمين ثابتتان طوال السنوات الأربع دون افتراض نمو إضافي.</div>';
+  H+='<div style="font-size:11.5px;color:#000;font-weight:700;">تفصيل التكلفة السنوية الإجمالية للسنة الثانية (ونفس التفصيل للثالثة والرابعة، بما إنها ثابتة): '
+    +'تكلفة الصيانة ('+f2Fmt(m.bma)+' ر.س) + تكلفة التأمين ('+f2Fmt(m.binsurance)+' ر.س) = '+f2Fmt(y2total)+' ر.س. '
+    +'ملاحظة: لا تشمل هذه السنوات أي قيمة شراء لأنها تُدفع مرة واحدة فقط بالسنة الأولى.</div>';
   H+=pageBreak;
 
   /* ══════ عروض شركات التأمين والصيانة (ترتيب) ══════ */
@@ -12313,35 +12316,23 @@ function f2ReportHTML(m){
   var annualSaving=highest.annual-lowest.annual;
   var fourYearSaving=highest.fourYear-lowest.fourYear;
 
-  H+='<h3 style="font-size:13px;font-weight:700;margin:0 0 6px;color:#000;">ترتيب الخيارات الثلاثة من الأقل للأعلى تكلفة</h3>';
   H+=wideTable(
-    ['الترتيب','الخيار','التكلفة السنوية','التكلفة خلال أربع سنوات','الفرق عن الأقل تكلفة (سنوياً)'],
+    ['الترتيب','الخيار','التكلفة السنوية','التكلفة خلال أربع سنوات','الفرق عن الأقل تكلفة (سنوياً)','الفرق عن الأقل تكلفة (4 سنوات)','التوصية'],
     byAnnual.map(function(o,i){
-      var diff=o.annual-lowest.annual;
-      return [''+(i+1), o.name+(i===0?' (الأقل تكلفة)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(o.fourYear)+' ر.س', i===0?'0 ر.س':'+'+f2Fmt(diff)+' ر.س'];
+      var diffAnnual=o.annual-lowest.annual;
+      var diffFour=o.fourYear-lowest.fourYear;
+      return [
+        ''+(i+1),
+        o.name,
+        f2Fmt(o.annual)+' ر.س',
+        f2Fmt(o.fourYear)+' ر.س',
+        i===0?'0 ر.س':'+'+f2Fmt(diffAnnual)+' ر.س',
+        i===0?'0 ر.س':'+'+f2Fmt(diffFour)+' ر.س',
+        i===0?'الخيار الموصى به':'—'
+      ];
     })
   );
-
-  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">تفصيل الوفر السنوي المتوقع</h3>';
-  H+=wideTable(
-    ['أعلى خيار تكلفة','قيمته السنوية','أقل خيار تكلفة','قيمته السنوية','الوفر السنوي (الفرق بينهما)'],
-    [[highest.name, f2Fmt(highest.annual)+' ر.س', lowest.name, f2Fmt(lowest.annual)+' ر.س', f2Fmt(annualSaving)+' ر.س']]
-  );
-
-  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">تفصيل الوفر خلال أربع سنوات</h3>';
-  H+=wideTable(
-    ['أعلى خيار تكلفة','قيمته خلال 4 سنوات','أقل خيار تكلفة','قيمته خلال 4 سنوات','الوفر خلال 4 سنوات (الفرق بينهما)'],
-    [[highest.name, f2Fmt(highest.fourYear)+' ر.س', lowest.name, f2Fmt(lowest.fourYear)+' ر.س', f2Fmt(fourYearSaving)+' ر.س']]
-  );
-
-  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">أساس التوصية النهائية</h3>';
-  H+=wideTable(
-    ['الخيار','التكلفة السنوية','هل هو الأقل تكلفة؟','الفرق عنه لو تم اختيار خيار آخر'],
-    byAnnual.map(function(o,i){
-      var diff=o.annual-lowest.annual;
-      return [o.name, f2Fmt(o.annual)+' ر.س', i===0?'نعم — هذا الخيار الموصى به':'لا', i===0?'—':'أعلى بـ '+f2Fmt(diff)+' ر.س سنوياً من "'+lowest.name+'"'];
-    })
-  );
+  H+='<div style="font-size:11px;color:#000;margin-bottom:10px;">الوفر السنوي بين أعلى خيار ("'+highest.name+'" — '+f2Fmt(highest.annual)+' ر.س) وأقل خيار ("'+lowest.name+'" — '+f2Fmt(lowest.annual)+' ر.س) = <b>'+f2Fmt(annualSaving)+' ر.س</b>. الوفر خلال أربع سنوات بين نفس الخيارين = <b>'+f2Fmt(fourYearSaving)+' ر.س</b>.</div>';
   H+=kvTable([
     ['التوصية النهائية', 'اعتماد خيار: '+lowest.name],
     ['الأساس الرقمي للتوصية', 'أقل تكلفة سنوية بين الخيارات الثلاثة ('+f2Fmt(lowest.annual)+' ر.س)، بفارق '+f2Fmt(annualSaving)+' ر.س سنوياً عن أعلى خيار ('+highest.name+')']
