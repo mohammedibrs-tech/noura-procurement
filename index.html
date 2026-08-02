@@ -12149,10 +12149,8 @@ function f2ReportHTML(m){
   var sortedMaint=f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var sortedLease=f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;});
 
-  // قائمة موحّدة بالخيارات الأربعة الأساسية (تُستخدم بالجدول التنفيذي والملخص الختامي)
+  // قائمة موحّدة بالخيارات الثلاثة المتاحة فعلياً (تُستخدم بالجدول التنفيذي والملخص الختامي وجدول المقارنة)
   var options=[
-    {name:'الاستمرار بالعقد الحالي', monthly:monthlyLeaseRate, annual:m.annualLease, fourYear:m.annualLease*4,
-      maint:m.inclMaint, ins:m.inclIns, alt:m.inclAlt, features:'استمرارية بدون تغيير تعاقدي', notes:m.currentVendor},
     {name:'تمديد العقد الحالي', monthly:renewMonthlyTotal, annual:m.renewAnnual, fourYear:m.renewAnnual*4,
       maint:m.inclMaint, ins:m.inclIns, alt:m.inclAlt, features:'تفاوض على تمديد بشروط جديدة', notes:m.currentVendor},
     {name:'إبرام عقد جديد (أفضل عرض)', monthly:newLeaseMonthly, annual:newLeaseAnnual, fourYear:newLeaseAnnual*4,
@@ -12169,6 +12167,17 @@ function f2ReportHTML(m){
     +'<div style="font-size:13px;color:#000;">تاريخ إعداد الدراسة: '+new Date().toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'})+'</div>'
     +'</div>'+pageBreak;
 
+  /* ══════ أفق الدراسة والخيارات المتاحة ══════ */
+  H+=secTitle('أفق الدراسة والخيارات المتاحة');
+  H+=kvTable([
+    ['عدد المركبات المشمولة بالدراسة', ''+m.count],
+    ['أفق الدراسة الزمني', m.Y+' '+(m.Y===1?'سنة':'سنوات')],
+    ['الخيار الأول المتاح', 'تمديد العقد الحالي'],
+    ['الخيار الثاني المتاح', 'إبرام عقد جديد بمركبات حديثة'],
+    ['الخيار الثالث المتاح', 'تملك الأسطول']
+  ]);
+  H+=pageBreak;
+
   /* ══════ الجدول التنفيذي للمقارنة ══════ */
   H+=secTitle('الجدول التنفيذي — مقارنة جميع الخيارات');
   H+=wideTable(
@@ -12179,25 +12188,8 @@ function f2ReportHTML(m){
   );
   H+=pageBreak;
 
-  /* ══════ القسم 1: الاستمرار بالعقد الحالي ══════ */
-  H+=secTitle('أولاً: الاستمرار بالعقد الحالي');
-  H+=kvTable([
-    ['عدد المركبات', ''+m.count],
-    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.count>0?monthlyLeaseRate/m.count:0)+' ر.س'],
-    ['التكلفة الشهرية', f2Fmt(monthlyLeaseRate)+' ر.س'],
-    ['التكلفة السنوية', f2Fmt(m.annualLease)+' ر.س'],
-    ['مدة العقد', m.leaseDuration+' '+(m.leaseDuration===1?'سنة':'سنوات')],
-    ['الصيانة', yn(m.inclMaint)],
-    ['التأمين', yn(m.inclIns)],
-    ['المركبات البديلة', yn(m.inclAlt)],
-    ['مستوى الخدمة', '—'],
-    ['إجمالي التكلفة خلال سنة', f2Fmt(m.annualLease)+' ر.س'],
-    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.annualLease*4)+' ر.س']
-  ]);
-  H+=pageBreak;
-
-  /* ══════ القسم 2: تمديد العقد الحالي ══════ */
-  H+=secTitle('ثانياً: تمديد العقد الحالي');
+  /* ══════ القسم 1: تمديد العقد الحالي ══════ */
+  H+=secTitle('أولاً: تمديد العقد الحالي');
   H+=kvTable([
     ['عدد المركبات', ''+m.count],
     ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.renewMonthlyUnit)+' ر.س'],
@@ -12214,7 +12206,7 @@ function f2ReportHTML(m){
   H+=pageBreak;
 
   /* ══════ القسم 3: إبرام عقد جديد ══════ */
-  H+=secTitle('ثالثاً: إبرام عقد جديد بمركبات حديثة');
+  H+=secTitle('ثانياً: إبرام عقد جديد بمركبات حديثة');
   H+=kvTable([
     ['اسم الشركة (أفضل عرض)', m.bestLease?m.bestLease.name:'—'],
     ['عدد المركبات', ''+m.count],
@@ -12243,7 +12235,7 @@ function f2ReportHTML(m){
   H+=pageBreak;
 
   /* ══════ القسم 4: تملك الأسطول ══════ */
-  H+=secTitle('رابعاً: تملك الأسطول');
+  H+=secTitle('ثالثاً: تملك الأسطول');
   H+=kvTable([
     ['عدد المركبات', ''+m.count],
     ['قيمة المركبة الواحدة', f2Fmt(m.unitPrice)+' ر.س'],
@@ -12300,6 +12292,16 @@ function f2ReportHTML(m){
       var diff=o.annual-sortedMaint[0].annual;
       var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
       return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%', o.sla||'—'];
+    })
+  );
+  H+=pageBreak;
+
+  /* ══════ مقارنة ══════ */
+  H+=secTitle('مقارنة');
+  H+=wideTable(
+    ['الخيار','التكلفة الشهرية','التكلفة السنوية','التكلفة الإجمالية خلال أربع سنوات'],
+    options.map(function(o){
+      return [o.name, f2Fmt(o.monthly)+' ر.س', f2Fmt(o.annual)+' ر.س', f2Fmt(o.fourYear)+' ر.س'];
     })
   );
   H+=pageBreak;
