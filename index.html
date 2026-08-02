@@ -405,8 +405,8 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     </div>
     <div class="card-body" style="overflow-x:auto;">
       <table class="tbl">
-        <thead><tr><th>الإدارة</th><th>رقم الفاتورة</th><th>البند</th><th>المبلغ</th><th>رسوم التحويل</th><th>الشهر</th><th>التاريخ</th><th>ملاحظات</th><th></th></tr></thead>
-        <tbody id="exp-tbody"><tr><td colspan="9" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات</td></tr></tbody>
+        <thead><tr><th>الإدارة</th><th>رقم الفاتورة</th><th>المورد</th><th>الرقم الضريبي</th><th>البند</th><th>المبلغ</th><th>رسوم التحويل</th><th>الشهر</th><th>التاريخ</th><th>ملاحظات</th><th></th></tr></thead>
+        <tbody id="exp-tbody"><tr><td colspan="11" style="text-align:center;color:#aaa;padding:20px;">لا توجد مصروفات</td></tr></tbody>
       </table>
       <div id="exp-total-row" style="text-align:left;padding:8px 12px;font-weight:700;color:#C53030;font-size:12px;"></div>
     </div>
@@ -2746,6 +2746,8 @@ function renderExpenses(){
     html+='<tr>';
     html+='<td><select onchange="expUpdate('+realIdx+',\'department\',this.value)" style="border:none;background:transparent;font-size:11px;width:140px;">'+opts+'</select></td>';
     html+='<td><input value="'+(e.invoice_num||'')+'" onchange="expUpdate('+realIdx+',\'invoice_num\',this.value)" style="border:none;background:transparent;width:90px;font-size:11px;" placeholder="—"></td>';
+    html+='<td><input value="'+(e.vendor||'')+'" onchange="expUpdate('+realIdx+',\'vendor\',this.value)" list="suppliers-datalist" style="border:none;background:transparent;width:110px;font-size:11px;" placeholder="—"></td>';
+    html+='<td><input value="'+(e.vat_num||'')+'" onchange="expUpdate('+realIdx+',\'vat_num\',this.value)" style="border:none;background:transparent;width:110px;font-size:11px;" placeholder="—"></td>';
     html+='<td><input value="'+(e.item_name||'')+'" onchange="expUpdate('+realIdx+',\'item_name\',this.value)" style="border:none;background:transparent;width:100%;font-size:11px;"></td>';
     html+='<td><input type="number" value="'+(parseFloat(e.amount)||0)+'" onchange="expUpdate('+realIdx+',\'amount\',this.value)" style="border:none;background:transparent;width:110px;font-weight:700;color:#C53030;font-size:11px;text-align:right;"></td>';
     html+='<td><input type="number" value="'+(parseFloat(e.transfer_fee)||0)+'" onchange="expUpdate('+realIdx+',\'transfer_fee\',this.value)" style="border:none;background:transparent;width:80px;font-size:11px;text-align:right;color:#7C3AED;" placeholder="0"></td>';
