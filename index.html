@@ -12312,12 +12312,39 @@ function f2ReportHTML(m){
   var lowest=byAnnual[0], highest=byAnnual[byAnnual.length-1];
   var annualSaving=highest.annual-lowest.annual;
   var fourYearSaving=highest.fourYear-lowest.fourYear;
+
+  H+='<h3 style="font-size:13px;font-weight:700;margin:0 0 6px;color:#000;">ترتيب الخيارات الثلاثة من الأقل للأعلى تكلفة</h3>';
+  H+=wideTable(
+    ['الترتيب','الخيار','التكلفة السنوية','التكلفة خلال أربع سنوات','الفرق عن الأقل تكلفة (سنوياً)'],
+    byAnnual.map(function(o,i){
+      var diff=o.annual-lowest.annual;
+      return [''+(i+1), o.name+(i===0?' (الأقل تكلفة)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(o.fourYear)+' ر.س', i===0?'0 ر.س':'+'+f2Fmt(diff)+' ر.س'];
+    })
+  );
+
+  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">تفصيل الوفر السنوي المتوقع</h3>';
+  H+=wideTable(
+    ['أعلى خيار تكلفة','قيمته السنوية','أقل خيار تكلفة','قيمته السنوية','الوفر السنوي (الفرق بينهما)'],
+    [[highest.name, f2Fmt(highest.annual)+' ر.س', lowest.name, f2Fmt(lowest.annual)+' ر.س', f2Fmt(annualSaving)+' ر.س']]
+  );
+
+  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">تفصيل الوفر خلال أربع سنوات</h3>';
+  H+=wideTable(
+    ['أعلى خيار تكلفة','قيمته خلال 4 سنوات','أقل خيار تكلفة','قيمته خلال 4 سنوات','الوفر خلال 4 سنوات (الفرق بينهما)'],
+    [[highest.name, f2Fmt(highest.fourYear)+' ر.س', lowest.name, f2Fmt(lowest.fourYear)+' ر.س', f2Fmt(fourYearSaving)+' ر.س']]
+  );
+
+  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">أساس التوصية النهائية</h3>';
+  H+=wideTable(
+    ['الخيار','التكلفة السنوية','هل هو الأقل تكلفة؟','الفرق عنه لو تم اختيار خيار آخر'],
+    byAnnual.map(function(o,i){
+      var diff=o.annual-lowest.annual;
+      return [o.name, f2Fmt(o.annual)+' ر.س', i===0?'نعم — هذا الخيار الموصى به':'لا', i===0?'—':'أعلى بـ '+f2Fmt(diff)+' ر.س سنوياً من "'+lowest.name+'"'];
+    })
+  );
   H+=kvTable([
-    ['أقل خيار تكلفة (سنوياً)', lowest.name+' — '+f2Fmt(lowest.annual)+' ر.س'],
-    ['أعلى خيار تكلفة (سنوياً)', highest.name+' — '+f2Fmt(highest.annual)+' ر.س'],
-    ['الوفر السنوي المتوقع (بين الأعلى والأقل)', f2Fmt(annualSaving)+' ر.س'],
-    ['الوفر خلال أربع سنوات (بين الأعلى والأقل)', f2Fmt(fourYearSaving)+' ر.س'],
-    ['التوصية النهائية', 'اعتماد خيار: '+lowest.name+' — الأقل تكلفة إجمالية من بين الخيارات المدروسة']
+    ['التوصية النهائية', 'اعتماد خيار: '+lowest.name],
+    ['الأساس الرقمي للتوصية', 'أقل تكلفة سنوية بين الخيارات الثلاثة ('+f2Fmt(lowest.annual)+' ر.س)، بفارق '+f2Fmt(annualSaving)+' ر.س سنوياً عن أعلى خيار ('+highest.name+')']
   ]);
 
   return H;
