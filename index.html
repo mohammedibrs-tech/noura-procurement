@@ -12117,9 +12117,18 @@ function f2ReportHTML(m){
   var pageBreak='<div style="page-break-before:always;"></div>';
 
   var kvTable=function(rows){
-    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12.5px;">'
-      +'<thead><tr><th style="padding:9px 14px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;width:45%;">البند</th><th style="padding:9px 14px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;">القيمة</th></tr></thead>'
-      +'<tbody>'+rows.map(function(r){return '<tr><td style="padding:9px 14px;border:1px solid #999;font-weight:700;color:#000;background:#fff;">'+r[0]+'</td><td style="padding:9px 14px;border:1px solid #999;color:#000;background:#fff;">'+r[1]+'</td></tr>';}).join('')+'</tbody>'
+    var pairs=[];
+    for(var i=0;i<rows.length;i+=2){
+      pairs.push([rows[i], rows[i+1]||null]);
+    }
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">'
+      +'<tbody>'+pairs.map(function(p){
+        var c1='<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;">'+p[0][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;">'+p[0][1]+'</td>';
+        var c2=p[1]
+          ?'<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;">'+p[1][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;">'+p[1][1]+'</td>'
+          :'<td style="border:1px solid #999;background:#fff;"></td><td style="border:1px solid #999;background:#fff;"></td>';
+        return '<tr>'+c1+c2+'</tr>';
+      }).join('')+'</tbody>'
       +'</table>';
   };
   var wideTable=function(headers,rows){
@@ -12228,7 +12237,7 @@ function f2ReportHTML(m){
       var bestAn=sortedLease[0].monthly*12*m.count;
       var diff=an-bestAn;
       var pct=bestAn>0?(diff/bestAn*100):0;
-      return [''+(i+1), o.name||'—', f2Fmt(an)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%'];
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(an)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%'];
     })
   );
   H+=pageBreak;
@@ -12280,7 +12289,7 @@ function f2ReportHTML(m){
     sortedIns.map(function(o,i){
       var diff=o.annual-sortedIns[0].annual;
       var pct=sortedIns[0].annual>0?(diff/sortedIns[0].annual*100):0;
-      return [''+(i+1), o.name||'—', f2Fmt(o.annual)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%', 'مدة العقد: '+(o.duration||'—')];
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%', 'مدة العقد: '+(o.duration||'—')];
     })
   );
 
@@ -12290,7 +12299,7 @@ function f2ReportHTML(m){
     sortedMaint.map(function(o,i){
       var diff=o.annual-sortedMaint[0].annual;
       var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
-      return [''+(i+1), o.name||'—', f2Fmt(o.annual)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%', o.sla||'—'];
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%', o.sla||'—'];
     })
   );
   H+=pageBreak;
