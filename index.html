@@ -3418,7 +3418,7 @@ function poPrintData(d){
   const rHTML=(d.rows||[]).map(r=>`<tr>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.num}</td>
     <td style="border:1px solid #bbb;padding:5px 4px;">${r.item}</td>
-    <td style="border:1px solid #bbb;padding:5px 4px;font-size:10px;">${r.desc||''}</td>
+    <td style="border:1px solid #bbb;padding:5px 4px;font-size:12px;">${r.desc||''}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.qty}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.uom||''}</td>
     <td style="text-align:right;border:1px solid #bbb;padding:5px 4px;">${(r.price||0).toFixed(2)}</td>
@@ -3430,13 +3430,13 @@ function poPrintData(d){
 <style>
 @page{size:A4;margin:0;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:ltr;background:#fff;}
+body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:ltr;background:#fff;}
 .page{position:relative;width:210mm;min-height:297mm;overflow:hidden;}
 .bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;}
 .content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}
 .blue{background:#2E9896 !important;color:#fff !important;font-weight:700;padding:6px 10px;}
-.lbl{background:#f0f0f0;font-weight:600;padding:5px 7px;border:1px solid #ccc;white-space:nowrap;font-size:10px;}
-.val{padding:5px 7px;border:1px solid #ccc;font-size:11px;}
+.lbl{background:#f0f0f0;font-weight:600;padding:5px 7px;border:1px solid #ccc;white-space:nowrap;font-size:12px;}
+.val{padding:5px 7px;border:1px solid #ccc;font-size:13px;}
 table{border-collapse:collapse;width:100%;}
 </style>
 </head><body>
@@ -3476,14 +3476,14 @@ table{border-collapse:collapse;width:100%;}
   <table style="margin-bottom:6px;">
     <thead>
       <tr style="background:#2E9896;color:#fff;">
-        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:5%;">S.N<br><span style="font-size:9px;">الرقم</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;width:12%;">Item<br><span style="font-size:9px;">الصنف</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;">Description<br><span style="font-size:9px;">الوصف</span></th>
-        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:6%;">Qty<br><span style="font-size:9px;">الكمية</span></th>
-        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:7%;">UOM<br><span style="font-size:9px;">الوحدة</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Unit Price<br><span style="font-size:9px;">سعر الوحدة</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Total<br><span style="font-size:9px;">الإجمالي</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;width:12%;">Notes<br><span style="font-size:9px;">ملاحظات</span></th>
+        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:5%;">S.N<br><span style="font-size:11px;">الرقم</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;width:12%;">Item<br><span style="font-size:11px;">الصنف</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;">Description<br><span style="font-size:11px;">الوصف</span></th>
+        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:6%;">Qty<br><span style="font-size:11px;">الكمية</span></th>
+        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:7%;">UOM<br><span style="font-size:11px;">الوحدة</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Unit Price<br><span style="font-size:11px;">سعر الوحدة</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Total<br><span style="font-size:11px;">الإجمالي</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;width:12%;">Notes<br><span style="font-size:11px;">ملاحظات</span></th>
       </tr>
     </thead>
     <tbody>${rHTML}</tbody>
@@ -3502,7 +3502,7 @@ table{border-collapse:collapse;width:100%;}
     <tr>
       <td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;color:#000;">
         Net Amount / المبلغ الإجمالي<br>
-        <span style="font-size:10px;font-weight:400;color:#555;font-style:italic;">In Words: ${numToWords(Math.floor(tot))} Riyals and ${Math.round((tot%1)*100)} Halalas</span>
+        <span style="font-size:12px;font-weight:400;color:#555;font-style:italic;">In Words: ${numToWords(Math.floor(tot))} Riyals and ${Math.round((tot%1)*100)} Halalas</span>
       </td>
       <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:700;color:#000;">${tot.toFixed(2)}</td>
     </tr>
@@ -3523,22 +3523,22 @@ table{border-collapse:collapse;width:100%;}
   </table>
   <div style="display:flex;justify-content:space-between;gap:14px;text-align:center;margin-top:6px;">
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Prepared By / أعدت بواسطة</div>
-      <div style="font-size:9px;color:#555;margin-bottom:50px;">مسؤول المشتريات</div>
-      <div style="position:relative;border-top:1px solid #000;padding-top:5px;font-size:10px;">
+      <div style="font-size:12px;font-weight:700;white-space:nowrap;">Prepared By / أعدت بواسطة</div>
+      <div style="font-size:11px;color:#555;margin-bottom:50px;">مسؤول المشتريات</div>
+      <div style="position:relative;border-top:1px solid #000;padding-top:5px;font-size:12px;">
         ${(!d.sig1||d.sig1==='أ.محمد ابراهيم الجمعان')?`<img src="${MAJ_SIG}" style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%) rotate(-12deg);width:72px;object-fit:contain;pointer-events:none;z-index:5;opacity:0.92;">`:''}
         ${d.sig1||'أ.محمد ابراهيم الجمعان'}
       </div>
     </div>
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Reviewed By / تم مراجعته من قبل</div>
-      <div style="font-size:9px;color:#555;margin-bottom:22px;">مدير الإدارة المالية</div>
-      <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
+      <div style="font-size:12px;font-weight:700;white-space:nowrap;">Reviewed By / تم مراجعته من قبل</div>
+      <div style="font-size:11px;color:#555;margin-bottom:22px;">مدير الإدارة المالية</div>
+      <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
     </div>
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
-      <div style="font-size:9px;color:#555;margin-bottom:22px;">الرئيس التنفيذي</div>
-      <div style="border-top:1px solid #000;padding-top:5px;font-size:10px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
+      <div style="font-size:12px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
+      <div style="font-size:11px;color:#555;margin-bottom:22px;">الرئيس التنفيذي</div>
+      <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
     </div>
   </div>
 
@@ -11079,18 +11079,18 @@ function cmpPDF(){
       ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي (شامل الضريبة)</th>'
       :'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th>';
     var colspanNum=isOneTimeStudy?7:8;
-    return '<h3 style="margin:18px 0 6px;font-size:11px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(!isOneTimeStudy&&t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr>'+theadCols+'</tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="'+colspanNum+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h3 style="margin:18px 0 6px;font-size:15px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(!isOneTimeStudy&&t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr>'+theadCols+'</tr></thead><tbody>'+drows+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="'+colspanNum+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
   html+='@page{size:A4;margin:0;}';
-  html+='body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}';
+  html+='body{font-family:Arial,sans-serif;font-size:14px;color:#111;direction:rtl;margin:0;padding:0;}';
   html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}';
   html+='.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}';
-  html+='h1{font-size:15px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:4px;color:#000;}';
-  html+='h2{font-size:12px;margin:16px 0 6px;border-right:4px solid #000;padding-right:7px;color:#000;}';
-  html+='p{text-align:center;color:#555;font-size:10px;margin-bottom:14px;}';
-  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px;border:1px solid #000;background:#fff;}';
+  html+='h1{font-size:18px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:4px;color:#000;}';
+  html+='h2{font-size:15px;margin:16px 0 6px;border-right:4px solid #000;padding-right:7px;color:#000;}';
+  html+='p{text-align:center;color:#555;font-size:13px;margin-bottom:14px;}';
+  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:14px;border:1px solid #000;background:#fff;}';
   html+='th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
   html+='td{padding:4px 7px;border:1px solid #000;}';
   html+='@media print{.bg-img{position:fixed;}}';
@@ -12113,7 +12113,9 @@ function f2SavingBadge(saving,pct,isBase){
 function f2ReportHTML(m){
   var H='';
   var yn=function(b){return b?'نعم':'لا';};
-  var secTitle=function(txt){return '<h2 style="font-size:15px;font-weight:800;margin:0 0 10px;padding:8px 14px;background:#2E9896;color:#fff;border-radius:3px;">'+txt+'</h2>';};
+  var FONT_CELL='font-family:\'Sakkal Majalla\',Arial,sans-serif;font-size:14px;';
+  var FONT_TITLE='font-family:\'Sakkal Majalla\',Arial,sans-serif;font-size:15px;';
+  var secTitle=function(txt){return '<h2 style="'+FONT_TITLE+'font-weight:800;margin:0 0 10px;padding:8px 14px;background:#2E9896;color:#fff;border-radius:3px;">'+txt+'</h2>';};
   var pageBreak='<div style="page-break-before:always;"></div>';
 
   var kvTable=function(rows){
@@ -12121,21 +12123,21 @@ function f2ReportHTML(m){
     for(var i=0;i<rows.length;i+=2){
       pairs.push([rows[i], rows[i+1]||null]);
     }
-    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">'
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;'+FONT_CELL+'">'
       +'<tbody>'+pairs.map(function(p){
-        var c1='<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;">'+p[0][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;">'+p[0][1]+'</td>';
+        var c1='<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;'+FONT_CELL+'">'+p[0][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;'+FONT_CELL+'">'+p[0][1]+'</td>';
         var c2=p[1]
-          ?'<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;">'+p[1][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;">'+p[1][1]+'</td>'
-          :'<td style="border:1px solid #999;background:#fff;"></td><td style="border:1px solid #999;background:#fff;"></td>';
+          ?'<td style="padding:9px 12px;border:1px solid #999;font-weight:700;color:#000;background:#EAF2F2;width:22%;'+FONT_CELL+'">'+p[1][0]+'</td><td style="padding:9px 12px;border:1px solid #999;color:#000;background:#fff;width:28%;'+FONT_CELL+'">'+p[1][1]+'</td>'
+          :'<td style="border:1px solid #999;background:#fff;'+FONT_CELL+'"></td><td style="border:1px solid #999;background:#fff;'+FONT_CELL+'"></td>';
         return '<tr>'+c1+c2+'</tr>';
       }).join('')+'</tbody>'
       +'</table>';
   };
   var wideTable=function(headers,rows){
-    if(!rows.length) return '<div style="font-size:12px;color:#000;padding:6px 0;">لا توجد بيانات مُدخلة</div>';
-    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">'
-      +'<thead><tr>'+headers.map(function(h){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;">'+h+'</th>';}).join('')+'</tr></thead>'
-      +'<tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;background:#fff;">'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>'
+    if(!rows.length) return '<div style="'+FONT_CELL+'color:#000;padding:6px 0;">لا توجد بيانات مُدخلة</div>';
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;'+FONT_CELL+'">'
+      +'<thead><tr>'+headers.map(function(h){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;'+FONT_CELL+'">'+h+'</th>';}).join('')+'</tr></thead>'
+      +'<tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;background:#fff;'+FONT_CELL+'">'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>'
       +'</table>';
   };
 
@@ -12224,7 +12226,7 @@ function f2ReportHTML(m){
     ['إجمالي التكلفة خلال سنة', f2Fmt(newLeaseAnnual)+' ر.س'],
     ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(newLeaseAnnual*4)+' ر.س']
   ]);
-  H+='<h3 style="font-size:13px;font-weight:700;margin:6px 0;color:#000;">عروض شركات التأجير الجديدة — ترتيب من الأقل للأعلى</h3>';
+  H+='<h3 style="'+FONT_TITLE+'font-weight:800;margin:6px 0;color:#000;">عروض شركات التأجير الجديدة — ترتيب من الأقل للأعلى</h3>';
   H+=wideTable(
     ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %'],
     sortedLease.map(function(o,i){
@@ -12254,25 +12256,28 @@ function f2ReportHTML(m){
     ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.totalPurchase+ownershipAnnualAfterY1*4)+' ر.س']
   ]);
 
-  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">الجدول الموسّع — تكلفة تملك الأسطول على مدى أربع سنوات</h3>';
+  H+='<h3 style="'+FONT_TITLE+'font-weight:800;margin:14px 0 6px;color:#000;">الجدول الموسّع — تكلفة تملك الأسطول على مدى أربع سنوات</h3>';
   var y1total=m.totalPurchase+m.bma+m.binsurance, y2total=m.bma+m.binsurance, y3total=y2total, y4total=y2total;
   var yearTotals=[y1total,y2total,y3total,y4total];
   var savingVsCurrent=yearTotals.map(function(t){return m.annualLease-t;});
   var savingVsNew=yearTotals.map(function(t){return newLeaseAnnual-t;});
   var cumSaving=[];
   savingVsCurrent.reduce(function(acc,v,i){cumSaving[i]=acc+v;return cumSaving[i];},0);
-  H+='<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11.5px;">'
-    +'<thead><tr><th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;">البند</th>'
-    +['السنة الأولى','السنة الثانية','السنة الثالثة','السنة الرابعة'].map(function(y){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;">'+y+'</th>';}).join('')
+  var TDL='padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;'+FONT_CELL; // خلية تسمية الصف
+  var TDV='padding:8px 10px;border:1px solid #999;text-align:center;color:#000;'+FONT_CELL; // خلية قيمة عادية
+  var TDVB='padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;'+FONT_CELL; // خلية قيمة بارزة
+  H+='<table style="width:100%;border-collapse:collapse;margin-bottom:14px;'+FONT_CELL+'">'
+    +'<thead><tr><th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;'+FONT_CELL+'">البند</th>'
+    +['السنة الأولى','السنة الثانية','السنة الثالثة','السنة الرابعة'].map(function(y){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;'+FONT_CELL+'">'+y+'</th>';}).join('')
     +'</tr></thead><tbody>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">قيمة الشراء</td>'+[m.totalPurchase,0,0,0].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">تكلفة الصيانة</td>'+[m.bma,m.bma,m.bma,m.bma].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">تكلفة التأمين</td>'+[m.binsurance,m.binsurance,m.binsurance,m.binsurance].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">التكلفة السنوية الإجمالية</td>'+yearTotals.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">متوسط التكلفة الشهرية</td>'+yearTotals.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v/12)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر مقارنة بالعقد الحالي</td>'+savingVsCurrent.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر مقارنة بالعقد الجديد</td>'+savingVsNew.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
-    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر التراكمي (مقارنة بالعقد الحالي)</td>'+cumSaving.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">قيمة الشراء</td>'+[m.totalPurchase,0,0,0].map(function(v){return '<td style="'+TDV+'">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">تكلفة الصيانة</td>'+[m.bma,m.bma,m.bma,m.bma].map(function(v){return '<td style="'+TDV+'">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">تكلفة التأمين</td>'+[m.binsurance,m.binsurance,m.binsurance,m.binsurance].map(function(v){return '<td style="'+TDV+'">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">التكلفة السنوية الإجمالية</td>'+yearTotals.map(function(v){return '<td style="'+TDVB+'">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">متوسط التكلفة الشهرية</td>'+yearTotals.map(function(v){return '<td style="'+TDV+'">'+f2Fmt(v/12)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">الوفر مقارنة بالعقد الحالي</td>'+savingVsCurrent.map(function(v){return '<td style="'+TDV+'">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">الوفر مقارنة بالعقد الجديد</td>'+savingVsNew.map(function(v){return '<td style="'+TDV+'">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="'+TDL+'">الوفر التراكمي (مقارنة بالعقد الحالي)</td>'+cumSaving.map(function(v){return '<td style="'+TDVB+'">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
     +'</tbody></table>';
   H+=pageBreak;
 
