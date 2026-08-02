@@ -12112,179 +12112,206 @@ function f2SavingBadge(saving,pct,isBase){
 
 function f2ReportHTML(m){
   var H='';
-  var secTitle=function(n,txt){return '<h2 style="font-size:10px;font-weight:800;margin:9px 0 4px;padding:4px 9px;background:#2E9896;color:#fff;border-radius:2px;">'+n+'- '+txt+'</h2>';};
-  var kv=function(rows){
-    return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:8.5px;">'
-      +rows.map(function(r){return '<tr><td style="padding:4px 7px;border:1px solid #999;font-weight:700;width:28%;background:#EAF2F2;color:#000;">'+r[0]+'</td><td style="padding:4px 7px;border:1px solid #999;color:#000;background:#fff;">'+r[1]+'</td></tr>';}).join('')
-      +'</table>';
-  };
-  // highlightIdx: صف يُبرَز (أفضل عرض) — لون خلفية + توسيم "الأقل سعراً"
-  var dataTable=function(headers,rows,highlightIdx,highlightCol){
-    if(!rows.length) return '<div style="font-size:8px;color:#000;padding:2px;">لا توجد بيانات مُدخلة</div>';
-    return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:8.5px;">'
-      +'<thead><tr>'+headers.map(function(h){return '<th style="padding:4px 7px;border:1px solid #2E9896;background:#2E9896;color:#fff;text-align:center;">'+h+'</th>';}).join('')+'</tr></thead>'
-      +'<tbody>'+rows.map(function(r,ri){
-        var isBest=(ri===highlightIdx);
-        var rowBg=isBest?'#D6EEEA':(ri%2===0?'#fff':'#F3F8F8');
-        return '<tr>'+r.map(function(c,ci){
-          var extra=(isBest&&ci===(highlightCol!==undefined?highlightCol:0))?' — الأقل سعراً':'';
-          return '<td style="padding:4px 7px;border:1px solid #bbb;text-align:center;color:#000;background:'+rowBg+';font-weight:'+(isBest?'700':'400')+';">'+c+extra+'</td>';
-        }).join('')+'</tr>';
-      }).join('')+'</tbody>'
-      +'</table>';
-  };
   var yn=function(b){return b?'نعم':'لا';};
+  var secTitle=function(txt){return '<h2 style="font-size:15px;font-weight:800;margin:0 0 10px;padding:8px 14px;background:#2E9896;color:#fff;border-radius:3px;">'+txt+'</h2>';};
+  var pageBreak='<div style="page-break-before:always;"></div>';
 
-  var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
-  var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
-  var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
+  var kvTable=function(rows){
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12.5px;">'
+      +'<thead><tr><th style="padding:9px 14px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;width:45%;">البند</th><th style="padding:9px 14px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;">القيمة</th></tr></thead>'
+      +'<tbody>'+rows.map(function(r){return '<tr><td style="padding:9px 14px;border:1px solid #999;font-weight:700;color:#000;background:#fff;">'+r[0]+'</td><td style="padding:9px 14px;border:1px solid #999;color:#000;background:#fff;">'+r[1]+'</td></tr>';}).join('')+'</tbody>'
+      +'</table>';
+  };
+  var wideTable=function(headers,rows){
+    if(!rows.length) return '<div style="font-size:12px;color:#000;padding:6px 0;">لا توجد بيانات مُدخلة</div>';
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">'
+      +'<thead><tr>'+headers.map(function(h){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;">'+h+'</th>';}).join('')+'</tr></thead>'
+      +'<tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;background:#fff;">'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>'
+      +'</table>';
+  };
+
   var monthlyLeaseRate=m.annualLease/12;
+  var renewMonthlyTotal=m.renewMonthlyUnit*m.count;
   var newLeaseMonthly=m.blm*m.count, newLeaseAnnual=newLeaseMonthly*12;
+  var ownershipAnnualAfterY1=m.bma+m.binsurance, ownershipMonthlyAfterY1=ownershipAnnualAfterY1/12;
   var ownershipYear1=m.totalPurchase+m.bma+m.binsurance;
-  var ownershipAnnualAfterY1=m.bma+m.binsurance;
-  var ownershipMonthlyAfterY1=ownershipAnnualAfterY1/12;
 
   var sortedIns=f2InsuranceOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var sortedMaint=f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var sortedLease=f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;});
 
-  /* 1) معلومات الدراسة */
-  H+=secTitle('1','معلومات الدراسة');
-  H+=kv([
-    ['الهدف من الدراسة','تقييم خيارات إدارة أسطول المركبات: الاستمرار بالعقد الحالي، تمديده، التعاقد الجديد، أو تملك الأسطول'],
-    ['عدد المركبات',''+m.count],
-    ['نوع المركبات',m.modelName]
+  // قائمة موحّدة بالخيارات الأربعة الأساسية (تُستخدم بالجدول التنفيذي والملخص الختامي)
+  var options=[
+    {name:'الاستمرار بالعقد الحالي', monthly:monthlyLeaseRate, annual:m.annualLease, fourYear:m.annualLease*4,
+      maint:m.inclMaint, ins:m.inclIns, alt:m.inclAlt, features:'استمرارية بدون تغيير تعاقدي', notes:m.currentVendor},
+    {name:'تمديد العقد الحالي', monthly:renewMonthlyTotal, annual:m.renewAnnual, fourYear:m.renewAnnual*4,
+      maint:m.inclMaint, ins:m.inclIns, alt:m.inclAlt, features:'تفاوض على تمديد بشروط جديدة', notes:m.currentVendor},
+    {name:'إبرام عقد جديد (أفضل عرض)', monthly:newLeaseMonthly, annual:newLeaseAnnual, fourYear:newLeaseAnnual*4,
+      maint:m.bestLease?m.bestLease.inclMaint==='yes':false, ins:m.bestLease?m.bestLease.inclIns==='yes':false, alt:m.bestLease?m.bestLease.inclAlt==='yes':false,
+      features:'أسطول حديث بعقد جديد', notes:m.bestLease?m.bestLease.name:'—'},
+    {name:'تملك الأسطول (بعد السنة الأولى)', monthly:ownershipMonthlyAfterY1, annual:ownershipAnnualAfterY1, fourYear:m.totalPurchase+ownershipAnnualAfterY1*4,
+      maint:true, ins:true, alt:false, features:'ملكية دائمة للأصول', notes:'يضاف بالسنة الأولى قيمة شراء قدرها '+f2Fmt(m.totalPurchase)+' ر.س'}
+  ];
+
+  /* ══════ الغلاف ══════ */
+  H+='<div style="min-height:250mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">'
+    +'<h1 style="font-size:30px;font-weight:900;color:#000;margin-bottom:18px;">دراسة جدوى تملك أسطول التدريب</h1>'
+    +'<div style="font-size:16px;font-weight:600;color:#000;margin-bottom:14px;">إدارة العقود والمشتريات</div>'
+    +'<div style="font-size:13px;color:#000;">تاريخ إعداد الدراسة: '+new Date().toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'})+'</div>'
+    +'</div>'+pageBreak;
+
+  /* ══════ الجدول التنفيذي للمقارنة ══════ */
+  H+=secTitle('الجدول التنفيذي — مقارنة جميع الخيارات');
+  H+=wideTable(
+    ['الخيار','التكلفة الشهرية','التكلفة السنوية','الصيانة','التأمين','مركبات بديلة','المميزات','الملاحظات'],
+    options.map(function(o){
+      return [o.name, f2Fmt(o.monthly)+' ر.س', f2Fmt(o.annual)+' ر.س', yn(o.maint), yn(o.ins), yn(o.alt), o.features, o.notes];
+    })
+  );
+  H+=pageBreak;
+
+  /* ══════ القسم 1: الاستمرار بالعقد الحالي ══════ */
+  H+=secTitle('أولاً: الاستمرار بالعقد الحالي');
+  H+=kvTable([
+    ['عدد المركبات', ''+m.count],
+    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.count>0?monthlyLeaseRate/m.count:0)+' ر.س'],
+    ['التكلفة الشهرية', f2Fmt(monthlyLeaseRate)+' ر.س'],
+    ['التكلفة السنوية', f2Fmt(m.annualLease)+' ر.س'],
+    ['مدة العقد', m.leaseDuration+' '+(m.leaseDuration===1?'سنة':'سنوات')],
+    ['الصيانة', yn(m.inclMaint)],
+    ['التأمين', yn(m.inclIns)],
+    ['المركبات البديلة', yn(m.inclAlt)],
+    ['مستوى الخدمة', '—'],
+    ['إجمالي التكلفة خلال سنة', f2Fmt(m.annualLease)+' ر.س'],
+    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.annualLease*4)+' ر.س']
+  ]);
+  H+=pageBreak;
+
+  /* ══════ القسم 2: تمديد العقد الحالي ══════ */
+  H+=secTitle('ثانياً: تمديد العقد الحالي');
+  H+=kvTable([
+    ['عدد المركبات', ''+m.count],
+    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.renewMonthlyUnit)+' ر.س'],
+    ['التكلفة الشهرية', f2Fmt(renewMonthlyTotal)+' ر.س'],
+    ['التكلفة السنوية', f2Fmt(m.renewAnnual)+' ر.س'],
+    ['مدة العقد', m.leaseDuration+' '+(m.leaseDuration===1?'سنة':'سنوات')],
+    ['الصيانة', yn(m.inclMaint)],
+    ['التأمين', yn(m.inclIns)],
+    ['المركبات البديلة', yn(m.inclAlt)],
+    ['مستوى الخدمة', '—'],
+    ['إجمالي التكلفة خلال سنة', f2Fmt(m.renewAnnual)+' ر.س'],
+    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.renewAnnual*4)+' ر.س']
+  ]);
+  H+=pageBreak;
+
+  /* ══════ القسم 3: إبرام عقد جديد ══════ */
+  H+=secTitle('ثالثاً: إبرام عقد جديد بمركبات حديثة');
+  H+=kvTable([
+    ['اسم الشركة (أفضل عرض)', m.bestLease?m.bestLease.name:'—'],
+    ['عدد المركبات', ''+m.count],
+    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.blm)+' ر.س'],
+    ['التكلفة الشهرية', f2Fmt(newLeaseMonthly)+' ر.س'],
+    ['التكلفة السنوية', f2Fmt(newLeaseAnnual)+' ر.س'],
+    ['مدة العقد', m.bestLease?m.bestLease.duration:'—'],
+    ['الصيانة', yn(m.bestLease?m.bestLease.inclMaint==='yes':false)],
+    ['التأمين', yn(m.bestLease?m.bestLease.inclIns==='yes':false)],
+    ['المركبات البديلة', yn(m.bestLease?m.bestLease.inclAlt==='yes':false)],
+    ['مستوى الخدمة', '—'],
+    ['إجمالي التكلفة خلال سنة', f2Fmt(newLeaseAnnual)+' ر.س'],
+    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(newLeaseAnnual*4)+' ر.س']
+  ]);
+  H+='<h3 style="font-size:13px;font-weight:700;margin:6px 0;color:#000;">عروض شركات التأجير الجديدة — ترتيب من الأقل للأعلى</h3>';
+  H+=wideTable(
+    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %'],
+    sortedLease.map(function(o,i){
+      var an=o.monthly*12*m.count;
+      var bestAn=sortedLease[0].monthly*12*m.count;
+      var diff=an-bestAn;
+      var pct=bestAn>0?(diff/bestAn*100):0;
+      return [''+(i+1), o.name||'—', f2Fmt(an)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%'];
+    })
+  );
+  H+=pageBreak;
+
+  /* ══════ القسم 4: تملك الأسطول ══════ */
+  H+=secTitle('رابعاً: تملك الأسطول');
+  H+=kvTable([
+    ['عدد المركبات', ''+m.count],
+    ['قيمة المركبة الواحدة', f2Fmt(m.unitPrice)+' ر.س'],
+    ['اسم مورد الشراء', m.purchaseVendor],
+    ['التكلفة الشهرية (بعد السنة الأولى)', f2Fmt(ownershipMonthlyAfterY1)+' ر.س'],
+    ['التكلفة السنوية (بعد السنة الأولى)', f2Fmt(ownershipAnnualAfterY1)+' ر.س'],
+    ['مدة العقد', '—'],
+    ['الصيانة', 'نعم — '+(m.bestMaint?m.bestMaint.name:'—')],
+    ['التأمين', 'نعم — '+(m.bestInsurance?m.bestInsurance.name:'—')],
+    ['المركبات البديلة', 'لا'],
+    ['مستوى الخدمة', m.bestMaint?(m.bestMaint.sla||'—'):'—'],
+    ['إجمالي التكلفة خلال سنة (شراء + صيانة + تأمين)', f2Fmt(ownershipYear1)+' ر.س'],
+    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.totalPurchase+ownershipAnnualAfterY1*4)+' ر.س']
   ]);
 
-  /* 2) إيضاح التكلفة */
-  H+=secTitle('2','إيضاح التكلفة — مقارنة سريعة بين الخيارات');
-  H+=dataTable(
-    ['الخيار','التكلفة الشهرية','التكلفة السنوية'],
-    [
-      ['الاستمرار بالعقد الحالي', f2Fmt(monthlyLeaseRate)+' ر.س', f2Fmt(m.annualLease)+' ر.س'],
-      ['تمديد العقد الحالي', f2Fmt(m.renewMonthlyUnit*m.count)+' ر.س', f2Fmt(m.renewAnnual)+' ر.س'],
-      ['إبرام عقد جديد (أفضل عرض)', f2Fmt(newLeaseMonthly)+' ر.س', f2Fmt(newLeaseAnnual)+' ر.س'],
-      ['تملك الأسطول (صيانة وتأمين فقط، بعد الشراء)', f2Fmt(ownershipMonthlyAfterY1)+' ر.س', f2Fmt(ownershipAnnualAfterY1)+' ر.س']
-    ]
+  H+='<h3 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:#000;">الجدول الموسّع — تكلفة تملك الأسطول على مدى أربع سنوات</h3>';
+  var y1total=m.totalPurchase+m.bma+m.binsurance, y2total=m.bma+m.binsurance, y3total=y2total, y4total=y2total;
+  var yearTotals=[y1total,y2total,y3total,y4total];
+  var savingVsCurrent=yearTotals.map(function(t){return m.annualLease-t;});
+  var savingVsNew=yearTotals.map(function(t){return newLeaseAnnual-t;});
+  var cumSaving=[];
+  savingVsCurrent.reduce(function(acc,v,i){cumSaving[i]=acc+v;return cumSaving[i];},0);
+  H+='<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11.5px;">'
+    +'<thead><tr><th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;">البند</th>'
+    +['السنة الأولى','السنة الثانية','السنة الثالثة','السنة الرابعة'].map(function(y){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;">'+y+'</th>';}).join('')
+    +'</tr></thead><tbody>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">قيمة الشراء</td>'+[m.totalPurchase,0,0,0].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">تكلفة الصيانة</td>'+[m.bma,m.bma,m.bma,m.bma].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">تكلفة التأمين</td>'+[m.binsurance,m.binsurance,m.binsurance,m.binsurance].map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">التكلفة السنوية الإجمالية</td>'+yearTotals.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;">'+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">متوسط التكلفة الشهرية</td>'+yearTotals.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+f2Fmt(v/12)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر مقارنة بالعقد الحالي</td>'+savingVsCurrent.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر مقارنة بالعقد الجديد</td>'+savingVsNew.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'<tr><td style="padding:8px 10px;border:1px solid #999;font-weight:700;color:#000;">الوفر التراكمي (مقارنة بالعقد الحالي)</td>'+cumSaving.map(function(v){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;">'+(v>=0?'+':'')+f2Fmt(v)+' ر.س</td>';}).join('')+'</tr>'
+    +'</tbody></table>';
+  H+='<div style="font-size:11px;color:#000;">ملاحظة: قيمة الشراء تُدفع مرة واحدة بالسنة الأولى فقط؛ الصيانة والتأمين ثابتتان طوال السنوات الأربع دون افتراض نمو إضافي.</div>';
+  H+=pageBreak;
+
+  /* ══════ عروض شركات التأمين والصيانة (ترتيب) ══════ */
+  H+=secTitle('عروض شركات التأمين — ترتيب من الأقل للأعلى');
+  H+=wideTable(
+    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %','ملاحظات'],
+    sortedIns.map(function(o,i){
+      var diff=o.annual-sortedIns[0].annual;
+      var pct=sortedIns[0].annual>0?(diff/sortedIns[0].annual*100):0;
+      return [''+(i+1), o.name||'—', f2Fmt(o.annual)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%', 'مدة العقد: '+(o.duration||'—')];
+    })
   );
 
-  /* 3) جدول العقد الحالي */
-  H+=secTitle('3','العقد الحالي');
-  H+=dataTable(
-    ['قيمة المركبة الواحدة شهرياً','يشمل صيانة','يشمل تأمين','مركبات مجهزة','القيمة الشهرية (غير شامل الضريبة)','القيمة السنوية (غير شامل الضريبة)'],
-    [[f2Fmt(m.count>0?monthlyLeaseRate/m.count:0)+' ر.س', yn(m.inclMaint), yn(m.inclIns), yn(m.inclAlt), f2Fmt(monthlyLeaseRate)+' ر.س', f2Fmt(m.annualLease)+' ر.س']]
+  H+=secTitle('عروض عقود الصيانة — ترتيب من الأقل للأعلى');
+  H+=wideTable(
+    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
+    sortedMaint.map(function(o,i){
+      var diff=o.annual-sortedMaint[0].annual;
+      var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
+      return [''+(i+1), o.name||'—', f2Fmt(o.annual)+' ر.س', i===0?'—':f2Fmt(diff)+' ر.س', i===0?'—':pct.toFixed(1)+'%', o.sla||'—'];
+    })
   );
+  H+=pageBreak;
 
-  /* 4) تكلفة شراء المركبات */
-  H+=secTitle('4','تكلفة شراء المركبات');
-  H+=dataTable(
-    ['اسم الشركة (المورد)','قيمة المركبة الواحدة','التكلفة الكلية'],
-    [[m.purchaseVendor, f2Fmt(m.unitPrice)+' ر.س', f2Fmt(m.totalPurchase)+' ر.س']]
-  );
-
-  /* 5) تكلفة التأمين */
-  H+=secTitle('5','تكلفة التأمين');
-  H+=dataTable(
-    ['عدد المركبات','التكلفة السنوية (أفضل عرض)'],
-    [[''+m.count, f2Fmt(m.binsurance)+' ر.س']]
-  );
-
-  /* 6) تكلفة عقد الصيانة */
-  H+=secTitle('6','تكلفة عقد الصيانة');
-  H+=dataTable(
-    ['عدد المركبات','التكلفة السنوية (أفضل عرض)'],
-    [[''+m.count, f2Fmt(m.bma)+' ر.س']]
-  );
-
-  /* 7) قيمة المركبة في حال تمديد العقد */
-  H+=secTitle('7','قيمة المركبة في حال تمديد العقد');
-  H+=dataTable(
-    ['قيمة المركبة الواحدة شهرياً','القيمة الشهرية الكلية','القيمة السنوية الكلية','يشمل صيانة','يشمل تأمين'],
-    [[f2Fmt(m.renewMonthlyUnit)+' ر.س', f2Fmt(m.renewMonthlyUnit*m.count)+' ر.س', f2Fmt(m.renewAnnual)+' ر.س', yn(m.inclMaint), yn(m.inclIns)]]
-  );
-
-  /* 8) قيمة إبرام عقد جديد (أقل عرض) */
-  H+=secTitle('8','قيمة إبرام عقد جديد بمركبات حديثة (أقل عرض سعر مطروح)');
-  H+=dataTable(
-    ['اسم الشركة','القيمة الشهرية للمركبة','يشمل صيانة','يشمل تأمين','مركبة بديلة'],
-    bestLease?[[bestLease.name||'—', f2Fmt(bestLease.monthly)+' ر.س', yn(bestLease.inclMaint==='yes'), yn(bestLease.inclIns==='yes'), yn(bestLease.inclAlt==='yes')]]:[]
-  );
-
-  /* 9) عروض أسعار شركات التأمين */
-  H+=secTitle('9','عروض أسعار شركات التأمين');
-  H+=dataTable(
-    ['اسم الشركة','عدد المركبات','التكلفة السنوية'],
-    sortedIns.map(function(o){return [o.name||'—', ''+m.count, f2Fmt(o.annual)+' ر.س'];}),
-    sortedIns.length?0:undefined
-  );
-
-  /* 10) عروض أسعار عقود الصيانة */
-  H+=secTitle('10','عروض أسعار عقود الصيانة');
-  H+=dataTable(
-    ['اسم الشركة','مستوى الخدمة (SLA)','التكلفة السنوية'],
-    sortedMaint.map(function(o){return [o.name||'—', o.sla||'—', f2Fmt(o.annual)+' ر.س'];}),
-    sortedMaint.length?0:undefined,
-    2
-  );
-
-  /* 11) عروض أسعار إبرام عقد جديد */
-  H+=secTitle('11','عروض أسعار إبرام عقد جديد');
-  H+=dataTable(
-    ['اسم الشركة','عدد المركبات','القيمة الشهرية','القيمة السنوية','يشمل تأمين','يشمل صيانة'],
-    sortedLease.map(function(o){
-      var mo=o.monthly*m.count;
-      return [o.name||'—', ''+m.count, f2Fmt(mo)+' ر.س', f2Fmt(mo*12)+' ر.س', yn(o.inclIns==='yes'), yn(o.inclMaint==='yes')];
-    }),
-    sortedLease.length?0:undefined
-  );
-
-  /* 12) التكلفة في حال شراء المركبات + عقد صيانة + تكلفة تأمين */
-  H+=secTitle('12','التكلفة في حال شراء المركبات + عقد صيانة + تكلفة تأمين');
-  H+=dataTable(
-    ['عدد المركبات','قيمة شراء المركبات','القيمة الشهرية لعقد الصيانة','القيمة السنوية لعقد الصيانة','تكلفة التأمين السنوية','إجمالي السنة الأولى'],
-    [[''+m.count, f2Fmt(m.totalPurchase)+' ر.س', f2Fmt(m.bma/12)+' ر.س', f2Fmt(m.bma)+' ر.س', f2Fmt(m.binsurance)+' ر.س', f2Fmt(ownershipYear1)+' ر.س']]
-  );
-
-  /* 13) في حال تمديد العقد */
-  H+=secTitle('13','في حال تمديد العقد');
-  H+=dataTable(
-    ['قيمة المركبة الواحدة شهرياً','عدد المركبات','القيمة الشهرية','القيمة السنوية','ما يشمله العقد'],
-    [[f2Fmt(m.renewMonthlyUnit)+' ر.س', ''+m.count, f2Fmt(m.renewMonthlyUnit*m.count)+' ر.س', f2Fmt(m.renewAnnual)+' ر.س', 'صيانة: '+yn(m.inclMaint)+' — تأمين: '+yn(m.inclIns)]]
-  );
-
-  /* 14) الجدول التفصيلي لإبرام العقد الجديد */
-  H+=secTitle('14','الجدول التفصيلي لإبرام العقد الجديد بمركبات حديثة');
-  H+=dataTable(
-    ['تكلفة تأجير المركبة الواحدة شهرياً','الإجمالي الشهري','الإجمالي السنوي'],
-    bestLease?[[f2Fmt(bestLease.monthly)+' ر.س', f2Fmt(newLeaseMonthly)+' ر.س', f2Fmt(newLeaseAnnual)+' ر.س']]:[]
-  );
-
-  /* 15) مؤشرات مالية إضافية */
-  H+=secTitle('15','مؤشرات مالية إضافية (شراء مقابل الاستمرار بالوضع الحالي)');
-  H+=dataTable(
-    ['صافي القيمة الحالية (NPV)','معدل العائد الداخلي (IRR)','فترة الاسترداد'],
-    [[
-      m.npv!==null?f2Fmt(m.npv)+' ر.س':'—',
-      m.irr!==null?(m.irr*100).toFixed(1)+'%':'—',
-      m.payback!==null?m.payback.toFixed(2)+' سنة':'أطول من مدة الدراسة'
-    ]]
-  );
-
-  /* 16) الجدول النهائي - مقارنة جميع الخيارات */
-  H+=secTitle('16','مقارنة جميع الخيارات');
-  H+=dataTable(
-    ['الخيار','التكلفة الشهرية','التكلفة السنوية'],
-    [
-      ['الاستمرار بالعقد الحالي', f2Fmt(monthlyLeaseRate)+' ر.س', f2Fmt(m.annualLease)+' ر.س'],
-      ['تمديد العقد الحالي', f2Fmt(m.renewMonthlyUnit*m.count)+' ر.س', f2Fmt(m.renewAnnual)+' ر.س'],
-      ['إبرام عقد جديد (أفضل عرض)', f2Fmt(newLeaseMonthly)+' ر.س', f2Fmt(newLeaseAnnual)+' ر.س'],
-      ['تملك الأسطول — السنة الأولى (شراء + صيانة + تأمين)', '—', f2Fmt(ownershipYear1)+' ر.س'],
-      ['تملك الأسطول — السنة الثانية فأكثر (صيانة + تأمين فقط)', f2Fmt(ownershipMonthlyAfterY1)+' ر.س', f2Fmt(ownershipAnnualAfterY1)+' ر.س']
-    ]
-  );
+  /* ══════ الملخص التنفيذي ══════ */
+  H+=secTitle('الملخص التنفيذي');
+  var byAnnual=options.slice().sort(function(a,b){return a.annual-b.annual;});
+  var lowest=byAnnual[0], highest=byAnnual[byAnnual.length-1];
+  var annualSaving=highest.annual-lowest.annual;
+  var fourYearSaving=highest.fourYear-lowest.fourYear;
+  H+=kvTable([
+    ['أقل خيار تكلفة (سنوياً)', lowest.name+' — '+f2Fmt(lowest.annual)+' ر.س'],
+    ['أعلى خيار تكلفة (سنوياً)', highest.name+' — '+f2Fmt(highest.annual)+' ر.س'],
+    ['الوفر السنوي المتوقع (بين الأعلى والأقل)', f2Fmt(annualSaving)+' ر.س'],
+    ['الوفر خلال أربع سنوات (بين الأعلى والأقل)', f2Fmt(fourYearSaving)+' ر.س'],
+    ['التوصية النهائية', 'اعتماد خيار: '+lowest.name+' — الأقل تكلفة إجمالية من بين الخيارات المدروسة']
+  ]);
 
   return H;
 }
+
 
 
 
@@ -12725,12 +12752,10 @@ function f2PDF(reportTitle){
   var BG=FORM_BG||'';
   var safeTitle=reportTitle.replace(/[<>&"]/g,'');
 
-  var css='@page{size:A4 landscape;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#000;direction:rtl;margin:0;padding:0;}'
-    +'.page{position:relative;width:297mm;min-height:210mm;page-break-after:always;}'
-    +'.page:last-child{page-break-after:auto;}'
-    +'.bg-img{position:absolute;top:0;left:0;width:297mm;height:210mm;z-index:1;object-fit:cover;pointer-events:none;}'
-    +'.wrap{position:relative;z-index:2;padding:14mm 10mm 8mm;}'
-    +'h1{font-size:11pt;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:6px;color:#000;}'
+  var css='@page{size:A4 portrait;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12pt;color:#000;direction:rtl;margin:0;padding:0;line-height:1.5;}'
+    +'.page{position:relative;width:210mm;min-height:297mm;}'
+    +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;opacity:0.15;}'
+    +'.wrap{position:relative;z-index:2;padding:22mm 20mm 18mm;}'
     +'@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
 
   var m=f2BuildModel();
@@ -12738,7 +12763,7 @@ function f2PDF(reportTitle){
 
   var contentPage='<div class="page">'
     +(BG?'<img src="'+BG+'" class="bg-img">':'')
-    +'<div class="wrap"><h1>'+safeTitle+'<\/h1>'
+    +'<div class="wrap">'
     +body
     +'<\/div><\/div>';
 
