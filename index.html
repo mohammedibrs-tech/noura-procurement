@@ -3017,11 +3017,14 @@ function expPrint(){
 <div class="pdf-content">
 <h1>سجل مصروفات العهدة المالية — ${monthLabel}</h1>
 <p class="sub">تاريخ الإصدار: ${today} | عدد المصروفات: ${filtered.length}</p>
-<div class="kpi-grid">
-  <div class="kpi-box"><div class="kpi-label">إجمالي العهدة</div><div class="kpi-val">${budgetTotal.toLocaleString('en-US')}</div><div class="kpi-unit">ريال</div></div>
-  <div class="kpi-box"><div class="kpi-label">المصروف</div><div class="kpi-val">${spent.toLocaleString('en-US')}</div><div class="kpi-unit">ريال</div></div>
-  <div class="kpi-box"><div class="kpi-label">المتبقي</div><div class="kpi-val">${remain.toLocaleString('en-US')}</div><div class="kpi-unit">ريال</div></div>
-</div>
+<table style="margin-bottom:20px;">
+  <thead><tr><th style="text-align:center;">إجمالي العهدة</th><th style="text-align:center;">المصروف</th><th style="text-align:center;">المتبقي</th></tr></thead>
+  <tbody><tr>
+    <td style="text-align:center;font-weight:700;">${budgetTotal.toLocaleString('en-US')} ريال</td>
+    <td style="text-align:center;font-weight:700;">${spent.toLocaleString('en-US')} ريال</td>
+    <td style="text-align:center;font-weight:700;">${remain.toLocaleString('en-US')} ريال</td>
+  </tr></tbody>
+</table>
 <h2>أكثر الإدارات صرفاً</h2>
 <table><thead><tr><th>الإدارة</th><th>الإجمالي (ر.س)</th><th>النسبة</th><th>أكثر المشتريات</th></tr></thead>
 <tbody>${deptSorted.map(([d,v])=>{const top=Object.entries(v.items).sort((a,b)=>b[1]-a[1])[0];const pct=spent>0?((v.total/spent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${v.total.toLocaleString('en-US')}</td><td style="text-align:center;">${pct}</td><td>${top?top[0]:'—'}</td></tr>`;}).join('')}<tr style="font-weight:700;"><td colspan="2">الإجمالي</td><td style="text-align:right;">${spent.toLocaleString('en-US')}</td><td></td></tr></tbody></table>
