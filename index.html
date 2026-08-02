@@ -3418,7 +3418,7 @@ function poPrintData(d){
   const rHTML=(d.rows||[]).map(r=>`<tr>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.num}</td>
     <td style="border:1px solid #bbb;padding:5px 4px;">${r.item}</td>
-    <td style="border:1px solid #bbb;padding:5px 4px;font-size:12px;">${r.desc||''}</td>
+    <td style="border:1px solid #bbb;padding:5px 4px;font-size:10.5px;">${r.desc||''}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.qty}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.uom||''}</td>
     <td style="text-align:right;border:1px solid #bbb;padding:5px 4px;">${(r.price||0).toFixed(2)}</td>
@@ -3430,13 +3430,13 @@ function poPrintData(d){
 <style>
 @page{size:A4;margin:0;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:ltr;background:#fff;}
+body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:ltr;background:#fff;}
 .page{position:relative;width:210mm;min-height:297mm;overflow:hidden;}
 .bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;}
 .content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}
 .blue{background:#2E9896 !important;color:#fff !important;font-weight:700;padding:6px 10px;}
-.lbl{background:#f0f0f0;font-weight:600;padding:5px 7px;border:1px solid #ccc;white-space:nowrap;font-size:12px;}
-.val{padding:5px 7px;border:1px solid #ccc;font-size:13px;}
+.lbl{background:#f0f0f0;font-weight:600;padding:5px 7px;border:1px solid #ccc;white-space:nowrap;font-size:11px;}
+.val{padding:5px 7px;border:1px solid #ccc;font-size:11px;}
 table{border-collapse:collapse;width:100%;}
 </style>
 </head><body>
@@ -3524,20 +3524,20 @@ table{border-collapse:collapse;width:100%;}
   <div style="display:flex;justify-content:space-between;gap:14px;text-align:center;margin-top:6px;">
     <div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Prepared By / أعدت بواسطة</div>
-      <div style="font-size:11px;color:#555;margin-bottom:50px;">مسؤول المشتريات</div>
+      <div style="font-size:11px;color:#555;margin-bottom:45px;">مسؤول المشتريات</div>
       <div style="position:relative;border-top:1px solid #000;padding-top:5px;font-size:12px;">
-        ${(!d.sig1||d.sig1==='أ.محمد ابراهيم الجمعان')?`<img src="${MAJ_SIG}" style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%) rotate(-12deg);width:72px;object-fit:contain;pointer-events:none;z-index:5;opacity:0.92;">`:''}
+        ${(!d.sig1||d.sig1==='أ.محمد ابراهيم الجمعان')?`<img src="${MAJ_SIG}" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%) rotate(-12deg);width:72px;object-fit:contain;pointer-events:none;z-index:5;opacity:0.92;">`:''}
         ${d.sig1||'أ.محمد ابراهيم الجمعان'}
       </div>
     </div>
     <div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Reviewed By / تم مراجعته من قبل</div>
-      <div style="font-size:11px;color:#555;margin-bottom:22px;">مدير الإدارة المالية</div>
+      <div style="font-size:11px;color:#555;margin-bottom:45px;">مدير الإدارة المالية</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
     </div>
     <div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
-      <div style="font-size:11px;color:#555;margin-bottom:22px;">الرئيس التنفيذي</div>
+      <div style="font-size:11px;color:#555;margin-bottom:45px;">الرئيس التنفيذي</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
     </div>
   </div>
