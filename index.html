@@ -6866,7 +6866,7 @@ function buildQuarterlyReport(){
     <div class="card-header" style="background:#F0FFF4;"><h3 style="color:#276749;">💡 فرص التوفير — الربع ${qName[q]}</h3></div>
     <div class="card-body" style="font-size:12px;">
       ${topItems.length>0?`<p style="margin-bottom:8px;">🔄 <b>${topItems[0][0]}</b> الأعلى إنفاقاً — دراسة عقد سنوي أو عروض بديلة قد توفر تكاليف.</p>`:''}
-      ${contracts.filter(c=>contractDaysLeft(c.end)>=0&&contractDaysLeft(c.end)<=60).length>0?`<p style="margin-bottom:8px;">📋 عقود تنتهي قريباً — فرصة ذهبية للتفاوض على أسعار أفضل.</p>`:''}
+      ${contracts.filter(c=>contractDaysLeft(c.end)>=0&&contractDaysLeft(c.end)<=60&&c.showInReports!==false).length>0?`<p style="margin-bottom:8px;">📋 عقود تنتهي قريباً — فرصة ذهبية للتفاوض على أسعار أفضل.</p>`:''}
       <p>💰 إجمالي التوفير المحقق بالتفاوض حتى الآن: <b style="color:#276749;">${totalSaving.toLocaleString('ar-SA')} ر.س</b></p>
     </div>
   </div>
@@ -7712,7 +7712,7 @@ function buildSemiReport(){
   const itemMap={};sExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const monthBreak=months.map(m=>{const t=sExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
-  const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
+  const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90&&c.showInReports!==false;});
   // وفرات من مقارنة الأسعار
   const cmpSavings=calcCmpSavings();
   const contractSavSemi=contracts.reduce((s,c)=>s+(c.saving||0),0);
@@ -7871,6 +7871,7 @@ function filterContractsForYear(year, half){
   var periodEnd=half===1?(year+'-06-30'):(year+'-12-31');
   var periodStart=half===1?(year+'-01-01'):(year+'-07-01');
   return contracts.filter(c=>{
+    if(c.showInReports===false) return false;
     // تجاهل status — نريد كل العقود التي كانت فعالة في تلك الفترة
     // شرط 1: العقد بدأ قبل نهاية الفترة (أو ليس له تاريخ بداية)
     if(c.start&&c.start>periodEnd) return false;
@@ -7945,6 +7946,7 @@ function cumulativeSavingsTableHTML(rows){
 
 function getCmpSavingsDetail(){
   return (typeof cmpSaved!=='undefined'?cmpSaved:[]).map(function(cmp){
+    if(cmp.showInReports===false) return null;
     if(!cmp.companies||!cmp.companies.length) return null;
     // حساب الإجمالي السنوي لكل شركة (مراعاة paymentType)
     var annuals=cmp.companies.map(function(co){
@@ -9201,7 +9203,7 @@ function buildAnnualReport(){
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAnnual=cumulativeSavingsRows(year+'-01-01',year+'-12-31').reduce((s,r)=>s+r.saving,0);
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
-  const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
+  const expiringC=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90&&c.showInReports!==false;});
   const quarters=[
     {name:'الربع الأول',months:['01','02','03']},{name:'الربع الثاني',months:['04','05','06']},
     {name:'الربع الثالث',months:['07','08','09']},{name:'الربع الرابع',months:['10','11','12']},
@@ -9270,7 +9272,7 @@ function exportAnnualPDF(){
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const monthlyData=ALL_MONTHS.map(m=>{const t=yExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);return{m:MONTHS_AR[m],t};});
   const maxT=Math.max(...monthlyData.map(x=>x.t),1);
-  const expiringCA=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90;});
+  const expiringCA=contracts.filter(c=>{const d=contractDaysLeft(c.end);return d!==null&&d>=0&&d<=90&&c.showInReports!==false;});
   const cumSavRowsA=cumulativeSavingsRows(year+'-01-01',year+'-12-31');
   // جدول الملخص
   const summaryRowsA=`
