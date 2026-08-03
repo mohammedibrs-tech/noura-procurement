@@ -5537,7 +5537,7 @@ function exportContractsExcel(){
   ['A2','B2','C2','D2','E2','F2','G2','H2'].forEach((a,i)=>{
     sc(ws,a,['الشركة','نوع الخدمة','الشهري (ر.س)','السنوي (ر.س)','بداية العقد','نهاية العقد','الحالة','وفر التفاوض (ر.س)'][i],hS);
   });
-  const totalMonthly=contracts.filter(c=>c.status==='active'||c.status==='expiring').reduce((s,c)=>s+(c.monthly||0),0);
+  const totalMonthly=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false).reduce((s,c)=>s+(c.monthly||0),0);
   contracts.forEach((c,i)=>{
     const r=3+i;const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     const dS=(fc)=>({font:{name:'Calibri',sz:10,color:fc||NK},fill:{patternType:'solid',fgColor:bg},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}}}});
@@ -5573,7 +5573,7 @@ function exportMonthlyExcel(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
@@ -5628,7 +5628,7 @@ function exportQuarterlyExcel(){
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
@@ -6017,11 +6017,11 @@ function buildMonthlyReport(){
   const monthPC=pcGroups[key]||[];
 
   // العقود الفعالة
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const expiringContracts=contracts.filter(c=>{
     const days=contractDaysLeft(c.end);
-    return days!==null&&days>=0&&days<=60;
+    return days!==null&&days>=0&&days<=60&&c.showInReports!==false;
   });
 
   // تحليل الإدارات
@@ -6161,7 +6161,7 @@ function exportMonthlyExcel(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
@@ -6216,7 +6216,7 @@ function exportQuarterlyExcel(){
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
@@ -6581,11 +6581,11 @@ function buildMonthlyReport(){
   const monthPC=pcGroups[key]||[];
 
   // العقود الفعالة
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const expiringContracts=contracts.filter(c=>{
     const days=contractDaysLeft(c.end);
-    return days!==null&&days>=0&&days<=60;
+    return days!==null&&days>=0&&days<=60&&c.showInReports!==false;
   });
 
   // تحليل الإدارات
@@ -6744,7 +6744,7 @@ function buildQuarterlyReport(){
   });
 
   // إجمالي العقود
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=activeContracts.reduce((s,c)=>s+(c.saving||0),0);
 
@@ -6884,7 +6884,7 @@ function exportContractsPDF(){
   if(!contracts.length){toast('لا توجد عقود',true);return;}
   const SIG=SIG_URL;const BG=FORM_BG;
   const today=new Date().toLocaleDateString('ar-SA');
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalRevMonthly=activeC.reduce((s,c)=>s+(c.revMonthly||0),0);
   const totalRevAnnual=activeC.reduce((s,c)=>s+(c.revAnnual||0),0);
@@ -6923,7 +6923,7 @@ function exportContractsWord(){
   if(!contracts.length){toast('لا توجد عقود',true);return;}
   const BG=FORM_BG;
   const today=new Date().toLocaleDateString('ar-SA');
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalRevMonthly=activeC.reduce((s,c)=>s+(c.revMonthly||0),0);
   const totalRevAnnual=activeC.reduce((s,c)=>s+(c.revAnnual||0),0);
@@ -6974,7 +6974,7 @@ function exportContractsExcel(){
   ['A2','B2','C2','D2','E2','F2','G2','H2'].forEach((a,i)=>{
     sc(ws,a,['الشركة','نوع الخدمة','الشهري (ر.س)','السنوي (ر.س)','بداية العقد','نهاية العقد','الحالة','وفر التفاوض (ر.س)'][i],hS);
   });
-  const totalMonthly=contracts.filter(c=>c.status==='active'||c.status==='expiring').reduce((s,c)=>s+(c.monthly||0),0);
+  const totalMonthly=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false).reduce((s,c)=>s+(c.monthly||0),0);
   contracts.forEach((c,i)=>{
     const r=3+i;const bg=i%2===0?{rgb:'FFFFFF'}:LB;
     const dS=(fc)=>({font:{name:'Calibri',sz:10,color:fc||NK},fill:{patternType:'solid',fgColor:bg},border:{bottom:{style:'thin',color:{rgb:'E2E8F0'}}}});
@@ -7010,7 +7010,7 @@ function exportMonthlyExcel(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
@@ -7065,7 +7065,7 @@ function exportQuarterlyExcel(){
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
@@ -7430,11 +7430,11 @@ function buildMonthlyReport(){
   const monthPC=pcGroups[key]||[];
 
   // العقود الفعالة
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const expiringContracts=contracts.filter(c=>{
     const days=contractDaysLeft(c.end);
-    return days!==null&&days>=0&&days<=60;
+    return days!==null&&days>=0&&days<=60&&c.showInReports!==false;
   });
 
   // تحليل الإدارات
@@ -7574,7 +7574,7 @@ function exportMonthlyExcel(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,key));
   const monthPC=pcGroups[key]||[];
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=parseFloat(e.amount)||0;});
@@ -7629,7 +7629,7 @@ function exportQuarterlyExcel(){
   const months=qMonths[q];
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===year+'-'+m));
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const itemMap={};
@@ -7704,7 +7704,7 @@ function buildSemiReport(){
   const totalSpent=sExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const deptMap={};sExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=parseFloat(e.amount)||0;deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+1;});
@@ -8060,7 +8060,7 @@ function exportSemiExcel(){
   ['إجمالي المصروفات','طلبات PO','فواتير PC','الشهري للعقود',''].forEach((h,i)=>sc(ws,String.fromCharCode(65+i)+(r+1),h,hS()));r++;
   const sPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
   const sPCCount=months.reduce((s,m)=>s+(pcGroups[year+'-'+m]||[]).length,0);
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   [totalSpent,sPO.length,sPCCount,totalCM,''].forEach((v,i)=>{sc(ws,String.fromCharCode(65+i)+(r+1),v,{font:{name:'Calibri',sz:12,bold:true,color:[RD,NK,{rgb:'7C3AED'},C,C][i]},fill:{patternType:'solid',fgColor:LB},alignment:{horizontal:'center'}});});r+=2;
   sc(ws,'A'+(r+1),'المصروفات التفصيلية',hS(NK));ws['!merges'].push({s:{r,c:0},e:{r,c:4}});r++;
@@ -8276,7 +8276,7 @@ function buildPMA(){
   var cmpOps=getCmpSavingsDetail();
   var totalCmpSaving=cmpOps.reduce(function(s,d){return s+d.saving;},0);
   var totalContractSaving=contracts.reduce(function(s,c){return s+(c.saving||0);},0);
-  var noSavingContracts=contracts.filter(function(c){return !(c.saving>0)&&(c.status==='active'||c.status==='expiring');});
+  var noSavingContracts=contracts.filter(function(c){return !(c.saving>0)&&((c.status==='active'||c.status==='expiring')&&c.showInReports!==false);});
 
   // ── تركّز الموردين (مخاطرة الاعتماد على مورد واحد) ──
   var vendorSpend={};
@@ -9196,7 +9196,7 @@ function buildAnnualReport(){
   const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAnnual=cumulativeSavingsRows(year+'-01-01',year+'-12-31').reduce((s,r)=>s+r.saving,0);
@@ -9258,7 +9258,7 @@ function exportAnnualPDF(){
   const yPO=poSaved.filter(p=>poInYear(p,year));
   const yPCAll=ALL_MONTHS.reduce((a,m)=>a.concat(pcGroups[year+'-'+m]||[]),[]);
   const yPCInvoices=yPCAll.length;
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCMonthly=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const cmpSavAnnual=cumulativeSavingsRows(year+'-01-01',year+'-12-31').reduce((s,r)=>s+r.saving,0);
@@ -9478,8 +9478,12 @@ async function contractSave(){
   }
   if(contractEditId){
     const idx=contracts.findIndex(c=>c.id===contractEditId);
-    if(idx!==-1)contracts[idx]=contract;
+    if(idx!==-1){
+      contract.showInReports=(contracts[idx].showInReports!==undefined?contracts[idx].showInReports:true);
+      contracts[idx]=contract;
+    }
   }else{
+    contract.showInReports=true;
     contracts.unshift(contract);
   }
   localStorage.setItem('contracts',JSON.stringify(contracts));
@@ -9525,10 +9529,11 @@ function renderContracts(){
   // تحديث الحالة تلقائياً
   contracts.forEach(c=>{if(c.end){const d=contractDaysLeft(c.end);if(d<0)c.status='expired';else if(d<=30)c.status='expiring';}});
   let html='';
-  contracts.forEach(c=>{
+  contracts.forEach((c,idx)=>{
     const days=contractDaysLeft(c.end);
     const daysText=days!==null?(days>0?`${days} يوم متبقي`:'منتهي'):'—';
     const clr=STATUS_COLORS[c.status]||'#64748B';
+    const showRpt=(c.showInReports!==false);
     html+=`<div style="border:1px solid #E2E8F0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
       <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:#FAFAFA;">
         <div>
@@ -9541,6 +9546,12 @@ function renderContracts(){
             ${c.revMonthly>0?`<span style="font-size:11px;color:#276749;font-weight:700;">إيراد: ${c.revMonthly.toLocaleString('en-US')} ر.س/شهر</span>`:''}
             ${c.saving>0?`<span style="font-size:11px;color:#276749;">توفير تفاوضي: ${c.saving.toLocaleString('en-US')} ر.س</span>`:''}
           </div>
+          <div style="margin-top:6px;">
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#64748B;cursor:pointer;">
+              <input type="checkbox" ${showRpt?'checked':''} onchange="contractToggleReportVisibility(${idx},this.checked)" style="cursor:pointer;">
+              عرضه بالتقارير (الشهري/الربعي/النصفي/السنوي)
+            </label>
+          </div>
         </div>
         <div style="display:flex;gap:5px;">
           <button class="btn btn-primary btn-sm" onclick="contractEdit(${c.id})">تعديل</button>
@@ -9551,6 +9562,14 @@ function renderContracts(){
     </div>`;
   });
   el.innerHTML=html;
+}
+// يتحكم إذا كان العقد يظهر بتقارير الشهري/الربع سنوي/النصف سنوي/السنوي أو لا
+function contractToggleReportVisibility(idx,val){
+  const c=contracts[idx];if(!c)return;
+  c.showInReports=val;
+  localStorage.setItem('contracts',JSON.stringify(contracts));
+  if(c.id) sbUpdate('procurement_contracts',c.id,{showInReports:val}).catch(()=>{});
+  toast(val?'✅ سيظهر بالتقارير':'تم إخفاؤه من التقارير');
 }
 
 /* ══════════════ التقرير الشهري ══════════════ */
@@ -9571,11 +9590,11 @@ function buildMonthlyReport(){
   const monthPC=pcGroups[key]||[];
 
   // العقود الفعالة
-  const activeContracts=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeContracts=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalContractMonthly=activeContracts.reduce((s,c)=>s+(c.monthly||0),0);
   const expiringContracts=contracts.filter(c=>{
     const days=contractDaysLeft(c.end);
-    return days!==null&&days>=0&&days<=60;
+    return days!==null&&days>=0&&days<=60&&c.showInReports!==false;
   });
 
   // تحليل الإدارات
@@ -9881,7 +9900,7 @@ function exportQuarterlyPDF(){
   const qExp=expenses.filter(e=>months.some(m=>expMonthKey(e)===(year+'-'+m)));
   const totalSpent=qExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const qPO=poSaved.filter(p=>months.some(m=>poInMonthKey(p,year+'-'+m)));
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const totalSaving=contracts.reduce((s,c)=>s+(c.saving||0),0);
   const qLastDayForCmp=new Date(parseInt(year),parseInt(months[months.length-1]),0).getDate();
@@ -9963,7 +9982,7 @@ function exportMonthlyPDF(){
   const totalSpent=monthExp.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
   const monthPO=poSaved.filter(p=>poInMonthKey(p,year+'-'+month));
   const monthPOVal=monthPO.reduce((s,p)=>{const r2=poRowsOf(p);return s+r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t*1.15;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='added'?b*1.15:b);},0);},0);
-  const activeC=contracts.filter(c=>c.status==='active'||c.status==='expiring');
+  const activeC=contracts.filter(c=>(c.status==='active'||c.status==='expiring')&&c.showInReports!==false);
   const totalCM=activeC.reduce((s,c)=>s+(c.monthly||0),0);
   const monthLastDayForCmp=new Date(parseInt(year),parseInt(month),0).getDate();
   const cmpSavAmt=cumulativeSavingsRows(year+'-'+month+'-01',year+'-'+month+'-'+String(monthLastDayForCmp).padStart(2,'0')).reduce((s,r)=>s+r.saving,0);
