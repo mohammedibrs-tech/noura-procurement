@@ -12076,6 +12076,7 @@ function f2BuildModel(){
   var totalPurchase=count*unitPrice;
   var perVehicleMonthly=monthlyLeaseTotal>0&&count>0?monthlyLeaseTotal/count:(annualLease>0&&count>0?annualLease/12/count:0);
 
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
@@ -12401,9 +12402,41 @@ function f2ReportHTML(m){
 
 
 
-function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,mobile:'no',parts:'yes',sla:'8 ساعات',duration:1});f2RenderMaint();}
+function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,sla:'8 ساعات',duration:1,services:[]});f2RenderMaint();}
 function f2DelMaint(id){f2MaintOffers=f2MaintOffers.filter(function(o){return o.id!==id;});f2RenderMaint();f2Calc();}
-function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='annual'||field==='duration')?parseFloat(val)||0:val;if(field==='annual'||field==='duration'||field==='mobile'||field==='parts')f2Calc();}
+function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='duration')?parseFloat(val)||0:val;if(field==='duration')f2Calc();}
+// يحسب التكلفة السنوية المتوقعة لشركة صيانة من بنود الخدمة (سعر × تكرارها بالسنة × عدد المركبات)، ويعيد كتابتها على o.annual
+// حتى تبقى كل الحسابات والتقارير القديمة اللي تقرأ o.annual شغّالة بدون أي تعديل إضافي
+function f2RecalcMaintAnnual(o){
+  var count=parseInt(document.getElementById('f2-count')?.value)||0;
+  var perVehicle=(o.services||[]).reduce(function(sum,s){
+    if(s.free) return sum;
+    return sum+((parseFloat(s.price)||0)*(parseFloat(s.freq)||0));
+  },0);
+  o.annual=perVehicle*count;
+}
+function f2AddMaintService(offerId){
+  var o=f2MaintOffers.find(function(x){return x.id===offerId;});if(!o)return;
+  if(!o.services)o.services=[];
+  o.services.push({name:'',price:0,freq:1,free:false});
+  f2RecalcMaintAnnual(o);
+  f2RenderMaint();f2Calc();
+}
+function f2DelMaintService(offerId,idx){
+  var o=f2MaintOffers.find(function(x){return x.id===offerId;});if(!o)return;
+  o.services.splice(idx,1);
+  f2RecalcMaintAnnual(o);
+  f2RenderMaint();f2Calc();
+}
+function f2UpdateMaintService(offerId,idx,field,val){
+  var o=f2MaintOffers.find(function(x){return x.id===offerId;});if(!o||!o.services[idx])return;
+  var s=o.services[idx];
+  if(field==='price'||field==='freq') s[field]=parseFloat(val)||0;
+  else if(field==='free') s.free=val;
+  else s[field]=val;
+  f2RecalcMaintAnnual(o);
+  f2RenderMaint();f2Calc();
+}
 // ── حفظ/استرجاع كل مدخلات دراسة جدوى الأسطول (تبقى محفوظة بين الزيارات) ──
 var F2_FIELD_IDS=['f2-report-title','f2-study-duration','f2-count','f2-model','f2-year','f2-readiness','f2-odometer','f2-unitprice','f2-purchase-vendor',
   'f2-annual-lease','f2-monthly-lease','f2-paid-total','f2-lease-duration','f2-current-vendor','f2-lease-start','f2-lease-end','f2-lease-growth','f2-discount-rate',
@@ -12443,6 +12476,7 @@ function f2LoadInputs(){
 function f2RenderMaint(){
   var el=document.getElementById('f2-maint-body');if(!el)return;
   if(!f2MaintOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "+ إضافة شركة صيانة" للبدء</div>';return;}
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var sorted=f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var h='';
   f2MaintOffers.forEach(function(o,idx){
@@ -12454,11 +12488,30 @@ function f2RenderMaint(){
     h+='<button onclick="f2DelMaint('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
     h+='<div class="form-grid-3">';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_name" value="'+L('lbl_f2_maint_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" oninput="f2UpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_annual" value="'+L('lbl_f2_maint_annual')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.annual||'')+'" oninput="f2UpdateMaint('+o.id+',\'annual\',this.value)" placeholder="0"></div>';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_duration" value="'+L('lbl_f2_maint_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" oninput="f2UpdateMaint('+o.id+',\'duration\',this.value)"></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_mobile" value="'+L('lbl_f2_maint_mobile')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateMaint('+o.id+',\'mobile\',this.value)"><option value="yes"'+(o.mobile==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.mobile==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_parts" value="'+L('lbl_f2_maint_parts')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateMaint('+o.id+',\'parts\',this.value)"><option value="yes"'+(o.parts==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.parts==='no'?' selected':'')+'>لا</option></select></div>';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_sla" value="'+L('lbl_f2_maint_sla')+'" oninput="f2LabelEdit(this)"><input value="'+(o.sla||'8 ساعات')+'" oninput="f2UpdateMaint('+o.id+',\'sla\',this.value)"></div>';
+    h+='</div>';
+
+    // بنود الخدمة — التسعير حسب الاستخدام
+    h+='<div style="margin-top:10px;border-top:1px dashed #ccc;padding-top:10px;">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;font-weight:700;color:var(--navy);">بنود الخدمة (السعر لكل مرة × تكرارها بالسنة)</span>';
+    h+='<button onclick="f2AddMaintService('+o.id+')" style="background:#EBF8FA;border:1px solid #2E9896;color:#0D7A8A;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;">+ إضافة بند</button></div>';
+    if(!o.services||!o.services.length){
+      h+='<div style="text-align:center;color:#aaa;padding:8px;font-size:11px;">لا توجد بنود مُضافة — اضغط "+ إضافة بند"</div>';
+    } else {
+      h+='<table class="tbl" style="margin-top:0;"><thead><tr><th>اسم الخدمة</th><th>السعر (ر.س)</th><th>مرات بالسنة</th><th>مجاني؟</th><th></th></tr></thead><tbody>';
+      o.services.forEach(function(s,si){
+        h+='<tr>'
+          +'<td><input value="'+(s.name||'')+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'name\',this.value)" placeholder="مثال: غيار زيت" style="width:100%;border:none;background:transparent;font-size:12px;"></td>'
+          +'<td><input type="number" value="'+(s.price||0)+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'price\',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;" '+(s.free?'disabled':'')+'></td>'
+          +'<td><input type="number" step="0.1" value="'+(s.freq||0)+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'freq\',this.value)" style="width:60px;border:none;background:transparent;font-size:12px;"></td>'
+          +'<td style="text-align:center;"><input type="checkbox" '+(s.free?'checked':'')+' onchange="f2UpdateMaintService('+o.id+','+si+',\'free\',this.checked)"></td>'
+          +'<td style="text-align:center;"><button onclick="f2DelMaintService('+o.id+','+si+')" style="background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;">×</button></td>'
+          +'</tr>';
+      });
+      h+='</tbody></table>';
+    }
+    h+='<div style="margin-top:8px;font-size:12px;font-weight:700;color:#0D7A8A;background:#EBF8FA;padding:6px 10px;border-radius:6px;">التكلفة السنوية المتوقعة (محسوبة تلقائياً): '+(o.annual||0).toLocaleString('en-US')+' ر.س</div>';
     h+='</div></div>';
   });
   el.innerHTML=h;
@@ -12536,6 +12589,7 @@ function f2Calc(){
   var leaseGrowthRaw=document.getElementById('f2-lease-growth')?.value;var leaseGrowth=(leaseGrowthRaw===''||leaseGrowthRaw==null?5:parseFloat(leaseGrowthRaw))/100;
   var tb=document.getElementById('f2-total-box');
   if(tb){if(totalPurchase>0){tb.style.display='block';tb.textContent='القيمة الإجمالية لشراء الأسطول: '+f2Fmt(totalPurchase)+' ر.س';}else tb.style.display='none';}
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
@@ -12604,6 +12658,7 @@ function f2Excel(){
   var leaseDuration=parseInt(document.getElementById('f2-lease-duration')?.value)||3;
   var leaseGrowthRaw=document.getElementById('f2-lease-growth')?.value;var leaseGrowth=(leaseGrowthRaw===''||leaseGrowthRaw==null?5:parseFloat(leaseGrowthRaw))/100;
   var totalPurchase=count*unitPrice;
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
@@ -12799,6 +12854,7 @@ function f2PDF(reportTitle){
   var inclMaint=document.getElementById('f2-incl-maint')?.value==='yes'?'نعم':'لا';
   var inclIns=document.getElementById('f2-incl-ins')?.value==='yes'?'نعم':'لا';
   var inclAlt=document.getElementById('f2-incl-alt')?.value==='yes'?'نعم':'لا';
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
@@ -12901,6 +12957,7 @@ function f2Word(){
   var inclMaint=document.getElementById('f2-incl-maint')?.value==='yes'?'نعم':'لا';
   var inclIns=document.getElementById('f2-incl-ins')?.value==='yes'?'نعم':'لا';
   var inclAlt=document.getElementById('f2-incl-alt')?.value==='yes'?'نعم':'لا';
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var bestMaint=f2MaintOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestInsurance=f2InsuranceOffers.filter(function(o){return o.annual>0;}).sort(function(a,b){return a.annual-b.annual;})[0]||null;
   var bestLease=f2LeaseOffers.filter(function(o){return o.monthly>0;}).sort(function(a,b){return a.monthly-b.monthly;})[0]||null;
