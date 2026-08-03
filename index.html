@@ -12502,9 +12502,9 @@ function f2RenderMaint(){
       h+='<table class="tbl" style="margin-top:0;"><thead><tr><th>اسم الخدمة</th><th>السعر (ر.س)</th><th>مرات بالسنة</th><th>مجاني؟</th><th></th></tr></thead><tbody>';
       o.services.forEach(function(s,si){
         h+='<tr>'
-          +'<td><input value="'+(s.name||'')+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'name\',this.value)" placeholder="مثال: غيار زيت" style="width:100%;border:none;background:transparent;font-size:12px;"></td>'
-          +'<td><input type="number" value="'+(s.price||0)+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'price\',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;" '+(s.free?'disabled':'')+'></td>'
-          +'<td><input type="number" step="0.1" value="'+(s.freq||0)+'" oninput="f2UpdateMaintService('+o.id+','+si+',\'freq\',this.value)" style="width:60px;border:none;background:transparent;font-size:12px;"></td>'
+          +'<td><input value="'+(s.name||'')+'" onchange="f2UpdateMaintService('+o.id+','+si+',\'name\',this.value)" placeholder="مثال: غيار زيت" style="width:100%;border:none;background:transparent;font-size:12px;"></td>'
+          +'<td><input type="number" value="'+(s.price||0)+'" onchange="f2UpdateMaintService('+o.id+','+si+',\'price\',this.value)" style="width:70px;border:none;background:transparent;font-size:12px;" '+(s.free?'disabled':'')+'></td>'
+          +'<td><input type="number" step="0.1" value="'+(s.freq||0)+'" onchange="f2UpdateMaintService('+o.id+','+si+',\'freq\',this.value)" style="width:60px;border:none;background:transparent;font-size:12px;"></td>'
           +'<td style="text-align:center;"><input type="checkbox" '+(s.free?'checked':'')+' onchange="f2UpdateMaintService('+o.id+','+si+',\'free\',this.checked)"></td>'
           +'<td style="text-align:center;"><button onclick="f2DelMaintService('+o.id+','+si+')" style="background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;">×</button></td>'
           +'</tr>';
