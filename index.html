@@ -12764,8 +12764,13 @@ async function f2SaveStudy(){
   f2Studies.unshift(data);
   localStorage.setItem('f2_studies',JSON.stringify(f2Studies));
   try{
-    await sbInsert('procurement_config',{key:'f2_study_'+data.id,value:JSON.stringify(data),updated_at:new Date().toISOString()});
-  }catch(e){}
+    var res=await sbInsert('procurement_config',{key:'f2_study_'+data.id,value:JSON.stringify(data),updated_at:new Date().toISOString()});
+    if(res&&res[0]) data._sbId=res[0].id;
+    console.log('[f2] تم حفظ الدراسة بالسحابة:',title,'| Supabase id:',data._sbId);
+  }catch(e){
+    console.error('[f2] فشل حفظ الدراسة بالسحابة (بقيت محفوظة محليًا فقط):',e);
+    toast('⚠️ تعذّر رفع الدراسة للسحابة — محفوظة على هذا الجهاز فقط حاليًا',true);
+  }
   f2RenderSaved();
   toast('تم حفظ الدراسة: '+title+' ✅');
 }
@@ -12793,12 +12798,23 @@ function f2LoadStudy(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function f2DelStudy(id){
+async function f2DelStudy(id){
   if(!confirm('حذف هذه الدراسة؟')) return;
+  var s=f2Studies.find(function(x){return x.id===id;});
   f2Studies=f2Studies.filter(function(x){return x.id!==id;});
   localStorage.setItem('f2_studies',JSON.stringify(f2Studies));
   f2RenderSaved();
   toast('تم الحذف');
+  if(s&&s._sbId){
+    try{
+      await sbDelete('procurement_config',s._sbId);
+      console.log('[f2] تم حذف الدراسة من السحابة:',s.title);
+    }catch(e){
+      console.error('[f2] فشل حذف الدراسة من السحابة (حُذفت محليًا فقط):',e);
+    }
+  } else if(s){
+    console.warn('[f2] الدراسة "'+s.title+'" ما كان لها رقم صف بالسحابة (لم تكن مرفوعة أصلاً)، حُذفت محليًا فقط.');
+  }
 }
 
 function f2RenderSaved(){
@@ -12821,21 +12837,48 @@ function f2RenderSaved(){
   el.innerHTML=html;
 }
 
-function f2LoadSavedData(){
+async function f2LoadSavedData(){
+  // نسخة محلية (تُستخدم فورًا وكـ fallback لو تعذر الاتصال بالسحابة)
+  var localArr=[];
   try{
-    // تحميل من localStorage
-    var arr=JSON.parse(localStorage.getItem('f2_studies')||'[]');
-    // دعم النظام القديم
+    localArr=JSON.parse(localStorage.getItem('f2_studies')||'[]');
     var old=JSON.parse(localStorage.getItem('f2_analysis_data')||'{}');
-    if(old.savedAt&&!arr.find(function(x){return x.id==='legacy';})){
+    if(old.savedAt&&!localArr.find(function(x){return x.id==='legacy';})){
       old.id=Date.now();old.title=old.title||'دراسة محفوظة سابقاً';
-      arr.push(old);
+      localArr.push(old);
     }
-    f2Studies=arr;
-    f2RenderSaved();
-    // تحميل آخر دراسة تلقائياً إن وجدت
-    if(f2Studies.length){f2LoadStudy(f2Studies[0].id);}
-  }catch(e){}
+  }catch(e){console.error('[f2] فشل قراءة النسخة المحلية:',e);}
+  f2Studies=localArr;
+  f2RenderSaved();
+
+  // السحابة هي مصدر الحقيقة — نجيب كل دراسات الأسطول المحفوظة تحت procurement_config
+  console.log('[f2] جاري تحميل الدراسات المحفوظة من السحابة...');
+  try{
+    var rows=await sbGetAll('procurement_config','key=like.f2_study_*');
+    if(rows===null){
+      console.error('[f2] تعذّر الاتصال بالسحابة — معروض النسخة المحلية فقط');
+      toast('⚠️ تعذّر الاتصال بالسحابة — تُعرض الدراسات المحفوظة على هذا الجهاز فقط',true);
+    } else {
+      var cloudArr=rows.map(function(r){
+        try{
+          var parsed=JSON.parse(r.value);
+          parsed._sbId=r.id; // نحتفظ برقم صف السحابة عشان الحذف لاحقًا
+          return parsed;
+        }catch(e){return null;}
+      }).filter(Boolean);
+      // دمج: أي دراسة محلية بس (لسه ما انرفعت للسحابة) تبقى ظاهرة، والباقي من السحابة (مصدر الحقيقة)
+      var cloudIds=new Set(cloudArr.map(function(s){return s.id;}));
+      var localOnly=localArr.filter(function(s){return !cloudIds.has(s.id);});
+      f2Studies=cloudArr.concat(localOnly).sort(function(a,b){return (b.id||0)-(a.id||0);});
+      localStorage.setItem('f2_studies',JSON.stringify(f2Studies));
+      console.log('[f2] تم تحميل',cloudArr.length,'دراسة من السحابة +',localOnly.length,'محلية فقط. الإجمالي:',f2Studies.length);
+    }
+  }catch(e){
+    console.error('[f2] خطأ أثناء تحميل الدراسات من السحابة:',e);
+  }
+  f2RenderSaved();
+  // تحميل آخر دراسة تلقائياً إن وجدت
+  if(f2Studies.length){f2LoadStudy(f2Studies[0].id);}
 }
 
 
