@@ -12365,13 +12365,27 @@ function f2ReportHTML(m){
 
   H+=secTitle('عروض عقود الصيانة — ترتيب من الأقل للأعلى');
   H+=wideTable(
-    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
+    ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً)','عدد المركبات','التكلفة السنوية الإجمالية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
     sortedMaint.map(function(o,i){
       var diff=o.annual-sortedMaint[0].annual;
       var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
-      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.annual)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%', o.sla||'—'];
+      var perVehicle=m.count>0?(o.annual/m.count):0;
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(perVehicle)+' ر.س', ''+m.count, f2Fmt(o.annual)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%', o.sla||'—'];
     })
   );
+
+  // تفصيل احتساب كل عرض صيانة بند ببند — يوضح بالضبط كيف طلع رقم "تكلفة المركبة الواحدة" أعلاه
+  sortedMaint.forEach(function(o){
+    if(!o.services||!o.services.length) return;
+    H+='<div style="font-size:12px;font-weight:700;color:var(--navy);margin:10px 0 4px;">تفصيل احتساب عرض: '+(o.name||'—')+'</div>';
+    H+=wideTable(
+      ['اسم الخدمة','السعر لكل مرة','مرات التكرار بالسنة','مجاني؟','التكلفة سنوياً للمركبة الواحدة'],
+      o.services.map(function(s){
+        var lineTotal=s.free?0:((parseFloat(s.price)||0)*(parseFloat(s.freq)||0));
+        return [s.name||'—', s.free?'—':f2Fmt(s.price)+' ر.س', ''+(s.freq||0), s.free?'نعم':'لا', f2Fmt(lineTotal)+' ر.س'];
+      })
+    );
+  });
   H+=pageBreak;
 
   /* ══════ مقارنة ══════ */
