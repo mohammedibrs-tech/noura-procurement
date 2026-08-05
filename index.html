@@ -12364,7 +12364,27 @@ function f2ReportHTML(m){
   );
 
   H+=secTitle('عروض عقود الصيانة — ترتيب من الأقل للأعلى');
-  H+='<div style="font-size:11px;color:#555;margin-bottom:8px;">* التكلفة السنوية تقديرية، مبنية على متوسط متوقع لعدد مرات كل خدمة بالسنة (وليست أرقامًا ثابتة أو مضمونة) — قد تختلف التكلفة الفعلية باختلاف الاستخدام الفعلي للأسطول.</div>';
+  H+='<div style="font-size:11px;color:#555;margin-bottom:8px;">* أسعار كل خدمة (المواد/العمالة) ثابتة ومتفق عليها مع كل شركة، أما التكلفة السنوية الإجمالية فتقديرية — لأنها مبنية على عدد المرات المتوقع لكل خدمة مضروبًا بعدد المركبات، وقد تختلف التكلفة الفعلية باختلاف الاستخدام الفعلي للأسطول.</div>';
+
+  // جدول ملخص: أي خدمة مشمولة بكل عرض (نعم/لا) — نظرة سريعة قبل الدخول بتفاصيل الأسعار
+  var allServiceNames=[];
+  sortedMaint.forEach(function(o){
+    (o.services||[]).forEach(function(s){
+      if(s.name && allServiceNames.indexOf(s.name)===-1) allServiceNames.push(s.name);
+    });
+  });
+  if(allServiceNames.length){
+    H+='<div style="font-size:12px;font-weight:700;color:var(--navy);margin:6px 0 4px;">الخدمات المشمولة بكل عرض</div>';
+    H+=wideTable(
+      ['اسم الشركة'].concat(allServiceNames),
+      sortedMaint.map(function(o){
+        var svcByName={};
+        (o.services||[]).forEach(function(s){svcByName[s.name]=true;});
+        return [o.name||'—'].concat(allServiceNames.map(function(sn){return svcByName[sn]?'نعم':'لا';}));
+      })
+    );
+  }
+
   H+=wideTable(
     ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً)','عدد المركبات','التكلفة السنوية الإجمالية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
     sortedMaint.map(function(o,i){
