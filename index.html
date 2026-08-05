@@ -12364,6 +12364,7 @@ function f2ReportHTML(m){
   );
 
   H+=secTitle('عروض عقود الصيانة — ترتيب من الأقل للأعلى');
+  H+='<div style="font-size:11px;color:#555;margin-bottom:8px;">* التكلفة السنوية تقديرية، مبنية على متوسط متوقع لعدد مرات كل خدمة بالسنة (وليست أرقامًا ثابتة أو مضمونة) — قد تختلف التكلفة الفعلية باختلاف الاستخدام الفعلي للأسطول.</div>';
   H+=wideTable(
     ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً)','عدد المركبات','التكلفة السنوية الإجمالية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
     sortedMaint.map(function(o,i){
@@ -12379,7 +12380,7 @@ function f2ReportHTML(m){
     if(!o.services||!o.services.length) return;
     H+='<div style="font-size:12px;font-weight:700;color:var(--navy);margin:10px 0 4px;">تفصيل احتساب عرض: '+(o.name||'—')+'</div>';
     H+=wideTable(
-      ['اسم الخدمة','السعر لكل مرة','مرات التكرار بالسنة','مجاني؟','التكلفة سنوياً للمركبة الواحدة'],
+      ['اسم الخدمة','السعر لكل مرة','عدد المرات المتوقع سنوياً (تقديري)','مجاني؟','التكلفة سنوياً للمركبة الواحدة'],
       o.services.map(function(s){
         var lineTotal=s.free?0:((parseFloat(s.price)||0)*(parseFloat(s.freq)||0));
         return [s.name||'—', s.free?'—':f2Fmt(s.price)+' ر.س', ''+(s.freq||0), s.free?'نعم':'لا', f2Fmt(lineTotal)+' ر.س'];
@@ -12538,7 +12539,7 @@ function f2RenderMaint(){
     if(!o.services||!o.services.length){
       h+='<div style="text-align:center;color:#aaa;padding:8px;font-size:11px;">لا توجد بنود مُضافة — اضغط "+ إضافة بند"</div>';
     } else {
-      h+='<table class="tbl" style="margin-top:0;"><thead><tr><th>اسم الخدمة</th><th>السعر (ر.س)</th><th>مرات بالسنة</th><th>مجاني؟</th><th></th></tr></thead><tbody>';
+      h+='<table class="tbl" style="margin-top:0;"><thead><tr><th>اسم الخدمة</th><th>السعر (ر.س)</th><th>عدد المرات المتوقع سنوياً (تقديري)</th><th>مجاني؟</th><th></th></tr></thead><tbody>';
       o.services.forEach(function(s,si){
         h+='<tr>'
           +'<td><input value="'+(s.name||'')+'" onchange="f2UpdateMaintService('+o.id+','+si+',\'name\',this.value)" placeholder="مثال: غيار زيت" style="width:100%;border:none;background:transparent;font-size:12px;"></td>'
