@@ -12395,19 +12395,6 @@ function f2ReportHTML(m){
     })
   );
 
-  // تفصيل احتساب كل عرض صيانة بند ببند — يوضح بالضبط كيف طلع رقم "تكلفة المركبة الواحدة" أعلاه
-  sortedMaint.forEach(function(o){
-    if(!o.services||!o.services.length) return;
-    H+='<div style="font-size:12px;font-weight:700;color:var(--navy);margin:10px 0 4px;">تفصيل احتساب عرض: '+(o.name||'—')+'</div>';
-    H+=wideTable(
-      ['اسم الخدمة','السعر لكل مرة','عدد المرات المتوقع سنوياً (تقديري)','% المركبات المستفيدة من الأسطول','مجاني؟','التكلفة السنوية (موزّعة على كامل الأسطول)'],
-      o.services.map(function(s){
-        var pct=(s.pct===undefined||s.pct===null||s.pct==='')?100:(parseFloat(s.pct)||0);
-        var lineTotal=s.free?0:((parseFloat(s.price)||0)*(parseFloat(s.freq)||0)*(pct/100));
-        return [s.name||'—', s.free?'—':f2Fmt(s.price)+' ر.س', ''+(s.freq||0), pct+'%', s.free?'نعم':'لا', s.free?'0 ر.س':(f2Fmt(lineTotal)+' ر.س لكل مركبة')];
-      })
-    );
-  });
   H+=pageBreak;
 
   /* ══════ مقارنة ══════ */
