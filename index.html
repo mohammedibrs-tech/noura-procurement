@@ -12429,8 +12429,11 @@ function f2UpdateMaint(id,field,val){var o=f2MaintOffers.find(function(x){return
 // يحسب التكلفة السنوية المتوقعة لشركة صيانة من بنود الخدمة (سعر × تكرارها بالسنة × عدد المركبات)، ويعيد كتابتها على o.annual
 // حتى تبقى كل الحسابات والتقارير القديمة اللي تقرأ o.annual شغّالة بدون أي تعديل إضافي
 function f2RecalcMaintAnnual(o){
+  // توافق مع الدراسات القديمة المحفوظة قبل ميزة "التسعير حسب الاستخدام":
+  // لو ما فيه بنود خدمة مُضافة، نحافظ على القيمة السنوية القديمة كما هي بدل ما نصفّرها
+  if(!o.services||!o.services.length) return;
   var count=parseInt(document.getElementById('f2-count')?.value)||0;
-  var perVehicle=(o.services||[]).reduce(function(sum,s){
+  var perVehicle=o.services.reduce(function(sum,s){
     if(s.free) return sum;
     return sum+((parseFloat(s.price)||0)*(parseFloat(s.freq)||0));
   },0);
@@ -12877,8 +12880,10 @@ async function f2LoadSavedData(){
     console.error('[f2] خطأ أثناء تحميل الدراسات من السحابة:',e);
   }
   f2RenderSaved();
-  // تحميل آخر دراسة تلقائياً إن وجدت
-  if(f2Studies.length){f2LoadStudy(f2Studies[0].id);}
+  // ملاحظة مهمة: لا نحمّل أي دراسة محفوظة تلقائياً هنا.
+  // المسودة الحالية (f2_inputs) محمّلة مسبقاً عبر f2LoadInputs() وتحتوي آخر ما كنت تعمل عليه فعلياً —
+  // تحميل دراسة محفوظة تلقائياً فوقها كان يمحي عملك الحالي بصمت بأي وقت فيه دراسة محفوظة قديمة.
+  // التحميل الآن يصير فقط لو ضغطت "تحميل" بنفسك من القائمة.
 }
 
 
