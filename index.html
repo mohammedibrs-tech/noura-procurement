@@ -2096,7 +2096,8 @@ var LBL_GROUPS=[
     lbl_f2_lease_duration:'مدة العقد (سنوات)',
     lbl_f2_lease_maint:'يشمل صيانة؟',
     lbl_f2_lease_ins:'يشمل تأمين؟',
-    lbl_f2_lease_alt:'يشمل مركبة بديلة؟',
+    lbl_f2_lease_interior:'يشمل تجهيزات داخلية؟',
+    lbl_f2_lease_altcount:'عدد المركبات البديلة',
   }},
 ];
 var LBL_DEFAULTS={};
@@ -12228,7 +12229,7 @@ function f2ReportHTML(m){
       maint:m.inclMaint, ins:m.inclIns, alt:m.inclAlt, features:'تفاوض على تمديد بشروط جديدة', notes:m.currentVendor,
       composition:'قيمة إيجار سنوية كاملة', perVehicleMonthly:m.renewMonthlyUnit},
     {name:'إبرام عقد جديد (أفضل عرض)', monthly:newLeaseMonthly, annual:newLeaseAnnual, fourYear:newLeaseAnnual*4,
-      maint:m.bestLease?m.bestLease.inclMaint==='yes':false, ins:m.bestLease?m.bestLease.inclIns==='yes':false, alt:m.bestLease?m.bestLease.inclAlt==='yes':false,
+      maint:m.bestLease?m.bestLease.inclMaint==='yes':false, ins:m.bestLease?m.bestLease.inclIns==='yes':false, alt:m.bestLease?(m.bestLease.altCount>0):false,
       features:'أسطول حديث بعقد جديد', notes:m.bestLease?m.bestLease.name:'—',
       composition:'قيمة إيجار سنوية كاملة', perVehicleMonthly:m.blm},
     {name:'تملك الأسطول — صيانة وتأمين فقط (سنة 2 فأكثر)', monthly:ownershipMonthlyAfterY1, annual:ownershipAnnualAfterY1, fourYear:m.totalPurchase+ownershipAnnualAfterY1*4,
@@ -12292,20 +12293,20 @@ function f2ReportHTML(m){
     ['مدة العقد', m.bestLease?m.bestLease.duration:'—'],
     ['الصيانة', yn(m.bestLease?m.bestLease.inclMaint==='yes':false)],
     ['التأمين', yn(m.bestLease?m.bestLease.inclIns==='yes':false)],
-    ['المركبات البديلة', yn(m.bestLease?m.bestLease.inclAlt==='yes':false)],
+    ['المركبات البديلة', m.bestLease?((m.bestLease.altCount>0?(m.bestLease.altCount+' مركبة'):'لا يوجد')):'—'],
     ['مستوى الخدمة', '—'],
     ['إجمالي التكلفة خلال سنة', f2Fmt(newLeaseAnnual)+' ر.س'],
     ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(newLeaseAnnual*4)+' ر.س']
   ]);
   H+='<h3 style="'+FONT_TITLE+'font-weight:800;margin:6px 0;color:#000;">عروض شركات التأجير الجديدة — ترتيب من الأقل للأعلى</h3>';
   H+=wideTable(
-    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %'],
+    ['الترتيب','اسم الشركة','قيمة المركبة الواحدة (شهرياً)','التكلفة السنوية','الصيانة','التجهيزات الداخلية','يشمل تأمين','المركبات البديلة','الفرق عن الأقل','نسبة الفرق %'],
     sortedLease.map(function(o,i){
       var an=o.monthly*12*m.count;
       var bestAn=sortedLease[0].monthly*12*m.count;
       var diff=an-bestAn;
       var pct=bestAn>0?(diff/bestAn*100):0;
-      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(an)+' ر.س', f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%'];
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.monthly)+' ر.س', f2Fmt(an)+' ر.س', yn(o.inclMaint==='yes'), yn(o.inclInterior==='yes'), yn(o.inclIns==='yes'), (o.altCount>0?(o.altCount+' مركبة'):'لا يوجد'), f2Fmt(diff)+' ر.س', pct.toFixed(1)+'%'];
     })
   );
   H+=pageBreak;
@@ -12591,9 +12592,9 @@ function f2RenderInsurance(){
   });
   el.innerHTML=h;
 }
-function f2AddLease(){var id=Date.now();f2LeaseOffers.push({id:id,name:'',monthly:0,duration:3,inclMaint:'yes',inclIns:'yes',inclAlt:'yes'});f2RenderLease();}
+function f2AddLease(){var id=Date.now();f2LeaseOffers.push({id:id,name:'',monthly:0,duration:3,inclMaint:'yes',inclIns:'yes',inclInterior:'yes',altCount:0});f2RenderLease();}
 function f2DelLease(id){f2LeaseOffers=f2LeaseOffers.filter(function(o){return o.id!==id;});f2RenderLease();f2Calc();}
-function f2UpdateLease(id,field,val){var o=f2LeaseOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='monthly'||field==='duration')?parseFloat(val)||0:val;if(field==='monthly'||field==='duration'||field==='inclMaint'||field==='inclIns'||field==='inclAlt')f2Calc();}
+function f2UpdateLease(id,field,val){var o=f2LeaseOffers.find(function(x){return x.id===id;});if(!o)return;o[field]=(field==='monthly'||field==='duration'||field==='altCount')?parseFloat(val)||0:val;if(field==='monthly'||field==='duration'||field==='inclMaint'||field==='inclIns'||field==='inclInterior'||field==='altCount')f2Calc();}
 function f2RenderLease(){
   var el=document.getElementById('f2-lease-body');if(!el)return;
   if(!f2LeaseOffers.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:14px;font-size:12px;">اضغط "+ إضافة شركة تأجير" للبدء</div>';return;}
@@ -12613,7 +12614,8 @@ function f2RenderLease(){
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_duration" value="'+L('lbl_f2_lease_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||3)+'" oninput="f2UpdateLease('+o.id+',\'duration\',this.value)"></div>';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_maint" value="'+L('lbl_f2_lease_maint')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclMaint\',this.value)"><option value="yes"'+(o.inclMaint==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclMaint==='no'?' selected':'')+'>لا</option></select></div>';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_ins" value="'+L('lbl_f2_lease_ins')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclIns\',this.value)"><option value="yes"'+(o.inclIns==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclIns==='no'?' selected':'')+'>لا</option></select></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_alt" value="'+L('lbl_f2_lease_alt')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclAlt\',this.value)"><option value="yes"'+(o.inclAlt==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclAlt==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_interior" value="'+L('lbl_f2_lease_interior')+'" oninput="f2LabelEdit(this)"><select onchange="f2UpdateLease('+o.id+',\'inclInterior\',this.value)"><option value="yes"'+(o.inclInterior==='yes'?' selected':'')+'>نعم</option><option value="no"'+(o.inclInterior==='no'?' selected':'')+'>لا</option></select></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_lease_altcount" value="'+L('lbl_f2_lease_altcount')+'" oninput="f2LabelEdit(this)"><input type="number" min="0" value="'+(o.altCount||0)+'" oninput="f2UpdateLease('+o.id+',\'altCount\',this.value)" placeholder="0"></div>';
     h+='</div>';
     if(o.monthly>0)h+='<div style="margin-top:8px;padding:6px 12px;background:#F8F5FF;border-radius:6px;font-size:11px;color:#7C3AED;font-weight:700;">الإيجار السنوي الإجمالي للأسطول: '+f2Fmt(o.monthly*12*count)+' ر.س</div>';
     h+='</div>';
@@ -12741,7 +12743,7 @@ function f2Excel(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'ملخص الدراسة');
   if(f2MaintOffers.length){var ms=[['الشركة','التكلفة السنوية','مدة العقد','متنقلة','قطع الغيار','SLA']];f2MaintOffers.sort(function(a,b){return a.annual-b.annual;}).forEach(function(o){ms.push([o.name||'—',o.annual,o.duration,o.mobile==='yes'?'نعم':'لا',o.parts==='yes'?'نعم':'لا',o.sla||'—']);});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ms),'عروض الصيانة');}
   if(f2InsuranceOffers.length){var is_=[['الشركة','قيمة عرض السعر السنوي','مدة العقد']];f2InsuranceOffers.sort(function(a,b){return a.annual-b.annual;}).forEach(function(o){is_.push([o.name||'—',o.annual,o.duration]);});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(is_),'عروض التأمين');}
-  if(f2LeaseOffers.length){var ls=[['الشركة','إيجار/مركبة/شهر','مدة','إجمالي سنوي','صيانة','تأمين','بديل']];f2LeaseOffers.sort(function(a,b){return a.monthly-b.monthly;}).forEach(function(o){ls.push([o.name||'—',o.monthly,o.duration,o.monthly*12*count,o.inclMaint==='yes'?'نعم':'لا',o.inclIns==='yes'?'نعم':'لا',o.inclAlt==='yes'?'نعم':'لا']);});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ls),'عروض التأجير');}
+  if(f2LeaseOffers.length){var ls=[['الشركة','إيجار/مركبة/شهر','مدة','إجمالي سنوي','صيانة','تأمين','تجهيزات داخلية','عدد المركبات البديلة']];f2LeaseOffers.sort(function(a,b){return a.monthly-b.monthly;}).forEach(function(o){ls.push([o.name||'—',o.monthly,o.duration,o.monthly*12*count,o.inclMaint==='yes'?'نعم':'لا',o.inclIns==='yes'?'نعم':'لا',o.inclInterior==='yes'?'نعم':'لا',o.altCount||0]);});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ls),'عروض التأجير');}
   XLSX.writeFile(wb,'دراسة_جدوى_الأسطول_'+new Date().toISOString().split('T')[0]+'.xlsx');
   toast('تم تصدير Excel بنجاح ✓');
 }
