@@ -11125,7 +11125,7 @@ function cmpPDF(){
       var dMin=t.annual-minAnn;
       var dMinPct=minAnn>0?((dMin/minAnn)*100).toFixed(2):'0.00';
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س عن الأقل':'—')+'</td>';
-      pctCell2='<td style="text-align:center;">'+(dMin>0?('+ '+dMinPct+'% عن الأقل'):'0.0%')+'</td>';
+      pctCell2='<td style="text-align:center;">'+(dMin>0?('+ '+dMinPct+'%'):'0.0%')+'</td>';
     }
     var durCell=isOneTimeStudy?'':'<td style="text-align:center;">'+dur+'</td>';
     return '<tr style="background:#fff;"><td>'+(isLowest?'<b>':'')+t.name+(isLowest?' — أقل عرض سعر مطروح</b>':'')+'</td>'+durCell+'<td style="text-align:right;">'+fmt(t.periodTotal)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
