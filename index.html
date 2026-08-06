@@ -4956,7 +4956,7 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
     var bg=isBest?GREEN:(i%2===0?WHITE:LGRAY);
     var fc=isBest?GREEND:{rgb:'1A2B4A'};
     var diffVsCur=curContract>0?curContract-t.annual:(isBest?0:t.annual-minAnnual);
-    var pctVsCur=curContract>0?((diffVsCur/curContract)*100).toFixed(2)+'%':(isBest?'—':((((t.annual-minAnnual)/t.annual)*100).toFixed(2))+'%');
+    var pctVsCur=curContract>0?((diffVsCur/curContract)*100).toFixed(2)+'%':(isBest?'0.00%':((((t.annual-minAnnual)/minAnnual)*100).toFixed(2))+'%');
 
     sc('A'+(curRow+1),t.name,        sData(bg,'right',isBest,fc));
     sc('B'+(curRow+1),t.annual,      sNum(bg,isBest,fc));
@@ -11123,8 +11123,9 @@ function cmpPDF(){
       pctCell2=d>0?('<td style="color:#1a6b35;text-align:center;font-weight:700;">'+dPct+'% أقل من الحالي</td>'):d<0?('<td style="color:#b91c1c;text-align:center;font-weight:700;">'+dPct+'% أعلى من الحالي</td>'):'<td style="text-align:center;">0%</td>';
     } else {
       var dMin=t.annual-minAnn;
+      var dMinPct=minAnn>0?((dMin/minAnn)*100).toFixed(2):'0.00';
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س عن الأقل':'—')+'</td>';
-      pctCell2='<td style="text-align:center;">—</td>';
+      pctCell2='<td style="text-align:center;">'+(dMin>0?('+ '+dMinPct+'% عن الأقل'):'0.0%')+'</td>';
     }
     var durCell=isOneTimeStudy?'':'<td style="text-align:center;">'+dur+'</td>';
     return '<tr style="background:#fff;"><td>'+(isLowest?'<b>':'')+t.name+(isLowest?' — أقل عرض سعر مطروح</b>':'')+'</td>'+durCell+'<td style="text-align:right;">'+fmt(t.periodTotal)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
@@ -11223,8 +11224,9 @@ function cmpWord(){
       pctCell2=d>0?('<td>'+dPct+'% أقل</td>'):d<0?('<td>'+dPct+'% أعلى</td>'):'<td>0%</td>';
     } else {
       var dMin=t.annual-minAnn;
+      var dMinPct=minAnn>0?((dMin/minAnn)*100).toFixed(2):'0.00';
       diffCell2='<td>'+(dMin>0?'+ '+fmt(dMin)+' ر.س':'—')+'</td>';
-      pctCell2='<td>—</td>';
+      pctCell2='<td>'+(dMin>0?('+ '+dMinPct+'%'):'0%')+'</td>';
     }
     var durCell2=isOneTimeStudy?'':'<td>'+(t.duration||'—')+'</td>';
     return '<tr><td>'+(isLowest?'* ':'')+t.name+(isLowest?' — أقل عرض':'')+'</td>'+durCell2+'<td>'+fmt(t.periodTotal)+' ر.س</td>'+diffCell2+pctCell2+'</tr>';
