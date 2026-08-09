@@ -84,6 +84,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 .btn-green{background:var(--green);color:#fff;}
 .btn-red{background:var(--red);color:#fff;}
 .btn-gray{background:#F1F5F9;color:var(--text);}
+.btn-teal{background:#2E9896;color:#fff;}
 .btn-sm{padding:5px 10px;font-size:11px;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
 
@@ -4735,6 +4736,7 @@ function renderCmpSaved(){
       '</div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-primary btn-sm" onclick="cmpLoad('+i+')">تعديل</button>'+
+        '<button class="btn btn-teal btn-sm" onclick="cmpTransferToCommittee('+i+')">نقل إلى لجنة فحص العروض</button>'+
         '<button class="btn btn-green btn-sm" onclick="cmpExcelById('+i+')">Excel</button>'+
         '<button class="btn btn-gray btn-sm" onclick="cmpPDFById('+i+')">PDF</button>'+
         '<button class="btn btn-gray btn-sm" onclick="cmpDel('+i+')">×</button>'+
@@ -4744,6 +4746,38 @@ function renderCmpSaved(){
 
 }
 // يتحكم إذا كانت مقارنة الأسعار تظهر بتقارير الشهري/الربع سنوي/النصف سنوي/السنوي أو لا
+// يحسب الإجمالي شامل الضريبة لشركة واحدة ضمن مقارنة أسعار محفوظة (نفس منطق الحساب المستخدم بجدول المقارنة)
+function cmpCompanyTotal(co){
+  var monthly=0;
+  (co.rows||[]).forEach(function(rr){
+    var rb=(rr.count||0)*(parseFloat(String(rr.unitPrice||0).replace(/,/g,''))||0);
+    var vt=rr.vatType||'none';
+    monthly+=vt==='added'?rb*1.15:rb;
+  });
+  var payType=co.paymentType||'total';
+  return payType==='monthly'?monthly*12:monthly;
+}
+// ينقل بيانات مقارنة أسعار محفوظة إلى نموذج لجنة فحص العروض جاهزة للتعبئة (بدل إعادة كتابة كل شي يدويًا)
+function cmpTransferToCommittee(idx){
+  var s=cmpSaved[idx];if(!s)return;
+  if(!s.companies||!s.companies.length){toast('لا توجد شركات بهذي المقارنة لنقلها',true);return;}
+  nav('committee');
+  committeeReset();
+  var subjectEl=document.getElementById('cm-subject');if(subjectEl)subjectEl.value=s.title||'';
+  var dateEl=document.getElementById('cm-date');if(dateEl&&s.date)dateEl.value=s.date;
+  cmSetCompType('price');
+  s.companies.forEach(function(co){
+    cmAddOffer();
+    var rows=document.querySelectorAll('.cm-offer-row');
+    var lastRow=rows[rows.length-1];
+    if(!lastRow)return;
+    var nameEl=lastRow.querySelector('.cm-offer-name');if(nameEl)nameEl.value=co.name||'';
+    var amtEl=lastRow.querySelector('.cm-offer-amount');if(amtEl)amtEl.value=cmpCompanyTotal(co).toFixed(2);
+  });
+  toast('تم نقل '+s.companies.length+' شركة إلى لجنة فحص العروض ✅ راجع البيانات وأكمل الباقي');
+  console.log('[cmp→committee] تم نقل مقارنة "'+s.title+'" —',s.companies.length,'شركة');
+}
+
 function cmpToggleReportVisibility(idx,val){
   var s=cmpSaved[idx];if(!s)return;
   s.showInReports=val;
