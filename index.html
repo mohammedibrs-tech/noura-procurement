@@ -11213,7 +11213,22 @@ function cmpPDF(){
     ?'<table><thead><tr><th>الشركة</th><th>الإجمالي</th><th>الفرق عن السعر الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>'
     :'<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي (حسب مدة العقد)</th><th>الفرق عن العقد الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>';
   html+='<h2>تفاصيل الأسعار</h2>'+detailSections;
-  html+='<\/div><script>window.onload=function(){window.print();}<\/script></body></html>';
+  html+='<\/div><script>'
+    +'window.onload=function(){'
+    +'  var content=document.querySelector(".pdf-content");'
+    +'  var pageHeightMM=297, safetyMarginMM=5;'
+    +'  var usableHeightMM=pageHeightMM-safetyMarginMM;'
+    +'  var pxPerMM=96/25.4;'
+    +'  var contentHeightMM=content.scrollHeight/pxPerMM;'
+    +'  if(contentHeightMM>usableHeightMM){'
+    +'    var scale=usableHeightMM/contentHeightMM;'
+    +'    scale=Math.max(scale,0.5);' // حد أدنى عشان النص ما يصير غير مقروء
+    +'    content.style.zoom=scale;'
+    +'  }'
+    // إذا ما احتاج تصغير، يطبع بنفس حجم الخط الحالي بدون أي تغيير
+    +'  setTimeout(function(){window.print();},80);'
+    +'};'
+    +'<\/script></body></html>';
   W.document.write(html);
   W.document.close();
 }
