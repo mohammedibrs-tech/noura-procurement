@@ -167,17 +167,9 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       سند الاستلام (DN)
     </div>
-    <div class="sb-item" onclick="nav('pc')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-      Petty Cash
-    </div>
     <div class="sb-item" onclick="nav('cmp')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       مقارنة الأسعار
-    </div>
-    <div class="sb-item" onclick="nav('taameeds')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      التعاميد
     </div>
     <div class="sb-sep"></div>
     <div class="sb-label">التقارير والعقود</div>
@@ -204,10 +196,6 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     <div class="sb-item" onclick="nav('kpi')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
       مؤشرات الأداء
-    </div>
-    <div class="sb-item" onclick="nav('pma')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      مساعد مدير المشتريات
     </div>
     <div class="sb-item" onclick="nav('lbl-settings');LRenderSettingsPage()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -402,6 +390,14 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
           <button onclick="document.getElementById('filter-year').value='';document.getElementById('filter-month').value='';syncBudgetFilter();" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:#f0f4ff;cursor:pointer;">عرض الكل</button>
         <button class="btn btn-green btn-sm" onclick="expExcel()">Excel</button>
         <button class="btn btn-red btn-sm" onclick="expPrint()">PDF</button>
+        <div style="display:flex;align-items:center;gap:6px;background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:6px 10px;">
+          <label style="font-size:11px;color:#555;white-space:nowrap;">حجم الخط (px)</label>
+          <input id="exp-pdf-fontsize" type="number" min="6" max="24" placeholder="تلقائي" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:11px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555;white-space:nowrap;cursor:pointer;">
+            <input id="exp-pdf-autofit" type="checkbox" checked style="cursor:pointer;">
+            تصغير تلقائي لصفحة واحدة
+          </label>
+        </div>
       </div>
     </div>
     <div class="card-body" style="overflow-x:auto;">
@@ -1263,121 +1259,6 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 
 </div>
 
-<!-- ══ Petty Cash ══ -->
-<div class="page" id="page-pc">
-  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>Petty Cash — الفواتير الشهرية</h1><p>تجميع فواتير كل شهر وتصديرها ZIP منظم للمالية</p></div></div>
-  <div class="card">
-    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-      <h3>إضافة فاتورة جديدة</h3>
-      <button class="btn btn-secondary btn-sm" onclick="loadFromSupabase().then(()=>renderPCGroups())" title="مزامنة يدوية مع السحابة">🔄 مزامنة السحابة</button>
-    </div>
-    <div class="card-body">
-      <div class="form-grid">
-        <div class="field"><label>الشهر</label>
-          <select id="pc-month">
-            <option value="01">يناير</option><option value="02">فبراير</option>
-            <option value="03">مارس</option><option value="04">أبريل</option>
-            <option value="05">مايو</option><option value="06">يونيو</option>
-            <option value="07">يوليو</option><option value="08">أغسطس</option>
-            <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
-            <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
-          </select>
-        </div>
-        <div class="field"><label>السنة</label><input id="pc-year" type="number" value="2026"></div>
-        <div class="field"><label>اسم الشركة / المورد</label><input id="pc-vendor" list="suppliers-datalist" placeholder="اختر أو اكتب اسم المورد" oninput="buildSupplierDatalist()"></div>
-        <div class="field"><label>البيان (وصف المصروف)</label><input id="pc-desc" placeholder="مثال: صيانة أجهزة التكييف"></div>
-        <div class="field"><label>المبلغ الإجمالي (ر.س)</label><input id="pc-amount" type="number" placeholder="0.00"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px;">
-        <div class="field"><label style="color:#1DA9BD;font-weight:700;">📄 الفاتورة الضريبية</label><input type="file" id="pc-tax" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#276749;font-weight:700;">📄 سند الاستلام</label><input type="file" id="pc-receipt" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#7C3AED;font-weight:700;">📄 طلب ERP</label><input type="file" id="pc-erp" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
-        <div class="field"><label style="color:#C53030;font-weight:700;">📄 إيصال التحويل</label><input type="file" id="pc-transfer" accept=".pdf" multiple style="margin-top:4px;font-size:11px;"></div>
-      </div>
-      <button class="btn btn-primary" onclick="pcAddInvoice()" style="margin-top:14px;">+ إضافة الفاتورة</button>
-    </div>
-  </div>
-  <div id="pc-groups"></div>
-</div>
-
-
-<!-- ══ التعاميد ══ -->
-<div class="page" id="page-taameeds">
-  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text">
-    <h1>التعاميد</h1>
-    <p>حفظ وإدارة ملفات التعاميد والموردين</p>
-  </div></div>
-
-  <!-- فورم إضافة/تعديل تعميد -->
-  <div class="card" id="taameed-form-card">
-    <div class="card-header">
-      <h3 id="taameed-form-title">إضافة تعميد جديد</h3>
-      <button class="btn btn-gray btn-sm" onclick="taameedResetForm()">🔄 جديد</button>
-    </div>
-    <div class="card-body">
-
-      <!-- معلومات التعميد -->
-      <div class="section-title">معلومات التعميد</div>
-      <div class="form-grid">
-        <div class="field"><label>رقم التعميد</label><input id="tm-num" placeholder="NDC-26-O-0001"></div>
-        <div class="field"><label>وصف التعميد</label><input id="tm-desc" placeholder="مثال: صيانة أجهزة التكييف"></div>
-        <div class="field"><label>اسم الشركة / المورد</label><input id="tm-vendor" placeholder="اسم الشركة"></div>
-        <div class="field"><label>عدد PO المرتبطة</label><input id="tm-po-count" type="number" min="0" placeholder="0" style="max-width:120px;"></div>
-        <div class="field"><label>تاريخ التعميد</label><input id="tm-date" type="date"></div>
-        <div class="field"><label>قيمة التعميد (ر.س)</label><input id="tm-amount" type="number" placeholder="0.00"></div>
-      </div>
-
-      <!-- عروض الأسعار -->
-      <div class="section-title" style="margin-top:16px;">عروض الأسعار</div>
-      <div id="tm-quotes-list">
-        <div class="field" style="margin-bottom:8px;">
-          <label style="color:#1DA9BD;">📄 عرض السعر 1</label>
-          <input type="file" class="tm-quote-file" accept=".pdf" style="font-size:11px;margin-top:4px;">
-        </div>
-      </div>
-      <button class="btn btn-gray btn-sm" onclick="taameedAddQuote()" id="tm-add-quote-btn" style="margin-bottom:4px;">+ إضافة عرض سعر</button>
-      <div style="font-size:10px;color:var(--sub);">الحد الأقصى 5 عروض</div>
-
-      <!-- ملفات الشركة -->
-      <div class="section-title" style="margin-top:16px;">ملفات الشركة / العميل</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="field"><label style="color:#C53030;">📄 الفاتورة الضريبية</label><input type="file" id="tm-invoice" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-        <div class="field"><label style="color:#276749;">📄 شهادة الضريبة للمورد</label><input type="file" id="tm-vat-cert" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-        <div class="field"><label style="color:#244062;">📄 السجل التجاري</label><input type="file" id="tm-cr" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-        <div class="field"><label style="color:#7C3AED;">📄 العنوان الوطني</label><input type="file" id="tm-address" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-      </div>
-      <div id="tm-extra-files-list"></div>
-      <button class="btn btn-gray btn-sm" onclick="taameedAddExtraFile()" style="margin-top:8px;">+ إضافة ملف للمورد</button>
-
-      <!-- ملفات ERP والإنجاز -->
-      <div class="section-title" style="margin-top:16px;">ملفات ERP والإنجاز</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="field">
-          <label style="color:#0D7A8A;">📄 طلب ERP</label>
-          <input id="tm-erp-num" placeholder="رقم الطلب في ERP" style="margin-bottom:6px;">
-          <input type="file" id="tm-erp-file" accept=".pdf" style="font-size:11px;">
-        </div>
-        <div class="field"><label style="color:#276749;">📄 شهادة الإنجاز (إن وجد)</label><input type="file" id="tm-completion" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-        <div class="field"><label style="color:#1DA9BD;">📄 Delivery Note / سند الاستلام</label><input type="file" id="tm-dn" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>
-      </div>
-
-      <div class="actions" style="margin-top:16px;">
-        <button class="btn btn-primary" onclick="taameedSave()">حفظ التعميد</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- قائمة التعاميد المحفوظة -->
-  <div class="card" style="margin-top:16px;">
-    <div class="card-header">
-      <h3>التعاميد المحفوظة</h3>
-    </div>
-    <div class="card-body" id="taameeds-list">
-      <div style="text-align:center;color:#aaa;padding:20px;">لا توجد تعاميد محفوظة</div>
-    </div>
-  </div>
-</div>
-
 <!-- ══ العقود ══ -->
 <div class="page" id="page-contracts">
   <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>العقود</h1><p>إدارة عقود الموردين والخدمات</p></div></div>
@@ -1566,18 +1447,6 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
   <div id="kpi-content" style="margin-top:16px;"></div>
 </div>
 
-<!-- ══ مساعد مدير المشتريات ══ -->
-<div class="page" id="page-pma">
-  <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1 id="title-pma">مساعد مدير المشتريات</h1><p>لوحة تنفيذية مبنية بالكامل من بيانات المنصة الحالية — عقود، طلبات شراء، مقارنات أسعار، وموردون</p></div></div>
-  <div class="card">
-    <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-      <div style="font-size:12px;color:#64748B;">يحلّل المساعد كل البيانات المُدخلة بالمنصة لحظة الضغط على "تحديث التحليل" — لا يراقب شيئاً تلقائياً بالخلفية.</div>
-      <button class="btn btn-primary" onclick="buildPMA()">🔄 تحديث التحليل</button>
-    </div>
-  </div>
-  <div id="pma-content" style="margin-top:16px;"></div>
-</div>
-
 <!-- ══ تخصيص النصوص ══ -->
 <div class="page" id="page-lbl-settings">
   <div class="page-header"><button class="back-btn" onclick="navBack()">&#8594; رجوع</button><div class="page-header-text"><h1>تخصيص النصوص</h1><p>عدّل أي اسم عمود أو عنوان جدول بنفسك — التعديل ينعكس فوراً على الشاشة وعلى أي ملف PDF أو Word تصدّره بعدها</p></div></div>
@@ -1693,11 +1562,19 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="field" style="margin-top:8px;"><label>تاريخ بداية العقد</label><input id="cm-start-date" placeholder="1/8/2025م"></div>
       <div class="field" style="margin-top:8px;"><label>ملاحظات إضافية</label><textarea id="cm-extra-notes" rows="2" placeholder="أي ملاحظات..."></textarea></div>
 
-      <div class="actions" style="margin-top:16px;gap:8px;">
+      <div class="actions" style="margin-top:16px;gap:8px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="committeeSave()">💾 حفظ المحضر</button>
         <button class="btn btn-green" onclick="committeeExportWord()">📄 تصدير Word</button>
         <button class="btn btn-red" onclick="committeeExportPDF()">🖨️ طباعة PDF</button>
         <button class="btn btn-gray" onclick="committeeExportTechPDF()" title="بدون مبالغ — للتوقيع الفني">🔒 النسخة الفنية</button>
+        <div style="display:flex;align-items:center;gap:6px;background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-inline-start:6px;">
+          <label style="font-size:12px;color:#555;white-space:nowrap;">حجم الخط (px)</label>
+          <input id="cm-pdf-fontsize" type="number" min="6" max="24" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;white-space:nowrap;cursor:pointer;">
+            <input id="cm-pdf-autofit" type="checkbox" checked style="cursor:pointer;">
+            تصغير تلقائي عند فيضان أي صفحة
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -2395,6 +2272,7 @@ let budgetTotal=0,budgetTarget=0;
 
 let poSaved=[];
 let pcGroups={};
+let taameeds=[]; // بيانات تاريخية تُستخدم بالتقارير فقط — واجهة الإدارة المخصصة لها حُذفت من المنصة
 
 async function initBudget(){
   // ── إعداد قيمة العهدة ──
@@ -2993,6 +2871,10 @@ function expExcel(){
 }
 
 function expPrint(){
+  const manualFontSize=parseFloat(document.getElementById('exp-pdf-fontsize')?.value)||null;
+  const autoFitEnabled=document.getElementById('exp-pdf-autofit')?.checked!==false;
+  const shouldAutoFit=!manualFontSize&&autoFitEnabled;
+  const BF=manualFontSize||11;
   // ── فلترة بالشهر والسنة المحددَين ──
   const filterMonth=(document.getElementById('filter-month')||{}).value||'';
   const filterYear=(document.getElementById('filter-year')||{}).value||'';
@@ -3020,7 +2902,7 @@ function expPrint(){
     return `<tr><td class="muted">${e.department||'—'}</td><td class="muted" style="text-align:center;">${e.invoice_num||'—'}</td><td class="val">${e.vendor||'—'}</td><td class="muted" style="text-align:center;">${e.vat_num||'—'}</td><td class="val">${e.item_name||'—'}</td><td style="text-align:right;">${amtExcl.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ر.س</td><td style="text-align:right;color:#555;">${vatAmt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ر.س</td><td style="text-align:right;font-weight:600;">${amtIncl.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ر.س</td><td style="text-align:right;color:#000000;">${(parseFloat(e.transfer_fee)||0)>0?(parseFloat(e.transfer_fee)||0).toLocaleString('en-US')+' ر.س':'—'}</td><td class="muted" style="text-align:center;">${e.expense_date||'—'}</td></tr>`;
   }).join('');
   const notesList=filtered.filter(e=>e.notes&&e.notes.trim()).map(e=>`• ${e.item_name||'—'}: ${e.notes}`).join('<br>');
-  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:10px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
+  const CSS=`@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:40mm 20mm 30mm;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;}h1{font-size:${BF+7}px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:${BF+2}px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:${BF}px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:${BF-1}px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:${BF-1}px;color:#555;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:${BF-1}px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;}td{padding:6px 8px;border:1px solid #000;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <img src="${BG}" class="bg-img">
@@ -3057,7 +2939,41 @@ ${notesList?`<h2>الملاحظات</h2>
   </div>
   </div>
   </body></html>`);
-  w.document.close();w.onload=()=>{w.focus();w.print();};
+  w.document.close();
+  w.onload=function(){
+    if(!shouldAutoFit){ setTimeout(function(){w.focus();w.print();},80); return; }
+    var content=w.document.querySelector('.pdf-content');
+    var pageHeightMM=297, safetyMarginMM=6;
+    var usableHeightMM=pageHeightMM-safetyMarginMM;
+    var pxPerMM=96/25.4;
+    function applyScale(scale){
+      var st=w.document.getElementById('autofit-style');
+      if(!st){st=w.document.createElement('style');st.id='autofit-style';w.document.head.appendChild(st);}
+      st.innerHTML=
+        'body{font-size:'+(BF*scale).toFixed(2)+'px !important;}'
+        +'table{font-size:'+((BF-1)*scale).toFixed(2)+'px !important;margin-bottom:'+(20*scale).toFixed(1)+'px !important;}'
+        +'td,thead th{padding:'+(6*scale).toFixed(1)+'px '+(8*scale).toFixed(1)+'px !important;}'
+        +'h1{font-size:'+((BF+7)*scale).toFixed(2)+'px !important;margin-bottom:'+(10*scale).toFixed(1)+'px !important;}'
+        +'h2{font-size:'+((BF+2)*scale).toFixed(2)+'px !important;margin:'+(16*scale).toFixed(1)+'px 0 '+(8*scale).toFixed(1)+'px !important;}'
+        +'.pdf-content{padding:'+(40*scale).toFixed(1)+'mm '+(20*scale).toFixed(1)+'mm '+(30*scale).toFixed(1)+'mm !important;}'
+        +'.kpi-val{font-size:'+(22*scale).toFixed(2)+'px !important;}';
+    }
+    var contentHeightMM=content.scrollHeight/pxPerMM;
+    if(contentHeightMM>usableHeightMM){
+      var scale=Math.max(usableHeightMM/contentHeightMM,0.5);
+      applyScale(scale);
+      setTimeout(function(){
+        var newHeightMM=content.scrollHeight/pxPerMM;
+        if(newHeightMM>usableHeightMM){
+          var corrected=Math.max(scale*(usableHeightMM/newHeightMM)*0.98,0.45);
+          applyScale(corrected);
+        }
+        setTimeout(function(){w.focus();w.print();},100);
+      },100);
+    } else {
+      setTimeout(function(){w.focus();w.print();},80);
+    }
+  };
 }
 
 /* ══════════════ PO ══════════════ */
@@ -5095,477 +5011,6 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
   toast('تم تصدير Excel ✅');
 }
 
-async function pcAddInvoice(){
-  var month  = document.getElementById('pc-month').value;
-  var year   = document.getElementById('pc-year').value||'2026';
-  var vendor = document.getElementById('pc-vendor').value.trim();
-  var desc   = document.getElementById('pc-desc').value.trim();
-  var amount = document.getElementById('pc-amount').value || 0;
-  if(!vendor||!desc){toast('أدخل اسم الشركة والبيان',true);return;}
-  autoAddSupplier(vendor);
-  var taxFile      = document.getElementById('pc-tax').files[0];
-  var receiptFile  = document.getElementById('pc-receipt').files[0];
-  var erpFile      = document.getElementById('pc-erp').files[0];
-  var transferFile = document.getElementById('pc-transfer').files[0];
-  if(!taxFile&&!receiptFile&&!erpFile&&!transferFile){toast('ارفع ملفاً واحداً على الأقل',true);return;}
-
-  var key = year+'-'+month;
-  if(!pcGroups[key]) pcGroups[key]=[];
-  var invId = Date.now();
-  var invoice={id:invId,vendor:vendor,desc:desc,amount:parseFloat(amount),files:[]};
-
-  toast('جاري رفع الملفات...');
-
-  try{
-
-  // رفع ملف واحد إلى Storage (مع دعم الحفظ المحلي كبديل)
-  async function uploadOne(file, label){
-    if(!file)return;
-    const cleanFileName = file.name.replace(/[^\x00-\x7F]/g, "").replace(/\s+/g, "_");
-    const storagePath = key+'/'+invId+'/'+label+'_'+cleanFileName;
-    const localKey = 'pc_'+invId+'_'+label;
-    
-    // دائماً احفظ نسخة محلياً في IndexedDB كضمان
-    try { await saveFileLocally(localKey, file); } catch(e) { console.error('Local save failed', e); }
-
-    try{
-      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+storagePath,{
-        method:'POST',
-        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
-        body:file
-      });
-      if(res.ok){
-        invoice.files.push({label:label,name:file.name,url:SB+'/storage/v1/object/public/petty-cash/'+storagePath, localKey: localKey});
-        return;
-      }
-    }catch(e){}
-    
-    // إذا فشل الرفع للسحابة، نعتمد على النسخة المحلية
-    invoice.files.push({label:label,name:file.name,url:null,localKey:localKey,isLocalOnly:true});
-  }
-
-  // رفع كل الملفات (كل input يقبل multiple)
-  var fileMap=[
-    {el:'pc-tax',    label:'الفاتورة_الضريبية'},
-    {el:'pc-receipt',label:'سند_الاستلام'},
-    {el:'pc-erp',    label:'طلب_ERP'},
-    {el:'pc-transfer',label:'إيصال_التحويل'}
-  ];
-  for(var fi=0;fi<fileMap.length;fi++){
-    var files=document.getElementById(fileMap[fi].el).files;
-    for(var fj=0;fj<files.length;fj++){
-      var suffix=files.length>1?'_'+(fj+1):'';
-      await uploadOne(files[fj], fileMap[fi].label+suffix);
-    }
-  }
-
-  // حفظ في Supabase DB
-  try{await sbInsert('procurement_pc',{month_key:key,invoice:JSON.stringify(invoice)});}catch(e){}
-
-  // حفظ محلي — بدون base64 لتجنب QuotaExceeded
-  pcGroups[key].push(invoice);
-  try{
-    localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
-  }catch(e){ console.warn('localStorage quota - data saved in Supabase only'); }
-  renderPCGroups();
-
-  document.getElementById('pc-vendor').value='';
-  document.getElementById('pc-desc').value='';
-  document.getElementById('pc-amount').value='';
-  ['pc-tax','pc-receipt','pc-erp','pc-transfer'].forEach(function(id){document.getElementById(id).value='';});
-  
-  var successCount = invoice.files.filter(f => !f.failed).length;
-  var failCount = invoice.files.filter(f => f.failed).length;
-  if(failCount > 0) {
-    toast('تم الحفظ مع فشل رفع ' + failCount + ' ملفات. تأكد من إعدادات Storage', true);
-  } else {
-    toast('تمت إضافة الفاتورة ورفع ' + successCount + ' ملفات بنجاح ✅');
-  }
-
-  }catch(e){
-    console.error('pcAddInvoice error:',e);
-    toast('خطأ: '+e.message,true);
-  }
-}
-
-function renderPCGroups(){
-  var el=document.getElementById('pc-groups');if(!el)return;
-  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
-  var keys=Object.keys(pcGroups).sort().reverse();
-  if(!keys.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:30px;">لا توجد فواتير محفوظة</div>';return;}
-  var html='';
-  for(var ki=0;ki<keys.length;ki++){
-    var key=keys[ki];
-    var parts=key.split('-');var yr=parts[0];var mo=parts[1];
-    var invoices=pcGroups[key]||[];
-    var totalMonth = invoices.reduce(function(sum, inv){ return sum + (inv.amount || 0); }, 0);
-    var invHTML='';
-    for(var ii=0;ii<invoices.length;ii++){
-      var inv=invoices[ii];
-      var flist=inv.files||[];
-      var tagsHTML='';
-      for(var fi=0;fi<flist.length;fi++){
-        var colors=['#1DA9BD','#276749','#7C3AED'];
-        var failBadge=flist[fi].failed?'⚠️ ':'';
-        tagsHTML+='<span style="font-size:10px;background:'+(flist[fi].failed?'#FEF3C7':''+colors[fi%3]+'22')+';color:'+(flist[fi].failed?'#92400E':colors[fi%3])+';padding:2px 8px;border-radius:10px;margin-left:4px;">'+failBadge+flist[fi].label+'</span>';
-      }
-      var btnsHTML='';
-      for(var fi2=0;fi2<flist.length;fi2++){
-        if(flist[fi2].failed){
-          btnsHTML+='<button class="btn btn-gray btn-sm" disabled style="opacity:0.5;font-size:10px;background:#FFF5F5;color:#C53030;border:1px solid #FEB2B2;" title="فشل الرفع">⚠️ '+flist[fi2].label.replace(/_/g,' ')+'</button>';
-        }else{
-          btnsHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpenFile(\''+key+'\','+ii+','+fi2+')" style="background:#F0FFF4;color:#276749;border:1px solid #C6F6D5;" title="'+flist[fi2].label+'">📄 '+flist[fi2].label.replace(/_/g,' ')+'</button>';
-        }
-      }
-      invHTML+='<div style="padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;">';
-      invHTML+='<div><div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:10px;">'+inv.vendor+' <span style="color:#276749;background:#F0FFF4;padding:1px 6px;border-radius:4px;font-size:11px;">'+(inv.amount||0).toLocaleString('ar-SA')+' ر.س</span></div>';
-      invHTML+='<div style="font-size:11px;color:#64748B;margin:3px 0;">'+inv.desc+'</div>';
-      invHTML+='<div>'+tagsHTML+'</div></div>';
-      invHTML+='<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">'+btnsHTML;
-      invHTML+='<button class="btn btn-gray btn-sm" onclick="pcOpenEdit(\''+key+'\','+ii+')" style="background:#EFF6FF;color:#244062;border:1px solid #244062;">✏️ تعديل</button>';
-      invHTML+='<button class="btn btn-red btn-sm" onclick="pcRemoveInvoice(\''+key+'\','+ii+')">حذف</button></div></div>';
-    }
-    html+='<div class="card" style="margin-bottom:16px;">';
-    html+='<div class="card-header"><h3>'+MONTHS[mo]+' '+yr;
-    html+=' <span style="font-size:11px;color:var(--sub);">('+invoices.length+' فاتورة - إجمالي: '+totalMonth.toLocaleString('ar-SA')+' ر.س)</span></h3>';
-    html+='<div style="display:flex;gap:6px;">';
-    html+='<button class="btn btn-green btn-sm" onclick="pcExport(\''+key+'\')">📦 تصدير ZIP</button>';
-    html+='<button class="btn btn-red btn-sm" onclick="pcDeleteGroup(\''+key+'\')">حذف الشهر</button>';
-    html+='</div></div>';
-    html+='<div style="padding:0;">'+invHTML+'</div></div>';
-  }
-  el.innerHTML=html;
-}
-
-async function pcOpenFile(key,ii,fi){
-  var inv=(pcGroups[key]||[])[ii];
-  if(!inv||!inv.files[fi])return;
-  var f=inv.files[fi];
-  
-  if(f.localKey){
-    try {
-      const localBlob = await getFileLocally(f.localKey);
-      if(localBlob){
-        window.open(URL.createObjectURL(localBlob), '_blank');
-        return;
-      }
-    } catch(e) {}
-  }
-  
-  if(f.url) window.open(f.url,'_blank');
-  else if(f.b64) window.open(f.b64,'_blank');
-}
-function pcRemoveInvoice(key,ii){
-  if(!confirm('حذف هذه الفاتورة؟'))return;
-  (pcGroups[key]||[]).splice(ii,1);
-  if(pcGroups[key]&&!pcGroups[key].length) delete pcGroups[key];
-  localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
-  renderPCGroups();
-}
-function pcOpen(key,i){window.open((pcGroups[key]||[])[i]?.b64||'','_blank');}
-function pcRemoveFile(key,i){(pcGroups[key]||[]).splice(i,1);if(pcGroups[key]&&!pcGroups[key].length)delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
-function pcDeleteGroup(key){if(!confirm('حذف شهر كامل؟'))return;delete pcGroups[key];localStorage.setItem('pc_groups',JSON.stringify(pcGroups));renderPCGroups();}
-
-async function pcFetchFile(url, localKey){
-  if(localKey){
-    try {
-      const blob = await getFileLocally(localKey);
-      if(blob) return await blob.arrayBuffer();
-    } catch(e) {}
-  }
-  if(!url) return null;
-  try{
-    var r=await fetch(url,{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-    if(r.ok) return await r.arrayBuffer();
-  }catch(e){}
-  try{
-    var r2=await fetch(url);
-    if(r2.ok) return await r2.arrayBuffer();
-  }catch(e){}
-  return null;
-}
-
-async function pcExport(key){
-  var invoices=pcGroups[key]||[];
-  if(!invoices.length){toast('لا توجد فواتير',true);return;}
-  var MONTHS={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
-  var p=key.split('-');
-  var fname='PettyCash_'+MONTHS[p[1]]+'_'+p[0];
-
-  // جمع كل الملفات القابلة للتصدير
-  var allFiles=[];
-  for(var i=0;i<invoices.length;i++){
-    var inv=invoices[i];
-    (inv.files||[]).forEach(function(f){
-      if(f.url || f.localKey) allFiles.push({inv:inv,invIdx:i,f:f});
-    });
-  }
-  if(!allFiles.length){toast('لا توجد ملفات مرفوعة في هذا الشهر', true); return;}
-
-  toast('جاري تجهيز ZIP...');
-  try{
-    var zip=new JSZip();
-    var mf=zip.folder(fname);
-    var ok=0,errors=0;
-    for(var i=0;i<invoices.length;i++){
-      var inv=invoices[i];
-      var fn=(i+1)+'_'+inv.vendor+'_'+inv.desc;
-      var invFolder=mf.folder(fn);
-      var files=inv.files||[];
-      for(var fi=0;fi<files.length;fi++){
-        var f=files[fi];
-        // نقبل الملف إذا كان له رابط أو مخزن محلياً
-        if(!f.url && !f.localKey){errors++;continue;}
-        var buf=await pcFetchFile(f.url, f.localKey);
-        if(buf){invFolder.file(f.label+'_'+f.name,buf);ok++;}
-        else{invFolder.file(f.label+'_رابط.txt','رابط الملف: '+(f.url||'غير متوفر'));errors++;}
-      }
-    }
-    var blob=await zip.generateAsync({type:'blob'});
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.zip';a.click();
-    toast('تم تصدير '+ok+' ملف'+(errors?' — '+errors+' ملف تعذّر':''));
-  }catch(e){toast('خطأ: '+e.message,true);}
-}
-
-
-/* ══════════════ التعاميد ══════════════ */
-let taameeds = JSON.parse(localStorage.getItem('taameeds') || '[]');
-let taameedEditId = null;
-let tmQuoteCount = 1;
-let tmExtraCount = 0;
-
-function taameedAddQuote(){
-  if(tmQuoteCount >= 5){toast('الحد الأقصى 5 عروض أسعار',true);return;}
-  tmQuoteCount++;
-  var div=document.createElement('div');
-  div.className='field';div.style.marginBottom='8px';
-  div.innerHTML='<label style="color:#1DA9BD;">📄 عرض السعر '+tmQuoteCount+'</label>'+
-    '<div style="display:flex;gap:6px;align-items:center;margin-top:4px;">'+
-    '<input type="file" class="tm-quote-file" accept=".pdf" style="font-size:11px;flex:1;">'+
-    '<button onclick="this.parentElement.parentElement.remove();tmQuoteCount--;" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button>'+
-    '</div>';
-  document.getElementById('tm-quotes-list').appendChild(div);
-  if(tmQuoteCount>=5) document.getElementById('tm-add-quote-btn').style.display='none';
-}
-
-function taameedAddExtraFile(){
-  tmExtraCount++;
-  var div=document.createElement('div');
-  div.className='field';div.style.marginBottom='8px';
-  div.innerHTML='<div style="display:flex;gap:6px;align-items:center;">'+
-    '<label style="color:#64748B;min-width:80px;">📄 ملف إضافي '+tmExtraCount+'</label>'+
-    '<input type="file" class="tm-extra-file" accept=".pdf" style="font-size:11px;flex:1;">'+
-    '<button onclick="this.parentElement.parentElement.remove();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button>'+
-    '</div>';
-  document.getElementById('tm-extra-files-list').appendChild(div);
-}
-
-async function taameedSave(){
-  var num    = document.getElementById('tm-num').value.trim();
-  var desc   = document.getElementById('tm-desc').value.trim();
-  var vendor = document.getElementById('tm-vendor').value.trim();
-  if(!num||!vendor){toast('أدخل رقم التعميد واسم الشركة',true);return;}
-
-  toast('جاري رفع الملفات...');
-
-  var taameed = {
-    id: taameedEditId || Date.now(),
-    num, desc, vendor,
-    poCount: parseInt(document.getElementById('tm-po-count')?.value)||0,
-    date: document.getElementById('tm-date')?.value||'',
-    amount: parseFloat(document.getElementById('tm-amount')?.value)||0,
-    erpNum: document.getElementById('tm-erp-num').value.trim(),
-    files: {}
-  };
-
-  // دالة رفع ملف واحد
-  async function uploadOne(file, label){
-    if(!file) return null;
-    try{
-      var path = 'taameeds/'+taameed.id+'/'+label+'_'+file.name;
-      var res = await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
-        method:'POST',
-        headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':file.type||'application/pdf','x-upsert':'true'},
-        body:file
-      });
-      if(res.ok) return {name:file.name, url:SB+'/storage/v1/object/public/petty-cash/'+path};
-    }catch(e){/* fallback */}
-    return await new Promise(function(resolve){
-      var r=new FileReader();
-      r.onload=function(e){resolve({name:file.name,b64:e.target.result});};
-      r.readAsDataURL(file);
-    });
-  }
-
-  // عروض الأسعار
-  taameed.files.quotes = [];
-  var quoteInputs = document.querySelectorAll('.tm-quote-file');
-  for(var qi=0;qi<quoteInputs.length;qi++){
-    if(quoteInputs[qi].files[0]){
-      var qf = await uploadOne(quoteInputs[qi].files[0], 'عرض_السعر_'+(qi+1));
-      if(qf) taameed.files.quotes.push(qf);
-    }
-  }
-
-  // ملفات الشركة
-  var companyFiles = [
-    {id:'tm-invoice',    label:'الفاتورة_الضريبية'},
-    {id:'tm-vat-cert',   label:'شهادة_الضريبة'},
-    {id:'tm-cr',         label:'السجل_التجاري'},
-    {id:'tm-address',    label:'العنوان_الوطني'},
-    {id:'tm-erp-file',   label:'طلب_ERP'},
-    {id:'tm-completion', label:'شهادة_الإنجاز'},
-    {id:'tm-dn',         label:'سند_الاستلام'},
-  ];
-  taameed.files.company = {};
-  for(var ci=0;ci<companyFiles.length;ci++){
-    var el=document.getElementById(companyFiles[ci].id);
-    if(el&&el.files[0]){
-      var cf=await uploadOne(el.files[0], companyFiles[ci].label);
-      if(cf) taameed.files.company[companyFiles[ci].label]=cf;
-    }
-  }
-
-  // ملفات إضافية
-  taameed.files.extra = [];
-  var extraInputs=document.querySelectorAll('.tm-extra-file');
-  for(var ei=0;ei<extraInputs.length;ei++){
-    if(extraInputs[ei].files[0]){
-      var ef=await uploadOne(extraInputs[ei].files[0],'ملف_إضافي_'+(ei+1));
-      if(ef) taameed.files.extra.push(ef);
-    }
-  }
-
-  // حفظ في Supabase DB
-  try{await sbInsert('procurement_taameeds',{taameed_id:taameed.id,data:JSON.stringify(taameed)});}catch(e){}
-
-  // حفظ محلي
-  if(taameedEditId){
-    var idx=taameeds.findIndex(function(t){return t.id===taameedEditId;});
-    if(idx!==-1) taameeds[idx]=taameed;
-  }else{
-    taameeds.unshift(taameed);
-  }
-  localStorage.setItem('taameeds',JSON.stringify(taameeds));
-  taameedResetForm();
-  renderTaameeds();
-  toast('تم حفظ التعميد ✅');
-}
-
-function taameedResetForm(){
-  taameedEditId=null;
-  tmQuoteCount=1;tmExtraCount=0;
-  document.getElementById('taameed-form-title').textContent='إضافة تعميد جديد';
-  ['tm-num','tm-desc','tm-vendor','tm-erp-num'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value='';
-  });
-  ['tm-invoice','tm-vat-cert','tm-cr','tm-address','tm-erp-file','tm-completion','tm-dn'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value='';
-  });
-  document.getElementById('tm-quotes-list').innerHTML=
-    '<div class="field" style="margin-bottom:8px;"><label style="color:#1DA9BD;">📄 عرض السعر 1</label>'+
-    '<input type="file" class="tm-quote-file" accept=".pdf" style="font-size:11px;margin-top:4px;"></div>';
-  document.getElementById('tm-extra-files-list').innerHTML='';
-  document.getElementById('tm-add-quote-btn').style.display='';
-}
-
-function taameedEdit(id){
-  var t=taameeds.find(function(x){return x.id===id;});
-  if(!t)return;
-  taameedEditId=id;
-  document.getElementById('taameed-form-title').textContent='تعديل التعميد: '+t.num;
-  document.getElementById('tm-num').value=t.num||'';
-  document.getElementById('tm-desc').value=t.desc||'';
-  document.getElementById('tm-vendor').value=t.vendor||'';
-  document.getElementById('tm-erp-num').value=t.erpNum||'';
-  document.getElementById('taameed-form-card').scrollIntoView({behavior:'smooth'});
-  toast('تحميل التعميد للتعديل — أعد رفع الملفات إذا أردت تغييرها');
-}
-
-async function taameedDelete(id){
-  if(!confirm('حذف هذا التعميد؟'))return;
-  taameeds=taameeds.filter(function(t){return t.id!==id;});
-  localStorage.setItem('taameeds',JSON.stringify(taameeds));
-  await fetch(SB+'/rest/v1/procurement_taameeds?taameed_id=eq.'+id,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-  renderTaameeds();toast('تم الحذف');
-}
-
-async function taameedExportZip(id){
-  var t=id?taameeds.find(function(x){return x.id===id;}):null;
-  var list=t?[t]:taameeds;
-  if(!list.length){toast('لا توجد تعاميد',true);return;}
-  toast('جاري تجهيز ZIP...');
-  var zip=new JSZip();
-  for(var ti=0;ti<list.length;ti++){
-    var tm=list[ti];
-    var folderName=(tm.num||'تعميد')+'_'+tm.vendor;
-    var folder=zip.folder(folderName);
-
-    async function addFile(f,name){
-      if(!f)return;
-      if(f.url){
-        try{
-          var r=await fetch(f.url);
-          var buf=await r.arrayBuffer();
-          folder.file(name+'_'+f.name,buf);
-        }catch(e){}
-      }else if(f.b64){
-        var b64=f.b64.includes(',')?f.b64.split(',')[1]:f.b64;
-        folder.file(name+'_'+f.name,b64,{base64:true});
-      }
-    }
-
-    // عروض الأسعار
-    var quotes=tm.files&&tm.files.quotes||[];
-    for(var qi=0;qi<quotes.length;qi++) await addFile(quotes[qi],'عرض_السعر_'+(qi+1));
-    // ملفات الشركة
-    var comp=tm.files&&tm.files.company||{};
-    var ckeys=Object.keys(comp);
-    for(var ci=0;ci<ckeys.length;ci++) await addFile(comp[ckeys[ci]],ckeys[ci]);
-    // ملفات إضافية
-    var extra=tm.files&&tm.files.extra||[];
-    for(var ei=0;ei<extra.length;ei++) await addFile(extra[ei],'ملف_إضافي_'+(ei+1));
-  }
-  var blob=await zip.generateAsync({type:'blob'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=(t?t.vendor+'_'+t.num:'التعاميد_كاملة')+'.zip';
-  a.click();
-  toast('✅ تم تصدير ZIP');
-}
-
-function renderTaameeds(){
-  var el=document.getElementById('taameeds-list');if(!el)return;
-  if(!taameeds.length){el.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">لا توجد تعاميد محفوظة</div>';return;}
-  var html='';
-  taameeds.forEach(function(t){
-    var quotesCount=(t.files&&t.files.quotes||[]).length;
-    var compCount=Object.keys(t.files&&t.files.company||{}).length;
-    var extraCount=(t.files&&t.files.extra||[]).length;
-    var total=quotesCount+compCount+extraCount;
-    html+='<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">';
-    html+='<div style="background:#244062;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">';
-    html+='<div>';
-    html+='<div style="font-weight:700;font-size:13px;">'+t.num+' — '+t.vendor+'</div>';
-    html+='<div style="font-size:11px;opacity:.8;margin-top:2px;">'+t.desc+'</div>';
-    html+='</div>';
-    html+='<div style="display:flex;gap:5px;">';
-    html+='<span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-size:11px;">'+total+' ملف</span>';
-    html+='</div></div>';
-    html+='<div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">';
-    html+='<div style="font-size:11px;color:var(--sub);">';
-    html+=(t.erpNum?'ERP: '+t.erpNum+'  |  ':'')+quotesCount+' عرض سعر  |  '+compCount+' مستند شركة  |  '+extraCount+' إضافي';
-    html+='</div>';
-    html+='<div style="display:flex;gap:5px;">';
-    html+='<button class="btn btn-primary btn-sm" onclick="taameedEdit('+t.id+')">تعديل</button>';
-    html+='<button class="btn btn-green btn-sm" onclick="taameedExportZip('+t.id+')">ZIP</button>';
-    html+='<button class="btn btn-red btn-sm" onclick="taameedDelete('+t.id+')">×</button>';
-    html+='</div></div></div>';
-  });
-  // زر تصدير الكل
-  html+='<div class="actions" style="margin-top:8px;"><button class="btn btn-green" onclick="taameedExportZip(null)">📦 تصدير كل التعاميد ZIP</button></div>';
-  el.innerHTML=html;
-}
 
 /* ══ تصدير العقود ══ */
 function exportContractsExcel(){
@@ -8276,235 +7721,6 @@ function buildKPIReport(){
     +'</tbody></table></div></div>';
 }
 
-/* ══════════════ مساعد مدير المشتريات — لوحة تنفيذية من بيانات المنصة الحالية ══════════════ */
-
-function pmaFmt(n){return (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
-
-function pmaStatCard(label,val,color){
-  return '<div class="card" style="text-align:center;padding:14px 6px;">'
-    +'<div style="font-size:22px;font-weight:900;color:'+(color||'#244062')+';">'+val+'</div>'
-    +'<div style="font-size:11px;color:#64748B;margin-top:4px;">'+label+'</div>'
-    +'</div>';
-}
-
-// يحدد توصية العقد بناءً على الأيام المتبقية وسجل الوفر
-function pmaContractRecommendation(c,daysLeft){
-  if(daysLeft===null) return {label:'راجع بيانات العقد — لا يوجد تاريخ انتهاء مسجّل',action:'مراجعة بيانات',urgency:'data'};
-  if(daysLeft<0) return {label:'⚠️ العقد منتهٍ فعلياً — قرار فوري: تجديد أو إنهاء',action:'قرار عاجل',urgency:'critical'};
-  if(daysLeft<=15) return {label:'عاجل جداً — تفاوض فوري على التجديد أو ابدأ إعادة منافسة',action:(c.saving>0?'تجديد فوري':'إعادة منافسة عاجلة'),urgency:'critical'};
-  if(daysLeft<=30) return {label:'ابدأ إجراءات التجديد أو المنافسة الآن',action:(c.saving>0?'تجديد بشروط محسّنة':'إعادة منافسة'),urgency:'critical'};
-  if(daysLeft<=60) return {label:'خطط للتجديد خلال الشهر القادم',action:'تخطيط تجديد',urgency:'warn'};
-  return {label:'راقب — ابدأ التحضير المبدئي',action:'مراقبة',urgency:'watch'};
-}
-
-function pmaUrgencyColor(u){return u==='critical'?'#C53030':u==='warn'?'#B7791F':u==='data'?'#7C3AED':'#276749';}
-
-function buildPMA(){
-  var el=document.getElementById('pma-content');if(!el)return;
-  var today=new Date();
-
-  // ── العقود الحرجة (خلال 90 يوم أو منتهية) ──
-  var contractRows=contracts.map(function(c){
-    var d=contractDaysLeft(c.end);
-    return {c:c,days:d,rec:pmaContractRecommendation(c,d)};
-  }).filter(function(x){return x.days===null || x.days<=90;})
-    .sort(function(a,b){
-      var av=a.days===null?9999:a.days, bv=b.days===null?9999:b.days;
-      return av-bv;
-    });
-  var critical30=contractRows.filter(function(x){return x.days!==null&&x.days>=0&&x.days<=30;}).length;
-  var critical60=contractRows.filter(function(x){return x.days!==null&&x.days>30&&x.days<=60;}).length;
-  var critical90=contractRows.filter(function(x){return x.days!==null&&x.days>60&&x.days<=90;}).length;
-  var expiredNow=contractRows.filter(function(x){return x.days!==null&&x.days<0;}).length;
-
-  // ── فرص التوفير (من مقارنات الأسعار المحفوظة) ──
-  var cmpOps=getCmpSavingsDetail();
-  var totalCmpSaving=cmpOps.reduce(function(s,d){return s+d.saving;},0);
-  var totalContractSaving=contracts.reduce(function(s,c){return s+(c.saving||0);},0);
-  var noSavingContracts=contracts.filter(function(c){return !(c.saving>0)&&((c.status==='active'||c.status==='expiring')&&c.showInReports!==false);});
-
-  // ── تركّز الموردين (مخاطرة الاعتماد على مورد واحد) ──
-  var vendorSpend={};
-  contracts.forEach(function(c){var v=c.vendor||'—';vendorSpend[v]=(vendorSpend[v]||0)+((c.annual||0)||(c.monthly||0)*12);});
-  poSaved.forEach(function(p){
-    var v=p.company||'—';
-    var val=poRowsOf(p).reduce(function(s,r){var t=parseFloat(r.total)||0;if(t>0)return s+t*1.15;var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return s+(r.vatType==='added'?b*1.15:b);},0);
-    vendorSpend[v]=(vendorSpend[v]||0)+val;
-  });
-  var totalVendorSpend=Object.values(vendorSpend).reduce(function(s,v){return s+v;},0);
-  var vendorSorted=Object.entries(vendorSpend).sort(function(a,b){return b[1]-a[1];});
-  var topVendorShare=totalVendorSpend>0&&vendorSorted.length?(vendorSorted[0][1]/totalVendorSpend*100):0;
-  var concentrationRisk=topVendorShare>=30&&vendorSorted.length>1;
-
-  // ── تحليل تنفيذي: أعلى بنود إنفاق وإدارات (من المصروفات النثرية) ──
-  var itemMap={};expenses.forEach(function(e){itemMap[e.item_name]=(itemMap[e.item_name]||0)+(parseFloat(e.amount)||0);});
-  var topItems=Object.entries(itemMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-  var deptMap={};expenses.forEach(function(e){var d=e.department||'أخرى';deptMap[d]=(deptMap[d]||0)+(parseFloat(e.amount)||0);});
-  var deptSorted=Object.entries(deptMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-  var highValueContracts=contracts.slice().sort(function(a,b){return (b.annual||0)-(a.annual||0);}).slice(0,5);
-
-  // ── مهام اليوم (مُولّدة تلقائياً من كل ما سبق) ──
-  var tasks=[];
-  contractRows.filter(function(x){return x.rec.urgency==='critical';}).forEach(function(x){
-    tasks.push({text:'راجع عقد '+(x.c.vendor||'—')+' ('+(x.c.type||'—')+') — '+(x.days<0?'منتهٍ منذ '+Math.abs(x.days)+' يوم':x.days+' يوم متبقي')+' — '+x.rec.action,urgency:'critical'});
-  });
-  if(concentrationRisk) tasks.push({text:'راجع الاعتماد على المورد "'+vendorSorted[0][0]+'" — يمثّل '+topVendorShare.toFixed(0)+'% من إجمالي الإنفاق مع الموردين',urgency:'warn'});
-  if(cmpOps.length) tasks.push({text:'اعتمد نتائج '+cmpOps.length+' مقارنة أسعار محفوظة بوفر محتمل '+pmaFmt(totalCmpSaving)+' ر.س',urgency:'watch'});
-  if(noSavingContracts.length) tasks.push({text:noSavingContracts.length+' عقد فعّال بدون سجل تفاوض على الوفر — فرصة لمراجعتها',urgency:'watch'});
-  if(!tasks.length) tasks.push({text:'لا توجد مهام عاجلة حالياً — كل العقود والبيانات ضمن النطاق الآمن',urgency:'ok'});
-
-  // ══ التجميع والعرض ══
-  var summaryCards=''
-    +pmaStatCard(critical30,'عقود حرجة (≤30 يوم)','#C53030')
-    +pmaStatCard(critical60,'تنتهي خلال 60 يوم','#B7791F')
-    +pmaStatCard(critical90,'تنتهي خلال 90 يوم','#0D7A8A')
-    +pmaStatCard(expiredNow,'عقود منتهية فعلياً','#C53030')
-    +pmaStatCard(cmpOps.length,'فرص توفير مكتشفة','#276749')
-    +pmaStatCard(pmaFmt(totalCmpSaving+totalContractSaving)+' ر.س','إجمالي الوفر (محقّق + محتمل)','#276749');
-
-  var tasksHTML=tasks.map(function(t){
-    var icon=t.urgency==='critical'?'🔴':t.urgency==='warn'?'🟡':t.urgency==='ok'?'🟢':'🔵';
-    return '<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #E2E8F0;font-size:12px;"><span>'+icon+'</span><span>'+t.text+'</span></div>';
-  }).join('');
-
-  var contractsHTML=contractRows.length?('<table class="tbl"><thead><tr>'
-    +'<th>المورد</th><th>نوع العقد</th><th style="text-align:right;">القيمة السنوية</th><th style="text-align:center;">تاريخ الانتهاء</th><th style="text-align:center;">الأيام المتبقية</th><th>التوصية</th>'
-    +'</tr></thead><tbody>'
-    +contractRows.map(function(x){
-      var clr=pmaUrgencyColor(x.rec.urgency);
-      var daysTxt=x.days===null?'—':(x.days<0?'منتهٍ منذ '+Math.abs(x.days)+' يوم':x.days+' يوم');
-      return '<tr><td style="font-weight:700;">'+(x.c.vendor||'—')+'</td><td>'+(x.c.type||'—')+'</td>'
-        +'<td style="text-align:right;">'+pmaFmt(x.c.annual||0)+' ر.س</td>'
-        +'<td style="text-align:center;">'+(x.c.end||'—')+'</td>'
-        +'<td style="text-align:center;color:'+clr+';font-weight:700;">'+daysTxt+'</td>'
-        +'<td style="color:'+clr+';font-weight:600;">'+x.rec.label+'</td></tr>';
-    }).join('')
-    +'</tbody></table>') : '<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد عقود ضمن نطاق الـ 90 يوماً القادمة</div>';
-
-  var savingsHTML=cmpOps.length?('<table class="tbl"><thead><tr><th>عنوان المقارنة</th><th style="text-align:right;">العقد الحالي</th><th style="text-align:right;">أفضل عرض</th><th style="text-align:right;">الوفر المحتمل</th></tr></thead><tbody>'
-    +cmpOps.map(function(d){return '<tr><td style="font-weight:600;">'+d.title+'</td><td style="text-align:right;">'+(d.curContract>0?pmaFmt(d.curContract):'—')+'</td><td style="text-align:right;">'+pmaFmt(d.bestAnnual)+'</td><td style="text-align:right;font-weight:700;color:#276749;">'+pmaFmt(d.saving)+' ر.س</td></tr>';}).join('')
-    +'</tbody></table>') : '<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد مقارنات أسعار محفوظة بوفر محتمل حالياً</div>';
-
-  var riskHTML='';
-  if(concentrationRisk) riskHTML+='<div style="padding:10px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:8px;font-size:12px;color:#C53030;">⚠️ تركّز الاعتماد: المورد "'+vendorSorted[0][0]+'" يمثّل <b>'+topVendorShare.toFixed(0)+'%</b> من إجمالي إنفاق العقود وطلبات الشراء ('+pmaFmt(vendorSorted[0][1])+' ر.س) — مخاطرة اعتماد على مصدر واحد.</div>';
-  if(expiredNow>0) riskHTML+='<div style="padding:10px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:8px;font-size:12px;color:#C53030;">⚠️ يوجد <b>'+expiredNow+'</b> عقد تجاوز تاريخ انتهائه المسجّل بدون تحديث الحالة — يحتاج مراجعة فورية.</div>';
-  if(noSavingContracts.length>0) riskHTML+='<div style="padding:10px 12px;background:#FFF8E1;border-radius:8px;margin-bottom:8px;font-size:12px;color:#B7791F;">📋 <b>'+noSavingContracts.length+'</b> عقد فعّال بدون أي سجل تفاوض على الوفر.</div>';
-  if(!riskHTML) riskHTML='<div style="text-align:center;color:#94A3B8;padding:16px;">لا توجد مخاطر واضحة ضمن البيانات الحالية</div>';
-
-  var topItemsHTML=topItems.length?topItems.map(function(x){return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td></tr>';}).join(''):'<tr><td colspan="2" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
-  var deptHTML=deptSorted.length?deptSorted.map(function(x){return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td></tr>';}).join(''):'<tr><td colspan="2" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
-  var vendorHTML=vendorSorted.length?vendorSorted.slice(0,5).map(function(x){var pct=totalVendorSpend>0?(x[1]/totalVendorSpend*100).toFixed(1):'0';return '<tr><td>'+x[0]+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(x[1])+' ر.س</td><td style="text-align:center;">'+pct+'%</td></tr>';}).join(''):'<tr><td colspan="3" style="text-align:center;color:#94A3B8;">لا توجد بيانات</td></tr>';
-  var highValHTML=highValueContracts.length?highValueContracts.map(function(c){return '<tr><td style="font-weight:600;">'+(c.vendor||'—')+'</td><td>'+(c.type||'—')+'</td><td style="text-align:right;font-weight:700;">'+pmaFmt(c.annual||0)+' ر.س</td></tr>';}).join(''):'<tr><td colspan="3" style="text-align:center;color:#94A3B8;">لا توجد عقود</td></tr>';
-
-  el.innerHTML=
-    '<div id="pma-agent-run" style="margin-bottom:14px;"></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">'+summaryCards+'</div>'
-    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>📋 مهام اليوم</h3></div><div class="card-body">'+tasksHTML+'</div></div>'
-    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>⏰ العقود الحرجة (خلال 90 يوماً)</h3></div><div class="card-body" style="overflow-x:auto;">'+contractsHTML+'</div></div>'
-    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>💰 فرص التوفير</h3></div><div class="card-body" style="overflow-x:auto;">'+savingsHTML+'</div></div>'
-    +'<div class="card" style="margin-bottom:14px;"><div class="card-header"><h3>⚠️ المخاطر</h3></div><div class="card-body">'+riskHTML+'</div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">'
-      +'<div class="card"><div class="card-header"><h3>أعلى الموردين اعتماداً (عقود + PO)</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>المورد</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+vendorHTML+'</tbody></table></div></div>'
-      +'<div class="card"><div class="card-header"><h3>أعلى العقود قيمة</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>المورد</th><th>النوع</th><th style="text-align:right;">القيمة السنوية</th></tr></thead><tbody>'+highValHTML+'</tbody></table></div></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'
-      +'<div class="card"><div class="card-header"><h3>أعلى بنود الإنفاق</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>البند</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+topItemsHTML+'</tbody></table></div></div>'
-      +'<div class="card"><div class="card-header"><h3>أعلى الإدارات إنفاقاً</h3></div><div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th></tr></thead><tbody>'+deptHTML+'</tbody></table></div></div>'
-    +'</div>'
-    +'<div class="card" style="margin-top:14px;border:1px solid #E2E8F0;"><div class="card-body" style="font-size:11px;color:#64748B;">💡 الأقسام أعلاه تحليل لحظي من بيانات المنصة الحالية. لبحث موردين بدلاء، رادار سوق، أو إعداد خطة تفاوض بالإنترنت — اطلبها مني مباشرة بالمحادثة وسأنفذها فوراً، أو فعّل الوكيل التلقائي اليومي (راجع ملف الإعداد المرفق) ليضيفها تلقائياً بقسم "آخر تحليل تلقائي" أعلى الصفحة.</div></div>';
-  loadPMAAgentRun();
-}
-
-// يجلب آخر نتيجة محفوظة من الوكيل التلقائي (Agent) اللي يشتغل يومياً بالخلفية عبر Vercel Cron
-// المنصة هنا لا تنفّذ أي بحث بنفسها — فقط تعرض آخر ما حفظه الوكيل بجدول procurement_agent_runs
-async function loadPMAAgentRun(){
-  var box=document.getElementById('pma-agent-run');
-  if(!box) return;
-  try{
-    var res=await fetch(SB+'/rest/v1/procurement_agent_runs?select=*&order=run_at.desc&limit=1',{
-      headers:{apikey:SK,Authorization:'Bearer '+SK}
-    });
-    if(!res.ok){
-      box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 الوكيل التلقائي اليومي غير مفعّل بعد على هذا المشروع. راجع ملف "إعداد الوكيل" لتفعيله.</div></div>';
-      return;
-    }
-    var rows=await res.json();
-    if(!rows||!rows.length){
-      box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 الوكيل التلقائي مُفعّل لكن لم يشتغل بعد — أول نتيجة هتظهر هنا بعد أول تشغيل مجدول.</div></div>';
-      return;
-    }
-    var run=rows[0];
-    var runDate=new Date(run.run_at).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});
-    if(run.status==='error'){
-      box.innerHTML='<div class="card" style="border:1px solid #C53030;"><div class="card-header" style="background:#FFF5F5;"><h3 style="color:#C53030;">🤖 آخر تحليل تلقائي — '+runDate+' (فشل)</h3></div><div class="card-body" style="font-size:12px;color:#C53030;">'+(run.error||'خطأ غير معروف')+'</div></div>';
-      return;
-    }
-    var critList=(run.critical_contracts||[]);
-    var suppList=(run.supplier_suggestions||[]);
-    var mktList=(run.market_notes||[]);
-    var rfqList=(run.rfq_suggestions||[]);
-    var pmaFmt2=function(n){return (parseFloat(n)||0).toLocaleString('ar-SA');};
-
-    // جدول 1: العقود الحرجة اللي فحصها الوكيل
-    var contractsTbl=critList.length?('<table class="tbl"><thead><tr><th>المورد</th><th>نوع الخدمة</th><th style="text-align:center;">الأيام المتبقية</th><th style="text-align:right;">القيمة السنوية</th></tr></thead><tbody>'
-      +critList.map(function(c){
-        var clr=c.days_left<0?'#C53030':c.days_left<=30?'#C53030':c.days_left<=60?'#B7791F':'#0D7A8A';
-        return '<tr><td style="font-weight:700;">'+(c.vendor||'—')+'</td><td>'+(c.type||'—')+'</td><td style="text-align:center;color:'+clr+';font-weight:700;">'+(c.days_left<0?'منتهٍ منذ '+Math.abs(c.days_left)+' يوم':c.days_left+' يوم')+'</td><td style="text-align:right;">'+pmaFmt2(c.annual)+' ر.س</td></tr>';
-      }).join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد عقود حرجة حالياً</div>';
-
-    // جدول 2: الموردون البدلاء المقترحون (صف مستقل لكل بديل)
-    var altRows=[];
-    suppList.forEach(function(s){
-      if(s.error){
-        altRows.push('<tr><td style="font-weight:700;">'+(s.contract_vendor||'—')+'</td><td colspan="5" style="color:#C53030;">'+s.error+'</td></tr>');
-        return;
-      }
-      (s.alternatives||[]).forEach(function(a,idx){
-        altRows.push('<tr>'
-          +(idx===0?'<td style="font-weight:700;" rowspan="'+(s.alternatives.length)+'">'+(s.contract_vendor||'—')+' <span style="color:#94A3B8;font-weight:400;">('+s.days_left+' يوم)</span></td>':'')
-          +'<td style="font-weight:600;">'+(a.name||'—')+'</td>'
-          +'<td>'+(a.website?('<a href="'+a.website+'" target="_blank" rel="noopener" style="color:#0D7A8A;">'+a.website+'</a>'):'—')+'</td>'
-          +'<td style="font-size:11px;white-space:nowrap;">'+(a.phone||'—')+'</td>'
-          +'<td style="font-size:11px;white-space:nowrap;">'+(a.email||'—')+'</td>'
-          +'<td style="font-size:11px;color:#64748B;">'+(a.reason||'—')+'</td>'
-          +'</tr>');
-      });
-    });
-    var altTbl=altRows.length?('<table class="tbl"><thead><tr><th>العقد الحالي</th><th>المورد البديل</th><th>الموقع</th><th>الهاتف</th><th>البريد الإلكتروني</th><th>سبب الترشيح</th></tr></thead><tbody>'+altRows.join('')+'</tbody></table>'):'<div style="color:#94A3B8;font-size:12px;">لا توجد اقتراحات موردين بهذا التشغيل</div>';
-
-    // جدول 3: ملاحظات السوق
-    var mktTbl=mktList.length?('<table class="tbl"><thead><tr><th>المورد المرتبط</th><th>ملاحظة السوق</th></tr></thead><tbody>'
-      +mktList.map(function(m){return '<tr><td style="font-weight:700;">'+(m.vendor||'—')+'</td><td style="font-size:11px;">'+(m.note||'—')+'</td></tr>';}).join('')
-      +'</tbody></table>'):'';
-
-    // جدول 4: طلبات عروض الأسعار المفتوحة (يظهر فقط لو الوكيل يدعمها)
-    var rfqTbl='';
-    if(rfqList.length){
-      rfqTbl='<div class="section-title" style="margin-top:16px;">📋 طلبات عروض الأسعار المفتوحة</div>'
-        +'<table class="tbl"><thead><tr><th>الصنف المطلوب</th><th>الموردون المرسل لهم</th><th>نطاق السعر بالسوق</th><th>مورد إضافي مقترح</th><th>الهاتف</th><th>البريد الإلكتروني</th></tr></thead><tbody>'
-        +rfqList.map(function(r){
-          var sv=r.suggested_vendor||{};
-          return '<tr><td style="font-weight:700;">'+(r.item||'—')+'</td><td style="font-size:11px;">'+((r.sent_to||[]).join('، ')||'—')+'</td><td>'+(r.market_price_range||'—')+'</td><td style="font-size:11px;">'+(sv.name||'—')+'</td><td style="font-size:11px;white-space:nowrap;">'+(sv.phone||'—')+'</td><td style="font-size:11px;white-space:nowrap;">'+(sv.email||'—')+'</td></tr>';
-        }).join('')
-        +'</tbody></table>';
-    }
-
-    box.innerHTML='<div class="card" style="border:1px solid #2E9896;">'
-      +'<div class="card-header" style="background:#EBF8FA;"><h3 style="color:#0D7A8A;">🤖 آخر تحليل تلقائي — '+runDate+'</h3></div>'
-      +'<div class="card-body">'
-      +(run.summary?('<p style="font-size:12px;margin-bottom:14px;line-height:1.8;padding:10px 12px;background:#F8FAFB;border-radius:8px;border-right:3px solid #2E9896;">'+run.summary+'</p>'):'')
-      +'<div class="section-title">العقود الحرجة المفحوصة ('+critList.length+')</div>'
-      +'<div style="overflow-x:auto;margin-bottom:16px;">'+contractsTbl+'</div>'
-      +'<div class="section-title">الموردون البدلاء المقترحون</div>'
-      +'<div style="overflow-x:auto;margin-bottom:'+(mktTbl?'8px':'0')+';">'+altTbl+'</div>'
-      +(mktTbl?('<div class="section-title" style="margin-top:12px;">ملاحظات السوق</div><div style="overflow-x:auto;">'+mktTbl+'</div>'):'')
-      +rfqTbl
-      +'</div></div>';
-  }catch(e){
-    console.error('loadPMAAgentRun failed',e);
-    box.innerHTML='<div class="card" style="border:1px dashed #CBD5E1;"><div class="card-body" style="font-size:12px;color:#94A3B8;text-align:center;">🤖 تعذّر تحميل نتائج الوكيل التلقائي حالياً.</div></div>';
-  }
-}
 var KPI_PDF_CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:8.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 5px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 5px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}';
 
 function exportKPIPDF(){
@@ -8873,6 +8089,8 @@ function committeeExportTechPDF(){
   committeeExportTechPDFData(data);
 }
 function committeeExportTechPDFData(c){
+  const manualFontSize=parseFloat(document.getElementById('cm-pdf-fontsize')?.value)||null;
+  const BF=manualFontSize||11;
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
   const membersText=(c.members||[]).map(m=>m.name).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
@@ -8883,7 +8101,7 @@ function committeeExportTechPDFData(c){
     </tr>`).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#000;direction:rtl;line-height:1.8;margin:0;}
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#000;direction:rtl;line-height:1.8;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
 .content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
 h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#2E9896;color:#fff;padding:7px 10px;font-size:11px;border:1px solid #2E9896;}</style>
@@ -8928,6 +8146,10 @@ function committeeExportPDF(){
 }
 
 function committeeExportPDFData(c){
+  const manualFontSize=parseFloat(document.getElementById('cm-pdf-fontsize')?.value)||null;
+  const autoFitEnabled=document.getElementById('cm-pdf-autofit')?.checked!==false;
+  const shouldAutoFit=!manualFontSize&&autoFitEnabled;
+  const BF=manualFontSize||14;
   const dt=c.date?new Date(c.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):c.date||'';
   const BG=FORM_BG;
   const isRevComp=(c.compType==='revenue');
@@ -8965,13 +8187,13 @@ function committeeExportPDFData(c){
   const membersText=(c.members||[]).map(m=>'<strong>'+m.name+'</strong>').join(' &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:14px;color:#000;direction:rtl;line-height:1.6;margin:0;}
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#000;direction:rtl;line-height:1.6;margin:0;}
 .page{position:relative;width:210mm;min-height:297mm;page-break-after:always;break-after:page;}
 .page:last-child{page-break-after:auto;break-after:auto;}
 .bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
 .footer-mask{position:absolute;bottom:0;left:0;width:60%;height:30mm;background:#fff;z-index:0;}
 .content{position:relative;z-index:1;padding:34mm 14mm 10mm 14mm;}
-h2{text-align:center;font-size:15px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:13px;}</style>
+h2{text-align:center;font-size:${BF+1}px;font-weight:700;margin:4px 0;}p{margin:2px 0;text-align:justify;font-size:${BF-1}px;}</style>
 </head><body>
 <div class="page"><img class="bg" src="${BG}"><div class="content">
         <div style="text-align:right;font-size:14px;margin-bottom:16px;">
@@ -9009,8 +8231,54 @@ ${c.extraNotes?`<p><em>${c.extraNotes}</em></p>`:''}
                         </div>
 </div>
 </div></div>
+<script>
+window.shouldAutoFit=${shouldAutoFit?'true':'false'};
+window.BF=${BF};
+window.runAutoFit=function(){
+  if(!window.shouldAutoFit){ setTimeout(function(){window.focus();window.print();},80); return; }
+  var pages=document.querySelectorAll('.page .content');
+  var pageHeightMM=297, safetyMarginMM=6;
+  var usableHeightMM=pageHeightMM-safetyMarginMM;
+  var pxPerMM=96/25.4;
+  function maxOverflowRatio(){
+    var worst=1;
+    pages.forEach(function(p){
+      var hMM=p.scrollHeight/pxPerMM;
+      var ratio=hMM/usableHeightMM;
+      if(ratio>worst) worst=ratio;
+    });
+    return worst;
+  }
+  function applyScale(scale){
+    var st=document.getElementById('autofit-style');
+    if(!st){st=document.createElement('style');st.id='autofit-style';document.head.appendChild(st);}
+    st.innerHTML=
+      'body{font-size:'+(window.BF*scale).toFixed(2)+'px !important;}'
+      +'h2{font-size:'+((window.BF+1)*scale).toFixed(2)+'px !important;}'
+      +'p{font-size:'+((window.BF-1)*scale).toFixed(2)+'px !important;}'
+      +'table{font-size:'+((window.BF-1)*scale).toFixed(2)+'px !important;}'
+      +'.content{padding:'+(34*scale).toFixed(1)+'mm '+(14*scale).toFixed(1)+'mm '+(10*scale).toFixed(1)+'mm '+(14*scale).toFixed(1)+'mm !important;}';
+  }
+  var ratio=maxOverflowRatio();
+  if(ratio>1){
+    var scale=Math.max(1/ratio,0.5);
+    applyScale(scale);
+    setTimeout(function(){
+      var ratio2=maxOverflowRatio();
+      if(ratio2>1){
+        var corrected=Math.max(scale/ratio2*0.98,0.45);
+        applyScale(corrected);
+      }
+      setTimeout(function(){window.focus();window.print();},100);
+    },100);
+  } else {
+    setTimeout(function(){window.focus();window.print();},80);
+  }
+};
+window.onload=window.runAutoFit;
+<\/script>
 </body></html>`);
-  w.document.close();w.onload=()=>{w.focus();w.print();};
+  w.document.close();
 }
 
 function committeeExportWord(){
@@ -10224,7 +9492,7 @@ async function init(){
   // اعرض كل شيء فوراً
   budgetCalc();renderExpenses();
   renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();rfqInit();
-  renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
+  renderContracts();renderSuppliers();renderCommittees();
   if(typeof renderPCGroups==='function')renderPCGroups();
   if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
 
@@ -10237,7 +9505,7 @@ async function init(){
   loadFromSupabase().then(()=>{
     initBudget();
     renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();
-    renderTaameeds();renderContracts();renderSuppliers();renderCommittees();
+    renderContracts();renderSuppliers();renderCommittees();
     if(typeof renderPCGroups==='function')renderPCGroups();
     if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
     // استرجاع بيانات التحليل المحفوظة
@@ -10258,172 +9526,10 @@ async function init(){
   });
 }
 
-/* ══════════════ PC EDIT MODAL ══════════════ */
-let pcEditKey=null, pcEditIdx=null;
-
-function pcOpenEdit(key,ii){
-  var inv=(pcGroups[key]||[])[ii];
-  if(!inv)return;
-  pcEditKey=key; pcEditIdx=ii;
-  document.getElementById('pce-vendor').value=inv.vendor||'';
-  document.getElementById('pce-desc').value=inv.desc||'';
-  document.getElementById('pce-amount').value=inv.amount||'';
-  // عرض الملفات الحالية
-  var cur=document.getElementById('pce-current-files');
-  var flist=inv.files||[];
-  if(!flist.length){ cur.innerHTML='<span style="color:#aaa;font-size:11px;">لا توجد ملفات</span>'; }
-  else{
-    var h='';
-    for(var i=0;i<flist.length;i++){
-      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-      h+='<span style="font-size:11px;background:#1DA9BD22;color:#1DA9BD;padding:2px 8px;border-radius:10px;">'+flist[i].label+'</span>';
-      h+='<span style="font-size:11px;color:#64748B;">'+flist[i].name+'</span>';
-      h+='<button onclick="pcEditRemoveFile('+i+')" style="font-size:10px;background:#fee2e2;color:#c53030;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;">حذف</button>';
-      h+='</div>';
-    }
-    cur.innerHTML=h;
-  }
-  // مسح inputs الملفات
-  ['pce-tax','pce-receipt','pce-erp','pce-transfer'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('pc-edit-modal').style.display='flex';
-}
-
-function pcEditRemoveFile(fi){
-  var inv=(pcGroups[pcEditKey]||[])[pcEditIdx];
-  if(!inv)return;
-  inv.files.splice(fi,1);
-  pcOpenEdit(pcEditKey,pcEditIdx); // أعد رسم المودال
-}
-
-function pcCloseEdit(){
-  document.getElementById('pc-edit-modal').style.display='none';
-  pcEditKey=null; pcEditIdx=null;
-}
-
-async function pcSaveEdit(){
-  var inv=(pcGroups[pcEditKey]||[])[pcEditIdx];
-  if(!inv)return;
-  var vendor=document.getElementById('pce-vendor').value.trim();
-  var desc=document.getElementById('pce-desc').value.trim();
-  var amount=document.getElementById('pce-amount').value||0;
-  if(!vendor||!desc){toast('أدخل اسم الشركة والبيان',true);return;}
-  inv.vendor=vendor;
-  inv.desc=desc;
-  inv.amount=parseFloat(amount);
-
-  toast('جاري حفظ التعديلات...');
-
-  // رفع ملفات جديدة إن وجدت
-  var fileMap=[
-    {id:'pce-tax',    label:'الفاتورة_الضريبية'},
-    {id:'pce-receipt',label:'سند_الاستلام'},
-    {id:'pce-erp',    label:'طلب_ERP'},
-    {id:'pce-transfer',label:'إيصال_التحويل'}
-  ];
-
-  for(var i=0;i<fileMap.length;i++){
-    var flist=document.getElementById(fileMap[i].id).files;
-    if(!flist||!flist.length)continue;
-    var label=fileMap[i].label;
-    for(var fj=0;fj<flist.length;fj++){
-      var f=flist[fj];
-      var suffix=flist.length>1?'_'+(fj+1):'';
-      var fullLabel=label+suffix;
-      const localKey = 'pc_'+inv.id+'_'+fullLabel;
-      try { await saveFileLocally(localKey, f); } catch(e) {}
-      try{
-        const cleanFileName = f.name.replace(/[^\x00-\x7F]/g, "").replace(/\s+/g, "_");
-        var path=pcEditKey+'/'+inv.id+'/'+fullLabel+'_'+cleanFileName;
-        var res=await fetch(SB+'/storage/v1/object/petty-cash/'+path,{
-          method:'POST',
-          headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':f.type||'application/pdf','x-upsert':'true'},
-          body:f
-        });
-        if(res.ok){ inv.files.push({label:fullLabel,name:f.name,url:SB+'/storage/v1/object/public/petty-cash/'+path, localKey:localKey}); continue; }
-      }catch(e){}
-      inv.files.push({label:fullLabel,name:f.name,url:null,localKey:localKey,isLocalOnly:true});
-    }
-  }
-
-  // حفظ محلي
-  localStorage.setItem('pc_groups',JSON.stringify(pcGroups));
-
-  // تحديث Supabase: ابحث عن السجل بـ month_key + invoice.id
-  try{
-    var sbRes=await fetch(SB+'/rest/v1/procurement_pc?month_key=eq.'+pcEditKey,{
-      headers:{'apikey':SK,'Authorization':'Bearer '+SK}
-    });
-    var rows=await sbRes.json();
-    // البحث عن السجل المطابق
-    for(var r=0;r<rows.length;r++){
-      var rowInv=rows[r].invoice;
-      if(typeof rowInv==='string') rowInv=JSON.parse(rowInv);
-      if(rowInv&&rowInv.id==inv.id){
-        await sbUpdate('procurement_pc',rows[r].id,{invoice:JSON.stringify(inv)});
-        break;
-      }
-    }
-  }catch(e){}
-
-  renderPCGroups();
-  pcCloseEdit();
-  toast('تم حفظ التعديلات ✅');
-}
 
 </script>
 
 <!-- ══ Modal تعديل فاتورة Petty Cash ══ -->
-<div id="pc-edit-modal" style="display:none;position:fixed;inset:0;background:#0008;z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;width:min(560px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px #0004;direction:rtl;">
-    <div style="background:#244062;color:#fff;padding:16px 20px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;font-size:15px;">✏️ تعديل الفاتورة</h3>
-      <button onclick="pcCloseEdit()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="padding:20px;">
-      <div style="margin-bottom:14px;">
-        <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:5px;">اسم الشركة / المورد</label>
-        <input id="pce-vendor" list="suppliers-datalist" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" placeholder="اختر أو اكتب اسم المورد" oninput="buildSupplierDatalist()">
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:5px;">البيان (وصف المصروف)</label>
-        <input id="pce-desc" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" placeholder="مثال: صيانة أجهزة التكييف">
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:5px;">المبلغ الإجمالي (ر.س)</label>
-        <input id="pce-amount" type="number" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" placeholder="0.00">
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:12px;font-weight:700;color:#244062;display:block;margin-bottom:8px;">الملفات الحالية</label>
-        <div id="pce-current-files" style="background:#F8FAFC;border-radius:8px;padding:10px;min-height:36px;"></div>
-      </div>
-      <div style="background:#F0F9FF;border-radius:10px;padding:14px;margin-bottom:16px;">
-        <div style="font-size:12px;font-weight:700;color:#1DA9BD;margin-bottom:10px;">📎 استبدال / إضافة ملفات جديدة</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:#1DA9BD;display:block;margin-bottom:3px;">📄 الفاتورة الضريبية</label>
-            <input type="file" id="pce-tax" accept=".pdf" multiple style="font-size:11px;width:100%;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:#276749;display:block;margin-bottom:3px;">📄 سند الاستلام</label>
-            <input type="file" id="pce-receipt" accept=".pdf" multiple style="font-size:11px;width:100%;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:#7C3AED;display:block;margin-bottom:3px;">📄 طلب ERP</label>
-            <input type="file" id="pce-erp" accept=".pdf" multiple style="font-size:11px;width:100%;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:#C53030;display:block;margin-bottom:3px;">📄 إيصال التحويل</label>
-            <input type="file" id="pce-transfer" accept=".pdf" multiple style="font-size:11px;width:100%;">
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="pcCloseEdit()" style="padding:9px 20px;border:1.5px solid #E2E8F0;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;">إلغاء</button>
-        <button onclick="pcSaveEdit()" style="padding:9px 20px;background:#244062;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">💾 حفظ التعديلات</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 // ============================================================
