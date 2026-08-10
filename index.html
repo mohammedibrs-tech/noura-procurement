@@ -9757,29 +9757,28 @@ function srExportDeptPDF(){
   const today=new Date().toLocaleDateString('en-GB');
   const BG=FORM_BG||'';
   const rowsHtml=rows.map(function(r){
-    return `<tr><td>${r.name}</td><td>${r.reqs}</td><td style="text-align:center;">${r.dueDate}</td><td style="text-align:center;">${r.deadline}</td></tr>`;
+    return `<tr><td style="border:1px solid #bbb;padding:6px 9px;">${r.name}</td><td style="border:1px solid #bbb;padding:6px 9px;">${r.reqs}</td><td style="border:1px solid #bbb;padding:6px 9px;text-align:center;">${r.dueDate}</td><td style="border:1px solid #bbb;padding:6px 9px;text-align:center;">${r.deadline}</td></tr>`;
   }).join('');
   const html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>طلب متطلبات — ${dept}</title>
-<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;margin:0;padding:0;line-height:1.8;}
-.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;opacity:0.15;}
-.wrap{position:relative;z-index:2;padding:30mm 20mm 20mm;}
-table{width:100%;border-collapse:collapse;margin:14px 0;}
-th{background:#0D7377;color:#fff;padding:7px 9px;border:1px solid #000;text-align:right;}
-td{padding:6px 9px;border:1px solid #999;}
-.sig-area{display:flex;justify-content:flex-start;margin-top:50px;}
-.sig-box{text-align:center;width:220px;}
+<style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;}
+.page{position:relative;width:210mm;min-height:297mm;}
+.bg{position:absolute;top:0;left:0;width:100%;height:100%;}
+.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}
+table{border-collapse:collapse;width:100%;margin:14px 0;}
+th{background:#2E9896;color:#fff;font-weight:700;padding:7px 9px;border:1px solid #bbb;text-align:center;}
 </style></head><body>
-${BG?`<img src="${BG}" class="bg-img">`:''}
-<div class="wrap">
+<div class="page">${BG?`<img class="bg" src="${BG}">`:''}
+<div class="content">
+<div style="text-align:center;font-size:16px;font-weight:900;color:#000;margin-bottom:16px;">المتطلبات الدورية لصرف المستخلصات</div>
 <p style="text-align:left;">${today}</p>
 <p style="font-weight:700;font-size:14px;">السادة / ${dept} سلمهم الله،</p>
 <p>إليكم المتطلبات لشهر (${monthLabel}) للموردين أعلاه، وذلك لتجهيز المتطلبات ومتابعة الإجراءات مع الإدارة المالية.</p>
 <table><thead><tr><th>اسم المورد</th><th>المتطلبات</th><th>تاريخ استحقاقها</th><th>التاريخ النهائي لتسليمها</th></tr></thead>
 <tbody>${rowsHtml}</tbody></table>
-<div class="sig-area"><div class="sig-box">
+<div style="margin-top:50px;width:220px;text-align:center;">
 <div style="border-top:1px solid #000;padding-top:6px;font-weight:700;">إدارة المشتريات</div>
-</div></div>
 </div>
+</div></div>
 <script>window.onload=function(){setTimeout(function(){window.print();},80);}<\/script>
 </body></html>`;
   const w=window.open('','_blank');
@@ -9799,9 +9798,10 @@ function srExportDeptWord(){
   const html=`<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>
 <style>@page{size:21cm 29.7cm;margin:2.5cm 2cm;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;line-height:1.8;}
 table{width:100%;border-collapse:collapse;margin:14px 0;}
-th{background:#0D7377;color:#fff;padding:7px 9px;border:1px solid #000;text-align:right;}
-td{padding:6px 9px;border:1px solid #999;}
+th{background:#2E9896;color:#fff;padding:7px 9px;border:1px solid #bbb;text-align:center;}
+td{padding:6px 9px;border:1px solid #bbb;}
 </style></head><body>
+<div style="text-align:center;font-size:16px;font-weight:900;color:#000;margin-bottom:16px;">المتطلبات الدورية لصرف المستخلصات</div>
 <p style="text-align:left;">${today}</p>
 <p style="font-weight:700;font-size:14px;">السادة / ${dept} سلمهم الله،</p>
 <p>إليكم المتطلبات لشهر (${monthLabel}) للموردين أعلاه، وذلك لتجهيز المتطلبات ومتابعة الإجراءات مع الإدارة المالية.</p>
