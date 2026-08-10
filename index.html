@@ -1797,7 +1797,13 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
   <!-- نافذة تفاصيل المستخلص -->
   <div id="dlv-detail-modal" class="sr-modal-overlay">
     <div class="sr-modal" style="max-width:780px;">
-      <div class="sr-modal-header"><h3 id="dlv-detail-title">تفاصيل المستخلص</h3><button class="sr-modal-close" onclick="dlvCloseDetail()">×</button></div>
+      <div class="sr-modal-header"><h3 id="dlv-detail-title">تفاصيل المستخلص</h3>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="sr-add-btn" style="background:var(--sr-red);color:#fff;padding:6px 12px;font-size:0.78rem;" onclick="dlvExportPDF()">📄 PDF</button>
+          <button class="sr-add-btn" style="background:#244062;color:#fff;padding:6px 12px;font-size:0.78rem;" onclick="dlvExportWord()">📄 Word</button>
+          <button class="sr-modal-close" onclick="dlvCloseDetail()">×</button>
+        </div>
+      </div>
       <div class="sr-modal-body" id="dlv-detail-body"></div>
     </div>
   </div>
@@ -10172,7 +10178,9 @@ function dlvRender(){
   }).join('');
 }
 
+let dlvCurrentDetailId=null;
 function dlvOpenDetail(id){
+  dlvCurrentDetailId=id;
   document.getElementById('dlv-detail-modal').classList.add('open');
   dlvRenderDetail(id);
 }
@@ -10240,6 +10248,95 @@ function dlvRenderDetail(id){
     <div class="sr-section-title" style="margin:14px 0 8px;font-size:0.95rem;">سجل المتابعة</div>
     <div>${logHtml||'<div style="color:var(--sr-muted);font-size:0.85rem;">لا يوجد سجل بعد</div>'}</div>
   `;
+}
+
+function dlvExportPDF(){
+  const item=deliverables.find(d=>d.id===dlvCurrentDetailId);
+  if(!item){toast('لم يتم تحديد مستخلص',true);return;}
+  const docs=item.documents||[];
+  const today=new Date().toLocaleDateString('en-GB');
+  const BG=FORM_BG||'';
+  const rowsHtml=docs.map(function(doc,i){
+    return `<tr><td style="text-align:center;">${i+1}</td><td>${doc.name}</td><td style="text-align:center;">${doc.status}</td><td>${doc.notes||doc.returnReason||'—'}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>طلب استكمال مستندات مستخلص — ${item.code}</title>
+<style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;}
+.page{position:relative;width:210mm;min-height:297mm;}
+.bg{position:absolute;top:0;left:0;width:100%;height:100%;}
+.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}
+table{border-collapse:collapse;width:100%;margin:14px 0;}
+th{background:#2E9896;color:#fff;font-weight:700;padding:7px 9px;border:1px solid #bbb;text-align:center;}
+td{padding:6px 9px;border:1px solid #bbb;}
+</style></head><body>
+<div class="page">${BG?`<img class="bg" src="${BG}">`:''}
+<div class="content">
+<div style="text-align:center;font-size:16px;font-weight:900;color:#000;margin-bottom:40px;">طلب استكمال مستندات مستخلص</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:0.85rem;margin-bottom:16px;">
+  <div><strong>رقم الطلب:</strong> ${item.code}</div>
+  <div><strong>تاريخ الطلب:</strong> ${today}</div>
+  <div><strong>اسم المورد:</strong> ${item.vendor||'—'}</div>
+  <div><strong>نوع الخدمة:</strong> ${item.serviceType||'—'}</div>
+  <div><strong>فترة المستخلص:</strong> ${item.periodFrom||'—'} → ${item.periodTo||'—'}</div>
+  <div><strong>الإدارة المعنية:</strong> ${item.department||'—'}</div>
+  <div><strong>المسؤول:</strong> ${item.responsible||'—'}</div>
+  <div><strong>تاريخ الاستحقاق:</strong> ${item.dueDate||'—'}</div>
+  <div><strong>آخر موعد للتسليم:</strong> ${item.docsDeadline||'—'}</div>
+</div>
+<table><thead><tr><th>رقم</th><th>المستند المطلوب</th><th>الحالة</th><th>الملاحظات</th></tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+<p style="margin-top:16px;">نأمل من الإدارة المعنية استكمال وإرسال المستندات الموضحة أعلاه، وذلك لاستكمال إجراءات مراجعة وصرف مستحقات المورد.</p>
+<div style="margin-top:50px;">
+  <div><strong>أعد بواسطة:</strong> إدارة المشتريات</div>
+  <div><strong>التاريخ:</strong> ${today}</div>
+</div>
+</div></div>
+<script>window.onload=function(){setTimeout(function(){window.print();},80);}<\/script>
+</body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function dlvExportWord(){
+  const item=deliverables.find(d=>d.id===dlvCurrentDetailId);
+  if(!item){toast('لم يتم تحديد مستخلص',true);return;}
+  const docs=item.documents||[];
+  const today=new Date().toLocaleDateString('en-GB');
+  const rowsHtml=docs.map(function(doc,i){
+    return `<tr><td align="center">${i+1}</td><td>${doc.name}</td><td align="center">${doc.status}</td><td>${doc.notes||doc.returnReason||'—'}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>
+<style>@page{size:21cm 29.7cm;margin:2.5cm 2cm;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;line-height:1.8;}
+table{width:100%;border-collapse:collapse;margin:14px 0;}
+th{background:#2E9896;color:#fff;padding:7px 9px;border:1px solid #bbb;text-align:center;}
+td{padding:6px 9px;border:1px solid #bbb;}
+</style></head><body>
+<div style="text-align:center;font-size:16px;font-weight:900;color:#000;margin-bottom:40px;">طلب استكمال مستندات مستخلص</div>
+<div style="margin-bottom:16px;">
+  <p><strong>رقم الطلب:</strong> ${item.code}</p>
+  <p><strong>تاريخ الطلب:</strong> ${today}</p>
+  <p><strong>اسم المورد:</strong> ${item.vendor||'—'}</p>
+  <p><strong>نوع الخدمة:</strong> ${item.serviceType||'—'}</p>
+  <p><strong>فترة المستخلص:</strong> ${item.periodFrom||'—'} → ${item.periodTo||'—'}</p>
+  <p><strong>الإدارة المعنية:</strong> ${item.department||'—'}</p>
+  <p><strong>المسؤول:</strong> ${item.responsible||'—'}</p>
+  <p><strong>تاريخ الاستحقاق:</strong> ${item.dueDate||'—'}</p>
+  <p><strong>آخر موعد للتسليم:</strong> ${item.docsDeadline||'—'}</p>
+</div>
+<table><thead><tr><th>رقم</th><th>المستند المطلوب</th><th>الحالة</th><th>الملاحظات</th></tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+<p style="margin-top:16px;">نأمل من الإدارة المعنية استكمال وإرسال المستندات الموضحة أعلاه، وذلك لاستكمال إجراءات مراجعة وصرف مستحقات المورد.</p>
+<div style="margin-top:50px;">
+  <p><strong>أعد بواسطة:</strong> إدارة المشتريات</p>
+  <p><strong>التاريخ:</strong> ${today}</p>
+</div>
+</body></html>`;
+  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='طلب_استكمال_مستندات_'+item.code+'.doc';
+  a.click();
+  toast('تم تصدير Word ✅');
 }
 
 
