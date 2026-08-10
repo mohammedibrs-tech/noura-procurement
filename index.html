@@ -11216,17 +11216,41 @@ function cmpPDF(){
   html+='<\/div><script>'
     +'window.onload=function(){'
     +'  var content=document.querySelector(".pdf-content");'
-    +'  var pageHeightMM=297, safetyMarginMM=5;'
+    +'  var pageHeightMM=297, safetyMarginMM=6;'
     +'  var usableHeightMM=pageHeightMM-safetyMarginMM;'
     +'  var pxPerMM=96/25.4;'
+    // نغيّر أحجام الخط والهوامش الحقيقية (مو zoom) — لأن zoom ما تلتزم فيه كل المتصفحات وقت الطباعة الفعلية،
+    // بينما تغيير الأرقام الحقيقية يُحتسب صح دايمًا بحساب عدد الصفحات
+    +'  function applyScale(scale){'
+    +'    var st=document.getElementById("autofit-style");'
+    +'    if(!st){st=document.createElement("style");st.id="autofit-style";document.head.appendChild(st);}'
+    +'    st.innerHTML='
+    +'      "body{font-size:"+(14*scale).toFixed(2)+"px !important;}"'
+    +'      +"table{font-size:"+(14*scale).toFixed(2)+"px !important;margin-bottom:"+(12*scale).toFixed(1)+"px !important;}"'
+    +'      +"th,td{padding:"+(4*scale).toFixed(1)+"px "+(6*scale).toFixed(1)+"px !important;}"'
+    +'      +"h1{font-size:"+(18*scale).toFixed(2)+"px !important;margin-bottom:"+(4*scale).toFixed(1)+"px !important;padding-bottom:"+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"h2{font-size:"+(15*scale).toFixed(2)+"px !important;margin:"+(10*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"h3{font-size:"+(15*scale).toFixed(2)+"px !important;margin:"+(11*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"p{font-size:"+(13*scale).toFixed(2)+"px !important;margin-bottom:"+(9*scale).toFixed(1)+"px !important;}"'
+    +'      +".pdf-content{padding:"+(28*scale).toFixed(1)+"mm "+(10*scale).toFixed(1)+"mm "+(12*scale).toFixed(1)+"mm !important;}";'
+    +'  }'
     +'  var contentHeightMM=content.scrollHeight/pxPerMM;'
     +'  if(contentHeightMM>usableHeightMM){'
-    +'    var scale=usableHeightMM/contentHeightMM;'
-    +'    scale=Math.max(scale,0.5);' // حد أدنى عشان النص ما يصير غير مقروء
-    +'    content.style.zoom=scale;'
+    +'    var scale=Math.max(usableHeightMM/contentHeightMM,0.5);' // حد أدنى عشان النص ما يصير غير مقروء
+    +'    applyScale(scale);'
+    // إعادة قياس بعد التطبيق (بعض الأبعاد كالحدود ما تصغر بنفس نسبة الخط)، وتصحيح إضافي لو لسه أطول من صفحة
+    +'    setTimeout(function(){'
+    +'      var newHeightMM=content.scrollHeight/pxPerMM;'
+    +'      if(newHeightMM>usableHeightMM){'
+    +'        var corrected=Math.max(scale*(usableHeightMM/newHeightMM)*0.98,0.45);'
+    +'        applyScale(corrected);'
+    +'      }'
+    +'      setTimeout(function(){window.print();},100);'
+    +'    },100);'
+    +'  } else {'
+    // ما فيه فيضان لصفحة ثانية أصلاً — يطبع بنفس حجم الخط الحالي بدون أي تغيير
+    +'    setTimeout(function(){window.print();},80);'
     +'  }'
-    // إذا ما احتاج تصغير، يطبع بنفس حجم الخط الحالي بدون أي تغيير
-    +'  setTimeout(function(){window.print();},80);'
     +'};'
     +'<\/script></body></html>';
   W.document.write(html);
