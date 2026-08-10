@@ -9835,7 +9835,11 @@ function supInit(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth
 // يجهز بيانات المتطلبات لموردي إدارة معيّنة لشهر العرض الحالي (srYear/srMonth)
 // كل صف: اسم المورد | المتطلبات المتبقية (غير المنجزة) | تاريخ الاستحقاق | التاريخ النهائي للتسليم (تاريخ الاستحقاق + مهلة الأيام)
 function srBuildDeptRows(dept, deadlineDays){
-  const vendors=srGetVendors().filter(v=>(v.department||'').trim()===dept);
+  const allVendors=srGetVendors();
+  console.log('[srBuildDeptRows] الإدارة المطلوبة:', JSON.stringify(dept));
+  console.log('[srBuildDeptRows] كل الموردين:', allVendors.map(v=>({name:v.name,department:v.department,requirements:v.requirements})));
+  const vendors=allVendors.filter(v=>(v.department||'').trim()===dept.trim());
+  console.log('[srBuildDeptRows] موردين مطابقين للإدارة:', vendors.length);
   const checks=srGetChecks();
   const rows=[];
   vendors.forEach(function(v){
@@ -9847,9 +9851,11 @@ function srBuildDeptRows(dept, deadlineDays){
     const ck=srCK(v.id);
     const sv=checks[ck]||{};
     const pending=(v.requirements||[]).filter(r=>!sv[r]);
+    console.log('[srBuildDeptRows] المورد:',v.name,'| مفتاح الشهر:',ck,'| متطلباته:',v.requirements,'| حالة الإنجاز المحفوظة:',sv,'| المتبقي:',pending);
     if(pending.length===0) return; // لا داعي لإدراج مورد أنجز كل متطلباته
     rows.push({name:v.name, reqs:pending.join('، '), dueDate:dateStr, deadline:deadlineStr});
   });
+  console.log('[srBuildDeptRows] عدد الصفوف النهائية:', rows.length);
   return rows;
 }
 function srExportDeptPDF(){
