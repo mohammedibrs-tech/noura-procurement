@@ -213,7 +213,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     </div>
     <div class="sb-item" onclick="nav('supplier-reports');supInit()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      تقارير الموردين
+      إدارة مستندات المستخلصات
     </div>
   </div>
 </div>
@@ -1669,7 +1669,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
   <div class="sr-page-header">
     <div class="sr-header-icon">🏢</div>
     <div class="sr-page-header-text" style="flex:1">
-      <h2>تقارير الموردين</h2>
+      <h2>إدارة مستندات المستخلصات</h2>
       <p>متابعة فواتير ومتطلبات الشركات المورّدة شهرياً</p>
     </div>
     <button class="sr-add-btn" onclick="srOpenModal()">＋ إضافة مورّد</button>
@@ -1708,7 +1708,100 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     </div>
   </div>
 
-  <div class="sr-section-title">قائمة الموردين — متطلبات الشهر</div>
+  <div class="sr-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>متابعة المستخلصات</span>
+    <button class="sr-add-btn" onclick="dlvOpenCreateModal()">＋ إنشاء مستخلص</button>
+  </div>
+  <div class="sr-dashboard" id="dlv-kpi-dashboard"></div>
+
+  <div class="sr-table-wrap" style="padding:14px 18px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="sr-field" style="margin-bottom:0;min-width:160px;">
+        <label>بحث</label>
+        <input type="text" id="dlv-filter-search" oninput="dlvRender()" placeholder="اسم المورد أو رقم المستخلص">
+      </div>
+      <div class="sr-field" style="margin-bottom:0;min-width:150px;">
+        <label>الإدارة</label>
+        <select id="dlv-filter-dept" onchange="dlvRender()"><option value="">الكل</option></select>
+      </div>
+      <div class="sr-field" style="margin-bottom:0;min-width:150px;">
+        <label>نوع الخدمة</label>
+        <select id="dlv-filter-service" onchange="dlvRender()">
+          <option value="">الكل</option>
+          <option value="حراسات أمنية">حراسات أمنية</option>
+          <option value="نظافة">نظافة</option>
+          <option value="صيانة">صيانة</option>
+          <option value="توريد مواد">توريد مواد</option>
+          <option value="خدمات أخرى">خدمات أخرى</option>
+        </select>
+      </div>
+      <div class="sr-field" style="margin-bottom:0;min-width:150px;">
+        <label>الحالة</label>
+        <select id="dlv-filter-status" onchange="dlvRender()"><option value="">الكل</option></select>
+      </div>
+      <button class="sr-btn-cancel" onclick="dlvClearFilters()">مسح الفلاتر</button>
+    </div>
+  </div>
+
+  <div class="sr-table-wrap">
+    <table class="sr-table">
+      <thead><tr>
+        <th>#</th><th>المورد</th><th>نوع الخدمة</th><th>الإدارة</th><th>فترة المستخلص</th>
+        <th>قيمة المستخلص</th><th>المستندات</th><th>الحالة</th><th>الأيام المتبقية</th><th>المسؤول</th><th>الإجراءات</th>
+      </tr></thead>
+      <tbody id="dlv-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- نافذة إنشاء مستخلص جديد -->
+  <div id="dlv-create-modal" class="sr-modal-overlay">
+    <div class="sr-modal">
+      <div class="sr-modal-header"><h3>＋ إنشاء مستخلص جديد</h3><button class="sr-modal-close" onclick="dlvCloseCreateModal()">×</button></div>
+      <div class="sr-modal-body">
+        <div class="sr-field"><label>اسم المورد *</label><input type="text" id="dlv-vendor"></div>
+        <div class="sr-field"><label>نوع الخدمة *</label>
+          <select id="dlv-service-type">
+            <option value="حراسات أمنية">حراسات أمنية</option>
+            <option value="نظافة">نظافة</option>
+            <option value="صيانة">صيانة</option>
+            <option value="توريد مواد">توريد مواد</option>
+            <option value="خدمات أخرى">خدمات أخرى</option>
+          </select>
+        </div>
+        <div class="sr-field"><label>الإدارة المستفيدة</label><input type="text" id="dlv-department" placeholder="مثال: إدارة العمليات"></div>
+        <div style="display:flex;gap:10px;">
+          <div class="sr-field" style="flex:1;"><label>فترة المستخلص من</label><input type="date" id="dlv-period-from"></div>
+          <div class="sr-field" style="flex:1;"><label>إلى</label><input type="date" id="dlv-period-to"></div>
+        </div>
+        <div class="sr-field"><label>رقم العقد</label><input type="text" id="dlv-contract-num"></div>
+        <div class="sr-field"><label>رقم أمر الشراء</label><input type="text" id="dlv-po-num"></div>
+        <div class="sr-field"><label>رقم الفاتورة</label><input type="text" id="dlv-invoice-num"></div>
+        <div class="sr-field"><label>تاريخ الفاتورة</label><input type="date" id="dlv-invoice-date"></div>
+        <div style="display:flex;gap:10px;">
+          <div class="sr-field" style="flex:1;"><label>قيمة المستخلص قبل الضريبة</label><input type="number" id="dlv-amount-before-vat" oninput="dlvCalcVat()"></div>
+          <div class="sr-field" style="flex:1;"><label>ضريبة القيمة المضافة</label><input type="number" id="dlv-vat"></div>
+        </div>
+        <div class="sr-field"><label>إجمالي المستخلص</label><input type="number" id="dlv-amount-total"></div>
+        <div class="sr-field"><label>تاريخ الاستحقاق</label><input type="date" id="dlv-due-date"></div>
+        <div class="sr-field"><label>آخر موعد لتسليم المستندات</label><input type="date" id="dlv-docs-deadline"></div>
+        <div class="sr-field"><label>المسؤول من الإدارة المعنية</label><input type="text" id="dlv-responsible"></div>
+        <div class="sr-field"><label>ملاحظات</label><textarea id="dlv-notes" rows="2"></textarea></div>
+      </div>
+      <div class="sr-modal-footer">
+        <button class="sr-btn-cancel" onclick="dlvCloseCreateModal()">إلغاء</button>
+        <button class="sr-btn-save" onclick="dlvCreate()">💾 إنشاء المستخلص</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة تفاصيل المستخلص -->
+  <div id="dlv-detail-modal" class="sr-modal-overlay">
+    <div class="sr-modal" style="max-width:780px;">
+      <div class="sr-modal-header"><h3 id="dlv-detail-title">تفاصيل المستخلص</h3><button class="sr-modal-close" onclick="dlvCloseDetail()">×</button></div>
+      <div class="sr-modal-body" id="dlv-detail-body"></div>
+    </div>
+  </div>
+
   <div class="sr-table-wrap">
     <table class="sr-table">
       <thead>
@@ -5205,6 +5298,8 @@ function exportQuarterlyExcel(){
 
 /* ══════════════ العقود ══════════════ */
 let contracts=JSON.parse(localStorage.getItem('contracts')||'[]');
+let deliverables=JSON.parse(localStorage.getItem('deliverables')||'[]'); // مستخلصات الموردين — إدارة مستندات المستخلصات
+
 let contractEditId=null;
 const MONTHS_AR={'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
 const STATUS_LABELS={active:'فعّال',expiring:'ينتهي قريباً',expired:'منتهي',pending:'قيد التفاوض'};
@@ -9445,6 +9540,15 @@ async function loadFromSupabase(){
   }else contracts=ctLocal;
   localStorage.setItem('contracts',JSON.stringify(contracts));
 
+  // مستخلصات الموردين (إدارة مستندات المستخلصات)
+  const dlRes=await sbGet('procurement_deliverables');
+  const dlLocal=JSON.parse(localStorage.getItem('deliverables')||'[]');
+  if(dlRes&&dlRes.length){
+    const sbMapped=dlRes.map(r=>typeof r.data==='string'?JSON.parse(r.data):r.data).filter(Boolean);
+    deliverables=mergeById(sbMapped,dlLocal);
+  }else deliverables=dlLocal;
+  localStorage.setItem('deliverables',JSON.stringify(deliverables));
+
   // المحاضر
   const cmRes=await sbGet('procurement_committees');
   const cmLocal=JSON.parse(localStorage.getItem('committees')||'[]');
@@ -9726,7 +9830,7 @@ function srDelete(id){
   toast(`🗑 تم حذف "${s.name}"`);
   srRender();
 }
-function supInit(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth(); srRender(); }
+function supInit(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth(); srRender(); if(typeof dlvRender==='function')dlvRender(); }
 
 // يجهز بيانات المتطلبات لموردي إدارة معيّنة لشهر العرض الحالي (srYear/srMonth)
 // كل صف: اسم المورد | المتطلبات المتبقية (غير المنجزة) | تاريخ الاستحقاق | التاريخ النهائي للتسليم (تاريخ الاستحقاق + مهلة الأيام)
@@ -9819,7 +9923,317 @@ td{padding:6px 9px;border:1px solid #bbb;}
   toast('تم تصدير Word ✅');
 }
 
+/* ══════════════ إدارة مستندات المستخلصات (تطوير قسم تقارير الموردين) ══════════════ */
+const DLV_SERVICE_TYPES={
+  'حراسات أمنية':['فاتورة','شهادة إنجاز','كشف حضور وانصراف','تقرير الخدمة'],
+  'نظافة':['فاتورة','شهادة إنجاز','كشف العمالة / الحضور','تقرير الخدمة','سند استلام مواد'],
+  'صيانة':['فاتورة','شهادة إنجاز','تقرير الصيانة','كشف الأعمال المنفذة','سند استلام المواد'],
+  'توريد مواد':['فاتورة','سند استلام المواد','محضر استلام','أمر الشراء'],
+  'خدمات أخرى':['فاتورة']
+};
+const DLV_DOC_STATUSES=['مطلوب','تم طلبه','تم الاستلام','تحت المراجعة','مقبول','مرتجع','غير مطلوب'];
+const DLV_MANUAL_STATUSES=['جاهز للصرف','محال للمالية','تم الصرف','مغلق'];
+
+function dlvSaveAll(){ localStorage.setItem('deliverables',JSON.stringify(deliverables)); }
+
+function dlvGenCode(){
+  const yr=new Date().getFullYear();
+  const n=deliverables.filter(d=>(d.code||'').indexOf('M-'+yr)===0).length+1;
+  return 'M-'+yr+'-'+String(n).padStart(4,'0');
+}
+
+function dlvLog(item,action){
+  if(!item.log) item.log=[];
+  item.log.push({date:new Date().toISOString(),action:action,by:'إدارة المشتريات'});
+}
+
+// يحسب حالة المستخلص تلقائيًا حسب حالة مستنداتها المطلوبة — لا يغيّر الحالات المتقدمة اليدوية (جاهز للصرف/محال للمالية/تم الصرف/مغلق)
+function dlvAutoStatus(item){
+  if(DLV_MANUAL_STATUSES.indexOf(item.status)!==-1) return item.status;
+  const docs=(item.documents||[]).filter(d=>d.required);
+  if(!docs.length) return item.status||'مسودة';
+  if(docs.some(d=>d.status==='مرتجع')) return 'يوجد نواقص';
+  if(docs.every(d=>d.status==='مقبول')) return 'مكتمل';
+  if(docs.some(d=>d.status==='تحت المراجعة')) return 'تحت مراجعة المشتريات';
+  if(docs.some(d=>d.status==='تم الاستلام')) return 'تم استلام المستندات';
+  if(item.status==='مسودة') return 'مسودة';
+  return 'بانتظار مستندات الإدارة';
+}
+
+function dlvBuildDocs(serviceType){
+  return (DLV_SERVICE_TYPES[serviceType]||[]).map(name=>({name:name,required:true,status:'مطلوب',fileUrl:'',receivedDate:'',uploadedBy:'',notes:'',returnReason:''}));
+}
+
+// 🟢/🟡/🔴 حسب الأيام المتبقية لتاريخ معيّن
+function dlvDaysBadge(dateStr){
+  if(!dateStr) return {label:'—',color:'#888',emoji:''};
+  const t=new Date();t.setHours(0,0,0,0);
+  const parts=dateStr.split('-');
+  const target=new Date(+parts[0],+parts[1]-1,+parts[2]);target.setHours(0,0,0,0);
+  const diff=Math.round((target-t)/86400000);
+  if(diff<0) return {label:'متأخر '+Math.abs(diff)+' يوم',color:'#C0392B',emoji:'🔴'};
+  if(diff===0) return {label:'مستحق اليوم',color:'#C0392B',emoji:'🔴'};
+  if(diff<=3) return {label:'يتبقى '+diff+' أيام',color:'#E07B39',emoji:'🟡'};
+  return {label:'يتبقى '+diff+' يوم',color:'#1A7C5A',emoji:'🟢'};
+}
+
+async function dlvPersist(item){
+  dlvSaveAll();
+  await sbInsert('procurement_deliverables',{deliv_id:item.id,data:JSON.stringify(item)}).catch(()=>{});
+}
+
+async function dlvCreate(){
+  const vendor=document.getElementById('dlv-vendor').value.trim();
+  const serviceType=document.getElementById('dlv-service-type').value;
+  if(!vendor){toast('أدخل اسم المورد',true);return;}
+  const item={
+    id:Date.now(),
+    code:dlvGenCode(),
+    vendor:vendor,
+    serviceType:serviceType,
+    department:document.getElementById('dlv-department').value.trim(),
+    periodFrom:document.getElementById('dlv-period-from').value,
+    periodTo:document.getElementById('dlv-period-to').value,
+    contractNum:document.getElementById('dlv-contract-num').value.trim(),
+    poNum:document.getElementById('dlv-po-num').value.trim(),
+    invoiceNum:document.getElementById('dlv-invoice-num').value.trim(),
+    invoiceDate:document.getElementById('dlv-invoice-date').value,
+    amountBeforeVat:parseFloat(document.getElementById('dlv-amount-before-vat').value)||0,
+    vat:parseFloat(document.getElementById('dlv-vat').value)||0,
+    amountTotal:parseFloat(document.getElementById('dlv-amount-total').value)||0,
+    dueDate:document.getElementById('dlv-due-date').value,
+    docsDeadline:document.getElementById('dlv-docs-deadline').value,
+    responsible:document.getElementById('dlv-responsible').value.trim(),
+    notes:document.getElementById('dlv-notes').value.trim(),
+    status:'مسودة',
+    documents:dlvBuildDocs(serviceType),
+    log:[],
+    createdAt:new Date().toISOString()
+  };
+  dlvLog(item,'تم إنشاء المستخلص');
+  deliverables.unshift(item);
+  await dlvPersist(item);
+  toast('تم إنشاء المستخلص '+item.code+' ✅');
+  dlvCloseCreateModal();
+  dlvRender();
+  dlvOpenDetail(item.id);
+}
+
+function dlvUpdateDoc(itemId,docIdx,field,val){
+  const item=deliverables.find(d=>d.id===itemId);if(!item)return;
+  const doc=item.documents[docIdx];if(!doc)return;
+  if(field==='status'&&val==='مرتجع'&&doc.status!=='مرتجع'){
+    const reason=prompt('سبب إرجاع مستند "'+doc.name+'"؟ (مطلوب)');
+    if(!reason||!reason.trim()){toast('يجب إدخال سبب الإرجاع',true);return;}
+    doc.returnReason=reason.trim();
+    dlvLog(item,'تم إرجاع مستند "'+doc.name+'" — السبب: '+reason.trim());
+  } else if(field==='status'){
+    dlvLog(item,'تم تحديث حالة مستند "'+doc.name+'" إلى: '+val);
+  }
+  doc[field]=val;
+  if(field==='status'&&val==='تم الاستلام'&&!doc.receivedDate) doc.receivedDate=new Date().toISOString().substring(0,10);
+  item.status=dlvAutoStatus(item);
+  dlvPersist(item);
+  dlvRenderDetail(itemId);
+  dlvRender();
+}
+
+function dlvSetManualStatus(itemId,newStatus){
+  const item=deliverables.find(d=>d.id===itemId);if(!item)return;
+  dlvLog(item,'تم تغيير حالة المستخلص إلى: '+newStatus);
+  item.status=newStatus;
+  dlvPersist(item);
+  dlvRenderDetail(itemId);
+  dlvRender();
+}
+
+function dlvOpenCreateModal(){
+  ['dlv-vendor','dlv-department','dlv-contract-num','dlv-po-num','dlv-invoice-num','dlv-invoice-date',
+   'dlv-amount-before-vat','dlv-vat','dlv-amount-total','dlv-due-date','dlv-docs-deadline','dlv-responsible',
+   'dlv-notes','dlv-period-from','dlv-period-to'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('dlv-service-type').value='حراسات أمنية';
+  document.getElementById('dlv-create-modal').classList.add('open');
+}
+function dlvCloseCreateModal(){ document.getElementById('dlv-create-modal').classList.remove('open'); }
+function dlvCalcVat(){
+  const base=parseFloat(document.getElementById('dlv-amount-before-vat').value)||0;
+  const vat=base*0.15;
+  document.getElementById('dlv-vat').value=vat.toFixed(2);
+  document.getElementById('dlv-amount-total').value=(base+vat).toFixed(2);
+}
+function dlvClearFilters(){
+  ['dlv-filter-search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['dlv-filter-dept','dlv-filter-service','dlv-filter-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  dlvActiveKpiFilter=null;
+  dlvRender();
+}
+
+let dlvActiveKpiFilter=null; // فلترة سريعة من الضغط على مؤشر بلوحة المتابعة
+
+const DLV_KPI_DEFS=[
+  {key:'total',label:'إجمالي المستخلصات',icon:'📋',color:'var(--sr-navy)',bg:'#E6F4F5',match:()=>true},
+  {key:'waiting',label:'بانتظار المستندات',icon:'⏳',color:'var(--sr-orange)',bg:'#FEF3E7',match:d=>d.status==='بانتظار مستندات الإدارة'},
+  {key:'review',label:'تحت المراجعة',icon:'🔍',color:'var(--sr-teal2)',bg:'#E6F4F5',match:d=>d.status==='تحت مراجعة المشتريات'},
+  {key:'issues',label:'بها نواقص',icon:'⚠️',color:'var(--sr-red)',bg:'#FDECEA',match:d=>d.status==='يوجد نواقص'},
+  {key:'complete',label:'مكتملة',icon:'✅',color:'var(--sr-green)',bg:'#E8F8F0',match:d=>d.status==='مكتمل'},
+  {key:'ready',label:'جاهزة للصرف',icon:'💳',color:'var(--sr-green2)',bg:'#E8F8F0',match:d=>d.status==='جاهز للصرف'},
+  {key:'finance',label:'محالة للمالية',icon:'🏦',color:'var(--sr-teal)',bg:'#E6F4F5',match:d=>d.status==='محال للمالية'},
+  {key:'late',label:'متأخرة',icon:'🔴',color:'var(--sr-red)',bg:'#FDECEA',match:d=>{const b=dlvDaysBadge(d.docsDeadline||d.dueDate);return b.emoji==='🔴';}}
+];
+
+function dlvRenderKpis(){
+  const el=document.getElementById('dlv-kpi-dashboard');if(!el)return;
+  el.innerHTML=DLV_KPI_DEFS.map(function(k){
+    const count=deliverables.filter(k.match).length;
+    const active=dlvActiveKpiFilter===k.key;
+    return `<div class="sr-stat-card" style="cursor:pointer;border-color:${k.color};${active?'box-shadow:0 0 0 2px '+k.color+';':''}" onclick="dlvToggleKpiFilter('${k.key}')">
+      <div class="sr-stat-icon" style="background:${k.bg};">${k.icon}</div>
+      <div class="sr-stat-info"><h3>${count}</h3><p>${k.label}</p></div>
+    </div>`;
+  }).join('');
+}
+function dlvToggleKpiFilter(key){
+  dlvActiveKpiFilter=(dlvActiveKpiFilter===key)?null:key;
+  dlvRender();
+}
+
+function dlvPopulateFilterOptions(){
+  const deptSel=document.getElementById('dlv-filter-dept');
+  const statusSel=document.getElementById('dlv-filter-status');
+  if(deptSel){
+    const cur=deptSel.value;
+    const depts=[...new Set(deliverables.map(d=>d.department).filter(Boolean))];
+    deptSel.innerHTML='<option value="">الكل</option>'+depts.map(d=>`<option value="${d}">${d}</option>`).join('');
+    deptSel.value=cur;
+  }
+  if(statusSel){
+    const cur=statusSel.value;
+    const statuses=[...new Set(deliverables.map(d=>d.status).filter(Boolean))];
+    statusSel.innerHTML='<option value="">الكل</option>'+statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+    statusSel.value=cur;
+  }
+}
+
+function dlvRender(){
+  if(typeof deliverables==='undefined') return;
+  dlvRenderKpis();
+  dlvPopulateFilterOptions();
+  const body=document.getElementById('dlv-table-body');if(!body)return;
+  const search=(document.getElementById('dlv-filter-search')?.value||'').trim().toLowerCase();
+  const fDept=document.getElementById('dlv-filter-dept')?.value||'';
+  const fService=document.getElementById('dlv-filter-service')?.value||'';
+  const fStatus=document.getElementById('dlv-filter-status')?.value||'';
+  let list=deliverables.slice();
+  if(dlvActiveKpiFilter){
+    const def=DLV_KPI_DEFS.find(k=>k.key===dlvActiveKpiFilter);
+    if(def) list=list.filter(def.match);
+  }
+  if(search) list=list.filter(d=>(d.vendor||'').toLowerCase().includes(search)||(d.code||'').toLowerCase().includes(search));
+  if(fDept) list=list.filter(d=>d.department===fDept);
+  if(fService) list=list.filter(d=>d.serviceType===fService);
+  if(fStatus) list=list.filter(d=>d.status===fStatus);
+  list.sort((a,b)=>new Date(a.dueDate||'2999-01-01')-new Date(b.dueDate||'2999-01-01'));
+
+  if(!list.length){
+    body.innerHTML='<tr><td colspan="11" style="text-align:center;color:#aaa;padding:24px;">لا توجد مستخلصات مطابقة</td></tr>';
+    return;
+  }
+  body.innerHTML=list.map(function(d,i){
+    const docs=d.documents||[];
+    const accepted=docs.filter(x=>x.status==='مقبول').length;
+    const badge=dlvDaysBadge(d.docsDeadline||d.dueDate);
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${d.vendor||'—'}</strong><br><span style="font-size:0.75rem;color:var(--sr-muted);">${d.code||''}</span></td>
+      <td>${d.serviceType||'—'}</td>
+      <td>${d.department||'—'}</td>
+      <td style="font-size:0.8rem;">${d.periodFrom||'—'} → ${d.periodTo||'—'}</td>
+      <td>${(d.amountTotal||0).toLocaleString('en-US')} ر.س</td>
+      <td>${accepted}/${docs.length}</td>
+      <td><span style="font-size:0.78rem;font-weight:700;color:var(--sr-teal);">${d.status||'—'}</span></td>
+      <td style="color:${badge.color};font-weight:700;font-size:0.8rem;">${badge.emoji} ${badge.label}</td>
+      <td>${d.responsible||'—'}</td>
+      <td><button class="sr-btn-save" style="padding:5px 12px;font-size:0.78rem;" onclick="dlvOpenDetail(${d.id})">عرض</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function dlvOpenDetail(id){
+  document.getElementById('dlv-detail-modal').classList.add('open');
+  dlvRenderDetail(id);
+}
+function dlvCloseDetail(){ document.getElementById('dlv-detail-modal').classList.remove('open'); }
+
+function dlvRenderDetail(id){
+  const item=deliverables.find(d=>d.id===id);if(!item)return;
+  document.getElementById('dlv-detail-title').textContent=item.code+' — '+item.vendor;
+  const docs=item.documents||[];
+  const stats={
+    total:docs.length,
+    received:docs.filter(d=>['تم الاستلام','تحت المراجعة','مقبول','مرتجع'].includes(d.status)).length,
+    accepted:docs.filter(d=>d.status==='مقبول').length,
+    returned:docs.filter(d=>d.status==='مرتجع').length,
+    remaining:docs.filter(d=>d.required&&!['مقبول'].includes(d.status)).length
+  };
+  const docsHtml=docs.map(function(doc,idx){
+    const statusOptions=DLV_DOC_STATUSES.map(s=>`<option value="${s}"${doc.status===s?' selected':''}>${s}</option>`).join('');
+    return `<tr>
+      <td>${doc.name}</td>
+      <td><select onchange="dlvUpdateDoc(${item.id},${idx},'status',this.value)" style="font-size:0.78rem;padding:3px 6px;">${statusOptions}</select></td>
+      <td style="font-size:0.75rem;">${doc.receivedDate||'—'}</td>
+      <td style="font-size:0.75rem;color:${doc.status==='مرتجع'?'var(--sr-red)':'inherit'};">${doc.returnReason||'—'}</td>
+    </tr>`;
+  }).join('');
+  const logHtml=(item.log||[]).slice().reverse().map(function(l){
+    const dt=new Date(l.date);
+    return `<div style="border-right:3px solid var(--sr-teal);padding:6px 10px;margin-bottom:6px;background:var(--sr-gray);border-radius:0 8px 8px 0;">
+      <div style="font-size:0.75rem;color:var(--sr-muted);">${dt.toLocaleDateString('en-GB')} ${dt.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})} — ${l.by}</div>
+      <div style="font-size:0.85rem;">${l.action}</div>
+    </div>`;
+  }).join('');
+  const manualBtns=DLV_MANUAL_STATUSES.map(s=>`<button class="sr-btn-cancel" style="font-size:0.75rem;padding:6px 10px;${item.status===s?'background:var(--sr-teal);color:#fff;':''}" onclick="dlvSetManualStatus(${item.id},'${s}')">${s}</button>`).join('');
+
+  document.getElementById('dlv-detail-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:16px;font-size:0.85rem;">
+      <div><strong>المورد:</strong> ${item.vendor||'—'}</div>
+      <div><strong>نوع الخدمة:</strong> ${item.serviceType||'—'}</div>
+      <div><strong>الإدارة:</strong> ${item.department||'—'}</div>
+      <div><strong>فترة المستخلص:</strong> ${item.periodFrom||'—'} → ${item.periodTo||'—'}</div>
+      <div><strong>رقم العقد:</strong> ${item.contractNum||'—'}</div>
+      <div><strong>رقم أمر الشراء:</strong> ${item.poNum||'—'}</div>
+      <div><strong>رقم الفاتورة:</strong> ${item.invoiceNum||'—'}</div>
+      <div><strong>قيمة المستخلص:</strong> ${(item.amountTotal||0).toLocaleString('en-US')} ر.س</div>
+      <div><strong>تاريخ الاستحقاق:</strong> ${item.dueDate||'—'}</div>
+      <div><strong>المسؤول:</strong> ${item.responsible||'—'}</div>
+    </div>
+
+    <div class="sr-section-title" style="margin:14px 0 8px;font-size:0.95rem;">حالة المستخلص: <span style="color:var(--sr-teal);">${item.status}</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">${manualBtns}</div>
+
+    <div class="sr-section-title" style="margin:14px 0 8px;font-size:0.95rem;">إحصائيات المستندات</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:0.8rem;margin-bottom:12px;">
+      <span>الإجمالي: <strong>${stats.total}</strong></span>
+      <span>المستلمة: <strong>${stats.received}</strong></span>
+      <span>المقبولة: <strong style="color:var(--sr-green);">${stats.accepted}</strong></span>
+      <span>المرتجعة: <strong style="color:var(--sr-red);">${stats.returned}</strong></span>
+      <span>المتبقية: <strong style="color:var(--sr-orange);">${stats.remaining}</strong></span>
+    </div>
+
+    <div class="sr-section-title" style="margin:14px 0 8px;font-size:0.95rem;">المستندات المطلوبة</div>
+    <table class="sr-table" style="margin-bottom:16px;"><thead><tr><th>المستند</th><th>الحالة</th><th>تاريخ الاستلام</th><th>سبب الإرجاع</th></tr></thead>
+    <tbody>${docsHtml}</tbody></table>
+
+    <div class="sr-section-title" style="margin:14px 0 8px;font-size:0.95rem;">سجل المتابعة</div>
+    <div>${logHtml||'<div style="color:var(--sr-muted);font-size:0.85rem;">لا يوجد سجل بعد</div>'}</div>
+  `;
+}
+
+
 document.getElementById('sr-modal').addEventListener('click',function(e){if(e.target===this)srCloseModal();});
+document.getElementById('dlv-create-modal')?.addEventListener('click',function(e){if(e.target===this)dlvCloseCreateModal();});
+document.getElementById('dlv-detail-modal')?.addEventListener('click',function(e){if(e.target===this)dlvCloseDetail();});
 
 /* ══════════════════════════════════════════════
    تبويبات صفحة المقارنة
