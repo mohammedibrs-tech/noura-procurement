@@ -899,7 +899,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="card-body" id="cmp-companies-body"></div>
     </div>
 
-    <div class="actions">
+    <div class="actions" style="align-items:center;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="cmpSaveData()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
         حفظ المقارنة
@@ -916,6 +916,14 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         تصدير Word
       </button>
+      <div style="display:flex;align-items:center;gap:6px;background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-inline-start:6px;">
+        <label style="font-size:12px;color:#555;white-space:nowrap;">حجم الخط (px)</label>
+        <input id="cmp-pdf-fontsize" type="number" min="6" max="24" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;white-space:nowrap;cursor:pointer;">
+          <input id="cmp-pdf-autofit" type="checkbox" checked style="cursor:pointer;">
+          تصغير تلقائي ليصير بصفحة واحدة
+        </label>
+      </div>
     </div>
 
     <div class="card" style="margin-top:16px;">
@@ -11115,6 +11123,10 @@ function cmpDurationToMonths(dur){
 }
 function cmpPDF(){
   cmpSyncAllInputs();
+  var manualFontSize=parseFloat(document.getElementById('cmp-pdf-fontsize')?.value)||null;
+  var autoFitEnabled=document.getElementById('cmp-pdf-autofit')?.checked!==false;
+  var shouldAutoFit=!manualFontSize&&autoFitEnabled; // تحديد حجم يدوي يوقف التلقائي دايمًا
+  var baseFont=manualFontSize||14;
   var title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
   var date=document.getElementById('cmp-date').value||'';
   var curContract=parseFloat(document.getElementById('cmp-current-contract')?.value)||0;
@@ -11190,13 +11202,13 @@ function cmpPDF(){
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
   html+='@page{size:A4;margin:0;}';
-  html+='body{font-family:Arial,sans-serif;font-size:14px;color:#111;direction:rtl;margin:0;padding:0;}';
+  html+='body{font-family:Arial,sans-serif;font-size:'+baseFont+'px;color:#111;direction:rtl;margin:0;padding:0;}';
   html+='.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}';
   html+='.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}';
   html+='h1{font-size:18px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:4px;color:#000;}';
   html+='h2{font-size:15px;margin:16px 0 6px;border-right:4px solid #000;padding-right:7px;color:#000;}';
   html+='p{text-align:center;color:#555;font-size:13px;margin-bottom:14px;}';
-  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:14px;border:1px solid #000;background:#fff;}';
+  html+='table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:'+baseFont+'px;border:1px solid #000;background:#fff;}';
   html+='th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #000;}';
   html+='td{padding:4px 7px;border:1px solid #000;}';
   html+='@media print{.bg-img{position:fixed;}}';
@@ -11215,6 +11227,9 @@ function cmpPDF(){
   html+='<h2>تفاصيل الأسعار</h2>'+detailSections;
   html+='<\/div><script>'
     +'window.onload=function(){'
+    +'  var shouldAutoFit='+(shouldAutoFit?'true':'false')+';'
+    +'  var BF='+baseFont+';' // حجم الخط الأساسي (يدوي لو تم تحديده، وإلا الافتراضي)
+    +'  if(!shouldAutoFit){ setTimeout(function(){window.print();},80); return; }'
     +'  var content=document.querySelector(".pdf-content");'
     +'  var pageHeightMM=297, safetyMarginMM=6;'
     +'  var usableHeightMM=pageHeightMM-safetyMarginMM;'
@@ -11225,13 +11240,13 @@ function cmpPDF(){
     +'    var st=document.getElementById("autofit-style");'
     +'    if(!st){st=document.createElement("style");st.id="autofit-style";document.head.appendChild(st);}'
     +'    st.innerHTML='
-    +'      "body{font-size:"+(14*scale).toFixed(2)+"px !important;}"'
-    +'      +"table{font-size:"+(14*scale).toFixed(2)+"px !important;margin-bottom:"+(12*scale).toFixed(1)+"px !important;}"'
+    +'      "body{font-size:"+(BF*scale).toFixed(2)+"px !important;}"'
+    +'      +"table{font-size:"+(BF*scale).toFixed(2)+"px !important;margin-bottom:"+(12*scale).toFixed(1)+"px !important;}"'
     +'      +"th,td{padding:"+(4*scale).toFixed(1)+"px "+(6*scale).toFixed(1)+"px !important;}"'
-    +'      +"h1{font-size:"+(18*scale).toFixed(2)+"px !important;margin-bottom:"+(4*scale).toFixed(1)+"px !important;padding-bottom:"+(4*scale).toFixed(1)+"px !important;}"'
-    +'      +"h2{font-size:"+(15*scale).toFixed(2)+"px !important;margin:"+(10*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
-    +'      +"h3{font-size:"+(15*scale).toFixed(2)+"px !important;margin:"+(11*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
-    +'      +"p{font-size:"+(13*scale).toFixed(2)+"px !important;margin-bottom:"+(9*scale).toFixed(1)+"px !important;}"'
+    +'      +"h1{font-size:"+((BF+4)*scale).toFixed(2)+"px !important;margin-bottom:"+(4*scale).toFixed(1)+"px !important;padding-bottom:"+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"h2{font-size:"+((BF+1)*scale).toFixed(2)+"px !important;margin:"+(10*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"h3{font-size:"+((BF+1)*scale).toFixed(2)+"px !important;margin:"+(11*scale).toFixed(1)+"px 0 "+(4*scale).toFixed(1)+"px !important;}"'
+    +'      +"p{font-size:"+((BF-1)*scale).toFixed(2)+"px !important;margin-bottom:"+(9*scale).toFixed(1)+"px !important;}"'
     +'      +".pdf-content{padding:"+(28*scale).toFixed(1)+"mm "+(10*scale).toFixed(1)+"mm "+(12*scale).toFixed(1)+"mm !important;}";'
     +'  }'
     +'  var contentHeightMM=content.scrollHeight/pxPerMM;'
