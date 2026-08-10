@@ -1686,6 +1686,28 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 
   <div class="sr-dashboard" id="sr-dashboard"></div>
 
+  <div class="sr-section-title">تصدير طلب متطلبات لإدارة معيّنة</div>
+  <div class="sr-table-wrap" style="padding:16px 18px;">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
+      <div class="sr-field" style="margin-bottom:0;min-width:220px;">
+        <label>الإدارة المستهدفة</label>
+        <select id="sr-export-dept">
+          <option value="إدارة الدعم والخدمات">إدارة الدعم والخدمات</option>
+          <option value="إدارة العمليات">إدارة العمليات</option>
+          <option value="إدارة التسويق">إدارة التسويق</option>
+          <option value="إدارة الموارد البشرية">إدارة الموارد البشرية</option>
+          <option value="إدارة المالية">إدارة المالية</option>
+        </select>
+      </div>
+      <div class="sr-field" style="margin-bottom:0;width:150px;">
+        <label>مهلة التسليم (أيام)</label>
+        <input type="number" id="sr-export-deadline-days" value="3" min="1">
+      </div>
+      <button class="sr-add-btn" style="background:var(--sr-red);color:#fff;" onclick="srExportDeptPDF()">📄 تصدير PDF</button>
+      <button class="sr-add-btn" style="background:#244062;color:#fff;" onclick="srExportDeptWord()">📄 تصدير Word</button>
+    </div>
+  </div>
+
   <div class="sr-section-title">قائمة الموردين — متطلبات الشهر</div>
   <div class="sr-table-wrap">
     <table class="sr-table">
@@ -9705,6 +9727,97 @@ function srDelete(id){
   srRender();
 }
 function supInit(){ srYear=new Date().getFullYear(); srMonth=new Date().getMonth(); srRender(); }
+
+// يجهز بيانات المتطلبات لموردي إدارة معيّنة لشهر العرض الحالي (srYear/srMonth)
+// كل صف: اسم المورد | المتطلبات المتبقية (غير المنجزة) | تاريخ الاستحقاق | التاريخ النهائي للتسليم (تاريخ الاستحقاق + مهلة الأيام)
+function srBuildDeptRows(dept, deadlineDays){
+  const vendors=srGetVendors().filter(v=>(v.department||'').trim()===dept);
+  const checks=srGetChecks();
+  const rows=[];
+  vendors.forEach(function(v){
+    const day=Math.min(v.invoiceDay,srDaysInMonth(srYear,srMonth));
+    const dateObj=new Date(srYear,srMonth,day);
+    const dateStr=day+' '+SR_AR_MONTHS[srMonth]+' '+srYear;
+    const deadlineObj=new Date(dateObj.getTime()+deadlineDays*86400000);
+    const deadlineStr=deadlineObj.getDate()+' '+SR_AR_MONTHS[deadlineObj.getMonth()]+' '+deadlineObj.getFullYear();
+    const ck=srCK(v.id);
+    const sv=checks[ck]||{};
+    const pending=(v.requirements||[]).filter(r=>!sv[r]);
+    if(pending.length===0) return; // لا داعي لإدراج مورد أنجز كل متطلباته
+    rows.push({name:v.name, reqs:pending.join('، '), dueDate:dateStr, deadline:deadlineStr});
+  });
+  return rows;
+}
+function srExportDeptPDF(){
+  const dept=document.getElementById('sr-export-dept').value;
+  const deadlineDays=parseInt(document.getElementById('sr-export-deadline-days').value)||3;
+  const rows=srBuildDeptRows(dept,deadlineDays);
+  if(!rows.length){toast('لا توجد متطلبات معلّقة لموردي '+dept+' هذا الشهر',true);return;}
+  const monthLabel=SR_AR_MONTHS[srMonth]+' '+srYear;
+  const today=new Date().toLocaleDateString('en-GB');
+  const BG=FORM_BG||'';
+  const rowsHtml=rows.map(function(r){
+    return `<tr><td>${r.name}</td><td>${r.reqs}</td><td style="text-align:center;">${r.dueDate}</td><td style="text-align:center;">${r.deadline}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>طلب متطلبات — ${dept}</title>
+<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;margin:0;padding:0;line-height:1.8;}
+.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;opacity:0.15;}
+.wrap{position:relative;z-index:2;padding:30mm 20mm 20mm;}
+table{width:100%;border-collapse:collapse;margin:14px 0;}
+th{background:#0D7377;color:#fff;padding:7px 9px;border:1px solid #000;text-align:right;}
+td{padding:6px 9px;border:1px solid #999;}
+.sig-area{display:flex;justify-content:flex-start;margin-top:50px;}
+.sig-box{text-align:center;width:220px;}
+</style></head><body>
+${BG?`<img src="${BG}" class="bg-img">`:''}
+<div class="wrap">
+<p style="text-align:left;">${today}</p>
+<p style="font-weight:700;font-size:14px;">السادة / ${dept} سلمهم الله،</p>
+<p>إليكم المتطلبات لشهر (${monthLabel}) للموردين أعلاه، وذلك لتجهيز المتطلبات ومتابعة الإجراءات مع الإدارة المالية.</p>
+<table><thead><tr><th>اسم المورد</th><th>المتطلبات</th><th>تاريخ استحقاقها</th><th>التاريخ النهائي لتسليمها</th></tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+<div class="sig-area"><div class="sig-box">
+<div style="border-top:1px solid #000;padding-top:6px;font-weight:700;">إدارة المشتريات</div>
+</div></div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},80);}<\/script>
+</body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+function srExportDeptWord(){
+  const dept=document.getElementById('sr-export-dept').value;
+  const deadlineDays=parseInt(document.getElementById('sr-export-deadline-days').value)||3;
+  const rows=srBuildDeptRows(dept,deadlineDays);
+  if(!rows.length){toast('لا توجد متطلبات معلّقة لموردي '+dept+' هذا الشهر',true);return;}
+  const monthLabel=SR_AR_MONTHS[srMonth]+' '+srYear;
+  const today=new Date().toLocaleDateString('en-GB');
+  const rowsHtml=rows.map(function(r){
+    return `<tr><td>${r.name}</td><td>${r.reqs}</td><td align="center">${r.dueDate}</td><td align="center">${r.deadline}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>
+<style>@page{size:21cm 29.7cm;margin:2.5cm 2cm;}body{font-family:Arial,sans-serif;font-size:13px;color:#000;direction:rtl;line-height:1.8;}
+table{width:100%;border-collapse:collapse;margin:14px 0;}
+th{background:#0D7377;color:#fff;padding:7px 9px;border:1px solid #000;text-align:right;}
+td{padding:6px 9px;border:1px solid #999;}
+</style></head><body>
+<p style="text-align:left;">${today}</p>
+<p style="font-weight:700;font-size:14px;">السادة / ${dept} سلمهم الله،</p>
+<p>إليكم المتطلبات لشهر (${monthLabel}) للموردين أعلاه، وذلك لتجهيز المتطلبات ومتابعة الإجراءات مع الإدارة المالية.</p>
+<table><thead><tr><th>اسم المورد</th><th>المتطلبات</th><th>تاريخ استحقاقها</th><th>التاريخ النهائي لتسليمها</th></tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+<div style="margin-top:50px;width:220px;text-align:center;">
+<div style="border-top:1px solid #000;padding-top:6px;font-weight:700;">إدارة المشتريات</div>
+</div>
+</body></html>`;
+  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='طلب_متطلبات_'+dept+'_'+monthLabel+'.doc';
+  a.click();
+  toast('تم تصدير Word ✅');
+}
 
 document.getElementById('sr-modal').addEventListener('click',function(e){if(e.target===this)srCloseModal();});
 
