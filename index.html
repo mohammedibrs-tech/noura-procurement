@@ -12446,34 +12446,36 @@ function f2ReportHTML(m){
 
 
 
-function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,sla:'8 ساعات',duration:1,services:[]});f2RenderMaint();}
+function f2AddMaint(){var id=Date.now();f2MaintOffers.push({id:id,name:'',annual:0,sla:'8 ساعات',duration:1,services:[],calcMethod:'items'});f2RenderMaint();}
 function f2DelMaint(id){f2MaintOffers=f2MaintOffers.filter(function(o){return o.id!==id;});f2RenderMaint();f2Calc();}
 function f2UpdateMaint(id,field,val){
   var o=f2MaintOffers.find(function(x){return x.id===id;});if(!o)return;
   if(field==='duration'||field==='flatCount'||field==='flatPerVehicle') o[field]=parseFloat(val)||0;
   else o[field]=val;
-  if(field==='duration'||field==='flatCount'||field==='flatPerVehicle'){f2RecalcMaintAnnual(o);f2RenderMaint();f2Calc();}
+  if(field==='duration'||field==='flatCount'||field==='flatPerVehicle'||field==='calcMethod'){f2RecalcMaintAnnual(o);f2RenderMaint();f2Calc();}
 }
 // يحسب التكلفة السنوية المتوقعة لشركة صيانة من بنود الخدمة (سعر × تكرارها بالسنة × عدد المركبات)، ويعيد كتابتها على o.annual
 // حتى تبقى كل الحسابات والتقارير القديمة اللي تقرأ o.annual شغّالة بدون أي تعديل إضافي
 function f2RecalcMaintAnnual(o){
-  // خيار مبسّط: عدد المركبات × تكلفة المركبة الواحدة (بديل عن بنود الخدمة التفصيلية)
-  if((!o.services||!o.services.length)&&o.flatCount>0&&o.flatPerVehicle>0){
-    o.annual=o.flatCount*o.flatPerVehicle;
+  var method=o.calcMethod||(o.services&&o.services.length?'items':(o.flatCount>0&&o.flatPerVehicle>0?'flat':null));
+  if(method==='flat'){
+    o.annual=(o.flatCount||0)*(o.flatPerVehicle||0);
     return;
   }
-  // توافق مع الدراسات القديمة المحفوظة قبل ميزة "التسعير حسب الاستخدام":
-  // لو ما فيه بنود خدمة مُضافة ولا سعر مبسّط، نحافظ على القيمة السنوية القديمة كما هي بدل ما نصفّرها
-  if(!o.services||!o.services.length) return;
-  var count=parseInt(document.getElementById('f2-count')?.value)||0;
-  // المعادلة: (السعر × عدد المرات بالسنة × نسبة المركبات المستفيدة من هذي الخدمة) لكل خدمة، ثم × عدد المركبات
-  // مثال: الكفرات سعرها 200 وتتكرر 0.5 بالسنة، لكن 20% بس من الأسطول يحتاجها فعليًا سنويًا — مو الكل
-  var perVehicle=o.services.reduce(function(sum,s){
-    if(s.free) return sum;
-    var pct=(s.pct===undefined||s.pct===null||s.pct==='')?100:(parseFloat(s.pct)||0);
-    return sum+((parseFloat(s.price)||0)*(parseFloat(s.freq)||0)*(pct/100));
-  },0);
-  o.annual=perVehicle*count;
+  if(method==='items'){
+    if(!o.services||!o.services.length) return; // ما فيه بنود لسه، نحافظ على القيمة الحالية بدل ما نصفّرها
+    var count=parseInt(document.getElementById('f2-count')?.value)||0;
+    // المعادلة: (السعر × عدد المرات بالسنة × نسبة المركبات المستفيدة من هذي الخدمة) لكل خدمة، ثم × عدد المركبات
+    // مثال: الكفرات سعرها 200 وتتكرر 0.5 بالسنة، لكن 20% بس من الأسطول يحتاجها فعليًا سنويًا — مو الكل
+    var perVehicle=o.services.reduce(function(sum,s){
+      if(s.free) return sum;
+      var pct=(s.pct===undefined||s.pct===null||s.pct==='')?100:(parseFloat(s.pct)||0);
+      return sum+((parseFloat(s.price)||0)*(parseFloat(s.freq)||0)*(pct/100));
+    },0);
+    o.annual=perVehicle*count;
+    return;
+  }
+  // توافق مع الدراسات القديمة المحفوظة قبل ميزة اختيار طريقة الحساب — نحافظ على القيمة كما هي
 }
 function f2AddMaintService(offerId){
   var o=f2MaintOffers.find(function(x){return x.id===offerId;});if(!o)return;
@@ -12552,15 +12554,21 @@ function f2RenderMaint(){
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_sla" value="'+L('lbl_f2_maint_sla')+'" oninput="f2LabelEdit(this)"><input value="'+(o.sla||'8 ساعات')+'" oninput="f2UpdateMaint('+o.id+',\'sla\',this.value)"></div>';
     h+='</div>';
 
-    // خيار مبسّط: عدد المركبات × تكلفة المركبة الواحدة (بديل عن بنود الخدمة التفصيلية)
-    var maintAutoComputed=((!o.services||!o.services.length)&&o.flatCount>0&&o.flatPerVehicle>0);
-    h+='<div class="form-grid-3" style="margin-top:8px;">';
-    h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.flatCount||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatCount\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>تكلفة المركبة الواحدة</label><input type="number" value="'+(o.flatPerVehicle||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatPerVehicle\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>الإجمالي</label><input type="number" value="'+(maintAutoComputed?o.annual:(o.flatCount&&o.flatPerVehicle?o.flatCount*o.flatPerVehicle:''))+'" readonly style="background:#F0FFF4;font-weight:700;" placeholder="0"></div>';
-    h+='</div>';
-    h+='<div style="font-size:10px;color:#888;margin-top:4px;">* استخدم هذا الحقل لو التسعير بسيط (مبلغ ثابت لكل مركبة)، أو استخدم "بنود الخدمة" تحت لو التسعير حسب كل خدمة لحالها — لو ضفت بنود خدمة فهي الأساس بالحساب.</div>';
+    // اختيار طريقة الحساب — القرار للمستخدم صراحة، مو تلقائي
+    var method=o.calcMethod||(o.services&&o.services.length?'items':(o.flatCount>0&&o.flatPerVehicle>0?'flat':'items'));
+    h+='<div class="field" style="margin-top:8px;"><label>طريقة الحساب</label><select onchange="f2UpdateMaint('+o.id+',\'calcMethod\',this.value)">'
+      +'<option value="items"'+(method==='items'?' selected':'')+'>الحساب بحسب التكلفة الثابتة (بنود الخدمة)</option>'
+      +'<option value="flat"'+(method==='flat'?' selected':'')+'>الحساب بتكلفة المركبة الواحدة</option>'
+      +'</select></div>';
 
+    if(method==='flat'){
+      // عدد المركبات × تكلفة المركبة الواحدة
+      h+='<div class="form-grid-3" style="margin-top:8px;">';
+      h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.flatCount||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatCount\',this.value)" placeholder="0"></div>';
+      h+='<div class="field"><label>تكلفة المركبة الواحدة</label><input type="number" value="'+(o.flatPerVehicle||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatPerVehicle\',this.value)" placeholder="0"></div>';
+      h+='<div class="field"><label>الإجمالي</label><input type="number" value="'+(o.flatCount&&o.flatPerVehicle?o.flatCount*o.flatPerVehicle:'')+'" readonly style="background:#F0FFF4;font-weight:700;" placeholder="0"></div>';
+      h+='</div>';
+    } else {
     // بنود الخدمة — التسعير حسب الاستخدام
     h+='<div style="margin-top:10px;border-top:1px dashed #ccc;padding-top:10px;">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;font-weight:700;color:var(--navy);">بنود الخدمة (السعر لكل مرة × تكرارها بالسنة)</span>';
@@ -12581,8 +12589,10 @@ function f2RenderMaint(){
       });
       h+='</tbody></table>';
     }
+    h+='</div>';
+    }
     h+='<div style="margin-top:8px;font-size:12px;font-weight:700;color:#0D7A8A;background:#EBF8FA;padding:6px 10px;border-radius:6px;">التكلفة السنوية المتوقعة (محسوبة تلقائياً): '+(o.annual||0).toLocaleString('en-US')+' ر.س</div>';
-    h+='</div></div>';
+    h+='</div>';
   });
   el.innerHTML=h;
 }
