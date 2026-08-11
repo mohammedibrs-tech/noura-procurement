@@ -12252,7 +12252,7 @@ function f2ReportHTML(m){
      ══════════════════════════════════════════════════════ */
   H+=secTitle('جدول الخيارات المتاحة');
   H+=wideTable(
-    ['الخيار','تكلفة المركبة الواحدة (شهرياً)','التكلفة الشهرية','التكلفة السنوية','الصيانة','التأمين','مركبات بديلة','المميزات','الملاحظات'],
+    ['الخيار','تكلفة المركبة الواحدة (شهرياً، غير شامل الضريبة)','التكلفة الشهرية (غير شامل الضريبة)','التكلفة السنوية (غير شامل الضريبة)','الصيانة','التأمين','مركبات بديلة','المميزات','الملاحظات'],
     options.map(function(o){
       return [o.name, f2Fmt(o.perVehicleMonthly)+' ريالاً', f2Fmt(o.monthly)+' ريالاً', f2Fmt(o.annual)+' ريالاً', yn(o.maint), yn(o.ins), yn(o.alt), o.features, o.notes];
     })
@@ -12261,16 +12261,16 @@ function f2ReportHTML(m){
   H+=secTitle('أولاً: تمديد العقد الحالي');
   H+=kvTable([
     ['عدد المركبات', ''+m.count],
-    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.renewMonthlyUnit)+' ريالاً'],
-    ['التكلفة الشهرية', f2Fmt(renewMonthlyTotal)+' ريالاً'],
-    ['التكلفة السنوية', f2Fmt(m.renewAnnual)+' ريالاً'],
+    ['قيمة المركبة الواحدة (شهرياً، غير شامل الضريبة)', f2Fmt(m.renewMonthlyUnit)+' ريالاً'],
+    ['التكلفة الشهرية (غير شامل الضريبة)', f2Fmt(renewMonthlyTotal)+' ريالاً'],
+    ['التكلفة السنوية (غير شامل الضريبة)', f2Fmt(m.renewAnnual)+' ريالاً'],
     ['مدة العقد', m.leaseDuration+' '+(m.leaseDuration===1?'سنة':'سنوات')],
     ['الصيانة', yn(m.inclMaint)],
     ['التأمين', yn(m.inclIns)],
     ['المركبات البديلة', yn(m.inclAlt)],
     ['مستوى الخدمة', '—'],
-    ['إجمالي التكلفة خلال سنة', f2Fmt(m.renewAnnual)+' ريالاً'],
-    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.renewAnnual*4)+' ريالاً']
+    ['إجمالي التكلفة خلال سنة (غير شامل الضريبة)', f2Fmt(m.renewAnnual)+' ريالاً'],
+    ['إجمالي التكلفة خلال أربع سنوات (غير شامل الضريبة)', f2Fmt(m.renewAnnual*4)+' ريالاً']
   ]);
   H+=pageBreak;
 
@@ -12281,20 +12281,20 @@ function f2ReportHTML(m){
   H+=kvTable([
     ['اسم الشركة (أفضل عرض)', m.bestLease?m.bestLease.name:'—'],
     ['عدد المركبات', ''+m.count],
-    ['قيمة المركبة الواحدة (شهرياً)', f2Fmt(m.blm)+' ريالاً'],
-    ['التكلفة الشهرية', f2Fmt(newLeaseMonthly)+' ريالاً'],
-    ['التكلفة السنوية', f2Fmt(newLeaseAnnual)+' ريالاً'],
+    ['قيمة المركبة الواحدة (شهرياً، غير شامل الضريبة)', f2Fmt(m.blm)+' ريالاً'],
+    ['التكلفة الشهرية (غير شامل الضريبة)', f2Fmt(newLeaseMonthly)+' ريالاً'],
+    ['التكلفة السنوية (غير شامل الضريبة)', f2Fmt(newLeaseAnnual)+' ريالاً'],
     ['مدة العقد', m.bestLease?m.bestLease.duration:'—'],
     ['الصيانة', yn(m.bestLease?m.bestLease.inclMaint==='yes':false)],
     ['التأمين', yn(m.bestLease?m.bestLease.inclIns==='yes':false)],
     ['المركبات البديلة', m.bestLease?((m.bestLease.altCount>0?(m.bestLease.altCount+' مركبة'):'لا يوجد')):'—'],
     ['مستوى الخدمة', '—'],
-    ['إجمالي التكلفة خلال سنة', f2Fmt(newLeaseAnnual)+' ريالاً'],
-    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(newLeaseAnnual*4)+' ريالاً']
+    ['إجمالي التكلفة خلال سنة (غير شامل الضريبة)', f2Fmt(newLeaseAnnual)+' ريالاً'],
+    ['إجمالي التكلفة خلال أربع سنوات (غير شامل الضريبة)', f2Fmt(newLeaseAnnual*4)+' ريالاً']
   ]);
   H+='<h3 style="'+FONT_TITLE+'font-weight:800;margin:6px 0;color:#000;">عروض شركات التأجير الجديدة — ترتيب من الأقل للأعلى</h3>';
   H+=wideTable(
-    ['الترتيب','اسم الشركة','قيمة المركبة الواحدة (شهرياً)','التكلفة السنوية','الصيانة','التجهيزات الداخلية','يشمل تأمين','المركبات البديلة','الفرق عن الأقل','نسبة الفرق %'],
+    ['الترتيب','اسم الشركة','قيمة المركبة الواحدة (شهرياً، غير شامل الضريبة)','التكلفة السنوية (غير شامل الضريبة)','الصيانة','التجهيزات الداخلية','يشمل تأمين','المركبات البديلة','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %'],
     sortedLease.map(function(o,i){
       var an=o.monthly*12*m.count;
       var bestAn=sortedLease[0].monthly*12*m.count;
@@ -12311,17 +12311,17 @@ function f2ReportHTML(m){
   H+=secTitle('ثالثاً: تملك الأسطول');
   H+=kvTable([
     ['عدد المركبات', ''+m.count],
-    ['قيمة المركبة الواحدة', f2Fmt(m.unitPrice)+' ريالاً'],
+    ['قيمة المركبة الواحدة (غير شامل الضريبة)', f2Fmt(m.unitPrice)+' ريالاً'],
     ['اسم مورد الشراء', m.purchaseVendor],
-    ['التكلفة الشهرية (بعد السنة الأولى)', f2Fmt(ownershipMonthlyAfterY1)+' ريالاً'],
-    ['التكلفة السنوية (بعد السنة الأولى)', f2Fmt(ownershipAnnualAfterY1)+' ريالاً'],
+    ['التكلفة الشهرية (بعد السنة الأولى، غير شامل الضريبة)', f2Fmt(ownershipMonthlyAfterY1)+' ريالاً'],
+    ['التكلفة السنوية (بعد السنة الأولى، غير شامل الضريبة)', f2Fmt(ownershipAnnualAfterY1)+' ريالاً'],
     ['مدة العقد', '—'],
     ['الصيانة', 'نعم — '+(m.bestMaint?m.bestMaint.name:'—')],
     ['التأمين', 'نعم — '+(m.bestInsurance?m.bestInsurance.name:'—')],
     ['المركبات البديلة', 'لا'],
     ['مستوى الخدمة', m.bestMaint?(m.bestMaint.sla||'—'):'—'],
-    ['إجمالي التكلفة خلال سنة (شراء + صيانة + تأمين)', f2Fmt(ownershipYear1)+' ريالاً'],
-    ['إجمالي التكلفة خلال أربع سنوات', f2Fmt(m.totalPurchase+ownershipAnnualAfterY1*4)+' ريالاً']
+    ['إجمالي التكلفة خلال سنة (شراء + صيانة + تأمين، غير شامل الضريبة)', f2Fmt(ownershipYear1)+' ريالاً'],
+    ['إجمالي التكلفة خلال أربع سنوات (غير شامل الضريبة)', f2Fmt(m.totalPurchase+ownershipAnnualAfterY1*4)+' ريالاً']
   ]);
 
   H+='<h3 style="'+FONT_TITLE+'font-weight:800;margin:14px 0 6px;color:#000;">الجدول الموسّع — تكلفة تملك الأسطول على مدى أربع سنوات</h3>';
@@ -12335,7 +12335,7 @@ function f2ReportHTML(m){
   var TDV='padding:8px 10px;border:1px solid #999;text-align:center;color:#000;'+FONT_CELL; // خلية قيمة عادية
   var TDVB='padding:8px 10px;border:1px solid #999;text-align:center;color:#000;font-weight:700;'+FONT_CELL; // خلية قيمة بارزة
   H+='<table style="width:100%;border-collapse:collapse;margin-bottom:14px;'+FONT_CELL+'">'
-    +'<thead><tr><th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;'+FONT_CELL+'">البند</th>'
+    +'<thead><tr><th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:right;'+FONT_CELL+'">البند (المبالغ غير شاملة الضريبة)</th>'
     +['السنة الأولى','السنة الثانية','السنة الثالثة','السنة الرابعة'].map(function(y){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;'+FONT_CELL+'">'+y+'</th>';}).join('')
     +'</tr></thead><tbody>'
     +'<tr><td style="'+TDL+'">قيمة الشراء</td>'+[m.totalPurchase,0,0,0].map(function(v){return '<td style="'+TDV+'">'+f2Fmt(v)+' ريالاً</td>';}).join('')+'</tr>'
@@ -12350,7 +12350,7 @@ function f2ReportHTML(m){
 
   H+=secTitle('عروض شركات التأمين — ترتيب من الأقل للأعلى');
   H+=wideTable(
-    ['الترتيب','اسم الشركة','التكلفة السنوية','الفرق عن الأقل','نسبة الفرق %','ملاحظات'],
+    ['الترتيب','اسم الشركة','التكلفة السنوية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات'],
     sortedIns.map(function(o,i){
       var diff=o.annual-sortedIns[0].annual;
       var pct=sortedIns[0].annual>0?(diff/sortedIns[0].annual*100):0;
@@ -12381,7 +12381,7 @@ function f2ReportHTML(m){
   }
 
   H+=wideTable(
-    ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً)','عدد المركبات','التكلفة السنوية الإجمالية','الفرق عن الأقل','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
+    ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً، غير شامل الضريبة)','عدد المركبات','التكلفة السنوية الإجمالية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
     sortedMaint.map(function(o,i){
       var diff=o.annual-sortedMaint[0].annual;
       var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
@@ -12395,7 +12395,7 @@ function f2ReportHTML(m){
   /* ══════ مقارنة ══════ */
   H+=secTitle('مقارنة');
   H+=wideTable(
-    ['الخيار','تكلفة المركبة الواحدة (شهرياً)','التكلفة الشهرية','التكلفة السنوية','التكلفة الإجمالية خلال أربع سنوات','التكلفة السنوية تشمل'],
+    ['الخيار','تكلفة المركبة الواحدة (شهرياً، غير شامل الضريبة)','التكلفة الشهرية (غير شامل الضريبة)','التكلفة السنوية (غير شامل الضريبة)','التكلفة الإجمالية خلال أربع سنوات (غير شامل الضريبة)','التكلفة السنوية تشمل'],
     options.map(function(o){
       return [o.name, f2Fmt(o.perVehicleMonthly)+' ريالاً', f2Fmt(o.monthly)+' ريالاً', f2Fmt(o.annual)+' ريالاً', f2Fmt(o.fourYear)+' ريالاً', o.composition];
     })
@@ -12410,7 +12410,7 @@ function f2ReportHTML(m){
   var fourYearSaving=highest.fourYear-lowest.fourYear;
 
   H+=wideTable(
-    ['الترتيب','الخيار','تكلفة المركبة الواحدة (شهرياً)','التكلفة السنوية تشمل','التكلفة السنوية','التكلفة خلال أربع سنوات','الفرق عن الأقل تكلفة (سنوياً)','الفرق عن الأقل تكلفة (4 سنوات)','التوصية'],
+    ['الترتيب','الخيار','تكلفة المركبة الواحدة (شهرياً، غير شامل الضريبة)','التكلفة السنوية تشمل','التكلفة السنوية (غير شامل الضريبة)','التكلفة خلال أربع سنوات (غير شامل الضريبة)','الفرق عن الأقل تكلفة (سنوياً)','الفرق عن الأقل تكلفة (4 سنوات)','التوصية'],
     byAnnual.map(function(o,i){
       var diffAnnual=o.annual-lowest.annual;
       var diffFour=o.fourYear-lowest.fourYear;
