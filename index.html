@@ -12544,15 +12544,15 @@ function f2RenderMaint(){
     h+='<button onclick="f2DelMaint('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
     h+='<div class="form-grid-3">';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_name" value="'+L('lbl_f2_maint_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" oninput="f2UpdateMaint('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_duration" value="'+L('lbl_f2_maint_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" oninput="f2UpdateMaint('+o.id+',\'duration\',this.value)"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_duration" value="'+L('lbl_f2_maint_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" onchange="f2UpdateMaint('+o.id+',\'duration\',this.value)"></div>';
     h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_maint_sla" value="'+L('lbl_f2_maint_sla')+'" oninput="f2LabelEdit(this)"><input value="'+(o.sla||'8 ساعات')+'" oninput="f2UpdateMaint('+o.id+',\'sla\',this.value)"></div>';
     h+='</div>';
 
     // خيار مبسّط: عدد المركبات × تكلفة المركبة الواحدة (بديل عن بنود الخدمة التفصيلية)
     var maintAutoComputed=((!o.services||!o.services.length)&&o.flatCount>0&&o.flatPerVehicle>0);
     h+='<div class="form-grid-3" style="margin-top:8px;">';
-    h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.flatCount||'')+'" oninput="f2UpdateMaint('+o.id+',\'flatCount\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>تكلفة المركبة الواحدة</label><input type="number" value="'+(o.flatPerVehicle||'')+'" oninput="f2UpdateMaint('+o.id+',\'flatPerVehicle\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.flatCount||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatCount\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>تكلفة المركبة الواحدة</label><input type="number" value="'+(o.flatPerVehicle||'')+'" onchange="f2UpdateMaint('+o.id+',\'flatPerVehicle\',this.value)" placeholder="0"></div>';
     h+='<div class="field"><label>الإجمالي</label><input type="number" value="'+(maintAutoComputed?o.annual:(o.flatCount&&o.flatPerVehicle?o.flatCount*o.flatPerVehicle:''))+'" readonly style="background:#F0FFF4;font-weight:700;" placeholder="0"></div>';
     h+='</div>';
     h+='<div style="font-size:10px;color:#888;margin-top:4px;">* استخدم هذا الحقل لو التسعير بسيط (مبلغ ثابت لكل مركبة)، أو استخدم "بنود الخدمة" تحت لو التسعير حسب كل خدمة لحالها — لو ضفت بنود خدمة فهي الأساس بالحساب.</div>';
@@ -12607,13 +12607,13 @@ function f2RenderInsurance(){
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;font-size:13px;color:var(--navy);">شركة تأمين '+(idx+1)+'</span>';
     h+='<button onclick="f2DelInsurance('+o.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">×</button></div>';
     h+='<div class="form-grid-3">';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_ins_name" value="'+L('lbl_f2_ins_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" oninput="f2UpdateInsurance('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
-    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_ins_duration" value="'+L('lbl_f2_ins_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" oninput="f2UpdateInsurance('+o.id+',\'duration\',this.value)"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_ins_name" value="'+L('lbl_f2_ins_name')+'" oninput="f2LabelEdit(this)"><input value="'+(o.name||'')+'" onchange="f2UpdateInsurance('+o.id+',\'name\',this.value)" placeholder="اسم الشركة"></div>';
+    h+='<div class="field"><input class="f2-editable-label" data-key="lbl_f2_ins_duration" value="'+L('lbl_f2_ins_duration')+'" oninput="f2LabelEdit(this)"><input type="number" value="'+(o.duration||1)+'" onchange="f2UpdateInsurance('+o.id+',\'duration\',this.value)"></div>';
     h+='</div>';
     h+='<div class="form-grid-3" style="margin-top:8px;">';
-    h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.count||'')+'" oninput="f2UpdateInsurance('+o.id+',\'count\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>قيمة المركبة الواحدة تأمين</label><input type="number" value="'+(o.perVehicle||'')+'" oninput="f2UpdateInsurance('+o.id+',\'perVehicle\',this.value)" placeholder="0"></div>';
-    h+='<div class="field"><label>الإجمالي</label><input type="number" value="'+(o.annual||'')+'" '+(autoComputed?'readonly style="background:#F0FFF4;font-weight:700;"':'oninput="f2UpdateInsurance('+o.id+',\'annual\',this.value)"')+' placeholder="0"></div>';
+    h+='<div class="field"><label>عدد المركبات</label><input type="number" value="'+(o.count||'')+'" onchange="f2UpdateInsurance('+o.id+',\'count\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>قيمة المركبة الواحدة تأمين</label><input type="number" value="'+(o.perVehicle||'')+'" onchange="f2UpdateInsurance('+o.id+',\'perVehicle\',this.value)" placeholder="0"></div>';
+    h+='<div class="field"><label>الإجمالي</label><input type="number" value="'+(o.annual||'')+'" '+(autoComputed?'readonly style="background:#F0FFF4;font-weight:700;"':'onchange="f2UpdateInsurance('+o.id+',\'annual\',this.value)"')+' placeholder="0"></div>';
     h+='</div></div>';
   });
   el.innerHTML=h;
