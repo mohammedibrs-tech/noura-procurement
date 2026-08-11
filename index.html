@@ -12211,6 +12211,7 @@ function f2ReportHTML(m){
   var ownershipAnnualAfterY1=m.bma+m.binsurance, ownershipMonthlyAfterY1=ownershipAnnualAfterY1/12;
   var ownershipYear1=m.totalPurchase+m.bma+m.binsurance;
 
+  f2MaintOffers.forEach(function(o){f2RecalcMaintAnnual(o);});
   var sortedIns=f2InsuranceOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var sortedMaint=f2MaintOffers.slice().sort(function(a,b){return a.annual-b.annual;});
   var sortedLease=f2LeaseOffers.slice().sort(function(a,b){return a.monthly-b.monthly;});
@@ -12350,11 +12351,13 @@ function f2ReportHTML(m){
 
   H+=secTitle('عروض شركات التأمين — ترتيب من الأقل للأعلى');
   H+=wideTable(
-    ['الترتيب','اسم الشركة','التكلفة السنوية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات'],
+    ['الترتيب','اسم الشركة','عدد المركبات','قيمة المركبة الواحدة تأمين (غير شامل الضريبة)','التكلفة السنوية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات'],
     sortedIns.map(function(o,i){
       var diff=o.annual-sortedIns[0].annual;
       var pct=sortedIns[0].annual>0?(diff/sortedIns[0].annual*100):0;
-      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(o.annual)+' ريالاً', f2Fmt(diff)+' ريالاً', pct.toFixed(1)+'%', 'مدة العقد: '+(o.duration||'—')];
+      var insCount=o.count>0?o.count:m.count;
+      var insPerVehicle=o.perVehicle>0?o.perVehicle:(insCount>0?(o.annual/insCount):0);
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), ''+insCount, f2Fmt(insPerVehicle)+' ريالاً', f2Fmt(o.annual)+' ريالاً', f2Fmt(diff)+' ريالاً', pct.toFixed(1)+'%', 'مدة العقد: '+(o.duration||'—')];
     })
   );
 
@@ -12381,12 +12384,13 @@ function f2ReportHTML(m){
   }
 
   H+=wideTable(
-    ['الترتيب','اسم الشركة','تكلفة المركبة الواحدة (سنوياً، غير شامل الضريبة)','عدد المركبات','التكلفة السنوية الإجمالية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
+    ['الترتيب','اسم الشركة','عدد المركبات','تكلفة المركبة الواحدة (سنوياً، غير شامل الضريبة)','التكلفة السنوية الإجمالية (غير شامل الضريبة)','الفرق عن الأقل (غير شامل الضريبة)','نسبة الفرق %','ملاحظات (مستوى الخدمة)'],
     sortedMaint.map(function(o,i){
       var diff=o.annual-sortedMaint[0].annual;
       var pct=sortedMaint[0].annual>0?(diff/sortedMaint[0].annual*100):0;
-      var perVehicle=m.count>0?(o.annual/m.count):0;
-      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), f2Fmt(perVehicle)+' ريالاً', ''+m.count, f2Fmt(o.annual)+' ريالاً', f2Fmt(diff)+' ريالاً', pct.toFixed(1)+'%', o.sla||'—'];
+      var maintCount=o.flatCount>0?o.flatCount:m.count;
+      var perVehicle=maintCount>0?(o.annual/maintCount):0;
+      return [''+(i+1), (o.name||'—')+(i===0?' (الأقل سعراً)':''), ''+maintCount, f2Fmt(perVehicle)+' ريالاً', f2Fmt(o.annual)+' ريالاً', f2Fmt(diff)+' ريالاً', pct.toFixed(1)+'%', o.sla||'—'];
     })
   );
 
