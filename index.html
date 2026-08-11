@@ -12195,14 +12195,16 @@ function f2ReportHTML(m){
           :'<td style="border:1px solid #999;background:#fff;'+FONT_CELL+'"></td><td style="border:1px solid #999;background:#fff;'+FONT_CELL+'"></td>';
         return '<tr>'+c1+c2+'</tr>';
       }).join('')+'</tbody>'
-      +'</table>';
+      +'</table>'
+      +'<p style="margin:0;line-height:1;font-size:1px;">&nbsp;</p>';
   };
   var wideTable=function(headers,rows){
     if(!rows.length) return '<div style="'+FONT_CELL+'color:#000;padding:6px 0;">لا توجد بيانات مُدخلة</div>';
     return '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;'+FONT_CELL+'">'
       +'<thead><tr>'+headers.map(function(h){return '<th style="padding:8px 10px;border:1px solid #333;background:#2E9896;color:#fff;text-align:center;'+FONT_CELL+'">'+h+'</th>';}).join('')+'</tr></thead>'
       +'<tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td style="padding:8px 10px;border:1px solid #999;text-align:center;color:#000;background:#fff;'+FONT_CELL+'">'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>'
-      +'</table>';
+      +'</table>'
+      +'<p style="margin:0;line-height:1;font-size:1px;">&nbsp;</p>';
   };
 
   var monthlyLeaseRate=m.annualLease/12;
@@ -12347,7 +12349,8 @@ function f2ReportHTML(m){
     +'<tr><td style="'+TDL+'">الوفر مقارنة بالعقد الحالي</td>'+savingVsCurrent.map(function(v){return '<td style="'+TDV+'">'+(v>=0?'+':'')+f2Fmt(v)+' ريالاً</td>';}).join('')+'</tr>'
     +'<tr><td style="'+TDL+'">الوفر مقارنة بالعقد الجديد</td>'+savingVsNew.map(function(v){return '<td style="'+TDV+'">'+(v>=0?'+':'')+f2Fmt(v)+' ريالاً</td>';}).join('')+'</tr>'
     +'<tr><td style="'+TDL+'">الوفر التراكمي (مقارنة بالعقد الحالي)</td>'+cumSaving.map(function(v){return '<td style="'+TDVB+'">'+(v>=0?'+':'')+f2Fmt(v)+' ريالاً</td>';}).join('')+'</tr>'
-    +'</tbody></table>';
+    +'</tbody></table>'
+    +'<p style="margin:0;line-height:1;font-size:1px;">&nbsp;</p>';
 
   H+=secTitle('عروض شركات التأمين — ترتيب من الأقل للأعلى');
   H+=wideTable(
