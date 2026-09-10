@@ -9423,39 +9423,35 @@ function exportQuarterlyPDF(){
   const cumSavLastDayQP=new Date(parseInt(year),parseInt(months[months.length-1]),0).getDate();
   const cumSavRowsQP=cumulativeSavingsRows(year+'-'+months[0]+'-01',year+'-'+months[months.length-1]+'-'+String(cumSavLastDayQP).padStart(2,'0'));
   const SIG_Q=SIG_URL||'';
-  const SIG_BQ=`<div class="sig-area"><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #2E9896;padding-top:4px;font-size:9px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-size:9px;font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #2E9896;padding-top:4px;font-size:9px;color:#555;">_______________</div></div></div>`;
-  const CSS='@page{size:A4 landscape;margin:28mm 13mm 18mm 13mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9px;color:#000;direction:rtl;line-height:1.5;background:#fff;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:0;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:1;}h1{font-size:13px;font-weight:900;color:#000;text-align:center;margin-bottom:8px;padding-bottom:5px;border-bottom:2.5px solid #000;}.sec-title{display:block;font-size:9px;font-weight:800;color:#000;border-right:3px solid #000;padding-right:7px;margin:8px 0 4px;background:rgba(255,255,255,0.85);padding:3px 7px 3px 0;}table{width:100%;border-collapse:collapse;margin-bottom:7px;background:#fff;}thead{display:table-header-group;}thead th{padding:4px 5px;border:1px solid #2E9896;background:#2E9896;color:#fff;font-size:7.5px;font-weight:700;text-align:right;}tbody td{padding:3px 5px;border:1px solid #ccc;color:#000;font-size:7.5px;word-break:break-word;}tbody tr:nth-child(even) td{background:#f5f8fc;}tfoot td{padding:4px 5px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;font-size:7.5px;background:#eef3f9;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:9px;}.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #2E9896;margin-bottom:10px;background:#fff;page-break-inside:avoid;}.kpi-box{padding:6px 4px;text-align:center;border-left:1px solid #2E9896;background:rgba(255,255,255,0.92);}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:6.5px;color:#555;margin-bottom:2px;}.kpi-val{font-size:13px;font-weight:900;color:#000;line-height:1.2;}.kpi-unit{font-size:6.5px;color:#444;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #2E9896;page-break-inside:avoid;background:rgba(255,255,255,0.9);}.sig-box{flex:1;text-align:center;}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.two-col,.kpi-row{page-break-inside:avoid;}}';
+  // ملخص الربع — بنفس شكل جدول "ملخص الشهر" بالتقرير الشهري تمامًا
+  const summaryRowsQ=`
+    <tr><td>إجمالي المصروفات (${qExp.length} عملية)</td><td style="text-align:right;font-weight:700;">${fmt2(totalSpent)}</td></tr>
+    <tr><td>إجمالي قيمة أوامر الشراء شامل الضريبة (${qPO.length} أمر)</td><td style="text-align:right;font-weight:700;">${fmt2(qPOVal)} ر.س</td></tr>
+    <tr><td>إجمالي العقود الشهري</td><td style="text-align:right;font-weight:700;">${fmt2(totalCM)} ر.س</td></tr>
+    <tr><td>وفر التفاوض</td><td style="text-align:right;font-weight:700;">${totalSaving>0?fmt2(totalSaving)+' ر.س':'—'}</td></tr>
+    <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAmtQ>0?fmt2(cmpSavAmtQ)+' ر.س':'—'}</td></tr>
+    <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#000;">${fmt2(totalSpent+qPOVal)} ر.س</td></tr>`;
+  const CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #2E9896;}.sig-box{flex:1;text-align:center;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body><div class="page">${BG?`<div class="bg-corner bg-tl"><img src="${BG}"></div><div class="bg-corner bg-tr"><img src="${BG}"></div><div class="bg-corner bg-bl"><img src="${BG}"></div><div class="bg-corner bg-br"><img src="${BG}"></div>`:''}<div class="pdf-content">
-<h1>${L('lbl_title_quarterly')} — الربع ${qName[q]} ${year}</h1>
-<div class="kpi-row">
-  <div class="kpi-box"><div class="kpi-label">إجمالي المصروفات</div><div class="kpi-val">${fmt2(totalSpent)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">قيمة PO</div><div class="kpi-val">${fmt2(qPOVal)}</div><div class="kpi-unit">ر.س (${qPO.length} طلب)</div></div>
-  <div class="kpi-box"><div class="kpi-label">العقود الشهري</div><div class="kpi-val">${fmt2(totalCM)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">وفر التفاوض</div><div class="kpi-val">${fmt2(totalSaving)}</div><div class="kpi-unit">ر.س</div></div>
-  <div class="kpi-box"><div class="kpi-label">وفر مقارنة الأسعار</div><div class="kpi-val">${fmt2(cmpSavAmtQ)}</div><div class="kpi-unit">ر.س</div></div>
-</div>
-<div class="two-col">
-  <div><div class="sec-title">المصروفات شهراً بشهر</div>
-  <table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
-  <tbody>${monthRows}</tbody>
-  <tfoot><tr><td style="font-weight:800;">الإجمالي</td><td style="text-align:right;font-weight:900;">${fmt2(totalSpent)}</td><td></td></tr></tfoot></table></div>
-  <div><div class="sec-title">أعلى الأصناف إنفاقاً</div>
-  <table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th></tr></thead>
-  <tbody>${topItemRows}</tbody></table></div>
-</div>
-<div class="sec-title">المصروفات حسب الإدارة</div>
-<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي (ر.س)</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead>
-<tbody>${deptRows}</tbody></table>
-<div class="sec-title">أوامر الشراء</div>
-${buildPOTableHTML(qPO)}
-${buildContractsTableHTML(activeC,totalCM)}
-<div class="sec-title">${L('lbl_cs_title')}</div>
-${cumulativeSavingsTableHTML(cumSavRowsQP)}
-${(()=>{const qChgP=chgList.filter(c=>c.date&&months.some(m=>c.date.substring(0,7)===year+'-'+m));return qChgP.length?'<div class="sec-title">تحديات الربع وحلولها</div>'+chgReportTable(qChgP):'';})()}
-${SIG_BQ}
-</div></body><script>window.onload=function(){window.print();}<\/script></html>`);
-  w.document.close();
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
+  html+='<div class="pdf-content">';
+  html+=`<h1>${L('lbl_title_quarterly')} — الربع ${qName[q]} ${year}</h1>`;
+  html+='<h2>ملخص الربع</h2>';
+  html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRowsQ+'</tbody></table>';
+  html+='<div class="two-col">';
+  html+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+monthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+fmt2(totalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
+  html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+topItemRows+'</tbody></table></div>';
+  html+='</div>';
+  html+='<h2>المصروفات حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody></table>';
+  html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(qPO);
+  html+=buildContractsTableHTML(activeC,totalCM);
+  html+='<h2>'+L('lbl_cs_title')+'</h2>'+cumulativeSavingsTableHTML(cumSavRowsQP);
+  const qChgP=chgList.filter(c=>c.date&&months.some(m=>c.date.substring(0,7)===year+'-'+m));
+  html+=chgReportTable(qChgP);
+  html+=`<div class="sig-area"><div class="sig-box"><div style="font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #2E9896;padding-top:4px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #2E9896;padding-top:4px;color:#555;">_______________</div></div></div>`;
+  html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
+  w.document.write(html);w.document.close();
 }
 
 
