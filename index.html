@@ -6580,8 +6580,8 @@ function exportContractsPDF(){
 <tr style="border-top:2px solid #2E9896;background:#f8faff;"><td colspan="2" class="val">الإجمالي الشهري الفعّال</td><td class="teal val" style="text-align:right;">${totalMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;font-weight:600;">${(totalMonthly*12).toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevMonthly.toLocaleString('ar-SA')} ر.س</td><td style="text-align:right;color:#276749;font-weight:600;">${totalRevAnnual.toLocaleString('ar-SA')} ر.س</td><td colspan="3"></td><td style="text-align:right;color:#276749;font-weight:600;">${totalSaving.toLocaleString('ar-SA')} ر.س</td></tr>
 </tbody></table>
 
-</div></div></body></html>`);
-  w.document.close();w.onload=()=>{w.focus();w.print();};
+</div></div><script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
 }
 
 function exportContractsWord(){
@@ -9454,8 +9454,8 @@ ${buildContractsTableHTML(activeC,totalCM)}
 ${cumulativeSavingsTableHTML(cumSavRowsQP)}
 ${(()=>{const qChgP=chgList.filter(c=>c.date&&months.some(m=>c.date.substring(0,7)===year+'-'+m));return qChgP.length?'<div class="sec-title">تحديات الربع وحلولها</div>'+chgReportTable(qChgP):'';})()}
 ${SIG_BQ}
-</div></body></html>`);
-  w.document.close();w.onload=()=>{w.focus();w.print();};
+</div></body><script>window.onload=function(){window.print();}<\/script></html>`);
+  w.document.close();
 }
 
 
