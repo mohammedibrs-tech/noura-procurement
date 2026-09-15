@@ -11082,25 +11082,30 @@ function cmpPDF(){
   var detailSections=sorted.map(function(t,ci){
     var durMonths=cmpDurationToMonths(t.duration);
     var periodLabel=durMonths!==null?('الإجمالي خلال '+t.duration+' (شامل الضريبة)'):'الإجمالي السنوي (شامل الضريبة)';
-    var sumOneTime=0, sumMonthly=0, sumPeriod=0;
+    var sumBaseOneTime=0, sumOneTime=0, sumBaseMonthly=0, sumMonthly=0, sumBasePeriod=0, sumPeriod=0;
     var drows=t.rows.map(function(r,ri){
       var base=(r.count||0)*(r.unitPrice||0);
       var vt=r.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
+      var baseExclVat=vt==='included'?(base-vatAmt):base;
       var vatLabel=vt==='added'?'VAT 15%':(vt==='included'?'شامل VAT':'—');
       if(isOneTimeStudy){
-        sumOneTime+=total;
+        sumBaseOneTime+=baseExclVat; sumOneTime+=total;
         return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(total)+' ر.س</td></tr>';
       }
       var monthlyTotal=t.payType==='monthly'?total:total/12;
       var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
-      sumMonthly+=monthlyTotal; sumPeriod+=periodTotal;
+      var monthlyBase=t.payType==='monthly'?baseExclVat:baseExclVat/12;
+      var periodBase=durMonths!==null?monthlyBase*durMonths:(t.payType==='monthly'?baseExclVat*12:baseExclVat);
+      sumMonthly+=monthlyTotal; sumPeriod+=periodTotal; sumBaseMonthly+=monthlyBase; sumBasePeriod+=periodBase;
       return '<tr style="background:'+(ri%2===0?'#fff':'#f9f9f9')+';"><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td style="text-align:center;">'+(r.count||0)+'</td><td style="text-align:right;">'+fmt(r.unitPrice||0)+' ر.س</td><td style="text-align:center;">'+vatLabel+'</td><td style="text-align:right;">'+fmt(vatAmt)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(monthlyTotal)+' ر.س</td><td style="text-align:right;font-weight:700;">'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
     var totalsRow=isOneTimeStudy
-      ?'<tr style="background:#e8f4f3;font-weight:900;border-top:2px solid #2E9896;"><td colspan="6" style="text-align:left;">الإجمالي الكلي لكل البنود</td><td style="text-align:right;">'+fmt(sumOneTime)+' ر.س</td></tr>'
-      :'<tr style="background:#e8f4f3;font-weight:900;border-top:2px solid #2E9896;"><td colspan="6" style="text-align:left;">الإجمالي الكلي لكل البنود</td><td style="text-align:right;">'+fmt(sumMonthly)+' ر.س</td><td style="text-align:right;">'+fmt(sumPeriod)+' ر.س</td></tr>';
+      ?'<tr style="background:#f4f4f4;font-weight:700;border-top:2px solid #2E9896;"><td colspan="6" style="text-align:left;">الإجمالي قبل الضريبة</td><td style="text-align:right;">'+fmt(sumBaseOneTime)+' ر.س</td></tr>'
+       +'<tr style="background:#e8f4f3;font-weight:900;"><td colspan="6" style="text-align:left;">الإجمالي شامل الضريبة</td><td style="text-align:right;">'+fmt(sumOneTime)+' ر.س</td></tr>'
+      :'<tr style="background:#f4f4f4;font-weight:700;border-top:2px solid #2E9896;"><td colspan="6" style="text-align:left;">الإجمالي قبل الضريبة</td><td style="text-align:right;">'+fmt(sumBaseMonthly)+' ر.س</td><td style="text-align:right;">'+fmt(sumBasePeriod)+' ر.س</td></tr>'
+       +'<tr style="background:#e8f4f3;font-weight:900;"><td colspan="6" style="text-align:left;">الإجمالي شامل الضريبة</td><td style="text-align:right;">'+fmt(sumMonthly)+' ر.س</td><td style="text-align:right;">'+fmt(sumPeriod)+' ر.س</td></tr>';
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="8" style="padding:5px 10px;">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
     var theadCols=isOneTimeStudy
       ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي (شامل الضريبة)</th>'
@@ -11231,25 +11236,28 @@ function cmpWord(){
   var detailSections=sorted.map(function(t,ci){
     var durMonths=cmpDurationToMonths(t.duration);
     var periodLabel=durMonths!==null?('الإجمالي خلال '+t.duration+' (شامل الضريبة)'):'الإجمالي السنوي (شامل الضريبة)';
-    var sumOneTime=0, sumMonthly=0, sumPeriod=0;
+    var sumBaseOneTime=0, sumOneTime=0, sumBaseMonthly=0, sumMonthly=0, sumBasePeriod=0, sumPeriod=0;
     var drows=t.rows.map(function(r,ri){
       var base=(r.count||0)*(r.unitPrice||0);
       var vt=r.vatType||'none';
       var vatAmt=vt==='added'?base*0.15:(vt==='included'?base-(base/1.15):0);
       var total=vt==='added'?base+vatAmt:base;
+      var baseExclVat=vt==='included'?(base-vatAmt):base;
       if(isOneTimeStudy){
-        sumOneTime+=total;
+        sumBaseOneTime+=baseExclVat; sumOneTime+=total;
         return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(total)+' ر.س</td></tr>';
       }
       var monthlyTotal=t.payType==='monthly'?total:total/12;
       var periodTotal=durMonths!==null?monthlyTotal*durMonths:(t.payType==='monthly'?total*12:total);
-      sumMonthly+=monthlyTotal; sumPeriod+=periodTotal;
+      var monthlyBase=t.payType==='monthly'?baseExclVat:baseExclVat/12;
+      var periodBase=durMonths!==null?monthlyBase*durMonths:(t.payType==='monthly'?baseExclVat*12:baseExclVat);
+      sumMonthly+=monthlyTotal; sumPeriod+=periodTotal; sumBaseMonthly+=monthlyBase; sumBasePeriod+=periodBase;
       return '<tr><td>'+(r.cat||'')+'</td><td>'+(r.nat||'')+'</td><td>'+(r.count||0)+'</td><td>'+fmt(r.unitPrice||0)+' ر.س</td><td>'+fmt(monthlyTotal)+' ر.س</td><td>'+fmt(periodTotal)+' ر.س</td></tr>';
     }).join('');
     var colspanNum2=isOneTimeStudy?5:6;
     var totalsRow2=isOneTimeStudy
-      ?'<tr style="font-weight:700;"><td colspan="4">الإجمالي الكلي لكل البنود</td><td>'+fmt(sumOneTime)+' ر.س</td></tr>'
-      :'<tr style="font-weight:700;"><td colspan="4">الإجمالي الكلي لكل البنود</td><td>'+fmt(sumMonthly)+' ر.س</td><td>'+fmt(sumPeriod)+' ر.س</td></tr>';
+      ?'<tr><td colspan="4">الإجمالي قبل الضريبة</td><td>'+fmt(sumBaseOneTime)+' ر.س</td></tr><tr style="font-weight:700;"><td colspan="4">الإجمالي شامل الضريبة</td><td>'+fmt(sumOneTime)+' ر.س</td></tr>'
+      :'<tr><td colspan="4">الإجمالي قبل الضريبة</td><td>'+fmt(sumBaseMonthly)+' ر.س</td><td>'+fmt(sumBasePeriod)+' ر.س</td></tr><tr style="font-weight:700;"><td colspan="4">الإجمالي شامل الضريبة</td><td>'+fmt(sumMonthly)+' ر.س</td><td>'+fmt(sumPeriod)+' ر.س</td></tr>';
     var termsRows=t.terms&&t.terms.filter(Boolean).length?t.terms.filter(Boolean).map(function(tm,ti){return '<tr><td colspan="'+colspanNum2+'">'+(ti+1)+'. '+tm+'</td></tr>';}).join(''):'';
     var theadCols2=isOneTimeStudy
       ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي (شامل الضريبة)</th>'
