@@ -1495,20 +1495,18 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     <div class="card-body">
       <div class="form-grid">
         <div class="field">
-          <label>الإدارة</label>
-          <select id="se-dept">
-            <option value="إدارة المشتريات">إدارة المشتريات</option>
-            <option value="إدارة التدريب">إدارة التدريب</option>
-            <option value="إدارة الجودة">إدارة الجودة</option>
-            <option value="إدارة العمليات">إدارة العمليات</option>
-            <option value="إدارة الموارد البشرية">إدارة الموارد البشرية</option>
-            <option value="إدارة الدعم والخدمات">إدارة الدعم والخدمات</option>
-            <option value="إدارة تقنية المعلومات">إدارة تقنية المعلومات</option>
-            <option value="إدارة التسويق">إدارة التسويق</option>
-            <option value="قسم التدريب والتطوير">قسم التدريب والتطوير</option>
-            <option value="مكتب السكرتير">مكتب السكرتير</option>
-            <option value="أخرى">أخرى</option>
-          </select>
+          <label>الإدارات</label>
+          <div id="se-dept-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+          <div style="position:relative;">
+            <input type="text" id="se-dept-search" placeholder="ابحث عن إدارة أو اضغط لعرض القائمة..." onfocus="seOpenDeptDropdown()" oninput="seRenderDeptDropdown()" autocomplete="off">
+            <div id="se-dept-dropdown" style="display:none;position:absolute;z-index:50;top:100%;right:0;left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;margin-top:4px;">
+              <div style="display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--border);">
+                <button type="button" class="btn btn-gray btn-sm" onclick="seSelectAllDepts()">تحديد الكل</button>
+                <button type="button" class="btn btn-gray btn-sm" onclick="seDeselectAllDepts()">إلغاء تحديد الكل</button>
+              </div>
+              <div id="se-dept-options"></div>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label>الفترة الزمنية</label>
@@ -1546,6 +1544,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="card-body">
         <div id="se-dashboard" class="form-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;"></div>
         <div id="se-compare-note" style="margin-top:10px;font-size:12px;color:#64748B;"></div>
+        <div id="se-brief-notes" style="margin-top:10px;font-size:12px;color:#333;"></div>
       </div>
     </div>
 
@@ -1554,36 +1553,24 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="card-body" id="se-monthly-chart"></div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>الإنفاق حسب البنود</h3></div>
-      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>البند</th><th>قيمة الإنفاق</th><th>النسبة من الإجمالي</th><th>عدد العمليات</th></tr></thead><tbody id="se-items-body"></tbody></table></div>
+    <div id="se-dept-dist-card" class="card" style="margin-top:16px;display:none;">
+      <div class="card-header"><h3>توزيع الإنفاق حسب الإدارة</h3></div>
+      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>الإدارة</th><th>نسبة الإنفاق</th><th>الإجمالي</th></tr></thead><tbody id="se-dept-dist-body"></tbody></table></div>
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>الإنفاق حسب الموردين</h3></div>
-      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>المورد</th><th>قيمة التعامل</th><th>عدد العمليات</th><th>متوسط العملية</th></tr></thead><tbody id="se-vendors-body"></tbody></table></div>
+      <div class="card-header"><h3>أعلى البنود إنفاقًا</h3></div>
+      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>#</th><th>البند</th><th>قيمة الإنفاق</th><th>النسبة</th></tr></thead><tbody id="se-items-body"></tbody></table></div>
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>بنود تستدعي المراجعة</h3></div>
-      <div class="card-body" id="se-review-items"></div>
+      <div class="card-header"><h3>أعلى الموردين إنفاقًا</h3></div>
+      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>#</th><th>المورد</th><th>قيمة التعامل</th><th>النسبة</th></tr></thead><tbody id="se-vendors-body"></tbody></table></div>
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>فرص تحسين الإنفاق</h3></div>
-      <div class="card-body" id="se-opportunities"></div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>التوصيات</h3></div>
-      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني المقترح</th></tr></thead><tbody id="se-recs-body"></tbody></table></div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header"><h3>خطة الإجراءات المقترحة</h3></div>
-      <div class="card-body" style="overflow-x:auto;">
-        <table class="tbl"><thead><tr><th>#</th><th>الملاحظة</th><th>الإجراء</th><th>الأولوية</th><th>المدة</th><th>الحالة</th></tr></thead><tbody id="se-action-plan-body"></tbody></table>
-      </div>
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><h3>التوصيات</h3><button class="btn btn-gray btn-sm" onclick="seAddRecRow()">＋ إضافة صف</button></div>
+      <div class="card-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني المقترح</th><th></th></tr></thead><tbody id="se-recs-body"></tbody></table></div>
     </div>
 
     <div class="card" style="margin-top:16px;">
@@ -1592,6 +1579,14 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         <button class="btn btn-red" onclick="seExportPDF()">📄 تصدير PDF</button>
         <button class="btn" style="background:#244062;color:#fff;" onclick="seExportWord()">📄 تصدير Word</button>
         <button class="btn btn-primary" onclick="seSaveReport()">💾 حفظ بسجل التقارير</button>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-inline-start:6px;">
+          <label style="font-size:11px;color:#555;white-space:nowrap;">حجم الخط (px)</label>
+          <input id="se-pdf-fontsize" type="number" min="6" max="24" placeholder="تلقائي" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:11px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555;white-space:nowrap;cursor:pointer;">
+            <input id="se-pdf-autofit" type="checkbox" checked style="cursor:pointer;">
+            تصغير تلقائي لصفحة واحدة
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -10645,26 +10640,19 @@ function seAddYears(dateStr,years){
   d.setFullYear(d.getFullYear()+years);
   return seYMD(d);
 }
-// يحدد نطاق التاريخ الفعلي بناءً على اختيار الفترة
 function seGetDateRange(period){
   var now=new Date();
   var y=now.getFullYear(), m=now.getMonth();
   function firstOfMonth(yy,mm){return new Date(yy,mm,1);}
   function lastOfMonth(yy,mm){return new Date(yy,mm+1,0);}
   var from,to,label;
-  if(period==='this_month'){
-    from=firstOfMonth(y,m); to=lastOfMonth(y,m); label='هذا الشهر';
-  } else if(period==='last_month'){
-    from=firstOfMonth(y,m-1); to=lastOfMonth(y,m-1); label='الشهر الماضي';
-  } else if(period==='last_3'){
-    from=firstOfMonth(y,m-2); to=lastOfMonth(y,m); label='آخر 3 أشهر';
-  } else if(period==='last_6'){
-    from=firstOfMonth(y,m-5); to=lastOfMonth(y,m); label='آخر 6 أشهر';
-  } else if(period==='this_year'){
-    from=new Date(y,0,1); to=new Date(y,11,31); label='السنة الحالية '+y;
-  } else if(period==='last_year'){
-    from=new Date(y-1,0,1); to=new Date(y-1,11,31); label='السنة الماضية '+(y-1);
-  } else { // custom
+  if(period==='this_month'){ from=firstOfMonth(y,m); to=lastOfMonth(y,m); label='هذا الشهر'; }
+  else if(period==='last_month'){ from=firstOfMonth(y,m-1); to=lastOfMonth(y,m-1); label='الشهر الماضي'; }
+  else if(period==='last_3'){ from=firstOfMonth(y,m-2); to=lastOfMonth(y,m); label='آخر 3 أشهر'; }
+  else if(period==='last_6'){ from=firstOfMonth(y,m-5); to=lastOfMonth(y,m); label='آخر 6 أشهر'; }
+  else if(period==='this_year'){ from=new Date(y,0,1); to=new Date(y,11,31); label='السنة الحالية '+y; }
+  else if(period==='last_year'){ from=new Date(y-1,0,1); to=new Date(y-1,11,31); label='السنة الماضية '+(y-1); }
+  else {
     var fromVal=document.getElementById('se-from').value;
     var toVal=document.getElementById('se-to').value;
     if(!fromVal||!toVal) return null;
@@ -10672,14 +10660,54 @@ function seGetDateRange(period){
   }
   return {from:seYMD(from), to:seYMD(to), label:label};
 }
-function seFilterExpenses(dept,from,to){
+
+/* ── اختيار الإدارات (Multi-select) ── */
+const SE_ALL_DEPTS=['إدارة المشتريات','إدارة التدريب','إدارة الجودة','إدارة العمليات','إدارة الموارد البشرية','إدارة الدعم والخدمات','إدارة تقنية المعلومات','إدارة التسويق','قسم التدريب والتطوير','مكتب السكرتير','أخرى'];
+var seSelectedDepts=[];
+function seOpenDeptDropdown(){
+  document.getElementById('se-dept-dropdown').style.display='block';
+  seRenderDeptDropdown();
+}
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('se-dept-dropdown');
+  var input=document.getElementById('se-dept-search');
+  if(wrap&&input&&!wrap.contains(e.target)&&e.target!==input){ wrap.style.display='none'; }
+});
+function seRenderDeptDropdown(){
+  var q=(document.getElementById('se-dept-search').value||'').trim();
+  var list=SE_ALL_DEPTS.filter(function(d){return d.indexOf(q)!==-1;});
+  document.getElementById('se-dept-options').innerHTML=list.map(function(d){
+    var checked=seSelectedDepts.indexOf(d)!==-1;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;font-size:13px;" onmousedown="event.preventDefault();seToggleDept(\''+d+'\')"><input type="checkbox" '+(checked?'checked':'')+' style="pointer-events:none;">'+d+'</label>';
+  }).join('')||'<div style="padding:10px;color:#94A3B8;font-size:12px;">لا توجد نتائج</div>';
+}
+function seToggleDept(d){
+  var idx=seSelectedDepts.indexOf(d);
+  if(idx===-1) seSelectedDepts.push(d); else seSelectedDepts.splice(idx,1);
+  seRenderDeptChips();
+  seRenderDeptDropdown();
+}
+function seSelectAllDepts(){ seSelectedDepts=SE_ALL_DEPTS.slice(); seRenderDeptChips(); seRenderDeptDropdown(); }
+function seDeselectAllDepts(){ seSelectedDepts=[]; seRenderDeptChips(); seRenderDeptDropdown(); }
+function seRemoveDeptChip(d){
+  seSelectedDepts=seSelectedDepts.filter(function(x){return x!==d;});
+  seRenderDeptChips();
+}
+function seRenderDeptChips(){
+  var el=document.getElementById('se-dept-chips');if(!el)return;
+  el.innerHTML=seSelectedDepts.map(function(d){
+    return '<span style="display:inline-flex;align-items:center;gap:6px;background:#EAF2F2;color:#0D7A8A;border:1px solid #2E9896;border-radius:16px;padding:4px 10px;font-size:12px;">'+d+' <span style="cursor:pointer;font-weight:700;" onclick="seRemoveDeptChip(\''+d+'\')">×</span></span>';
+  }).join('');
+}
+
+function seFilterExpenses(depts,from,to){
   return expenses.filter(function(e){
-    return e.department===dept && e.expense_date && e.expense_date>=from && e.expense_date<=to;
+    return depts.indexOf(e.department)!==-1 && e.expense_date && e.expense_date>=from && e.expense_date<=to;
   });
 }
 function seComputeMetrics(rows){
   var total=0, count=rows.length;
-  var byMonth={}, byItem={}, byVendor={};
+  var byMonth={}, byItem={}, byVendor={}, byDept={};
   rows.forEach(function(e){
     var amt=parseFloat(e.amount)||0;
     total+=amt;
@@ -10692,47 +10720,34 @@ function seComputeMetrics(rows){
     var vd=e.vendor||'—';
     if(!byVendor[vd]) byVendor[vd]={total:0,count:0};
     byVendor[vd].total+=amt; byVendor[vd].count++;
+    var dp=e.department||'—';
+    byDept[dp]=(byDept[dp]||0)+amt;
   });
   var topItem=Object.entries(byItem).sort((a,b)=>b[1].total-a[1].total)[0];
   var topVendor=Object.entries(byVendor).sort((a,b)=>b[1].total-a[1].total)[0];
-  return {total:total,count:count,byMonth:byMonth,byItem:byItem,byVendor:byVendor,
+  return {total:total,count:count,byMonth:byMonth,byItem:byItem,byVendor:byVendor,byDept:byDept,
     topItem:topItem?topItem[0]:null, topVendor:topVendor?topVendor[0]:null,
     avgPerOp:count>0?total/count:0};
 }
-// يكتشف البنود اللي تستحق مراجعة بناءً على معايير رقمية واضحة (تكرار، تفاوت سعري، تركز مورد)
 function seDetectReviewItems(metrics){
   var findings=[];
-  var itemEntries=Object.entries(metrics.byItem);
-  itemEntries.forEach(function(entry){
+  Object.entries(metrics.byItem).forEach(function(entry){
     var name=entry[0], d=entry[1];
     if(d.count>=3){
-      var minA=Math.min.apply(null,d.amounts), maxA=Math.max.apply(null,d.amounts);
-      var variance=minA>0?((maxA-minA)/minA*100):0;
-      var vendorCount=Object.keys(d.vendors).length;
-      findings.push({
-        type:'تكرار',
-        item:name,
+      findings.push({type:'تكرار',item:name,
         note:'تم تسجيل '+d.count+' عملية شراء للبند "'+name+'" خلال الفترة المحددة بإجمالي '+seFmt(d.total)+' ريال.',
-        support:'عدد العمليات: '+d.count+' | الإجمالي: '+seFmt(d.total)+' ريال | متوسط العملية: '+seFmt(d.total/d.count)+' ريال'+(vendorCount>1?' | عدد الموردين المختلفين: '+vendorCount:''),
         reason:'تكرار مرتفع لنفس البند خلال فترة واحدة',
-        impact:'قد يشير إلى فرصة لتجميع الطلبات وتحسين القوة الشرائية',
         action:'دراسة إمكانية تجميع الطلبات الدورية ورفع طلب شراء موحد',
-        total:d.total, count:d.count
-      });
+        total:d.total, count:d.count});
     }
     if(d.amounts.length>=2){
-      var minA2=Math.min.apply(null,d.amounts), maxA2=Math.max.apply(null,d.amounts);
-      if(minA2>0 && ((maxA2-minA2)/minA2)>=0.2){
-        findings.push({
-          type:'تفاوت سعري',
-          item:name,
-          note:'لوحظ تفاوت في سعر البند "'+name+'" بين '+seFmt(minA2)+' ريال و'+seFmt(maxA2)+' ريال خلال نفس الفترة.',
-          support:'أقل سعر مسجّل: '+seFmt(minA2)+' ريال | أعلى سعر مسجّل: '+seFmt(maxA2)+' ريال | نسبة التفاوت: '+(((maxA2-minA2)/minA2*100).toFixed(1))+'%',
+      var minA=Math.min.apply(null,d.amounts), maxA=Math.max.apply(null,d.amounts);
+      if(minA>0 && ((maxA-minA)/minA)>=0.2){
+        findings.push({type:'تفاوت سعري',item:name,
+          note:'لوحظ تفاوت في سعر البند "'+name+'" بين '+seFmt(minA)+' و'+seFmt(maxA)+' ريال.',
           reason:'تفاوت سعري بنسبة 20% أو أكثر لنفس البند',
-          impact:'قد يشير إلى فرصة لتوحيد المصدر أو التفاوض على سعر ثابت',
           action:'مراجعة أسعار هذا البند مع الموردين ومقارنتها',
-          total:d.total, count:d.count
-        });
+          total:d.total, count:d.count});
       }
     }
   });
@@ -10741,54 +10756,35 @@ function seDetectReviewItems(metrics){
       var name=entry[0], d=entry[1];
       var pct=d.total/metrics.total*100;
       if(pct>=40 && name!=='—'){
-        findings.push({
-          type:'تركز لدى مورد',
-          item:name,
-          note:'يتركز '+pct.toFixed(1)+'% من إجمالي الإنفاق لهذي الفترة لدى مورد واحد ("'+name+'").',
-          support:'إجمالي التعامل مع هذا المورد: '+seFmt(d.total)+' ريال | عدد العمليات: '+d.count+' | نسبة من الإجمالي: '+pct.toFixed(1)+'%',
+        findings.push({type:'تركز لدى مورد',item:name,
+          note:'يتركز '+pct.toFixed(1)+'% من إجمالي الإنفاق لدى مورد واحد ("'+name+'").',
           reason:'تركز الإنفاق لدى مورد واحد بنسبة 40% أو أكثر',
-          impact:'قد يشير إلى فرصة لإعادة التفاوض على شروط أفضل نظير حجم التعامل',
           action:'دراسة إعادة التفاوض مع هذا المورد على أسعار أو شروط أفضل',
-          total:d.total, count:d.count
-        });
+          total:d.total, count:d.count});
       }
     });
   }
   return findings;
 }
-function seGenerateOpportunities(findings){
-  var byType={};
-  findings.forEach(function(f){ if(!byType[f.type]) byType[f.type]=[]; byType[f.type].push(f); });
-  var opps=[];
-  if(byType['تكرار']){
-    opps.push({title:'تجميع المشتريات',body:byType['تكرار'].map(function(f){return f.note;}).join(' ')+' يوصى بدراسة إمكانية تجميع الطلبات الدورية ورفع طلب شراء موحد لتحسين القوة الشرائية وتقليل العمليات المتكررة.'});
-  }
-  if(byType['تركز لدى مورد']){
-    opps.push({title:'إعادة التفاوض مع المورد',body:byType['تركز لدى مورد'].map(function(f){return f.note;}).join(' ')});
-  }
-  if(byType['تفاوت سعري']){
-    opps.push({title:'مراجعة الأسعار',body:byType['تفاوت سعري'].map(function(f){return f.note;}).join(' ')});
-  }
-  return opps;
-}
 function seGenerateRecommendations(findings){
   return findings.map(function(f){
-    var priority=f.type==='تركز لدى مورد'?'عالية':(f.type==='تكرار'?'متوسطة':'متوسطة');
+    var priority=f.type==='تركز لدى مورد'?'عالية':'متوسطة';
     var timeline=priority==='عالية'?'15 يوم':'30 يوم';
     return {rec:f.action, reason:f.reason, priority:priority, timeline:timeline};
   });
 }
-var seLastReport=null; // يحتفظ بآخر تقرير مُنشأ (للاستخدام بالتصدير)
+
+var seLastReport=null;
 
 function seGenerateReport(isFilterChange){
-  var dept=document.getElementById('se-dept').value;
+  if(!seSelectedDepts.length){toast('اختر إدارة واحدة على الأقل',true);return;}
   var period=document.getElementById('se-period').value;
   var range=seGetDateRange(period);
   if(!range){toast('حدد الفترة المخصصة (من - إلى)',true);return;}
-  var baseRows=seFilterExpenses(dept,range.from,range.to);
-  if(!baseRows.length){toast('لا توجد بيانات إنفاق لهذي الإدارة بهذي الفترة',true);document.getElementById('se-report-wrap').style.display='none';document.getElementById('se-advanced-filters').style.display='none';return;}
+  var depts=seSelectedDepts.slice();
+  var baseRows=seFilterExpenses(depts,range.from,range.to);
+  if(!baseRows.length){toast('لا توجد بيانات إنفاق لهذي الإدارات بهذي الفترة',true);document.getElementById('se-report-wrap').style.display='none';document.getElementById('se-advanced-filters').style.display='none';return;}
 
-  // تعبئة الفلاتر المتقدمة (مورد/بند) من البيانات الفعلية لنفس الإدارة والفترة — ما نعرضها إلا لو فيه بيانات تدعمها
   if(!isFilterChange){
     var vendSel=document.getElementById('se-filter-vendor'), itemSel=document.getElementById('se-filter-item');
     var vendors=[...new Set(baseRows.map(function(e){return e.vendor;}).filter(Boolean))];
@@ -10799,15 +10795,12 @@ function seGenerateReport(isFilterChange){
   }
   var fVendor=document.getElementById('se-filter-vendor').value;
   var fItem=document.getElementById('se-filter-item').value;
-  var rows=baseRows.filter(function(e){
-    return (!fVendor||e.vendor===fVendor) && (!fItem||e.item_name===fItem);
-  });
+  var rows=baseRows.filter(function(e){ return (!fVendor||e.vendor===fVendor) && (!fItem||e.item_name===fItem); });
   if(!rows.length){toast('لا توجد بيانات مطابقة لهذي الفلاتر',true);return;}
   var metrics=seComputeMetrics(rows);
 
-  // فترة المقارنة: نفس الفترة قبل سنة بالضبط
   var cmpFrom=seAddYears(range.from,-1), cmpTo=seAddYears(range.to,-1);
-  var cmpRows=seFilterExpenses(dept,cmpFrom,cmpTo);
+  var cmpRows=seFilterExpenses(depts,cmpFrom,cmpTo);
   var changeNote='';
   if(cmpRows.length>0){
     var cmpTotal=cmpRows.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
@@ -10818,14 +10811,11 @@ function seGenerateReport(isFilterChange){
   } else { changeNote='لا تتوفر بيانات مقارنة كافية.'; }
 
   var findings=seDetectReviewItems(metrics);
-  var opportunities=seGenerateOpportunities(findings);
   var recommendations=seGenerateRecommendations(findings);
-  // خطة الإجراءات المقترحة — تبدأ دائمًا "لم يبدأ"، ما لم تكن محمّلة من تقرير محفوظ (تُستبدل لاحقًا بحالتها الفعلية)
-  var actionPlan=findings.map(function(f,i){return {idx:i,note:f.note,action:f.action,priority:(f.type==='تركز لدى مورد'?'عالية':'متوسطة'),duration:(f.type==='تركز لدى مورد'?'15 يوم':'30 يوم'),status:'لم يبدأ'};});
 
-  seLastReport={dept:dept,range:range,metrics:metrics,changeNote:changeNote,findings:findings,opportunities:opportunities,recommendations:recommendations,actionPlan:actionPlan,filters:{vendor:fVendor,item:fItem},generatedAt:new Date().toISOString()};
+  seLastReport={depts:depts,range:range,metrics:metrics,changeNote:changeNote,findings:findings,recommendations:recommendations,filters:{vendor:fVendor,item:fItem},generatedAt:new Date().toISOString()};
 
-  document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+dept+' ('+range.label+')';
+  document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+depts.join('، ')+' ('+range.label+')';
   document.getElementById('se-dashboard').innerHTML=
     '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">إجمالي الإنفاق</div><div style="font-size:18px;font-weight:700;">'+seFmt(metrics.total)+' ريال</div></div>'+
     '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">عدد العمليات</div><div style="font-size:18px;font-weight:700;">'+metrics.count+'</div></div>'+
@@ -10833,172 +10823,176 @@ function seGenerateReport(isFilterChange){
     '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى بند إنفاقًا</div><div style="font-size:14px;font-weight:700;">'+(metrics.topItem||'—')+'</div></div>'+
     '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى مورد تعاملًا</div><div style="font-size:14px;font-weight:700;">'+(metrics.topVendor||'—')+'</div></div>';
   document.getElementById('se-compare-note').textContent=changeNote;
+  document.getElementById('se-brief-notes').innerHTML=seLastReport.findings.length?('<strong>أبرز الملاحظات:</strong> يوجد '+seLastReport.findings.length+' ملاحظة تستدعي المتابعة ضمن بيانات هذي الفترة (تفصيلها ضمن التوصيات أدناه).'):'';
 
-  // الإنفاق حسب الشهر (جدول بسيط بدل رسم بياني — يعمل بكل الحالات بدون مكتبات خارجية)
   var monthKeys=Object.keys(metrics.byMonth).sort();
   document.getElementById('se-monthly-chart').innerHTML=monthKeys.length?
     '<table class="tbl"><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthKeys.map(function(mk){return '<tr><td>'+mk+'</td><td>'+seFmt(metrics.byMonth[mk])+' ريال</td></tr>';}).join('')+'</tbody></table>'
     :'<div style="color:#94A3B8;font-size:12px;">لا توجد بيانات</div>';
 
-  var itemEntries=Object.entries(metrics.byItem).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('se-items-body').innerHTML=itemEntries.map(function(entry){
+  var distCard=document.getElementById('se-dept-dist-card');
+  if(depts.length>1){
+    distCard.style.display='block';
+    document.getElementById('se-dept-dist-body').innerHTML=Object.entries(metrics.byDept).sort((a,b)=>b[1]-a[1]).map(function(entry){
+      var pct=metrics.total>0?(entry[1]/metrics.total*100):0;
+      return '<tr><td>'+entry[0]+'</td><td>'+pct.toFixed(1)+'%</td><td>'+seFmt(entry[1])+' ريال</td></tr>';
+    }).join('');
+  } else { distCard.style.display='none'; }
+
+  var top4Items=Object.entries(metrics.byItem).sort((a,b)=>b[1].total-a[1].total).slice(0,4);
+  document.getElementById('se-items-body').innerHTML=top4Items.map(function(entry,i){
     var pct=metrics.total>0?(entry[1].total/metrics.total*100):0;
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td><td>'+entry[1].count+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td></tr>';
+  }).join('');
+  var top4Vendors=Object.entries(metrics.byVendor).sort((a,b)=>b[1].total-a[1].total).slice(0,4);
+  document.getElementById('se-vendors-body').innerHTML=top4Vendors.map(function(entry,i){
+    var pct=metrics.total>0?(entry[1].total/metrics.total*100):0;
+    return '<tr><td>'+(i+1)+'</td><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td></tr>';
   }).join('');
 
-  var vendorEntries=Object.entries(metrics.byVendor).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('se-vendors-body').innerHTML=vendorEntries.map(function(entry){
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+entry[1].count+'</td><td>'+seFmt(entry[1].total/entry[1].count)+' ريال</td></tr>';
-  }).join('');
-
-  document.getElementById('se-review-items').innerHTML=findings.length?findings.map(function(f){
-    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;">'+
-      '<div style="font-weight:700;margin-bottom:4px;">'+f.note+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>البيانات الداعمة:</strong> '+f.support+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>سبب الاعتبار:</strong> '+f.reason+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>الأثر المحتمل:</strong> '+f.impact+'</div>'+
-      '<div style="font-size:12px;color:#64748B;"><strong>الإجراء المقترح:</strong> '+f.action+'</div>'+
-    '</div>';
-  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لم يتم رصد بنود تستدعي المراجعة وفق المعايير المعتمدة خلال هذي الفترة.</div>';
-
-  document.getElementById('se-opportunities').innerHTML=opportunities.length?opportunities.map(function(o){
-    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;"><div style="font-weight:700;margin-bottom:4px;">'+o.title+'</div><div style="font-size:12px;color:#64748B;">'+o.body+'</div></div>';
-  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لا توجد فرص تحسين واضحة وفق البيانات المتاحة لهذي الفترة.</div>';
-
-  document.getElementById('se-recs-body').innerHTML=recommendations.length?recommendations.map(function(r){
-    return '<tr><td>'+r.rec+'</td><td>'+r.reason+'</td><td>'+r.priority+'</td><td>'+r.timeline+'</td></tr>';
-  }).join(''):'<tr><td colspan="4" style="text-align:center;color:#94A3B8;">لا توجد توصيات لهذي الفترة</td></tr>';
-
-  seRenderActionPlan();
-
+  seRenderRecs();
   document.getElementById('se-report-wrap').style.display='block';
 }
 
-function seRenderActionPlan(){
-  var plan=seLastReport?seLastReport.actionPlan:[];
-  var statuses=['لم يبدأ','قيد التنفيذ','مكتمل','مؤجل'];
-  document.getElementById('se-action-plan-body').innerHTML=plan.length?plan.map(function(a,i){
-    return '<tr><td>'+(i+1)+'</td><td>'+a.note+'</td><td>'+a.action+'</td><td>'+a.priority+'</td><td>'+a.duration+'</td>'+
-      '<td><select onchange="seUpdateActionStatus('+i+',this.value)">'+statuses.map(function(s){return '<option value="'+s+'"'+(s===a.status?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td></tr>';
-  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#94A3B8;">لا توجد إجراءات مقترحة لهذي الفترة</td></tr>';
+function seRenderRecs(){
+  var recs=seLastReport?seLastReport.recommendations:[];
+  document.getElementById('se-recs-body').innerHTML=recs.length?recs.map(function(r,i){
+    return '<tr>'+
+      '<td contenteditable="true" onblur="seUpdateRecCell('+i+',\'rec\',this.textContent)">'+r.rec+'</td>'+
+      '<td contenteditable="true" onblur="seUpdateRecCell('+i+',\'reason\',this.textContent)">'+r.reason+'</td>'+
+      '<td contenteditable="true" onblur="seUpdateRecCell('+i+',\'priority\',this.textContent)">'+r.priority+'</td>'+
+      '<td contenteditable="true" onblur="seUpdateRecCell('+i+',\'timeline\',this.textContent)">'+r.timeline+'</td>'+
+      '<td><button class="btn btn-gray btn-sm" onclick="seRemoveRecRow('+i+')">حذف</button></td></tr>';
+  }).join(''):'<tr><td colspan="5" style="text-align:center;color:#94A3B8;">لا توجد توصيات — اضغط "إضافة صف" لإدخال توصية يدويًا</td></tr>';
 }
-function seUpdateActionStatus(idx,status){
-  if(!seLastReport||!seLastReport.actionPlan[idx]) return;
-  seLastReport.actionPlan[idx].status=status;
+function seAddRecRow(){
+  if(!seLastReport){toast('أنشئ التقرير أولاً',true);return;}
+  seLastReport.recommendations.push({rec:'',reason:'',priority:'متوسطة',timeline:'30 يوم'});
+  seRenderRecs();
+}
+function seRemoveRecRow(i){
+  if(!seLastReport)return;
+  seLastReport.recommendations.splice(i,1);
+  seRenderRecs();
+}
+function seUpdateRecCell(i,field,val){
+  if(!seLastReport||!seLastReport.recommendations[i])return;
+  seLastReport.recommendations[i][field]=val.trim();
 }
 
-function seBuildReportHTML(forWord){
+function seBuildReportHTML(){
   if(!seLastReport){return '';}
   var r=seLastReport;
   var today=new Date().toLocaleDateString('en-GB');
-  var itemRows=Object.entries(r.metrics.byItem).sort((a,b)=>b[1].total-a[1].total).map(function(entry){
+  var itemRows=Object.entries(r.metrics.byItem).sort((a,b)=>b[1].total-a[1].total).slice(0,4).map(function(entry,i){
     var pct=r.metrics.total>0?(entry[1].total/r.metrics.total*100):0;
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td><td>'+entry[1].count+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td></tr>';
   }).join('');
-  var vendorRows=Object.entries(r.metrics.byVendor).sort((a,b)=>b[1].total-a[1].total).map(function(entry){
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+entry[1].count+'</td><td>'+seFmt(entry[1].total/entry[1].count)+' ريال</td></tr>';
+  var vendorRows=Object.entries(r.metrics.byVendor).sort((a,b)=>b[1].total-a[1].total).slice(0,4).map(function(entry,i){
+    var pct=r.metrics.total>0?(entry[1].total/r.metrics.total*100):0;
+    return '<tr><td>'+(i+1)+'</td><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td></tr>';
   }).join('');
   var monthRows=Object.keys(r.metrics.byMonth).sort().map(function(mk){
     return '<tr><td>'+mk+'</td><td>'+seFmt(r.metrics.byMonth[mk])+' ريال</td></tr>';
   }).join('');
-  var findingsHTML=r.findings.length?r.findings.map(function(f){
-    return '<div style="margin-bottom:10px;padding:8px;border:1px solid #999;">'+
-      '<div style="font-weight:700;">'+f.note+'</div>'+
-      '<div style="font-size:11px;color:#333;">البيانات الداعمة: '+f.support+'</div>'+
-      '<div style="font-size:11px;color:#333;">سبب الاعتبار: '+f.reason+'</div>'+
-      '<div style="font-size:11px;color:#333;">الأثر المحتمل: '+f.impact+'</div>'+
-      '<div style="font-size:11px;color:#333;">الإجراء المقترح: '+f.action+'</div>'+
-    '</div>';
-  }).join(''):'<p>لم يتم رصد بنود تستدعي المراجعة وفق المعايير المعتمدة خلال هذي الفترة.</p>';
-  var oppsHTML=r.opportunities.length?r.opportunities.map(function(o){
-    return '<div style="margin-bottom:8px;"><strong>'+o.title+':</strong> '+o.body+'</div>';
-  }).join(''):'<p>لا توجد فرص تحسين واضحة وفق البيانات المتاحة لهذي الفترة.</p>';
+  var distSection='';
+  if(r.depts.length>1){
+    var distRows=Object.entries(r.metrics.byDept).sort((a,b)=>b[1]-a[1]).map(function(entry){
+      var pct=r.metrics.total>0?(entry[1]/r.metrics.total*100):0;
+      return '<tr><td>'+entry[0]+'</td><td>'+pct.toFixed(1)+'%</td></tr>';
+    }).join('');
+    distSection='<h2>توزيع الإنفاق حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th>نسبة الإنفاق</th></tr></thead><tbody>'+distRows+'</tbody></table>';
+  }
   var recRows=r.recommendations.length?r.recommendations.map(function(rc){
     return '<tr><td>'+rc.rec+'</td><td>'+rc.reason+'</td><td>'+rc.priority+'</td><td>'+rc.timeline+'</td></tr>';
-  }).join(''):'<tr><td colspan="4" style="text-align:center;">لا توجد توصيات لهذي الفترة</td></tr>';
-  var actionRows=(r.actionPlan&&r.actionPlan.length)?r.actionPlan.map(function(a,i){
-    return '<tr><td>'+(i+1)+'</td><td>'+a.note+'</td><td>'+a.action+'</td><td>'+a.priority+'</td><td>'+(a.responsible||'إدارة المشتريات')+'</td><td>'+a.duration+'</td><td>'+a.status+'</td></tr>';
-  }).join(''):'<tr><td colspan="7" style="text-align:center;">لا توجد إجراءات مقترحة لهذي الفترة</td></tr>';
-  // تقدير الوفر: فقط لو فيه بنود مرصودة، وبنسبة تحسين تقديرية محافظة 5% على إجمالي البنود المرصودة فقط
-  var reviewTotal=r.findings.reduce(function(s,f){return s+(f.total||0);},0);
-  var savingsHTML;
-  if(reviewTotal>0){
-    var savingEst=reviewTotal*0.05;
-    savingsHTML='<p>الإنفاق على البنود المرصودة للمراجعة: '+seFmt(reviewTotal)+' ريال.</p>'+
-      '<p>بافتراض سيناريو تحسين أولي بنسبة 5% على هذي البنود تحديدًا:</p>'+
-      '<p>الوفر التقديري: '+seFmt(savingEst)+' ريال</p>'+
-      '<p><strong>تقدير أولي للوفر — وليس وفرًا محققًا.</strong></p>';
-  } else {
-    savingsHTML='<p>لا يمكن تقدير الوفر بدقة بناءً على البيانات المتاحة.</p>';
-  }
+  }).join(''):'<tr><td colspan="4" style="text-align:center;">لا توجد توصيات</td></tr>';
   var body=''+
     '<h1>تقرير تحليل كفاءة الإنفاق</h1>'+
-    '<p style="text-align:center;">'+r.dept+' — '+r.range.label+' | تاريخ الإعداد: '+today+'</p>'+
-    '<h2>الملخص التنفيذي</h2>'+
-    '<p>يستعرض هذا التقرير تحليل الإنفاق لـ'+r.dept+' خلال الفترة ('+r.range.label+')، بإجمالي إنفاق قدره '+seFmt(r.metrics.total)+' ريال موزّعة على '+r.metrics.count+' عملية. '+r.changeNote+'</p>'+
-    '<h2>هدف التقرير</h2>'+
-    '<p>تحليل بيانات الإنفاق الفعلية للإدارة المحددة خلال الفترة المختارة، واستخراج الملاحظات وفرص التحسين والتوصيات المبنية على البيانات.</p>'+
-    '<h2>نطاق الدراسة</h2>'+
-    '<p>الإدارة: '+r.dept+' | الفترة: '+r.range.label+' ('+r.range.from+' إلى '+r.range.to+')</p>'+
-    '<h2>مصادر البيانات</h2>'+
-    '<p>سجلات العهدة المالية (المصروفات) المسجّلة بالمنصة لهذي الإدارة خلال الفترة المحددة.</p>'+
-    '<h2>ملخص الإنفاق</h2>'+
-    '<table><thead><tr><th>المؤشر</th><th>القيمة</th></tr></thead><tbody>'+
-    '<tr><td>إجمالي الإنفاق</td><td>'+seFmt(r.metrics.total)+' ريال</td></tr>'+
-    '<tr><td>عدد العمليات</td><td>'+r.metrics.count+'</td></tr>'+
-    '<tr><td>متوسط قيمة العملية</td><td>'+seFmt(r.metrics.avgPerOp)+' ريال</td></tr>'+
-    '<tr><td>أعلى بند إنفاقًا</td><td>'+(r.metrics.topItem||'—')+'</td></tr>'+
-    '<tr><td>أعلى مورد تعاملًا</td><td>'+(r.metrics.topVendor||'—')+'</td></tr>'+
-    '</tbody></table>'+
-    '<h2>التحليل الشهري</h2>'+
-    (monthRows?'<table><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthRows+'</tbody></table>':'<p>لا توجد بيانات كافية للتحليل الشهري.</p>')+
-    '<h2>تحليل البنود</h2>'+
-    '<table><thead><tr><th>البند</th><th>قيمة الإنفاق</th><th>النسبة</th><th>عدد العمليات</th></tr></thead><tbody>'+itemRows+'</tbody></table>'+
-    '<h2>تحليل الموردين</h2>'+
-    '<table><thead><tr><th>المورد</th><th>قيمة التعامل</th><th>عدد العمليات</th><th>متوسط العملية</th></tr></thead><tbody>'+vendorRows+'</tbody></table>'+
-    '<h2>بنود تستدعي المراجعة</h2>'+findingsHTML+
-    '<h2>فرص تحسين الإنفاق</h2>'+oppsHTML+
-    '<h2>الوفر التقديري</h2>'+savingsHTML+
+    '<p class="sub">الإدارات المشمولة: '+r.depts.join('، ')+' — '+r.range.label+' | تاريخ الإعداد: '+today+'</p>'+
+    '<div class="kpi-grid">'+
+    '<div class="kpi-box"><div class="kpi-label">إجمالي الإنفاق</div><div class="kpi-val">'+seFmt(r.metrics.total)+'</div><div class="kpi-unit">ريال</div></div>'+
+    '<div class="kpi-box"><div class="kpi-label">عدد العمليات</div><div class="kpi-val">'+r.metrics.count+'</div><div class="kpi-unit">عملية</div></div>'+
+    '<div class="kpi-box"><div class="kpi-label">متوسط قيمة العملية</div><div class="kpi-val">'+seFmt(r.metrics.avgPerOp)+'</div><div class="kpi-unit">ريال</div></div>'+
+    '</div>'+
+    '<p style="text-align:center;">'+r.changeNote+'</p>'+
+    distSection+
+    '<h2>الإنفاق حسب الشهر</h2>'+
+    (monthRows?'<table><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthRows+'</tbody></table>':'<p style="text-align:center;">لا توجد بيانات كافية.</p>')+
+    '<h2>أعلى البنود إنفاقًا</h2>'+
+    '<table><thead><tr><th>#</th><th>البند</th><th>قيمة الإنفاق</th><th>النسبة</th></tr></thead><tbody>'+itemRows+'</tbody></table>'+
+    '<h2>أعلى الموردين إنفاقًا</h2>'+
+    '<table><thead><tr><th>#</th><th>المورد</th><th>قيمة التعامل</th><th>النسبة</th></tr></thead><tbody>'+vendorRows+'</tbody></table>'+
     '<h2>التوصيات</h2>'+
-    '<table><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني المقترح</th></tr></thead><tbody>'+recRows+'</tbody></table>'+
-    '<h2>خطة الإجراءات</h2>'+
-    '<table><thead><tr><th>#</th><th>الملاحظة</th><th>الإجراء</th><th>الأولوية</th><th>المسؤول</th><th>المدة</th><th>الحالة</th></tr></thead><tbody>'+actionRows+'</tbody></table>'+
-    '<h2>الخلاصة</h2>'+
-    '<p>يوصى بمراجعة الملاحظات والتوصيات الواردة أعلاه مع الجهات المعنية، ومتابعة تنفيذها ضمن الأطر الزمنية المقترحة.</p>';
+    '<table><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني</th></tr></thead><tbody>'+recRows+'</tbody></table>';
   return body;
 }
 
 function seExportPDF(){
   if(!seLastReport){toast('أنشئ التقرير أولاً',true);return;}
+  var manualFontSize=parseFloat(document.getElementById('se-pdf-fontsize')?.value)||null;
+  var autoFitEnabled=document.getElementById('se-pdf-autofit')?.checked!==false;
+  var shouldAutoFit=!manualFontSize&&autoFitEnabled;
+  var BF=manualFontSize||11;
   var BG=FORM_BG||'';
-  var body=seBuildReportHTML(false);
-  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تحليل كفاءة الإنفاق</title>'+
-    '<style>@page{size:A4;margin:0;}*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;direction:rtl;margin:0;}'+
-    '.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;}'+
-    '.content{position:relative;z-index:1;padding:35mm 18mm 20mm;}'+
-    'h1{font-size:17px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:6px;}'+
-    'h2{font-size:13px;margin:14px 0 6px;border-right:3px solid #000;padding-right:6px;}'+
-    'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px;}'+
-    'th{background:#2E9896;color:#fff;padding:5px 7px;border:1px solid #000;text-align:right;}'+
-    'td{padding:4px 7px;border:1px solid #999;}p{margin:4px 0;}</style></head><body>'+
-    '<div class="page">'+(BG?'<img class="bg" src="'+BG+'">':'')+'<div class="content">'+body+'</div></div>'+
-    '<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var body=seBuildReportHTML();
+  var CSS=`@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:${BF}px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:20px;font-size:${BF}px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}td{padding:6px 8px;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.25;}tbody tr:nth-child(even){background:#f9f9f9;}`;
   var w=window.open('','_blank');
-  w.document.write(html); w.document.close();
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
+  html+='<div class="pdf-content">'+body+'</div>';
+  html+='</body></html>';
+  w.document.write(html);
+  w.document.close();
+  w.onload=function(){
+    if(!shouldAutoFit){ setTimeout(function(){w.focus();w.print();},80); return; }
+    var content=w.document.querySelector('.pdf-content');
+    var pageHeightMM=210, safetyMarginMM=6;
+    var usableHeightMM=pageHeightMM-safetyMarginMM;
+    var pxPerMM=96/25.4;
+    function applyScale(scale){
+      var st=w.document.getElementById('autofit-style');
+      if(!st){st=w.document.createElement('style');st.id='autofit-style';w.document.head.appendChild(st);}
+      st.innerHTML=
+        'body{font-size:'+(BF*scale).toFixed(2)+'px !important;}'
+        +'table{font-size:'+(BF*scale).toFixed(2)+'px !important;margin-bottom:'+(20*scale).toFixed(1)+'px !important;}'
+        +'td,thead th{padding:'+(6*scale).toFixed(1)+'px '+(8*scale).toFixed(1)+'px !important;}'
+        +'h1{font-size:'+((BF+7)*scale).toFixed(2)+'px !important;margin-bottom:'+(10*scale).toFixed(1)+'px !important;}'
+        +'h2{font-size:'+((BF+2)*scale).toFixed(2)+'px !important;margin:'+(16*scale).toFixed(1)+'px 0 '+(8*scale).toFixed(1)+'px !important;}'
+        +'.pdf-content{padding:'+(35*scale).toFixed(1)+'mm '+(20*scale).toFixed(1)+'mm '+(25*scale).toFixed(1)+'mm !important;}'
+        +'.kpi-val{font-size:'+(22*scale).toFixed(2)+'px !important;}';
+    }
+    var contentHeightMM=content.scrollHeight/pxPerMM;
+    if(contentHeightMM>usableHeightMM){
+      var scale=Math.max(usableHeightMM/contentHeightMM,0.5);
+      applyScale(scale);
+      setTimeout(function(){
+        var newHeightMM=content.scrollHeight/pxPerMM;
+        if(newHeightMM>usableHeightMM){
+          var corrected=Math.max(scale*(usableHeightMM/newHeightMM)*0.98,0.45);
+          applyScale(corrected);
+        }
+        setTimeout(function(){w.focus();w.print();},100);
+      },100);
+    } else {
+      setTimeout(function(){w.focus();w.print();},80);
+    }
+  };
 }
 
 function seExportWord(){
   if(!seLastReport){toast('أنشئ التقرير أولاً',true);return;}
-  var body=seBuildReportHTML(true);
+  var body=seBuildReportHTML();
   var html='<!DOCTYPE html><html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document>'+
-    '<style>@page{size:21cm 29.7cm;margin:2.5cm 2cm;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;direction:rtl;line-height:1.7;}'+
-    'h1{font-size:17px;text-align:center;}h2{font-size:13px;margin:14px 0 6px;}'+
+    '<style>@page{size:29.7cm 21cm;margin:2cm;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;direction:rtl;line-height:1.7;}'+
+    'h1{font-size:17px;text-align:center;}h2{font-size:13px;margin:14px 0 6px;}p.sub{text-align:center;color:#555;}'+
+    '.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:14px;}.kpi-box{padding:10px;border-left:1px solid #000;text-align:center;}'+
+    '.kpi-label{font-size:10px;color:#555;}.kpi-val{font-size:18px;font-weight:700;}.kpi-unit{font-size:10px;color:#555;}'+
     'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px;}'+
     'th{background:#2E9896;color:#fff;padding:5px 7px;border:1px solid #000;}td{padding:4px 7px;border:1px solid #999;}</style></head><body>'+body+'</body></html>';
   var blob=new Blob(['\ufeff'+html],{type:'application/msword'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='تحليل_كفاءة_الإنفاق_'+seLastReport.dept+'.doc';
+  a.download='تحليل_كفاءة_الإنفاق.doc';
   a.click();
   toast('تم تصدير Word ✅');
 }
@@ -11009,13 +11003,12 @@ async function seSaveReport(){
   if(!seLastReport){toast('أنشئ التقرير أولاً',true);return;}
   var record={
     id:Date.now(),
-    dept:seLastReport.dept,
+    dept:seLastReport.depts.join('، '),
     periodLabel:seLastReport.range.label,
     from:seLastReport.range.from,
     to:seLastReport.range.to,
     total:seLastReport.metrics.total,
     generatedAt:seLastReport.generatedAt,
-    // نحفظ إعدادات التقرير + بيانات إعادة الإنتاج، مو نسخة كاملة مكررة من كل شي — نعيد توليد التحليل من نفس البيانات وقت الفتح
     report:seLastReport
   };
   seReportHistory.unshift(record);
@@ -11044,48 +11037,11 @@ function seRenderHistory(){
 
 function seOpenSavedReport(i){
   var r=seReportHistory[i];if(!r)return;
-  seLastReport=r.report;
-  document.getElementById('se-dept').value=seLastReport.dept;
-  // نعيد عرض نفس التقرير المحفوظ مباشرة بدل إعادة حسابه من جديد (يحافظ على حالة خطة الإجراءات المحفوظة)
-  document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+seLastReport.dept+' ('+seLastReport.range.label+')';
-  var m=seLastReport.metrics;
-  document.getElementById('se-dashboard').innerHTML=
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">إجمالي الإنفاق</div><div style="font-size:18px;font-weight:700;">'+seFmt(m.total)+' ريال</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">عدد العمليات</div><div style="font-size:18px;font-weight:700;">'+m.count+'</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">متوسط قيمة العملية</div><div style="font-size:18px;font-weight:700;">'+seFmt(m.avgPerOp)+' ريال</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى بند إنفاقًا</div><div style="font-size:14px;font-weight:700;">'+(m.topItem||'—')+'</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى مورد تعاملًا</div><div style="font-size:14px;font-weight:700;">'+(m.topVendor||'—')+'</div></div>';
-  document.getElementById('se-compare-note').textContent=seLastReport.changeNote;
-  var monthKeys=Object.keys(m.byMonth).sort();
-  document.getElementById('se-monthly-chart').innerHTML=monthKeys.length?
-    '<table class="tbl"><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthKeys.map(function(mk){return '<tr><td>'+mk+'</td><td>'+seFmt(m.byMonth[mk])+' ريال</td></tr>';}).join('')+'</tbody></table>'
-    :'<div style="color:#94A3B8;font-size:12px;">لا توجد بيانات</div>';
-  var itemEntries=Object.entries(m.byItem).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('se-items-body').innerHTML=itemEntries.map(function(entry){
-    var pct=m.total>0?(entry[1].total/m.total*100):0;
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td><td>'+entry[1].count+'</td></tr>';
-  }).join('');
-  var vendorEntries=Object.entries(m.byVendor).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('se-vendors-body').innerHTML=vendorEntries.map(function(entry){
-    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+entry[1].count+'</td><td>'+seFmt(entry[1].total/entry[1].count)+' ريال</td></tr>';
-  }).join('');
-  document.getElementById('se-review-items').innerHTML=seLastReport.findings.length?seLastReport.findings.map(function(f){
-    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;">'+
-      '<div style="font-weight:700;margin-bottom:4px;">'+f.note+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>البيانات الداعمة:</strong> '+f.support+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>سبب الاعتبار:</strong> '+f.reason+'</div>'+
-      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>الأثر المحتمل:</strong> '+f.impact+'</div>'+
-      '<div style="font-size:12px;color:#64748B;"><strong>الإجراء المقترح:</strong> '+f.action+'</div>'+
-    '</div>';
-  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لم يتم رصد بنود تستدعي المراجعة وفق المعايير المعتمدة خلال هذي الفترة.</div>';
-  document.getElementById('se-opportunities').innerHTML=seLastReport.opportunities.length?seLastReport.opportunities.map(function(o){
-    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;"><div style="font-weight:700;margin-bottom:4px;">'+o.title+'</div><div style="font-size:12px;color:#64748B;">'+o.body+'</div></div>';
-  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لا توجد فرص تحسين واضحة وفق البيانات المتاحة لهذي الفترة.</div>';
-  document.getElementById('se-recs-body').innerHTML=seLastReport.recommendations.length?seLastReport.recommendations.map(function(r){
-    return '<tr><td>'+r.rec+'</td><td>'+r.reason+'</td><td>'+r.priority+'</td><td>'+r.timeline+'</td></tr>';
-  }).join(''):'<tr><td colspan="4" style="text-align:center;color:#94A3B8;">لا توجد توصيات لهذي الفترة</td></tr>';
-  seRenderActionPlan();
-  document.getElementById('se-report-wrap').style.display='block';
+  var savedRecs=r.report.recommendations;
+  seSelectedDepts=r.report.depts.slice();
+  seRenderDeptChips();
+  seGenerateReport(true);
+  if(seLastReport){ seLastReport.recommendations=savedRecs; seRenderRecs(); }
   document.getElementById('se-report-wrap').scrollIntoView({behavior:'smooth'});
 }
 
