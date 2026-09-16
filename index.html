@@ -201,7 +201,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       تحديات الشهر
     </div>
-    <div class="sb-item" onclick="nav('spend-eff')">
+    <div class="sb-item" onclick="nav('spend-eff');if(typeof seRenderHistory==='function')seRenderHistory();">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       تحليل كفاءة الإنفاق
     </div>
@@ -1527,6 +1527,13 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         <div class="field"><label>من تاريخ</label><input type="date" id="se-from"></div>
         <div class="field"><label>إلى تاريخ</label><input type="date" id="se-to"></div>
       </div>
+      <div id="se-advanced-filters" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;">
+        <div style="font-size:12px;font-weight:700;color:#64748B;margin-bottom:8px;">فلاتر متقدمة (اختياري)</div>
+        <div class="form-grid">
+          <div class="field"><label>المورد</label><select id="se-filter-vendor" onchange="seGenerateReport(true)"><option value="">الكل</option></select></div>
+          <div class="field"><label>البند</label><select id="se-filter-item" onchange="seGenerateReport(true)"><option value="">الكل</option></select></div>
+        </div>
+      </div>
       <div style="margin-top:12px;">
         <button class="btn btn-primary" onclick="seGenerateReport()">📊 إنشاء التقرير</button>
       </div>
@@ -1573,11 +1580,27 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     </div>
 
     <div class="card" style="margin-top:16px;">
+      <div class="card-header"><h3>خطة الإجراءات المقترحة</h3></div>
+      <div class="card-body" style="overflow-x:auto;">
+        <table class="tbl"><thead><tr><th>#</th><th>الملاحظة</th><th>الإجراء</th><th>الأولوية</th><th>المدة</th><th>الحالة</th></tr></thead><tbody id="se-action-plan-body"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
       <div class="card-header"><h3>تصدير التقرير</h3></div>
       <div class="card-body">
         <button class="btn btn-red" onclick="seExportPDF()">📄 تصدير PDF</button>
         <button class="btn" style="background:#244062;color:#fff;" onclick="seExportWord()">📄 تصدير Word</button>
+        <button class="btn btn-primary" onclick="seSaveReport()">💾 حفظ بسجل التقارير</button>
       </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><h3>التقارير السابقة</h3></div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table class="tbl"><thead><tr><th>الإدارة</th><th>الفترة</th><th>تاريخ الإنشاء</th><th>إجمالي الإنفاق</th><th>إجراءات</th></tr></thead>
+      <tbody id="se-history-body"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px;">لا توجد تقارير محفوظة</td></tr></tbody></table>
     </div>
   </div>
 </div>
@@ -9732,6 +9755,16 @@ async function loadFromSupabase(){
   localStorage.setItem('chg_list',JSON.stringify(chgList));
   if(typeof chgRender==='function') chgRender();
 
+  // سجل تقارير تحليل كفاءة الإنفاق
+  const seRes=await sbGet('procurement_spend_reports');
+  const seLocal=JSON.parse(localStorage.getItem('se_report_history')||'[]');
+  if(seRes&&seRes.length){
+    const sbMapped=seRes.map(r=>{const d=typeof r.data==='string'?JSON.parse(r.data):r.data; if(d) d._sbId=r.id; return d;}).filter(Boolean);
+    seReportHistory=mergeById(sbMapped,seLocal,'id');
+  }else seReportHistory=seLocal;
+  localStorage.setItem('se_report_history',JSON.stringify(seReportHistory));
+  if(typeof seRenderHistory==='function') seRenderHistory();
+
   // المحاضر
   const cmRes=await sbGet('procurement_committees');
   const cmLocal=JSON.parse(localStorage.getItem('committees')||'[]');
@@ -10747,13 +10780,29 @@ function seGenerateRecommendations(findings){
 }
 var seLastReport=null; // يحتفظ بآخر تقرير مُنشأ (للاستخدام بالتصدير)
 
-function seGenerateReport(){
+function seGenerateReport(isFilterChange){
   var dept=document.getElementById('se-dept').value;
   var period=document.getElementById('se-period').value;
   var range=seGetDateRange(period);
   if(!range){toast('حدد الفترة المخصصة (من - إلى)',true);return;}
-  var rows=seFilterExpenses(dept,range.from,range.to);
-  if(!rows.length){toast('لا توجد بيانات إنفاق لهذي الإدارة بهذي الفترة',true);document.getElementById('se-report-wrap').style.display='none';return;}
+  var baseRows=seFilterExpenses(dept,range.from,range.to);
+  if(!baseRows.length){toast('لا توجد بيانات إنفاق لهذي الإدارة بهذي الفترة',true);document.getElementById('se-report-wrap').style.display='none';document.getElementById('se-advanced-filters').style.display='none';return;}
+
+  // تعبئة الفلاتر المتقدمة (مورد/بند) من البيانات الفعلية لنفس الإدارة والفترة — ما نعرضها إلا لو فيه بيانات تدعمها
+  if(!isFilterChange){
+    var vendSel=document.getElementById('se-filter-vendor'), itemSel=document.getElementById('se-filter-item');
+    var vendors=[...new Set(baseRows.map(function(e){return e.vendor;}).filter(Boolean))];
+    var items=[...new Set(baseRows.map(function(e){return e.item_name;}).filter(Boolean))];
+    vendSel.innerHTML='<option value="">الكل</option>'+vendors.map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('');
+    itemSel.innerHTML='<option value="">الكل</option>'+items.map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('');
+    document.getElementById('se-advanced-filters').style.display=(vendors.length||items.length)?'block':'none';
+  }
+  var fVendor=document.getElementById('se-filter-vendor').value;
+  var fItem=document.getElementById('se-filter-item').value;
+  var rows=baseRows.filter(function(e){
+    return (!fVendor||e.vendor===fVendor) && (!fItem||e.item_name===fItem);
+  });
+  if(!rows.length){toast('لا توجد بيانات مطابقة لهذي الفلاتر',true);return;}
   var metrics=seComputeMetrics(rows);
 
   // فترة المقارنة: نفس الفترة قبل سنة بالضبط
@@ -10771,8 +10820,10 @@ function seGenerateReport(){
   var findings=seDetectReviewItems(metrics);
   var opportunities=seGenerateOpportunities(findings);
   var recommendations=seGenerateRecommendations(findings);
+  // خطة الإجراءات المقترحة — تبدأ دائمًا "لم يبدأ"، ما لم تكن محمّلة من تقرير محفوظ (تُستبدل لاحقًا بحالتها الفعلية)
+  var actionPlan=findings.map(function(f,i){return {idx:i,note:f.note,action:f.action,priority:(f.type==='تركز لدى مورد'?'عالية':'متوسطة'),duration:(f.type==='تركز لدى مورد'?'15 يوم':'30 يوم'),status:'لم يبدأ'};});
 
-  seLastReport={dept:dept,range:range,metrics:metrics,changeNote:changeNote,findings:findings,opportunities:opportunities,recommendations:recommendations,generatedAt:new Date().toISOString()};
+  seLastReport={dept:dept,range:range,metrics:metrics,changeNote:changeNote,findings:findings,opportunities:opportunities,recommendations:recommendations,actionPlan:actionPlan,filters:{vendor:fVendor,item:fItem},generatedAt:new Date().toISOString()};
 
   document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+dept+' ('+range.label+')';
   document.getElementById('se-dashboard').innerHTML=
@@ -10818,7 +10869,22 @@ function seGenerateReport(){
     return '<tr><td>'+r.rec+'</td><td>'+r.reason+'</td><td>'+r.priority+'</td><td>'+r.timeline+'</td></tr>';
   }).join(''):'<tr><td colspan="4" style="text-align:center;color:#94A3B8;">لا توجد توصيات لهذي الفترة</td></tr>';
 
+  seRenderActionPlan();
+
   document.getElementById('se-report-wrap').style.display='block';
+}
+
+function seRenderActionPlan(){
+  var plan=seLastReport?seLastReport.actionPlan:[];
+  var statuses=['لم يبدأ','قيد التنفيذ','مكتمل','مؤجل'];
+  document.getElementById('se-action-plan-body').innerHTML=plan.length?plan.map(function(a,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+a.note+'</td><td>'+a.action+'</td><td>'+a.priority+'</td><td>'+a.duration+'</td>'+
+      '<td><select onchange="seUpdateActionStatus('+i+',this.value)">'+statuses.map(function(s){return '<option value="'+s+'"'+(s===a.status?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td></tr>';
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#94A3B8;">لا توجد إجراءات مقترحة لهذي الفترة</td></tr>';
+}
+function seUpdateActionStatus(idx,status){
+  if(!seLastReport||!seLastReport.actionPlan[idx]) return;
+  seLastReport.actionPlan[idx].status=status;
 }
 
 function seBuildReportHTML(forWord){
@@ -10850,6 +10916,9 @@ function seBuildReportHTML(forWord){
   var recRows=r.recommendations.length?r.recommendations.map(function(rc){
     return '<tr><td>'+rc.rec+'</td><td>'+rc.reason+'</td><td>'+rc.priority+'</td><td>'+rc.timeline+'</td></tr>';
   }).join(''):'<tr><td colspan="4" style="text-align:center;">لا توجد توصيات لهذي الفترة</td></tr>';
+  var actionRows=(r.actionPlan&&r.actionPlan.length)?r.actionPlan.map(function(a,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+a.note+'</td><td>'+a.action+'</td><td>'+a.priority+'</td><td>'+(a.responsible||'إدارة المشتريات')+'</td><td>'+a.duration+'</td><td>'+a.status+'</td></tr>';
+  }).join(''):'<tr><td colspan="7" style="text-align:center;">لا توجد إجراءات مقترحة لهذي الفترة</td></tr>';
   // تقدير الوفر: فقط لو فيه بنود مرصودة، وبنسبة تحسين تقديرية محافظة 5% على إجمالي البنود المرصودة فقط
   var reviewTotal=r.findings.reduce(function(s,f){return s+(f.total||0);},0);
   var savingsHTML;
@@ -10892,6 +10961,8 @@ function seBuildReportHTML(forWord){
     '<h2>الوفر التقديري</h2>'+savingsHTML+
     '<h2>التوصيات</h2>'+
     '<table><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني المقترح</th></tr></thead><tbody>'+recRows+'</tbody></table>'+
+    '<h2>خطة الإجراءات</h2>'+
+    '<table><thead><tr><th>#</th><th>الملاحظة</th><th>الإجراء</th><th>الأولوية</th><th>المسؤول</th><th>المدة</th><th>الحالة</th></tr></thead><tbody>'+actionRows+'</tbody></table>'+
     '<h2>الخلاصة</h2>'+
     '<p>يوصى بمراجعة الملاحظات والتوصيات الواردة أعلاه مع الجهات المعنية، ومتابعة تنفيذها ضمن الأطر الزمنية المقترحة.</p>';
   return body;
@@ -10930,6 +11001,101 @@ function seExportWord(){
   a.download='تحليل_كفاءة_الإنفاق_'+seLastReport.dept+'.doc';
   a.click();
   toast('تم تصدير Word ✅');
+}
+
+var seReportHistory=JSON.parse(localStorage.getItem('se_report_history')||'[]');
+
+async function seSaveReport(){
+  if(!seLastReport){toast('أنشئ التقرير أولاً',true);return;}
+  var record={
+    id:Date.now(),
+    dept:seLastReport.dept,
+    periodLabel:seLastReport.range.label,
+    from:seLastReport.range.from,
+    to:seLastReport.range.to,
+    total:seLastReport.metrics.total,
+    generatedAt:seLastReport.generatedAt,
+    // نحفظ إعدادات التقرير + بيانات إعادة الإنتاج، مو نسخة كاملة مكررة من كل شي — نعيد توليد التحليل من نفس البيانات وقت الفتح
+    report:seLastReport
+  };
+  seReportHistory.unshift(record);
+  localStorage.setItem('se_report_history',JSON.stringify(seReportHistory));
+  try{
+    var res=await sbInsert('procurement_spend_reports',{report_id:record.id,data:JSON.stringify(record)});
+    if(res&&res[0]) record._sbId=res[0].id;
+  }catch(e){console.error('[se] فشل حفظ التقرير بالسحابة (محفوظ محليًا فقط):',e);}
+  toast('تم حفظ التقرير بسجل التقارير ✅');
+  seRenderHistory();
+}
+
+function seRenderHistory(){
+  var body=document.getElementById('se-history-body');if(!body)return;
+  if(!seReportHistory.length){
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px;">لا توجد تقارير محفوظة</td></tr>';
+    return;
+  }
+  body.innerHTML=seReportHistory.map(function(r,i){
+    var dt=new Date(r.generatedAt).toLocaleDateString('en-GB');
+    return '<tr><td>'+r.dept+'</td><td>'+r.periodLabel+'</td><td>'+dt+'</td><td>'+seFmt(r.total)+' ريال</td>'+
+      '<td><button class="btn btn-primary btn-sm" onclick="seOpenSavedReport('+i+')">فتح</button> '+
+      '<button class="btn btn-gray btn-sm" onclick="seDeleteSavedReport('+i+')">حذف</button></td></tr>';
+  }).join('');
+}
+
+function seOpenSavedReport(i){
+  var r=seReportHistory[i];if(!r)return;
+  seLastReport=r.report;
+  document.getElementById('se-dept').value=seLastReport.dept;
+  // نعيد عرض نفس التقرير المحفوظ مباشرة بدل إعادة حسابه من جديد (يحافظ على حالة خطة الإجراءات المحفوظة)
+  document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+seLastReport.dept+' ('+seLastReport.range.label+')';
+  var m=seLastReport.metrics;
+  document.getElementById('se-dashboard').innerHTML=
+    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">إجمالي الإنفاق</div><div style="font-size:18px;font-weight:700;">'+seFmt(m.total)+' ريال</div></div>'+
+    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">عدد العمليات</div><div style="font-size:18px;font-weight:700;">'+m.count+'</div></div>'+
+    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">متوسط قيمة العملية</div><div style="font-size:18px;font-weight:700;">'+seFmt(m.avgPerOp)+' ريال</div></div>'+
+    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى بند إنفاقًا</div><div style="font-size:14px;font-weight:700;">'+(m.topItem||'—')+'</div></div>'+
+    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى مورد تعاملًا</div><div style="font-size:14px;font-weight:700;">'+(m.topVendor||'—')+'</div></div>';
+  document.getElementById('se-compare-note').textContent=seLastReport.changeNote;
+  var monthKeys=Object.keys(m.byMonth).sort();
+  document.getElementById('se-monthly-chart').innerHTML=monthKeys.length?
+    '<table class="tbl"><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthKeys.map(function(mk){return '<tr><td>'+mk+'</td><td>'+seFmt(m.byMonth[mk])+' ريال</td></tr>';}).join('')+'</tbody></table>'
+    :'<div style="color:#94A3B8;font-size:12px;">لا توجد بيانات</div>';
+  var itemEntries=Object.entries(m.byItem).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('se-items-body').innerHTML=itemEntries.map(function(entry){
+    var pct=m.total>0?(entry[1].total/m.total*100):0;
+    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+pct.toFixed(1)+'%</td><td>'+entry[1].count+'</td></tr>';
+  }).join('');
+  var vendorEntries=Object.entries(m.byVendor).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('se-vendors-body').innerHTML=vendorEntries.map(function(entry){
+    return '<tr><td>'+entry[0]+'</td><td>'+seFmt(entry[1].total)+' ريال</td><td>'+entry[1].count+'</td><td>'+seFmt(entry[1].total/entry[1].count)+' ريال</td></tr>';
+  }).join('');
+  document.getElementById('se-review-items').innerHTML=seLastReport.findings.length?seLastReport.findings.map(function(f){
+    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;">'+
+      '<div style="font-weight:700;margin-bottom:4px;">'+f.note+'</div>'+
+      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>البيانات الداعمة:</strong> '+f.support+'</div>'+
+      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>سبب الاعتبار:</strong> '+f.reason+'</div>'+
+      '<div style="font-size:12px;color:#64748B;margin-bottom:2px;"><strong>الأثر المحتمل:</strong> '+f.impact+'</div>'+
+      '<div style="font-size:12px;color:#64748B;"><strong>الإجراء المقترح:</strong> '+f.action+'</div>'+
+    '</div>';
+  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لم يتم رصد بنود تستدعي المراجعة وفق المعايير المعتمدة خلال هذي الفترة.</div>';
+  document.getElementById('se-opportunities').innerHTML=seLastReport.opportunities.length?seLastReport.opportunities.map(function(o){
+    return '<div style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;"><div style="font-weight:700;margin-bottom:4px;">'+o.title+'</div><div style="font-size:12px;color:#64748B;">'+o.body+'</div></div>';
+  }).join(''):'<div style="color:#94A3B8;font-size:12px;">لا توجد فرص تحسين واضحة وفق البيانات المتاحة لهذي الفترة.</div>';
+  document.getElementById('se-recs-body').innerHTML=seLastReport.recommendations.length?seLastReport.recommendations.map(function(r){
+    return '<tr><td>'+r.rec+'</td><td>'+r.reason+'</td><td>'+r.priority+'</td><td>'+r.timeline+'</td></tr>';
+  }).join(''):'<tr><td colspan="4" style="text-align:center;color:#94A3B8;">لا توجد توصيات لهذي الفترة</td></tr>';
+  seRenderActionPlan();
+  document.getElementById('se-report-wrap').style.display='block';
+  document.getElementById('se-report-wrap').scrollIntoView({behavior:'smooth'});
+}
+
+async function seDeleteSavedReport(i){
+  if(!confirm('حذف هذا التقرير من السجل؟'))return;
+  var r=seReportHistory[i];
+  seReportHistory.splice(i,1);
+  localStorage.setItem('se_report_history',JSON.stringify(seReportHistory));
+  if(r&&r._sbId){ try{ await sbDelete('procurement_spend_reports',r._sbId); }catch(e){} }
+  seRenderHistory();
 }
 
 
