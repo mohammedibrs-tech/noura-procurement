@@ -3183,7 +3183,7 @@ function expPrint(){
   }).join('');
   const notesList=filtered.filter(e=>e.notes&&e.notes.trim()).map(e=>`• ${e.item_name||'—'}: ${e.notes}`).join('<br>');
   const transferFeesList=filtered.filter(e=>(parseFloat(e.transfer_fee)||0)>0).map(e=>`• ${e.item_name||'—'} (${e.vendor||'—'}): ${(parseFloat(e.transfer_fee)||0).toLocaleString('en-US')} ريال`).join('<br>');
-  const CSS=`@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:20px;font-size:${BF}px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}td{padding:6px 8px;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.25;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
+  const CSS=`@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:11px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:11px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{table-layout:auto;border-collapse:collapse;margin-bottom:20px;font-size:${BF}px;background:#fff;border:1px solid #000;}table.info-tbl{width:auto;max-width:65%;}table.wide-tbl{width:100%;table-layout:fixed;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}td{padding:6px 8px;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.25;}tbody tr:nth-child(even){background:#f9f9f9;}.val{font-weight:600;}.sig-area{display:flex;gap:40px;margin-top:30px;}.sig-box{flex:1;text-align:center;}.sig-img{width:120px;margin:10px auto;display:block;}`;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>${CSS}</style></head><body>
 <div class="bg-corner bg-tl"><img src="${BG}"></div>
@@ -10705,6 +10705,20 @@ function seFilterExpenses(depts,from,to){
     return depts.indexOf(e.department)!==-1 && e.expense_date && e.expense_date>=from && e.expense_date<=to;
   });
 }
+// يوحّد أسماء البنود المتشابهة تحت مسمى واحد عند التجميع، بدل ما تتفرق كل صيغة كتابة كبند منفصل
+var SE_ITEM_GROUPS=[
+  {label:'مياه الشرب', keywords:['ماء','مياه']}
+];
+function seNormalizeItemName(name){
+  if(!name) return name;
+  for(var i=0;i<SE_ITEM_GROUPS.length;i++){
+    var g=SE_ITEM_GROUPS[i];
+    for(var j=0;j<g.keywords.length;j++){
+      if(name.indexOf(g.keywords[j])!==-1) return g.label;
+    }
+  }
+  return name;
+}
 function seComputeMetrics(rows){
   var total=0, count=rows.length;
   var byMonth={}, byItem={}, byVendor={}, byDept={};
@@ -10713,7 +10727,7 @@ function seComputeMetrics(rows){
     total+=amt;
     var mk=(e.expense_date||'').substring(0,7);
     byMonth[mk]=(byMonth[mk]||0)+amt;
-    var it=e.item_name||'—';
+    var it=seNormalizeItemName(e.item_name||'—');
     if(!byItem[it]) byItem[it]={total:0,count:0,amounts:[],vendors:{}};
     byItem[it].total+=amt; byItem[it].count++; byItem[it].amounts.push(amt);
     if(e.vendor) byItem[it].vendors[e.vendor]=(byItem[it].vendors[e.vendor]||0)+1;
@@ -10817,12 +10831,12 @@ function seGenerateReport(isFilterChange){
 
   document.getElementById('se-report-title').textContent='لوحة المؤشرات — '+depts.join('، ')+' ('+range.label+')';
   document.getElementById('se-dashboard').innerHTML=
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">إجمالي الإنفاق</div><div style="font-size:18px;font-weight:700;">'+seFmt(metrics.total)+' ريال</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">عدد العمليات</div><div style="font-size:18px;font-weight:700;">'+metrics.count+'</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">متوسط قيمة العملية</div><div style="font-size:18px;font-weight:700;">'+seFmt(metrics.avgPerOp)+' ريال</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى بند إنفاقًا</div><div style="font-size:14px;font-weight:700;">'+(metrics.topItem||'—')+'</div></div>'+
-    '<div class="kpi-box" style="border:1px solid #E2E8F0;border-radius:8px;padding:10px;"><div style="font-size:11px;color:#64748B;">أعلى مورد تعاملًا</div><div style="font-size:14px;font-weight:700;">'+(metrics.topVendor||'—')+'</div></div>';
-  document.getElementById('se-compare-note').textContent=changeNote;
+    '<table class="tbl" style="width:auto;min-width:50%;"><tbody>'+
+    '<tr><td style="font-weight:700;">الإدارات المشمولة</td><td>'+depts.join('، ')+'</td></tr>'+
+    '<tr><td style="font-weight:700;">الهدف من التقرير</td><td>تحليل الإنفاق وتحديد فرص تحسين كفاءة استخدام الموارد للإدارات والفترة المحددة</td></tr>'+
+    '<tr><td style="font-weight:700;">فترة التقرير</td><td>من '+range.from+' إلى '+range.to+'</td></tr>'+
+    '</tbody></table>';
+  document.getElementById('se-compare-note').textContent='';
   document.getElementById('se-brief-notes').innerHTML=seLastReport.findings.length?('<strong>أبرز الملاحظات:</strong> يوجد '+seLastReport.findings.length+' ملاحظة تستدعي المتابعة ضمن بيانات هذي الفترة (تفصيلها ضمن التوصيات أدناه).'):'';
 
   var monthKeys=Object.keys(metrics.byMonth).sort();
@@ -10901,29 +10915,27 @@ function seBuildReportHTML(){
       var pct=r.metrics.total>0?(entry[1]/r.metrics.total*100):0;
       return '<tr><td>'+entry[0]+'</td><td>'+pct.toFixed(1)+'%</td></tr>';
     }).join('');
-    distSection='<h2>توزيع الإنفاق حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th>نسبة الإنفاق</th></tr></thead><tbody>'+distRows+'</tbody></table>';
+    distSection='<h2>توزيع الإنفاق حسب الإدارة</h2><table class="info-tbl"><thead><tr><th>الإدارة</th><th>نسبة الإنفاق</th></tr></thead><tbody>'+distRows+'</tbody></table>';
   }
   var recRows=r.recommendations.length?r.recommendations.map(function(rc){
     return '<tr><td>'+rc.rec+'</td><td>'+rc.reason+'</td><td>'+rc.priority+'</td><td>'+rc.timeline+'</td></tr>';
   }).join(''):'<tr><td colspan="4" style="text-align:center;">لا توجد توصيات</td></tr>';
   var body=''+
     '<h1>تقرير تحليل كفاءة الإنفاق</h1>'+
-    '<p class="sub">الإدارات المشمولة: '+r.depts.join('، ')+' — '+r.range.label+' | تاريخ الإعداد: '+today+'</p>'+
-    '<div class="kpi-grid">'+
-    '<div class="kpi-box"><div class="kpi-label">إجمالي الإنفاق</div><div class="kpi-val">'+seFmt(r.metrics.total)+'</div><div class="kpi-unit">ريال</div></div>'+
-    '<div class="kpi-box"><div class="kpi-label">عدد العمليات</div><div class="kpi-val">'+r.metrics.count+'</div><div class="kpi-unit">عملية</div></div>'+
-    '<div class="kpi-box"><div class="kpi-label">متوسط قيمة العملية</div><div class="kpi-val">'+seFmt(r.metrics.avgPerOp)+'</div><div class="kpi-unit">ريال</div></div>'+
-    '</div>'+
-    '<p style="text-align:center;">'+r.changeNote+'</p>'+
+    '<table class="info-tbl"><tbody>'+
+    '<tr><td style="font-weight:700;width:35%;">الإدارات المشمولة</td><td>'+r.depts.join('، ')+'</td></tr>'+
+    '<tr><td style="font-weight:700;">الهدف من التقرير</td><td>تحليل الإنفاق وتحديد فرص تحسين كفاءة استخدام الموارد للإدارات والفترة المحددة</td></tr>'+
+    '<tr><td style="font-weight:700;">فترة التقرير</td><td>من '+r.range.from+' إلى '+r.range.to+'</td></tr>'+
+    '</tbody></table>'+
     distSection+
     '<h2>الإنفاق حسب الشهر</h2>'+
-    (monthRows?'<table><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthRows+'</tbody></table>':'<p style="text-align:center;">لا توجد بيانات كافية.</p>')+
+    (monthRows?'<table class="wide-tbl"><thead><tr><th>الشهر</th><th>الإجمالي</th></tr></thead><tbody>'+monthRows+'</tbody></table>':'<p style="text-align:center;">لا توجد بيانات كافية.</p>')+
     '<h2>أعلى البنود إنفاقًا</h2>'+
-    '<table><thead><tr><th>#</th><th>البند</th><th>قيمة الإنفاق</th><th>النسبة</th></tr></thead><tbody>'+itemRows+'</tbody></table>'+
+    '<table class="wide-tbl"><thead><tr><th>#</th><th>البند</th><th>قيمة الإنفاق</th><th>النسبة</th></tr></thead><tbody>'+itemRows+'</tbody></table>'+
     '<h2>أعلى الموردين إنفاقًا</h2>'+
-    '<table><thead><tr><th>#</th><th>المورد</th><th>قيمة التعامل</th><th>النسبة</th></tr></thead><tbody>'+vendorRows+'</tbody></table>'+
+    '<table class="wide-tbl"><thead><tr><th>#</th><th>المورد</th><th>قيمة التعامل</th><th>النسبة</th></tr></thead><tbody>'+vendorRows+'</tbody></table>'+
     '<h2>التوصيات</h2>'+
-    '<table><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني</th></tr></thead><tbody>'+recRows+'</tbody></table>';
+    '<table class="wide-tbl"><thead><tr><th>التوصية</th><th>السبب</th><th>الأولوية</th><th>الإطار الزمني</th></tr></thead><tbody>'+recRows+'</tbody></table>';
   return body;
 }
 
@@ -10935,7 +10947,7 @@ function seExportPDF(){
   var BF=manualFontSize||11;
   var BG=FORM_BG||'';
   var body=seBuildReportHTML();
-  var CSS=`@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:${BF}px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:20px;font-size:${BF}px;background:#fff;border:1px solid #000;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}td{padding:6px 8px;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.25;}tbody tr:nth-child(even){background:#f9f9f9;}`;
+  var CSS=`@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:${BF}px;color:#111;direction:rtl;margin:0;padding:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}h1{font-size:18px;text-align:center;color:#000;margin-bottom:10px;}h2{font-size:13px;margin:16px 0 8px;border-right:4px solid #000;padding-right:8px;color:#000;}p.sub{text-align:center;color:#555;font-size:${BF}px;margin-bottom:20px;}.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:20px;background:#fff;}.kpi-box{padding:12px;border-left:1px solid #000;}.kpi-box:last-child{border-left:none;}.kpi-label{font-size:10px;color:#555;margin-bottom:4px;}.kpi-val{font-size:22px;font-weight:700;color:#111;}.kpi-unit{font-size:10px;color:#555;}table{table-layout:auto;border-collapse:collapse;margin-bottom:20px;font-size:${BF}px;background:#fff;border:1px solid #000;}table.info-tbl{width:auto;max-width:65%;}table.wide-tbl{width:100%;table-layout:fixed;}thead th{background:#2E9896;color:#fff;padding:8px;text-align:right;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}td{padding:6px 8px;border:1px solid #000;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.25;}tbody tr:nth-child(even){background:#f9f9f9;}`;
   var w=window.open('','_blank');
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
   if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
@@ -10987,7 +10999,7 @@ function seExportWord(){
     'h1{font-size:17px;text-align:center;}h2{font-size:13px;margin:14px 0 6px;}p.sub{text-align:center;color:#555;}'+
     '.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #000;margin-bottom:14px;}.kpi-box{padding:10px;border-left:1px solid #000;text-align:center;}'+
     '.kpi-label{font-size:10px;color:#555;}.kpi-val{font-size:18px;font-weight:700;}.kpi-unit{font-size:10px;color:#555;}'+
-    'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px;}'+
+    'table{table-layout:auto;border-collapse:collapse;margin-bottom:10px;font-size:11px;}table.info-tbl{width:auto;max-width:65%;}table.wide-tbl{width:100%;table-layout:fixed;}'+
     'th{background:#2E9896;color:#fff;padding:5px 7px;border:1px solid #000;}td{padding:4px 7px;border:1px solid #999;}</style></head><body>'+body+'</body></html>';
   var blob=new Blob(['\ufeff'+html],{type:'application/msword'});
   var a=document.createElement('a');
