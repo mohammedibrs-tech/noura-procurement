@@ -3677,7 +3677,7 @@ function poPrintData(d){
 
   const rHTML=(d.rows||[]).map(r=>`<tr>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.num}</td>
-    <td style="border:1px solid #bbb;padding:5px 4px;">${r.item}</td>
+    <td style="border:1px solid #bbb;padding:5px 4px;word-wrap:break-word;overflow-wrap:break-word;">${r.item}</td>
     <td style="border:1px solid #bbb;padding:5px 4px;font-size:10.5px;word-wrap:break-word;overflow-wrap:break-word;">${r.desc||''}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.qty}</td>
     <td style="text-align:center;border:1px solid #bbb;padding:5px 3px;">${r.uom||''}</td>
@@ -3736,14 +3736,14 @@ table{border-collapse:collapse;width:100%;}
   <table style="margin-bottom:6px;table-layout:fixed;width:100%;">
     <thead>
       <tr style="background:#2E9896;color:#fff;">
-        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:4%;">S.N<br><span style="font-size:11px;">الرقم</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;width:9%;">Item<br><span style="font-size:11px;">الصنف</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;width:32%;">Description<br><span style="font-size:11px;">الوصف</span></th>
+        <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:3%;">S.N<br><span style="font-size:11px;">الرقم</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;width:20%;">Item<br><span style="font-size:11px;">الصنف</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;width:26%;">Description<br><span style="font-size:11px;">الوصف</span></th>
         <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:5%;">Qty<br><span style="font-size:11px;">الكمية</span></th>
         <th style="border:1px solid #bbb;padding:6px 3px;text-align:center;width:6%;">UOM<br><span style="font-size:11px;">الوحدة</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Unit Price<br><span style="font-size:11px;">سعر الوحدة</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:10%;">Total<br><span style="font-size:11px;">الإجمالي</span></th>
-        <th style="border:1px solid #bbb;padding:6px 4px;width:10%;">Notes<br><span style="font-size:11px;">ملاحظات</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:9%;">Unit Price<br><span style="font-size:11px;">سعر الوحدة</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;text-align:right;width:9%;">Total<br><span style="font-size:11px;">الإجمالي</span></th>
+        <th style="border:1px solid #bbb;padding:6px 4px;width:9%;">Notes<br><span style="font-size:11px;">ملاحظات</span></th>
       </tr>
     </thead>
     <tbody>${rHTML}</tbody>
