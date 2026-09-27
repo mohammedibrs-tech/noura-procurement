@@ -478,9 +478,16 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         </tbody>
       </table>
       <button class="btn btn-gray btn-sm" onclick="poAddRow()">+ إضافة صف</button>
+      <div style="margin-top:12px;">
+        <label style="font-size:13px;font-weight:600;">نسبة الضريبة</label>
+        <select id="po-vat-rate" onchange="poCalcAll()" style="margin-inline-start:8px;padding:4px 8px;">
+          <option value="0.15" selected>15% (شامل الضريبة)</option>
+          <option value="0">0% (بدون ضريبة)</option>
+        </select>
+      </div>
       <div style="text-align:left;margin-top:12px;font-size:13px;">
         <div>المجموع: <strong id="po-sub">0</strong> ر.س</div>
-        <div>VAT 15%: <strong id="po-tax">0</strong> ر.س</div>
+        <div>VAT <span id="po-vat-label">15%</span>: <strong id="po-tax">0</strong> ر.س</div>
         <div style="font-size:15px;font-weight:900;color:var(--primary);">الإجمالي: <strong id="po-tot">0</strong> ر.س</div>
       </div>
       <!-- شروط التسليم والضمان والدفع -->
@@ -3288,10 +3295,13 @@ function poCalcAll(){
     const price=parseFloat(tr.querySelector('.po-price')?.value)||0;
     sub+=qty*price;
   });
-  const tax=sub*0.15;
+  const vatRate=parseFloat(document.getElementById('po-vat-rate')?.value)||0;
+  const tax=sub*vatRate;
   document.getElementById('po-sub').textContent=sub.toLocaleString('ar-SA');
   document.getElementById('po-tax').textContent=tax.toLocaleString('ar-SA');
   document.getElementById('po-tot').textContent=(sub+tax).toLocaleString('ar-SA');
+  const vatLabelEl=document.getElementById('po-vat-label');
+  if(vatLabelEl) vatLabelEl.textContent=(vatRate*100)+'%';
 }
 
 function poGetRows(){
@@ -3383,6 +3393,7 @@ function poEditById(i){
   document.getElementById('po-num').value=s.num||'';
   document.getElementById('po-date').value=s.date||'';
   document.getElementById('po-vat').value=s.vat||'';
+  document.getElementById('po-vat-rate').value=(typeof s.vatRate==='number')?s.vatRate:0.15;
   document.getElementById('po-email').value=s.email||'';
   document.getElementById('po-phone').value=s.phone||'';
   document.getElementById('po-addr').value=s.addr||'';
@@ -3434,6 +3445,7 @@ function poEditById(i){
 
   // انتقل للأعلى
   document.getElementById('page-po').scrollIntoView({behavior:'smooth'});
+  poCalcAll();
   toast('وضع التعديل — عدّل البيانات ثم اضغط حفظ');
 }
 
@@ -3478,7 +3490,7 @@ async function poSave(){
   const terms=poGetTerms();
   const data={
     company:co,num:document.getElementById('po-num')?.value||'',date:document.getElementById('po-date')?.value||'',
-    vat:document.getElementById('po-vat')?.value||'',terms:terms,email:document.getElementById('po-email')?.value||'',
+    vat:document.getElementById('po-vat')?.value||'',vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,terms:terms,email:document.getElementById('po-email')?.value||'',
     phone:document.getElementById('po-phone')?.value||'',addr:document.getElementById('po-addr')?.value||'',
     del_email:document.getElementById('po-del-email')?.value||'',del_phone:document.getElementById('po-del-phone')?.value||'',
     del_addr:document.getElementById('po-del-addr')?.value||'',del_vat:document.getElementById('po-del-vat')?.value||'',
@@ -3604,6 +3616,7 @@ function poToggleReportVisibility(idx,val){
 function poExcel(){poExcelData({
   company:document.getElementById('po-co').value,num:document.getElementById('po-num').value,
   date:document.getElementById('po-date').value,vat:document.getElementById('po-vat').value,
+  vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,
   email:document.getElementById('po-email').value,phone:document.getElementById('po-phone').value,
   del_vat:document.getElementById('po-del-vat').value,quote:document.getElementById('po-quote').value,
   rows:poGetRows()
@@ -3628,7 +3641,8 @@ function poExcelData(d){
     sc(`D${r}`,row.qty);sc(`E${r}`,row.uom||'');sc(`F${r}`,row.price);sc(`G${r}`,row.total);sc(`H${r}`,row.notes||'');
   });
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
-  sc('G20',sub);sc('G21',sub*0.15);sc('G22',sub*1.15);
+  const vatRate=(typeof d.vatRate==='number')?d.vatRate:0.15;
+  sc('G20',sub);sc('G21',sub*vatRate);sc('G22',sub*(1+vatRate));
   const out=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
   const a=document.createElement('a');a.href='data:application/octet-stream;base64,'+out;
   a.download=`LPO_${d.company||'طلب'}_${d.num||''}.xlsx`;a.click();
@@ -3655,6 +3669,7 @@ function poGetSignatories(){
 function poPrint(){poPrintData({
   company:document.getElementById('po-co').value,num:document.getElementById('po-num').value,
   date:document.getElementById('po-date').value,vat:document.getElementById('po-vat').value,
+  vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,
   email:document.getElementById('po-email').value,phone:document.getElementById('po-phone').value,
   addr:document.getElementById('po-addr').value,
   del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
@@ -3669,7 +3684,9 @@ function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:p
 
 function poPrintData(d){
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
-  const tax=sub*0.15; const tot=sub+tax;
+  const vatRate=(typeof d.vatRate==='number')?d.vatRate:0.15;
+  const tax=sub*vatRate; const tot=sub+tax;
+  const vatPctLabel=(vatRate*100)+'%';
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
   const BG=FORM_BG;
@@ -3756,7 +3773,7 @@ table{border-collapse:collapse;width:100%;}
       <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${sub.toFixed(2)}</td>
     </tr>
     <tr>
-      <td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">VAT 15% / الضريبة</td>
+      <td style="border:1px solid #ccc;padding:5px 8px;font-weight:700;">VAT ${vatPctLabel} / الضريبة</td>
       <td style="border:1px solid #ccc;padding:5px 8px;text-align:right;">${tax.toFixed(2)}</td>
     </tr>
     <tr>
