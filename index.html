@@ -3490,7 +3490,7 @@ async function poSave(){
   const terms=poGetTerms();
   const data={
     company:co,num:document.getElementById('po-num')?.value||'',date:document.getElementById('po-date')?.value||'',
-    vat:document.getElementById('po-vat')?.value||'',vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,terms:terms,email:document.getElementById('po-email')?.value||'',
+    vat:document.getElementById('po-vat')?.value||'',vatRate:(function(){var v=parseFloat(document.getElementById('po-vat-rate')?.value);return isNaN(v)?0.15:v;})(),terms:terms,email:document.getElementById('po-email')?.value||'',
     phone:document.getElementById('po-phone')?.value||'',addr:document.getElementById('po-addr')?.value||'',
     del_email:document.getElementById('po-del-email')?.value||'',del_phone:document.getElementById('po-del-phone')?.value||'',
     del_addr:document.getElementById('po-del-addr')?.value||'',del_vat:document.getElementById('po-del-vat')?.value||'',
@@ -3616,7 +3616,7 @@ function poToggleReportVisibility(idx,val){
 function poExcel(){poExcelData({
   company:document.getElementById('po-co').value,num:document.getElementById('po-num').value,
   date:document.getElementById('po-date').value,vat:document.getElementById('po-vat').value,
-  vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,
+  vatRate:(function(){var v=parseFloat(document.getElementById('po-vat-rate')?.value);return isNaN(v)?0.15:v;})(),
   email:document.getElementById('po-email').value,phone:document.getElementById('po-phone').value,
   del_vat:document.getElementById('po-del-vat').value,quote:document.getElementById('po-quote').value,
   rows:poGetRows()
@@ -3669,7 +3669,7 @@ function poGetSignatories(){
 function poPrint(){poPrintData({
   company:document.getElementById('po-co').value,num:document.getElementById('po-num').value,
   date:document.getElementById('po-date').value,vat:document.getElementById('po-vat').value,
-  vatRate:parseFloat(document.getElementById('po-vat-rate')?.value)||0.15,
+  vatRate:(function(){var v=parseFloat(document.getElementById('po-vat-rate')?.value);return isNaN(v)?0.15:v;})(),
   email:document.getElementById('po-email').value,phone:document.getElementById('po-phone').value,
   addr:document.getElementById('po-addr').value,
   del_email:document.getElementById('po-del-email').value,del_phone:document.getElementById('po-del-phone').value,
