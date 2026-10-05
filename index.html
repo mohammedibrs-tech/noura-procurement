@@ -557,7 +557,11 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     <div class="card-body">
       <div class="form-grid">
         <div class="field">
-          <label>اسم الشركة / الجهة الطالبة</label>
+          <label>رقم النموذج</label>
+          <input id="rfq-ref-num" placeholder="RFQ-2026-001">
+        </div>
+        <div class="field">
+          <label>اسم الشركة</label>
           <input id="rfq-co" placeholder="اسم الشركة أو الإدارة">
         </div>
         <div class="field">
@@ -565,36 +569,34 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
           <input id="rfq-date" type="date">
         </div>
         <div class="field">
-          <label>الصنف المطلوب</label>
-          <input id="rfq-item" placeholder="اسم الصنف أو الخدمة المطلوبة">
-        </div>
-        <div class="field">
-          <label>عدد الأصناف</label>
-          <input id="rfq-qty" type="number" placeholder="1">
+          <label>مدة التسليم</label>
+          <input id="rfq-delivery" placeholder="أسبوع عمل">
         </div>
       </div>
-      <div class="field" style="margin-top:8px;">
+
+      <div class="section-title" style="margin-top:16px;">الأصناف المطلوبة</div>
+      <table class="tbl" style="margin-bottom:8px;table-layout:fixed;width:100%;">
+        <thead><tr><th style="width:6%;">م</th><th style="width:22%;">الصنف</th><th style="width:32%;">الوصف</th><th style="width:10%;">الكمية</th><th style="width:24%;">الملاحظات</th><th style="width:6%;"></th></tr></thead>
+        <tbody id="rfq-tbody">
+          <tr>
+            <td>1</td>
+            <td><input class="rfq-item" placeholder="اسم الصنف"></td>
+            <td><input class="rfq-desc" placeholder="وصف الصنف"></td>
+            <td><input class="rfq-qty" placeholder="1"></td>
+            <td><input class="rfq-notes" placeholder=""></td>
+            <td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-gray btn-sm" onclick="rfqAddRow()">+ إضافة صنف</button>
+
+      <div class="field" style="margin-top:12px;">
         <label>ملاحظات</label>
         <textarea id="rfq-notes" placeholder="أي تفاصيل إضافية..."></textarea>
       </div>
 
-      <div class="section-title" style="margin-top:16px;">الموردون المستلمون</div>
-      <table class="tbl" style="margin-bottom:8px;">
-        <thead><tr><th style="width:8%;">م</th><th>اسم المورد</th><th>البريد الإلكتروني</th><th style="width:8%;"></th></tr></thead>
-        <tbody id="rfq-vendors-tbody">
-          <tr>
-            <td>1</td>
-            <td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td>
-            <td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td>
-            <td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>
-          </tr>
-        </tbody>
-      </table>
-      <button class="btn btn-gray btn-sm" onclick="rfqAddVendorRow()">+ إضافة مورد</button>
-
       <div class="actions">
         <button class="btn btn-primary" onclick="rfqSave()">💾 حفظ الطلب</button>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">بعد الحفظ، بتلقى زر "إرسال بالبريد" لكل مورد أضفته — يفتح لك تبويب PDF للطلب وتبويب Outlook برسالة جاهزة معاً؛ احفظ الـ PDF واسحبه لتبويب Outlook قبل الإرسال (المتصفح لا يسمح بإرفاق ملفات تلقائياً لأسباب أمنية).</div>
         <button class="btn btn-red" onclick="rfqPrint()">🖨️ طباعة / PDF</button>
       </div>
     </div>
@@ -774,6 +776,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
     <div class="card-header"><h3>إنشاء سند استلام</h3></div>
     <div class="card-body">
       <div class="form-grid">
+        <div class="field"><label>رقم السند</label><input id="dn-ref-num" placeholder="DN-2026-001"></div>
         <div class="field"><label>اسم الشركة المورّدة</label><input id="dn-co" placeholder="اسم الشركة"></div>
         <div class="field"><label>رقم التعميد (إن وجد)</label><input id="dn-lpo" placeholder="NDC-26-O-0001"></div>
         <div class="field"><label>التاريخ</label><input id="dn-date" type="date"></div>
@@ -3837,72 +3840,84 @@ let rfqActiveType=null;
 let rfqCurrentPDFb64=null;
 let rfqCurrentPDFname=null;
 
-function rfqGenRef(){
-  const yr=new Date().getFullYear();
-  const n=rfqSaved.length+1;
-  return 'RFQ-'+yr+'-'+String(n).padStart(3,'0');
+/* ══ ترقيم تسلسلي دائم (RFQ + سند الاستلام) — آخر رقم يُحفظ محليًا وبالسحابة، ولا يتراجع حتى لو حُذف نموذج ══ */
+function seqLast(type){return parseInt(localStorage.getItem('seq_last_'+type)||'0',10)||0;}
+function seqParse(str){var m=String(str||'').match(/(\d+)\s*$/);return m?parseInt(m[1],10):0;}
+function seqFormat(type,n){return (type==='rfq'?'RFQ':'DN')+'-'+new Date().getFullYear()+'-'+String(n).padStart(3,'0');}
+function seqNext(type){return seqFormat(type,seqLast(type)+1);}
+async function seqCommit(type,refStr){
+  var n=seqParse(refStr);
+  if(n>seqLast(type)){
+    localStorage.setItem('seq_last_'+type,String(n));
+    try{await sbInsert('procurement_config',{key:'seq_'+type,value:String(n),updated_at:new Date().toISOString()});}catch(e){console.error('[seq] تعذّر حفظ آخر رقم بالسحابة (محفوظ محليًا):',e);}
+  }
 }
+// يأخذ الأكبر بين الرقم المحلي والسحابي والأرقام الموجودة فعليًا بالنماذج المحفوظة
+async function seqLoadFromCloud(){
+  var types=['rfq','dn'];
+  for(var i=0;i<types.length;i++){
+    var type=types[i], max=seqLast(type);
+    try{
+      var rows=await sbGetAll('procurement_config','key=eq.seq_'+type);
+      (rows||[]).forEach(function(r){var v=parseInt(r.value,10)||0;if(v>max)max=v;});
+    }catch(e){}
+    var saved=(type==='rfq')?rfqSaved:dnSaved;
+    (saved||[]).forEach(function(s){var v=seqParse(s.refNum);if(v>max)max=v;});
+    localStorage.setItem('seq_last_'+type,String(max));
+  }
+  if(typeof rfqInitRef==='function')rfqInitRef();
+  if(typeof dnInitRef==='function')dnInitRef();
+}
+
+function rfqGenRef(){return seqNext('rfq');}
 function rfqInitRef(){
   const el=document.getElementById('rfq-ref-num');
   if(el&&!el.value)el.value=rfqGenRef();
 }
+function rfqRowHTML(n,r){
+  r=r||{};
+  const e=function(v){return String(v==null?'':v).replace(/"/g,'&quot;');};
+  return `<td>${n}</td><td><input class="rfq-item" placeholder="اسم الصنف" value="${e(r.item)}"></td><td><input class="rfq-desc" placeholder="وصف الصنف" value="${e(r.desc)}"></td><td><input class="rfq-qty" placeholder="1" value="${e(r.qty)}"></td><td><input class="rfq-notes" placeholder="" value="${e(r.notes)}"></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+}
+function rfqResetRows(rows){
+  const tb=document.getElementById('rfq-tbody');if(!tb)return;
+  tb.innerHTML='';rfqRows=0;
+  const list=(rows&&rows.length)?rows:[{}];
+  list.forEach(function(r){rfqRows++;const tr=document.createElement('tr');tr.innerHTML=rfqRowHTML(rfqRows,r);tb.appendChild(tr);});
+}
 function rfqAddRow(){
   rfqRows++;
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${rfqRows}</td><td><input class="rfq-item" placeholder="اسم الصنف"></td><td><input class="rfq-qty" placeholder="1" style="width:60px;"></td><td><input class="rfq-notes" placeholder=""></td><td><button onclick="rfqDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>`;
+  tr.innerHTML=rfqRowHTML(rfqRows,{});
   document.getElementById('rfq-tbody').appendChild(tr);
 }
 function rfqDelRow(btn){btn.closest('tr').remove();}
 function rfqGetRows(){
-  return Array.from(document.querySelectorAll('#rfq-tbody tr')).map((tr,i)=>({
-    num:i+1,item:tr.querySelector('.rfq-item')?.value||'',
-    qty:tr.querySelector('.rfq-qty')?.value||'',
-    notes:tr.querySelector('.rfq-notes')?.value||''
-  }));
-}
-var rfqVendorRows=1;
-function rfqAddVendorRow(){
-  rfqVendorRows++;
-  var tr=document.createElement('tr');
-  tr.innerHTML='<td>'+rfqVendorRows+'</td><td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';
-  document.getElementById('rfq-vendors-tbody').appendChild(tr);
-}
-function rfqDelVendorRow(btn){btn.closest('tr').remove();}
-// لو المورد موجود بقائمة الموردين وعنده إيميل محفوظ، عبّيه تلقائياً (بدون ما يستبدل قيمة كتبها المستخدم يدوياً)
-function rfqAutoFillVendorEmail(nameInput){
-  var name=nameInput.value.trim();
-  if(!name)return;
-  var row=nameInput.closest('tr');if(!row)return;
-  var emailInput=row.querySelector('.rfq-vendor-email');
-  if(!emailInput||emailInput.value.trim())return;
-  var sup=suppliers.find(function(s){return (s.name||'').trim()===name;});
-  if(sup&&sup.email)emailInput.value=sup.email;
-}
-function rfqGetVendors(){
-  return Array.from(document.querySelectorAll('#rfq-vendors-tbody tr')).map(function(tr){
-    return {
-      name:tr.querySelector('.rfq-vendor-name')?.value.trim()||'',
-      email:tr.querySelector('.rfq-vendor-email')?.value.trim()||''
-    };
-  }).filter(function(v){return v.name&&v.email;});
+  return Array.from(document.querySelectorAll('#rfq-tbody tr')).map(tr=>({
+    item:tr.querySelector('.rfq-item')?.value.trim()||'',
+    desc:tr.querySelector('.rfq-desc')?.value.trim()||'',
+    qty:tr.querySelector('.rfq-qty')?.value.trim()||'',
+    notes:tr.querySelector('.rfq-notes')?.value.trim()||''
+  })).filter(r=>r.item||r.desc).map((r,i)=>({num:i+1,item:r.item,desc:r.desc,qty:r.qty,notes:r.notes}));
 }
 function rfqSave(){
   const co=document.getElementById('rfq-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
-  const vendors=rfqGetVendors();
-  if(!vendors.length){toast('أضف مورد واحد على الأقل (اسم وبريد إلكتروني)',true);return;}
-  const item=document.getElementById('rfq-item').value.trim();
-  const qty=document.getElementById('rfq-qty').value.trim();
+  const rows=rfqGetRows();
+  if(!rows.length){toast('أدخل صنفًا واحدًا على الأقل',true);return;}
   const existingIdx=rfqEditingId!=null?rfqSaved.findIndex(r=>r.id===rfqEditingId):-1;
+  const refInput=(document.getElementById('rfq-ref-num')?.value||'').trim();
+  const refNum=existingIdx>=0?(refInput||rfqSaved[existingIdx].refNum):(refInput||rfqGenRef());
   const data={
     id:existingIdx>=0?rfqSaved[existingIdx].id:Date.now(),
-    refNum:existingIdx>=0?rfqSaved[existingIdx].refNum:rfqGenRef(),
+    refNum:refNum,
     company:co,
     date:document.getElementById('rfq-date').value,
+    delivery:(document.getElementById('rfq-delivery')?.value||'').trim(),
     notes:document.getElementById('rfq-notes').value,
-    expectedCount:vendors.length,
-    rows:[{num:1,item:item,qty:qty,notes:''}],
-    vendors:vendors,
+    expectedCount:existingIdx>=0?(rfqSaved[existingIdx].expectedCount||3):3,
+    rows:rows,
+    vendors:existingIdx>=0?(rfqSaved[existingIdx].vendors||[]):[],
     quotes:existingIdx>=0?(rfqSaved[existingIdx].quotes||[]):[],
     type:existingIdx>=0?rfqSaved[existingIdx].type:null,
     status:'open'
@@ -3911,17 +3926,18 @@ function rfqSave(){
   else rfqSaved.unshift(data);
   rfqEditingId=null;
   localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));
+  seqCommit('rfq',refNum);
   renderRfqSaved();
-  toast('تم حفظ الطلب — اضغط زر "إرسال بالبريد" لكل مورد بالقائمة أدناه ✉️');
+  toast('تم حفظ الطلب '+refNum+' ✅');
   // مزامنة مع Supabase (لا تعطّل الحفظ المحلي أبداً مهما صار بالاتصال) — يحتاجها الوكيل التلقائي ليقرأ الطلبات المفتوحة
   sbInsert('procurement_rfq',{rfq_id:data.id,data:JSON.stringify(data)}).catch(()=>{});
-  // تنظيف الفورم لطلب جديد
+  // تنظيف الفورم لطلب جديد — ويُوضع الرقم التسلسلي التالي مباشرة
   document.getElementById('rfq-co').value='';
-  document.getElementById('rfq-item').value='';
-  document.getElementById('rfq-qty').value='';
   document.getElementById('rfq-notes').value='';
-  var vtbody=document.getElementById('rfq-vendors-tbody');
-  if(vtbody){vtbody.innerHTML='<tr><td>1</td><td><input class="rfq-vendor-name" list="suppliers-datalist" placeholder="اسم المورد" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" placeholder="email@example.com"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';rfqVendorRows=1;}
+  var dl=document.getElementById('rfq-delivery');if(dl)dl.value='';
+  rfqResetRows([]);
+  document.getElementById('rfq-ref-num').value='';
+  rfqInitRef();
 }
 // مزامنة لمرة واحدة: يرفع كل طلبات عروض الأسعار المحفوظة محلياً (اللي كانت قبل تفعيل المزامنة التلقائية) لقاعدة البيانات
 // حتى يقدر الوكيل التلقائي يشوفها ويبحث عنها
@@ -3941,38 +3957,6 @@ async function rfqSyncAllToSupabase(){
   }
   if(fail===0) toast('✅ تمت مزامنة '+ok+' طلب بنجاح — الوكيل يقدر يشوفها الحين');
   else toast('تمت مزامنة '+ok+' طلب، وفشل '+fail+' — الخطأ: '+lastErr.substring(0,150),true);
-}
-// يبني رابط تركيب رسالة جاهزة (مرسل ومحتوى) لمورد معيّن حسب بيانات طلب عرض السعر
-function rfqBuildMailto(rfq,vendor){
-  var subject='طلب عرض سعر'+(rfq.refNum?' - '+rfq.refNum:'');
-  var lines=[];
-  lines.push('السادة / '+(vendor.name||'')+' المحترمين،');
-  lines.push('');
-  lines.push('نأمل التكرم بتزويدنا بعرض سعر للأصناف التالية:');
-  lines.push('');
-  (rfq.rows||[]).forEach(function(r,i){
-    lines.push((i+1)+'. '+(r.item||'')+' — الكمية: '+(r.qty||'')+(r.notes?(' — ملاحظات: '+r.notes):''));
-  });
-  lines.push('');
-  if(rfq.notes) lines.push('تفاصيل إضافية: '+rfq.notes+'\n');
-  lines.push('تاريخ الطلب: '+(rfq.date||'—'));
-  lines.push('الجهة الطالبة: '+(rfq.company||'—'));
-  lines.push('');
-  lines.push('مع الشكر والتقدير');
-  var body=lines.join('\n');
-  // رابط تركيب رسالة بـ Outlook على الويب (يفتح بالمتصفح مباشرة، مو تطبيق سطح المكتب)
-  return 'https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(vendor.email)+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-}
-// يفتح Outlook على المتصفح (تبويب جديد) مع رسالة جاهزة لمورد معيّن — يبقى الإرسال الفعلي بضغطة المستخدم
-function rfqOpenMailto(rfqId,vendorIdx){
-  var rfq=rfqSaved.find(function(r){return String(r.id)===String(rfqId);});
-  if(!rfq||!rfq.vendors||!rfq.vendors[vendorIdx])return;
-  var vendor=rfq.vendors[vendorIdx];
-  var url=rfqBuildMailto(rfq,vendor);
-  // نفتح نسخة PDF من الطلب أولاً (تبويب منفصل) — المتصفح لا يسمح بإرفاق ملفات تلقائياً برسائل الويب لأسباب أمنية
-  rfqPrintData(rfq);
-  window.open(url,'_blank');
-  toast('📄 فُتحت نسخة PDF بتبويب — احفظها (طباعة → حفظ كـ PDF) واسحبها لتبويب Outlook قبل الإرسال');
 }
 function rfqOpenQuotes(id){
   const rfq=rfqSaved.find(r=>String(r.id)===String(id));
@@ -4375,18 +4359,12 @@ function renderRfqSaved(){
     var bar='<div style="display:flex;gap:4px;margin-top:4px;">';
     for(var p=0;p<qTotal;p++)bar+='<div style="width:18px;height:6px;border-radius:3px;background:'+(p<qDone?'#1DA9BD':'#E2E8F0')+'"></div>';
     bar+='</div>';
-    var vendorBtns='';
-    if(s.vendors&&s.vendors.length){
-      vendorBtns='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'+s.vendors.map(function(v,vi){
-        return '<button class="btn btn-sm" style="background:#EBF8FA;color:#0D7A8A;border:1px solid #BEE3E8;" onclick="rfqOpenMailto(\''+s.id+'\','+vi+')">✉️ إرسال بالبريد لـ '+(v.name||v.email)+'</button>';
-      }).join('')+'</div>';
-    }
     html+='<div class="saved-item" style="border-right:3px solid '+(isComplete?'#276749':'#1DA9BD')+';">'+
       '<div class="saved-item-info">'+
         '<strong style="color:var(--primary);">'+(s.refNum||'RFQ')+'</strong> '+typeBadge+
         '<strong> — '+(s.company||'')+'</strong>'+
         '<span style="color:var(--sub);font-size:11px;display:block;">'+(s.date||'')+(s.rows&&s.rows.length?' | '+s.rows.length+' بنود':'')+'</span>'+
-        '<span style="font-size:10px;color:var(--sub);">العروض: '+qDone+'/'+qTotal+'</span>'+bar+vendorBtns+
+        '<span style="font-size:10px;color:var(--sub);">العروض: '+qDone+'/'+qTotal+'</span>'+bar+
       '</div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-primary btn-sm" onclick="rfqOpenQuotes(\''+s.id+'\')">📥 العروض</button>'+
@@ -4401,25 +4379,23 @@ var rfqEditingId=null;
 function rfqEditHeader(i){
   const s=rfqSaved[i];if(!s)return;
   rfqEditingId=s.id;
+  document.getElementById('rfq-ref-num').value=s.refNum||'';
   document.getElementById('rfq-co').value=s.company||'';
   document.getElementById('rfq-date').value=s.date||'';
+  var dl=document.getElementById('rfq-delivery');if(dl)dl.value=s.delivery||'';
   document.getElementById('rfq-notes').value=s.notes||'';
-  var firstRow=(s.rows&&s.rows[0])||{};
-  document.getElementById('rfq-item').value=firstRow.item||'';
-  document.getElementById('rfq-qty').value=firstRow.qty||'';
-  const vtbody=document.getElementById('rfq-vendors-tbody');
-  if(vtbody){vtbody.innerHTML='';rfqVendorRows=0;((s.vendors&&s.vendors.length)?s.vendors:[{name:'',email:''}]).forEach(function(v){rfqVendorRows++;var tr=document.createElement('tr');tr.innerHTML='<td>'+rfqVendorRows+'</td><td><input class="rfq-vendor-name" list="suppliers-datalist" value="'+(v.name||'')+'" oninput="buildSupplierDatalist()" onblur="rfqAutoFillVendorEmail(this)"></td><td><input class="rfq-vendor-email" type="email" value="'+(v.email||'')+'"></td><td><button onclick="rfqDelVendorRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td>';vtbody.appendChild(tr);});}
+  rfqResetRows(s.rows||[]);
   document.getElementById('rfq-co').scrollIntoView({behavior:'smooth'});
   toast('✏️ وضع تعديل بيانات الطلب — عدّل واضغط "حفظ الطلب"');
 }
 function rfqDel(i){if(!confirm('حذف هذا الطلب وعروضه؟'))return;rfqSaved.splice(i,1);localStorage.setItem('rfq_saved',JSON.stringify(rfqSaved));renderRfqSaved();toast('تم الحذف');}
-function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,refNum:rfqGenRef(),date:document.getElementById('rfq-date').value,notes:document.getElementById('rfq-notes').value,rows:[{num:1,item:document.getElementById('rfq-item').value,qty:document.getElementById('rfq-qty').value,notes:''}]});}
+function rfqPrint(){rfqPrintData({company:document.getElementById('rfq-co').value,refNum:(document.getElementById('rfq-ref-num')?.value||'').trim()||rfqGenRef(),date:document.getElementById('rfq-date').value,delivery:(document.getElementById('rfq-delivery')?.value||'').trim(),notes:document.getElementById('rfq-notes').value,rows:rfqGetRows()});}
 function rfqPrintById(i){const s=rfqSaved[i];if(s)rfqPrintData(s);}
 function rfqPrintData(d){
   const dt=d.date?new Date(d.date):new Date();
   const ds=String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
-  const rows=(d.rows||[]).map(r=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num}</td><td style="border:1px solid #bbb;padding:5px;">${r.item}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty}</td><td style="border:1px solid #bbb;padding:5px;">${r.notes||''}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#2E9896;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body><div class="page"><img class="bg" src="${FORM_BG}"><div class="content"><div style="font-size:16px;font-weight:900;color:#000;margin-bottom:4px;">Request For Quotation (RFQ)</div><div style="font-size:12px;color:#000;margin-bottom:12px;">الرقم المرجعي: ${d.refNum||'—'}</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;"><div><strong>السادة / ${d.company||'___'}</strong></div><div>التاريخ: ${ds}</div></div><p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p><table style="margin-bottom:10px;"><thead><tr style="background:#2E9896;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">الصنف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات</th></tr></thead><tbody>${rows}</tbody></table><table style="margin-bottom:10px;"><tr><td class="blue" colspan="2">Terms & Conditions</td></tr><tr><td class="lbl" style="width:30%;">مدة التنفيذ</td><td class="val">أسبوع عمل</td></tr><tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr><tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr></table></div></div></body></html>`;
+  const rows=(d.rows||[]).map((r,i)=>`<tr><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.num||i+1}</td><td style="border:1px solid #bbb;padding:5px;word-wrap:break-word;overflow-wrap:break-word;">${r.item||''}</td><td style="border:1px solid #bbb;padding:5px;word-wrap:break-word;overflow-wrap:break-word;">${r.desc||''}</td><td style="text-align:center;border:1px solid #bbb;padding:5px;">${r.qty||''}</td><td style="border:1px solid #bbb;padding:5px;word-wrap:break-word;overflow-wrap:break-word;">${r.notes||''}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:A4;margin:0;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;}.page{position:relative;width:210mm;min-height:297mm;}.bg{position:absolute;top:0;left:0;width:100%;height:100%;}.content{position:relative;z-index:1;padding:52mm 20mm 35mm 20mm;}table{border-collapse:collapse;width:100%;}.blue{background:#2E9896;color:#fff;font-weight:700;padding:6px 10px;}.lbl{background:#f0f0f0;font-weight:600;padding:5px 8px;border:1px solid #ccc;}.val{padding:5px 8px;border:1px solid #ccc;}</style></head><body><div class="page"><img class="bg" src="${FORM_BG}"><div class="content"><div style="font-size:16px;font-weight:900;color:#000;margin-bottom:4px;">Request For Quotation (RFQ)</div><div style="font-size:12px;color:#000;margin-bottom:12px;">الرقم المرجعي: ${d.refNum||'—'}</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;"><div><strong>السادة / ${d.company||'___'}</strong></div><div>التاريخ: ${ds}</div></div><p style="font-size:11px;line-height:1.8;margin-bottom:12px;color:#333;">نفيدكم أننا بصدد طلب الأصناف/الخدمات الموضحة في الجدول أدناه، لذا نأمل منكم التكرم بإرسال عرض سعر مع توضيح كافة التفاصيل الخاصة بهذه الأصناف / الخدمات</p><table style="margin-bottom:10px;table-layout:fixed;width:100%;"><thead><tr style="background:#2E9896;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:6%;">م</th><th style="border:1px solid #bbb;padding:6px;width:24%;">الصنف</th><th style="border:1px solid #bbb;padding:6px;width:34%;">الوصف</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:10%;">الكمية</th><th style="border:1px solid #bbb;padding:6px;width:26%;">ملاحظات</th></tr></thead><tbody>${rows}</tbody></table><table style="margin-bottom:10px;"><tr><td class="blue" colspan="2">Terms & Conditions</td></tr><tr><td class="lbl" style="width:30%;">مدة التسليم</td><td class="val">${d.delivery||'أسبوع عمل'}</td></tr><tr><td class="lbl">طريقة الدفع</td><td class="val">100% بعد الاستلام</td></tr><tr><td class="lbl">تفاصيل أخرى</td><td class="val">${d.notes||'—'}</td></tr></table></div></div></body></html>`;
   const w=window.open('','_blank');if(!w){toast('يرجى السماح بالنوافذ المنبثقة',true);return;}
   w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
 }
@@ -4631,18 +4607,28 @@ async function loadCertSaved(){
   }catch(e){}
 }
 
+function dnInitRef(){
+  const el=document.getElementById('dn-ref-num');
+  if(el&&!el.value)el.value=seqNext('dn');
+}
 async function dnSave(){
   const co=document.getElementById('dn-co').value.trim();
   if(!co){toast('أدخل اسم الشركة',true);return;}
+  const refNum=(document.getElementById('dn-ref-num')?.value||'').trim()||seqNext('dn');
   const data={company:co,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()};
   try{
-    const res=await sbInsert('procurement_dn',{...data,rows:JSON.stringify(data.rows)});
-    if(res&&Array.isArray(res)&&res[0]){dnSaved.unshift({...res[0],rows:data.rows});}
-    else{dnSaved.unshift({...data,id:Date.now()});}
-  }catch(e){dnSaved.unshift({...data,id:Date.now()});}
+    // الرقم التسلسلي يُحفظ داخل عمود extra الموجود أصلًا بالجدول (بدون أي تعديل على بنية قاعدة البيانات)
+    const res=await sbInsert('procurement_dn',{...data,rows:JSON.stringify(data.rows),extra:JSON.stringify({refNum:refNum})});
+    if(res&&Array.isArray(res)&&res[0]){dnSaved.unshift({...res[0],rows:data.rows,refNum:refNum});}
+    else{dnSaved.unshift({...data,id:Date.now(),refNum:refNum});}
+  }catch(e){dnSaved.unshift({...data,id:Date.now(),refNum:refNum});}
   localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
+  seqCommit('dn',refNum);
   renderDnSaved();
-  loadCertSaved();toast('تم الحفظ ✅');
+  loadCertSaved();toast('تم الحفظ '+refNum+' ✅');
+  // الرقم التسلسلي التالي يُوضع مباشرة للنموذج الجديد
+  document.getElementById('dn-ref-num').value='';
+  dnInitRef();
 }
 function renderDnSaved(){
   var el=document.getElementById('dn-saved');if(!el)return;
@@ -4651,7 +4637,7 @@ function renderDnSaved(){
   for(var i=0;i<dnSaved.length;i++){
     var s=dnSaved[i];
     html+='<div class="saved-item">'+
-      '<div class="saved-item-info"><strong>'+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.lpo||'')+' — '+(s.date||'')+'</span></div>'+
+      '<div class="saved-item-info">'+(s.refNum?'<strong style="color:var(--primary);">'+s.refNum+'</strong> — ':'')+'<strong>'+(s.company||'')+'</strong><span style="color:var(--sub)">'+(s.lpo||'')+' — '+(s.date||'')+'</span></div>'+
       '<div class="saved-item-actions">'+
         '<button class="btn btn-green btn-sm" onclick="dnExcelById('+i+')">Excel</button>'+
         '<button class="btn btn-red btn-sm" onclick="dnPrintById('+i+')">PDF</button>'+
@@ -4662,7 +4648,7 @@ function renderDnSaved(){
 
 }
 function dnDel(i){dnSaved.splice(i,1);localStorage.setItem('dn_saved',JSON.stringify(dnSaved));renderDnSaved();}
-function dnPrint(){dnPrintData({company:document.getElementById('dn-co').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()});}
+function dnPrint(){dnPrintData({refNum:(document.getElementById('dn-ref-num')?.value||'').trim()||seqNext('dn'),company:document.getElementById('dn-co').value,lpo:document.getElementById('dn-lpo').value,date:document.getElementById('dn-date').value,from:document.getElementById('dn-from').value,rows:dnGetRows()});}
 function dnPrintById(i){const s=dnSaved[i];if(s)dnPrintData(s);}
 function dnExcelById(i){const s=dnSaved[i];if(s)dnExcelData(s);}
 function dnPrintData(d){
@@ -4677,7 +4663,7 @@ function dnPrintData(d){
 <div style="font-size:16px;font-weight:900;color:#000;margin-bottom:4px;">Delivery Note</div>
 <div style="font-size:12px;color:#000;margin-bottom:12px;">سند الاستلام</div>
 <div style="display:flex;gap:8px;margin-bottom:10px;">
-  <table style="flex:1;"><tr><td class="lbl">اسم الشركة المورّدة</td><td class="val">${d.company}</td></tr><tr><td class="lbl">رقم التعميد</td><td class="val">${d.lpo||'—'}</td></tr><tr><td class="lbl">التاريخ</td><td class="val">${ds}</td></tr><tr><td class="lbl">تم التسليم من قبل</td><td class="val">${d.from||'—'}</td></tr></table>
+  <table style="flex:1;"><tr><td class="lbl">رقم السند</td><td class="val">${d.refNum||'—'}</td></tr><tr><td class="lbl">اسم الشركة المورّدة</td><td class="val">${d.company}</td></tr><tr><td class="lbl">رقم التعميد</td><td class="val">${d.lpo||'—'}</td></tr><tr><td class="lbl">التاريخ</td><td class="val">${ds}</td></tr><tr><td class="lbl">تم التسليم من قبل</td><td class="val">${d.from||'—'}</td></tr></table>
 </div>
 <table style="margin-bottom:12px;">
   <thead><tr style="background:#2E9896;color:#fff;"><th style="border:1px solid #bbb;padding:6px;text-align:center;width:8%;">م</th><th style="border:1px solid #bbb;padding:6px;">المنتج / Product & Service Description</th><th style="border:1px solid #bbb;padding:6px;text-align:center;width:12%;">الكمية / Qty</th><th style="border:1px solid #bbb;padding:6px;width:25%;">ملاحظات / Notes</th></tr></thead>
@@ -9688,10 +9674,11 @@ async function loadFromSupabase(){
   const dnRes=await sbGetAll('procurement_dn');
   const dnLocal=JSON.parse(localStorage.getItem('dn_saved')||'[]');
   if(dnRes&&dnRes.length){
-    const sbMapped=dnRes.map(r=>({...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows}));
+    const sbMapped=dnRes.map(r=>{var rn=r.refNum||'';if(!rn&&r.type!=='cert'&&r.extra){try{var ex=typeof r.extra==='string'?JSON.parse(r.extra):r.extra;rn=(ex&&ex.refNum)||'';}catch(e){}}return {...r,rows:typeof r.rows==='string'?JSON.parse(r.rows):r.rows,refNum:rn};});
     dnSaved=mergeById(sbMapped,dnLocal);
   }else dnSaved=dnLocal;
   localStorage.setItem('dn_saved',JSON.stringify(dnSaved));
+  await seqLoadFromCloud();
 
   // CMP
   const cmpRes=await sbGetAll('procurement_cmp');
@@ -9845,7 +9832,7 @@ async function init(){
 
   // اعرض كل شيء فوراً
   budgetCalc();renderExpenses();
-  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();rfqInit();
+  renderRfqSaved();renderDnSaved();renderPoSaved();renderCmpSaved();rfqInit();dnInitRef();
   renderContracts();renderSuppliers();renderCommittees();
   if(typeof renderPCGroups==='function')renderPCGroups();
   if(typeof buildSupplierDatalist==='function')buildSupplierDatalist();
