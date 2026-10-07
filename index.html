@@ -448,7 +448,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       </div>
       <div class="section-title">بيانات المورد</div>
       <div class="form-grid">
-        <div class="field"><label>اسم الشركة</label><input id="po-co" list="suppliers-datalist" placeholder="اختر أو اكتب اسم الشركة المورّدة" oninput="buildSupplierDatalist()"></div>
+        <div class="field"><label>اسم الشركة</label><input id="po-co" list="suppliers-datalist" placeholder="اختر أو اكتب اسم الشركة المورّدة" oninput="buildSupplierDatalist();poUpdateVendorSig()"></div>
         <div class="field"><label>الرقم الضريبي</label><input id="po-vat" placeholder="الرقم الضريبي للمورد"></div>
         <div class="field"><label>العنوان</label><input id="po-addr" placeholder="عنوان المورد"></div>
         <div class="field"><label>رقم التواصل</label><input id="po-phone" placeholder="+966XXXXXXXXX"></div>
@@ -459,6 +459,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
         <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
+        <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"></div>
       </div>
       <div class="section-title">البنود</div>
       <table class="tbl" style="margin-bottom:8px;">
@@ -531,7 +532,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         </div>
         <div class="field" id="po-payment-custom-wrap" style="display:none;">
           <label>شرط دفع مخصص</label>
-          <input id="po-payment-custom" placeholder="اكتب شرط الدفع...">
+          <input id="po-payment-custom" placeholder="اكتب شرط الدفع..." oninput="poUpdateVendorSig()">
         </div>
       </div>
       <div class="actions">
@@ -3318,6 +3319,19 @@ function poGetRows(){
 async function poToggleCustomPayment(val){
   var wrap=document.getElementById('po-payment-custom-wrap');
   if(wrap) wrap.style.display=(val==='custom')?'block':'none';
+  poUpdateVendorSig();
+}
+// الدفع المقدم أو المتقطع (دفعات/أقساط) => يلزم توقيع المورد. الدفع الآجل أو عند الاستلام => بدون توقيع المورد
+function poNeedsVendorSig(payment){
+  return /مقدم|متقطع|دفعات|دفعة|أقساط|اقساط|قسط/.test(String(payment||''));
+}
+function poUpdateVendorSig(){
+  var wrap=document.getElementById('po-sig-vendor-wrap');if(!wrap)return;
+  var need=poNeedsVendorSig(poGetTerms().payment);
+  wrap.style.display=need?'block':'none';
+  var lbl=document.getElementById('po-sig-vendor-label');
+  var co=(document.getElementById('po-co')?.value||'').trim();
+  if(lbl) lbl.textContent='توقيع المورد'+(co?' — '+co:'');
 }
 
 function poGetTerms(){
@@ -3335,7 +3349,10 @@ function poGetTerms(){
   var payTerms=document.getElementById('po-payment-terms')?.value||'';
   var payment=payTerms==='custom'?(document.getElementById('po-payment-custom')?.value||''):payTerms;
 
-  return {delivery:delivery, warranty:warranty, payment:payment};
+  var vr=parseFloat(document.getElementById('po-vat-rate')?.value);
+  // نسبة الضريبة وتوقيع المورد يُحفظان داخل حقل terms الموجود أصلًا (بدون إضافة أعمدة جديدة بقاعدة البيانات)
+  var sigVendor=poNeedsVendorSig(payment)?(document.getElementById('po-sig-vendor')?.value||'').trim():'';
+  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor};
 }
 
 function poSetTerms(terms){
@@ -3382,6 +3399,8 @@ function poSetTerms(terms){
       }
     }
   }
+  var sv=document.getElementById('po-sig-vendor');if(sv)sv.value=terms.sigVendor||'';
+  poUpdateVendorSig();
 }
 
 let poEditIdx = null; // null = إضافة جديدة، رقم = وضع تعديل
@@ -3396,7 +3415,7 @@ function poEditById(i){
   document.getElementById('po-num').value=s.num||'';
   document.getElementById('po-date').value=s.date||'';
   document.getElementById('po-vat').value=s.vat||'';
-  document.getElementById('po-vat-rate').value=(typeof s.vatRate==='number')?s.vatRate:0.15;
+  document.getElementById('po-vat-rate').value=(s.terms&&typeof s.terms.vatRate==='number')?s.terms.vatRate:((typeof s.vatRate==='number')?s.vatRate:0.15);
   document.getElementById('po-email').value=s.email||'';
   document.getElementById('po-phone').value=s.phone||'';
   document.getElementById('po-addr').value=s.addr||'';
@@ -3468,6 +3487,8 @@ function poResetEdit(){
   document.getElementById('po-warranty-val').value='';
   document.getElementById('po-payment-terms').value='فور الاستلام';
   document.getElementById('po-payment-custom-wrap').style.display='none';
+  var svr=document.getElementById('po-sig-vendor');if(svr)svr.value='';
+  poUpdateVendorSig();
   var tbody=document.getElementById('po-tbody');
   tbody.innerHTML='<tr><td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
   poCalcAll();
@@ -3493,7 +3514,7 @@ async function poSave(){
   const terms=poGetTerms();
   const data={
     company:co,num:document.getElementById('po-num')?.value||'',date:document.getElementById('po-date')?.value||'',
-    vat:document.getElementById('po-vat')?.value||'',vatRate:(function(){var v=parseFloat(document.getElementById('po-vat-rate')?.value);return isNaN(v)?0.15:v;})(),terms:terms,email:document.getElementById('po-email')?.value||'',
+    vat:document.getElementById('po-vat')?.value||'',terms:terms,email:document.getElementById('po-email')?.value||'',
     phone:document.getElementById('po-phone')?.value||'',addr:document.getElementById('po-addr')?.value||'',
     del_email:document.getElementById('po-del-email')?.value||'',del_phone:document.getElementById('po-del-phone')?.value||'',
     del_addr:document.getElementById('po-del-addr')?.value||'',del_vat:document.getElementById('po-del-vat')?.value||'',
@@ -3644,7 +3665,7 @@ function poExcelData(d){
     sc(`D${r}`,row.qty);sc(`E${r}`,row.uom||'');sc(`F${r}`,row.price);sc(`G${r}`,row.total);sc(`H${r}`,row.notes||'');
   });
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
-  const vatRate=(typeof d.vatRate==='number')?d.vatRate:0.15;
+  const vatRate=(typeof d.vatRate==='number')?d.vatRate:((d.terms&&typeof d.terms.vatRate==='number')?d.terms.vatRate:0.15);
   sc('G20',sub);sc('G21',sub*vatRate);sc('G22',sub*(1+vatRate));
   const out=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
   const a=document.createElement('a');a.href='data:application/octet-stream;base64,'+out;
@@ -3687,7 +3708,7 @@ function poPrintById(i){const s=poSaved[i];if(!s)return;poPrintData({...s,rows:p
 
 function poPrintData(d){
   const sub=(d.rows||[]).reduce((s,r)=>s+(r.total||0),0);
-  const vatRate=(typeof d.vatRate==='number')?d.vatRate:0.15;
+  const vatRate=(typeof d.vatRate==='number')?d.vatRate:((d.terms&&typeof d.terms.vatRate==='number')?d.terms.vatRate:0.15);
   const tax=sub*vatRate; const tot=sub+tax;
   const vatPctLabel=(vatRate*100)+'%';
   const dt=d.date?new Date(d.date):new Date();
@@ -3820,6 +3841,11 @@ table{border-collapse:collapse;width:100%;}
       <div style="font-size:11px;color:#555;margin-bottom:45px;">الرئيس التنفيذي</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
     </div>
+    ${poNeedsVendorSig(d.terms&&d.terms.payment)?`<div style="flex:1;">
+      <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
+      <div style="font-size:11px;color:#555;margin-bottom:45px;">${d.company||''}</div>
+      <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${(d.terms&&d.terms.sigVendor)||'&nbsp;'}</div>
+    </div>`:''}
   </div>
 
 </div>
