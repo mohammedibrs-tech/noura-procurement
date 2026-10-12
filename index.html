@@ -2650,6 +2650,10 @@ async function initBudget(){
 // يُرجع صفوف أمر الشراء بأمان بغض النظر عن شكلها (نص JSON، أو مصفوفة مُحلَّلة مسبقاً من Supabase/JSONB، أو قيمة فاسدة)
 // بعض السجلات القادمة من Supabase (عمود JSONB) تُرجَع كمصفوفة جاهزة لا كنص، و JSON.parse على مصفوفة يفشل بصمت ويكسر التقرير كامل
 // ===== قيم قبل الضريبة (15%) للتقارير =====
+function poDeptName(p){var n=String((p&&(p.num||p.poNum))||'');var m=n.match(/-([MTF])-/i);if(!m)return 'أخرى';return {M:'إدارة التسويق',T:'إدارة تقنية المعلومات',F:'إدارة الدعم والخدمات'}[m[1].toUpperCase()];}
+function poExVatOf(p){return poRowsOf(p).reduce(function(ss,r){var t=parseFloat(r.total)||0;if(t>0)return ss+t;var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='included'?b/1.15:b);},0);}
+function deptAddPO(map,poList){(poList||[]).forEach(function(p){var d=poDeptName(p);if(!map[d])map[d]={total:0,items:{}};var v=poExVatOf(p);map[d].total+=v;map[d].items['أوامر شراء']=(map[d].items['أوامر شراء']||0)+v;});}
+function deptGrandOf(map){return Object.keys(map).reduce(function(s,k){return s+(typeof map[k]==='number'?map[k]:map[k].total);},0);}
 function expEx(e){return (parseFloat(e&&e.amount)||0)/1.15;}
 function ctEx(v){return (parseFloat(v)||0)/1.15;}
 function poRowsOf(p){
@@ -7655,7 +7659,8 @@ function exportSemiPDF(){
   const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   // حسب الإدارة
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=expEx(e);sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(expEx(e));});
-  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
+  deptAddPO(sDeptMap,sPOList);const sDeptGrand=deptGrandOf(sDeptMap);
+  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sDeptGrand>0?((v.total/sDeptGrand)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   var CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
@@ -7670,7 +7675,7 @@ function exportSemiPDF(){
   html+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
   html+='</div>';
-  html+='<h2>المصروفات حسب الإدارة</h2>';
+  html+='<h2>المصروفات وأوامر الشراء حسب الإدارة</h2>';
   html+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
   html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(sPOList);
   html+=buildContractsTableHTML(sActiveC,sTotalCM);
@@ -7823,7 +7828,8 @@ function exportSemiWord(){
   const sItemMap={};sExpForSum.forEach(e=>{sItemMap[e.item_name]=(sItemMap[e.item_name]||0)+(expEx(e));});
   const sTopItemRows=Object.entries(sItemMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${sFmt(v)}</td><td style="text-align:center;">${sTotalSpent>0?((v/sTotalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const sDeptMap={};sExpForSum.forEach(e=>{const d=e.department||'أخرى';if(!sDeptMap[d])sDeptMap[d]={total:0,items:{}};sDeptMap[d].total+=expEx(e);sDeptMap[d].items[e.item_name]=(sDeptMap[d].items[e.item_name]||0)+(expEx(e));});
-  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sTotalSpent>0?((v.total/sTotalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
+  deptAddPO(sDeptMap,sPOList);const sDeptGrand=deptGrandOf(sDeptMap);
+  const sDeptRows=Object.entries(sDeptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const ti=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([i])=>i).join(' / ');const pct=sDeptGrand>0?((v.total/sDeptGrand)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${sFmt(v.total)}</td><td style="text-align:center;">${pct}</td><td>${ti||'—'}</td></tr>`;}).join('');
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;mso-page-orientation:portrait;}'
     +'.bg-img{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:1;object-fit:cover;pointer-events:none;}'
     +'.pdf-content{position:relative;z-index:2;padding:28mm 12mm 15mm;}'
@@ -7847,7 +7853,7 @@ function exportSemiWord(){
   bodyHTML+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sMonthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+sFmt(sTotalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   bodyHTML+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+sTopItemRows+'</tbody></table></div>';
   bodyHTML+='</div>';
-  bodyHTML+='<h2>المصروفات حسب الإدارة</h2>';
+  bodyHTML+='<h2>المصروفات وأوامر الشراء حسب الإدارة</h2>';
   bodyHTML+='<table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+sDeptRows+'</tbody></table>';
   bodyHTML+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(sPOList);
   bodyHTML+=buildContractsTableHTML(sActiveC,sTotalCM);
@@ -8909,6 +8915,7 @@ function exportAnnualPDF(){
   const fmt2=n=>(parseFloat(n)||0).toLocaleString('ar-SA',{minimumFractionDigits:2});
   const quarters=[{name:'ق١',months:['01','02','03']},{name:'ق٢',months:['04','05','06']},{name:'ق٣',months:['07','08','09']},{name:'ق٤',months:['10','11','12']}].map(q=>{const t=yExp.filter(e=>q.months.some(m=>expMonthKey(e)===(year+'-'+m))).reduce((s,e)=>s+(expEx(e)),0);return{...q,total:t};});
   const deptMap={};yExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]=0;deptMap[d]+=expEx(e);});
+  yPO.forEach(p=>{const d=poDeptName(p);deptMap[d]=(deptMap[d]||0)+poExVatOf(p);});const deptGrand=deptGrandOf(deptMap);
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
   const itemMap={};yExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(expEx(e));});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
@@ -8925,7 +8932,7 @@ function exportAnnualPDF(){
     <tr><td>وفر التفاوض من العقود</td><td style="text-align:right;font-weight:700;">${totalSaving>0?fmt2(totalSaving)+' ر.س':'—'}</td></tr>
     <tr><td>وفر مقارنة الأسعار</td><td style="text-align:right;font-weight:700;">${cmpSavAnnual>0?fmt2(cmpSavAnnual)+' ر.س':'—'}</td></tr>`;
   const quartersRowsA=quarters.map(q=>`<tr><td style="font-weight:600;">${q.name}</td><td style="text-align:right;font-weight:700;">${fmt2(q.total)}</td><td style="text-align:center;">${totalSpent>0?((q.total/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
-  const deptRowsA=deptSorted.slice(0,10).map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;font-weight:700;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
+  const deptRowsA=deptSorted.slice(0,10).map(([d,v])=>`<tr><td>${d}</td><td style="text-align:right;font-weight:700;">${fmt2(v)}</td><td style="text-align:center;">${deptGrand>0?((v/deptGrand)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const topItemRowsA=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const monthRowsA=monthlyData.map(m=>`<tr><td>${m.m}</td><td style="text-align:right;">${fmt2(m.t)}</td><td style="text-align:center;">${totalSpent>0?((m.t/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expiringRowsA=expiringCA.map(c=>`<tr><td style="font-weight:700;">${c.vendor}</td><td>${c.type}</td><td style="text-align:center;color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم</td><td style="text-align:right;">${fmt2(c.monthly||0)} ر.س/شهر</td></tr>`).join('');
@@ -9563,10 +9570,11 @@ function exportQuarterlyPDF(){
   const itemMap={};qExp.forEach(e=>{itemMap[e.item_name]=(itemMap[e.item_name]||0)+(expEx(e));});
   const topItems=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const deptMap={};qExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expEx(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(expEx(e));});
+  deptAddPO(deptMap,qPO);const deptGrand=deptGrandOf(deptMap);
   const deptSorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total);
   const monthBreak=months.map(m=>{const t=qExp.filter(e=>expMonthKey(e)===(year+'-'+m)).reduce((s,e)=>s+(expEx(e)),0);return{m:MONTHS_AR[m],t};});
   const qPOVal=qPO.reduce((s,p)=>{const r2=poRowsOf(p);const v=r2.reduce((ss,r)=>{const t=parseFloat(r.total)||0;if(t>0)return ss+t;const b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='included'?b/1.15:b);},0);return s+v;},0);
-  const deptRows=deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topI||'—'}</td></tr>`;}).join('');
+  const deptRows=deptSorted.map(([d,v])=>{const topI=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=deptGrand>0?((v.total/deptGrand)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topI||'—'}</td></tr>`;}).join('');
   const monthRows=monthBreak.map(mb=>`<tr><td>${mb.m}</td><td style="text-align:right;">${fmt2(mb.t)}</td><td style="text-align:center;">${totalSpent>0?((mb.t/totalSpent)*100).toFixed(0)+'%':'0%'}</td></tr>`).join('');
   const topItemRows=topItems.map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
   const expRows=qExp.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.item_name||'—'}</td><td style="text-align:right;">${fmt2(expEx(e))}</td><td style="text-align:center;">${e.expense_date||'—'}</td></tr>`).join('');
@@ -9591,13 +9599,12 @@ function exportQuarterlyPDF(){
   html+='<div><h2>المصروفات شهراً بشهر</h2><table><thead><tr><th>الشهر</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+monthRows+'</tbody><tfoot><tr><td>الإجمالي</td><td style="text-align:right;">'+fmt2(totalSpent)+' ر.س</td><td></td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+topItemRows+'</tbody></table></div>';
   html+='</div>';
-  html+='<h2>المصروفات حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody></table>';
+  html+='<h2>المصروفات وأوامر الشراء حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody></table>';
   html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(qPO);
   html+=buildContractsTableHTML(activeC,totalCM);
   html+='<h2>'+L('lbl_cs_title')+'</h2>'+cumulativeSavingsTableHTML(cumSavRowsQP);
   const qChgP=chgList.filter(c=>c.date&&months.some(m=>c.date.substring(0,7)===year+'-'+m));
   html+=chgReportTable(qChgP);
-  html+=`<div class="sig-area"><div class="sig-box"><div style="font-weight:700;margin-bottom:18px;">مسؤول المشتريات</div><div style="position:relative;display:inline-block;min-width:110px;">${SIG_Q?'<img src="'+SIG_Q+'" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);height:50px;object-fit:contain;">':''}<div style="border-top:1px solid #2E9896;padding-top:4px;">أ.محمد ابراهيم الجمعان</div></div></div><div class="sig-box"><div style="font-weight:700;margin-bottom:52px;">مدير الإدارة</div><div style="border-top:1px solid #2E9896;padding-top:4px;color:#555;">_______________</div></div></div>`;
   html+='</div><script>window.onload=function(){window.print();}<\/script></body></html>';
   w.document.write(html);w.document.close();
 }
@@ -9646,7 +9653,8 @@ function exportMonthlyPDF(){
   // حسب الإدارة
   const deptMap={};
   monthExp.forEach(e=>{const d=e.department||'أخرى';if(!deptMap[d])deptMap[d]={total:0,items:{}};deptMap[d].total+=expEx(e);deptMap[d].items[e.item_name]=(deptMap[d].items[e.item_name]||0)+(expEx(e));});
-  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=totalSpent>0?((v.total/totalSpent)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;}).join('');
+  deptAddPO(deptMap,monthPO);const deptGrand=deptGrandOf(deptMap);
+  const deptRows=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{const topItems=Object.entries(v.items).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>i).join(' / ');const pct=deptGrand>0?((v.total/deptGrand)*100).toFixed(1)+'%':'0%';return`<tr><td>${d}</td><td style="text-align:right;">${fmt2(v.total)}</td><td style="text-align:center;">${pct}</td><td>${topItems||'—'}</td></tr>`;}).join('');
   // أعلى الأصناف
   const itemMapM={};monthExp.forEach(e=>{itemMapM[e.item_name]=(itemMapM[e.item_name]||0)+(expEx(e));});
   const topItemRowsM=Object.entries(itemMapM).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>`<tr><td>${i}</td><td style="text-align:right;">${fmt2(v)}</td><td style="text-align:center;">${totalSpent>0?((v/totalSpent)*100).toFixed(1)+'%':'0%'}</td></tr>`).join('');
@@ -9661,7 +9669,7 @@ function exportMonthlyPDF(){
   html+='<h2>ملخص الشهر</h2>';
   html+='<table><thead><tr><th>البيان</th><th style="text-align:right;">القيمة</th></tr></thead><tbody>'+summaryRows+'</tbody></table>';
   html+='<div class="two-col">';
-  html+='<div><h2>المصروفات حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody><tfoot><tr><td colspan="3">الإجمالي</td><td style="text-align:right;">'+fmt2(totalSpent)+' ر.س</td></tr></tfoot></table></div>';
+  html+='<div><h2>المصروفات وأوامر الشراء حسب الإدارة</h2><table><thead><tr><th>الإدارة</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th><th>أبرز الأصناف</th></tr></thead><tbody>'+deptRows+'</tbody><tfoot><tr><td colspan="3">الإجمالي</td><td style="text-align:right;">'+fmt2(deptGrand)+' ر.س</td></tr></tfoot></table></div>';
   html+='<div><h2>أعلى الأصناف إنفاقاً</h2><table><thead><tr><th>الصنف</th><th style="text-align:right;">الإجمالي</th><th style="text-align:center;">النسبة</th></tr></thead><tbody>'+topItemRowsM+'</tbody></table></div>';
   html+='</div>';
   html+='<h2>أوامر الشراء</h2>'+buildPOTableHTML(monthPO);
