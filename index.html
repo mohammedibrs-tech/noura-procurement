@@ -2650,7 +2650,7 @@ async function initBudget(){
 // يُرجع صفوف أمر الشراء بأمان بغض النظر عن شكلها (نص JSON، أو مصفوفة مُحلَّلة مسبقاً من Supabase/JSONB، أو قيمة فاسدة)
 // بعض السجلات القادمة من Supabase (عمود JSONB) تُرجَع كمصفوفة جاهزة لا كنص، و JSON.parse على مصفوفة يفشل بصمت ويكسر التقرير كامل
 // ===== قيم قبل الضريبة (15%) للتقارير =====
-function poDeptName(p){var n=String((p&&(p.num||p.poNum))||'');var m=n.match(/-([MTF])-/i);if(!m)return 'أخرى';return {M:'إدارة التسويق',T:'إدارة تقنية المعلومات',F:'إدارة الدعم والخدمات'}[m[1].toUpperCase()];}
+function poDeptName(p){var n=String((p&&(p.num||p.poNum))||'');var m=n.match(/-(IT|M|F)-/i);if(!m)return 'أخرى';return {M:'إدارة التسويق',IT:'إدارة تقنية المعلومات',F:'إدارة الدعم والخدمات'}[m[1].toUpperCase()];}
 function poExVatOf(p){return poRowsOf(p).reduce(function(ss,r){var t=parseFloat(r.total)||0;if(t>0)return ss+t;var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='included'?b/1.15:b);},0);}
 function deptAddPO(map,poList){(poList||[]).forEach(function(p){var d=poDeptName(p);if(!map[d])map[d]={total:0,items:{}};var v=poExVatOf(p);map[d].total+=v;map[d].items['أوامر شراء']=(map[d].items['أوامر شراء']||0)+v;});}
 function deptGrandOf(map){return Object.keys(map).reduce(function(s,k){return s+(typeof map[k]==='number'?map[k]:map[k].total);},0);}
