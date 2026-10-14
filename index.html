@@ -2125,6 +2125,23 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 
 
 <script>
+// ===== حماية من امتلاء التخزين المحلي (QuotaExceededError) — السحابة هي المصدر الأساسي =====
+(function(){
+  try{
+    var _set=Storage.prototype.setItem;var _warned=false;
+    var EVICT=['expenses_cache','dn_pdfs','se_report_history','saved_hash','fleet_analysis_data'];
+    Storage.prototype.setItem=function(k,v){
+      try{return _set.call(this,k,v);}catch(e){
+        if(this!==window.localStorage){throw e;}
+        for(var i=0;i<EVICT.length;i++){
+          if(EVICT[i]===k)continue;
+          try{ if(this.getItem(EVICT[i])!==null){ this.removeItem(EVICT[i]); try{return _set.call(this,k,v);}catch(e2){} } }catch(e3){}
+        }
+        if(!_warned){_warned=true;try{console.warn('التخزين المحلي ممتلئ — يتم الاعتماد على السحابة');}catch(e6){}}
+      }
+    };
+  }catch(e){}
+})();
 const SB="https://jvqzvfdmvudhelbhojue.supabase.co",SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2cXp2ZmRtdnVkaGVsYmhvanVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Mzk4NDIsImV4cCI6MjA5MTAxNTg0Mn0.7lAmAUjtE0EW3kODRTuHmNtOY_Z9bUS_3hePjhhy93M";
 
 /* ══════════════════════════════════════════════════════════════
