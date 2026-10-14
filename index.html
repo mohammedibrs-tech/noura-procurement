@@ -2129,7 +2129,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 (function(){
   try{
     var _set=Storage.prototype.setItem;var _warned=false;
-    var EVICT=['expenses_cache','dn_pdfs','se_report_history','saved_hash','fleet_analysis_data'];
+    var EVICT=['expenses_cache','dn_pdfs','se_report_history','fleet_analysis_data'];
     Storage.prototype.setItem=function(k,v){
       try{return _set.call(this,k,v);}catch(e){
         if(this!==window.localStorage){throw e;}
