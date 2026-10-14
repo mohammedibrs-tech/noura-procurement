@@ -8467,12 +8467,12 @@ h2{text-align:center;font-size:12px;font-weight:700;margin:8px 0;}p{margin:4px 0
 <p>إنه في يوم <strong>${c.dayName}</strong> الموافق <strong>${dt}</strong>م اجتمعت لجنة فحص العروض بشركة نورة للقيادة بموجب القرار رقم (<strong>${c.decision}</strong>) الصادر بتاريخ <strong>${c.decisionDate}</strong>م برئاسة <strong>${c.chairTitle} ${c.chairName}</strong> وعضوية كلاً من:</p>
 <p style="margin:10px 20px;font-weight:600;">${membersText}</p>
 <p>وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية الخاصة فقد تبين الآتـي:</p>
-<div style="position:relative;">
+<div style="position:relative;padding-bottom:78px;">
 <table>
   <thead><tr><th>اسم الشركة أو المؤسسة</th><th>التقييم الفني</th></tr></thead>
   <tbody>${techRows}</tbody>
 </table>
-<img src="${MAJ_SIG}" style="position:absolute;left:60%;bottom:-34px;width:80px;height:auto;object-fit:contain;z-index:5;pointer-events:none;">
+<img src="${MAJ_SIG}" style="position:absolute;left:60%;bottom:0;width:80px;height:auto;object-fit:contain;z-index:5;pointer-events:none;">
 </div>
 <p style="margin-top:16px;">${c.views||''}</p>
 <div style="margin-top:40px;"><p><strong>أعضاء اللجنة:</strong></p>
@@ -8562,14 +8562,14 @@ h2{text-align:center;font-size:${BF+1}px;font-weight:700;margin:4px 0;}p{margin:
 <p style="font-size:13px;">وبعد تكامل أعضاء اللجنة تم استعراض كافة العروض واطلعت اللجنة على التقرير الفني، وبعد الإطلاع على مطابقة العروض لكراسة الشروط والمواصفات الفنية والمالية الخاصة فقد تبين الآتـي:</p>
 <p><strong>${isRevComp?'اطلعت اللجنة على عروض الاتفاقيات المقدمة وتم ترتيبها بحسب أعلى عائد للجهة على النحو الآتي:':'اطلعت اللجنة على العروض المالية وتم ترتيبها من الأقل سعراً للأعلى على النحو الآتي:'}</strong></p>
 ${offersTable}
-<div style="position:relative;">
+<div style="position:relative;padding-bottom:78px;">
 <table style="width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13px;">
 <colgroup><col style="width:35%;"><col style="width:65%;"></colgroup>
 <tbody>${(c.offers||[]).map(o=>`<tr>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;font-weight:600;text-align:center;">${o.name}</td>
   <td style="padding:6px 8px;border:1px solid #000;color:#000;text-align:center;">العرض المقدم ${o.status}</td>
 </tr>`).join('')}</tbody></table>
-<img src="${MAJ_SIG}" style="position:absolute;left:60%;bottom:-34px;width:80px;height:auto;object-fit:contain;z-index:5;pointer-events:none;">
+<img src="${MAJ_SIG}" style="position:absolute;left:60%;bottom:0;width:80px;height:auto;object-fit:contain;z-index:5;pointer-events:none;">
 </div>
 </div></div>
 <div class="page"><img class="bg" src="${BG}"><div class="footer-mask"></div><div class="content">
