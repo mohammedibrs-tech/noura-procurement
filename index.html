@@ -1413,7 +1413,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       </div>
       <button class="btn btn-primary" onclick="buildMonthlyReport()" style="margin-top:8px;">عرض التقرير</button>
       <button class="btn btn-green" onclick="exportMonthlyExcel()" style="margin-top:8px;">تصدير Excel</button>
-      <button class="btn btn-red" onclick="exportMonthlyPDF()" style="margin-top:8px;">تصدير PDF</button>
+      <button class="btn btn-red" onclick="exportMonthlyPDF()" style="margin-top:8px;">تصدير PDF</button><span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-inline-start:6px;">حجم خط الجداول (PDF): <input id="rm-tblfont" type="number" min="5" max="30" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;"></span>
     </div>
   </div>
   <div id="monthly-report-content"></div>
@@ -1438,7 +1438,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="buildSemiReport()">عرض التقرير</button>
         <button class="btn btn-green" onclick="exportSemiExcel()">تصدير Excel</button>
-        <button class="btn btn-red" onclick="exportSemiPDF()">تصدير PDF</button>
+        <button class="btn btn-red" onclick="exportSemiPDF()">تصدير PDF</button><span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-inline-start:6px;">حجم خط الجداول (PDF): <input id="rs-tblfont" type="number" min="5" max="30" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;"></span>
         <button class="btn" style="background:#244062;color:#fff;" onclick="exportSemiWord()">تصدير Word</button>
       </div>
     </div>
@@ -2090,7 +2090,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="buildAnnualReport()">عرض التقرير</button>
         <button class="btn btn-green" onclick="exportAnnualExcel()">تصدير Excel</button>
-        <button class="btn btn-red" onclick="exportAnnualPDF()">تصدير PDF</button>
+        <button class="btn btn-red" onclick="exportAnnualPDF()">تصدير PDF</button><span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-inline-start:6px;">حجم خط الجداول (PDF): <input id="ra-tblfont" type="number" min="5" max="30" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;"></span>
       </div>
     </div>
   </div>
@@ -2116,7 +2116,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       </div>
       <button class="btn btn-primary" onclick="buildQuarterlyReport()" style="margin-top:8px;">عرض التقرير</button>
       <button class="btn btn-green" onclick="exportQuarterlyExcel()" style="margin-top:8px;">تصدير Excel</button>
-      <button class="btn btn-red" onclick="exportQuarterlyPDF()" style="margin-top:8px;">تصدير PDF</button>
+      <button class="btn btn-red" onclick="exportQuarterlyPDF()" style="margin-top:8px;">تصدير PDF</button><span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-inline-start:6px;">حجم خط الجداول (PDF): <input id="rq-tblfont" type="number" min="5" max="30" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;"></span>
     </div>
   </div>
   <div id="quarterly-report-content"></div>
@@ -2671,6 +2671,7 @@ function poDeptName(p){var n=String((p&&(p.num||p.poNum))||'');var m=n.match(/-(
 function poExVatOf(p){return poRowsOf(p).reduce(function(ss,r){var t=parseFloat(r.total)||0;if(t>0)return ss+t;var b=(parseFloat(r.count)||0)*(parseFloat(r.unitPrice)||0);return ss+(r.vatType==='included'?b/1.15:b);},0);}
 function deptAddPO(map,poList){(poList||[]).forEach(function(p){var d=poDeptName(p);if(!map[d])map[d]={total:0,items:{}};var v=poExVatOf(p);map[d].total+=v;map[d].items['أوامر شراء']=(map[d].items['أوامر شراء']||0)+v;});}
 function deptGrandOf(map){return Object.keys(map).reduce(function(s,k){return s+(typeof map[k]==='number'?map[k]:map[k].total);},0);}
+function rptTblFontCSS(id){var v=parseFloat(document.getElementById(id)&&document.getElementById(id).value);if(!(v>=5&&v<=30))return '';return '.pdf-content table td,.pdf-content table th{font-size:'+v+'px !important;}';}
 function expEx(e){return (parseFloat(e&&e.amount)||0)/1.15;}
 function ctEx(v){return (parseFloat(v)||0)/1.15;}
 function poRowsOf(p){
@@ -7681,7 +7682,7 @@ function exportSemiPDF(){
   const rsTitle2=document.getElementById('rs-title')?.value?.trim()||('التقرير النصف سنوي — النصف '+halfName+' '+year);
   var CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
-  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+rptTblFontCSS('rs-tblfont')+'</style></head><body>';
   if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
   html+='<div class="pdf-content">';
   html+=`<h1>${rsTitle2}</h1>`;
@@ -8961,7 +8962,7 @@ function exportAnnualPDF(){
   const expiringRowsA=expiringCA.map(c=>`<tr><td style="font-weight:700;">${c.vendor}</td><td>${c.type}</td><td style="text-align:center;color:#C53030;font-weight:700;">${contractDaysLeft(c.end)} يوم</td><td style="text-align:right;">${fmt2(c.monthly||0)} ر.س/شهر</td></tr>`).join('');
   var CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
-  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+rptTblFontCSS('ra-tblfont')+'</style></head><body>';
   if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
   html+='<div class="pdf-content">';
   html+=`<h1>${L('lbl_title_annual')} — ${year}</h1>`;
@@ -9612,7 +9613,7 @@ function exportQuarterlyPDF(){
     <tr style="background:#d6e4f0;"><td style="font-weight:900;">المجموع الكلي (مصروفات + PO)</td><td style="text-align:right;font-weight:900;color:#000;">${fmt2(totalSpent+qPOVal)} ر.س</td></tr>`;
   const CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.sig-area{display:flex;gap:40px;margin-top:16px;padding-top:8px;border-top:1.5px solid #2E9896;}.sig-box{flex:1;text-align:center;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const w=window.open('','_blank');
-  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+rptTblFontCSS('rq-tblfont')+'</style></head><body>';
   if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
   html+='<div class="pdf-content">';
   html+=`<h1>${L('lbl_title_quarterly')} — الربع ${qName[q]} ${year}</h1>`;
@@ -9685,7 +9686,7 @@ function exportMonthlyPDF(){
   const cumSavRowsM=cumulativeSavingsRows(year+'-'+month+'-01',year+'-'+month+'-'+String(cumSavLastDayM).padStart(2,'0'));
   var CSS='@page{size:A4 landscape;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#111;direction:rtl;margin:0;padding:0;}.bg-corner{position:fixed;width:95mm;height:45mm;overflow:hidden;z-index:1;}.bg-corner img{position:absolute;width:190mm;height:auto;}.bg-tl{top:0;left:0;}.bg-tl img{top:0;left:0;}.bg-tr{top:0;right:0;}.bg-tr img{top:0;right:0;}.bg-bl{bottom:0;left:0;}.bg-bl img{bottom:0;left:0;}.bg-br{bottom:0;right:0;}.bg-br img{bottom:0;right:0;}.pdf-content{position:relative;z-index:2;padding:35mm 20mm 25mm;}h1{font-size:14px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px;color:#000;}h2{font-size:10px;font-weight:800;margin:14px 0 4px;padding:4px 8px;background:#2E9896;color:#fff;border-right:4px solid #2E9896;}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5px;border:1px solid #333;background:#fff;}thead th{background:#2E9896;color:#fff;padding:5px 7px;text-align:right;border:1px solid #2E9896;font-weight:700;}tbody td{padding:4px 7px;border:1px solid #bbb;color:#000;}tbody tr:nth-child(even) td{background:#eaf2ff;}tfoot td{padding:5px 7px;border:1px solid #2E9896;border-top:2px solid #2E9896;font-weight:700;background:#d6e4f0;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
   const W=window.open('','_blank');
-  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+'</style></head><body>';
+  var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>'+CSS+rptTblFontCSS('rm-tblfont')+'</style></head><body>';
   if(BG) html+='<div class="bg-corner bg-tl"><img src="'+BG+'"></div><div class="bg-corner bg-tr"><img src="'+BG+'"></div><div class="bg-corner bg-bl"><img src="'+BG+'"></div><div class="bg-corner bg-br"><img src="'+BG+'"></div>';
   html+='<div class="pdf-content">';
   html+=`<h1>${L('lbl_title_monthly')} — ${monthName} ${year}</h1>`;
