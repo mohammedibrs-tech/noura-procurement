@@ -932,6 +932,8 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
         تصدير Word
       </button>
       <div style="display:flex;align-items:center;gap:6px;background:#F8FAFB;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-inline-start:6px;">
+        <label style="font-size:12px;color:#555;white-space:nowrap;">القيم السنوية</label>
+        <select id="cmp-pdf-vat" style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;"><option value="inc">شامل الضريبة</option><option value="ex">غير شامل الضريبة</option></select>
         <label style="font-size:12px;color:#555;white-space:nowrap;">حجم الخط (px)</label>
         <input id="cmp-pdf-fontsize" type="number" min="6" max="24" placeholder="تلقائي" style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;">
         <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#555;white-space:nowrap;cursor:pointer;">
@@ -2129,8 +2131,9 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
 (function(){
   try{
     var _set=Storage.prototype.setItem;var _warned=false;
-    var EVICT=['expenses_cache','dn_pdfs','se_report_history','fleet_analysis_data'];
+    var EVICT=['dn_pdfs','se_report_history','fleet_analysis_data'];
     Storage.prototype.setItem=function(k,v){
+      if(k==='expenses_cache'&&this===window.localStorage&&typeof v==='string'&&v.length>20){try{_set.call(this,'expenses_backup',v);}catch(eb){}}
       try{return _set.call(this,k,v);}catch(e){
         if(this!==window.localStorage){throw e;}
         for(var i=0;i<EVICT.length;i++){
@@ -2520,7 +2523,7 @@ async function sbGetAll(table,filter=''){
       const sep=filter?'&':'';
       const url=SB+'/rest/v1/'+table+'?'+filter+sep+'order=created_at.asc&limit='+pageSize+'&offset='+offset;
       const r=await fetch(url,{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-      if(!r.ok)break;
+      if(!r.ok){return null;}
       const batch=await r.json();
       if(!batch||!batch.length)break;
       allData=allData.concat(batch);
@@ -2591,7 +2594,7 @@ async function initBudget(){
   if(inp) inp.value = budgetTotal;
 
   // اعرض المصروفات من cache فوراً
-  const cachedExp = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+  const cachedExp = JSON.parse(localStorage.getItem('expenses_cache')||localStorage.getItem('expenses_backup')||'[]');
   if(cachedExp.length > 0){
     expenses = cachedExp;
     budgetCalcMonth();
@@ -2630,7 +2633,7 @@ async function initBudget(){
       toast('تم تحميل '+expenses.length+' مصروف ✅');
     } else if(!sbExp || sbExp.length === 0) {
       // Supabase فارغ — تحقق من الكاش
-      const cached = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+      const cached = JSON.parse(localStorage.getItem('expenses_cache')||localStorage.getItem('expenses_backup')||'[]');
       if(cached.length > 0){
         expenses = cached;
         budgetCalcMonth();
@@ -2640,7 +2643,7 @@ async function initBudget(){
   } catch(e){
     console.error('expenses fetch error', e);
     // استخدم الكاش عند الخطأ
-    const cached = JSON.parse(localStorage.getItem('expenses_cache')||'[]');
+    const cached = JSON.parse(localStorage.getItem('expenses_cache')||localStorage.getItem('expenses_backup')||'[]');
     if(cached.length > 0){
       expenses = cached;
       budgetCalcMonth();
@@ -2809,7 +2812,6 @@ async function forceReloadExpenses(){
     const prevExpenses = expenses.slice();
     const prevById = {};
     prevExpenses.forEach(function(e){prevById[String(e.id)]=e;});
-    localStorage.removeItem('expenses_cache');
     const sbExp = await sbGetAll('expenses');
     if(sbExp && sbExp.length > 0){
       expenses = sbExp.map(function(e){
@@ -11661,14 +11663,18 @@ function cmpPDF(){
   var baseFont=manualFontSize||14;
   var title=document.getElementById('cmp-title').value||'مقارنة الأسعار';
   var date=document.getElementById('cmp-date').value||'';
+  var exMode=(document.getElementById('cmp-pdf-vat')?.value==='ex');
+  var vatLbl=exMode?'غير شامل الضريبة':'شامل الضريبة';
   var curContract=parseFloat(document.getElementById('cmp-current-contract')?.value)||0;
+  if(exMode)curContract=curContract/1.15; // قيمة العقد الحالي تُدخل شاملة الضريبة
   var curVendor=document.getElementById('cmp-current-vendor')?.value||'';
   var curDuration=document.getElementById('cmp-current-duration')?.value||'—';
   if(!cmpCompanies.length){toast('لا توجد بيانات للتصدير',true);return;}
   var fmt=function(n){return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
   var totals=cmpCompanies.map(function(co,ci){
-    var monthly=0; var exPT=co.paymentType||'total';
-    co.rows.forEach(function(r){var b=(r.count||0)*(r.unitPrice||0);monthly+=r.vatType==='added'?b*1.15:b;});
+    var monthly=0; var monthlyEx=0; var exPT=co.paymentType||'total';
+    co.rows.forEach(function(r){var b=(r.count||0)*(r.unitPrice||0);monthly+=r.vatType==='added'?b*1.15:b;monthlyEx+=r.vatType==='included'?b/1.15:b;});
+    if(exMode)monthly=monthlyEx;
     var annual=exPT==='monthly'?monthly*12:monthly;
     var dur=co.duration||'—';
     var durMonths=cmpDurationToMonths(dur);
@@ -11681,13 +11687,14 @@ function cmpPDF(){
   var minAnn=sorted.length?sorted[0].periodTotal:0;
   var W=window.open('','_blank');
   var curRow='';
+  var curVendorLabel=(curVendor||'—')+(/العقد الحالي/.test(curVendor||'')?'':' (العقد الحالي)');
   if(curContract>0){
     var saving=curContract-minAnn;
     var savingAbs=Math.abs(saving);
     var savingPct=(savingAbs/curContract*100).toFixed(2);
     var diffCell=saving>0?('<td style="color:#1a6b35;font-weight:700;">'+fmt(savingAbs)+' ر.س (وفر)</td>'):saving<0?('<td style="color:#b91c1c;font-weight:700;">'+fmt(savingAbs)+' ر.س (زيادة)</td>'):'<td style="text-align:center;">لا فرق</td>';
     var pctCell=saving>0?('<td style="color:#1a6b35;font-weight:700;text-align:center;">'+savingPct+'% أقل</td>'):saving<0?('<td style="color:#b91c1c;font-weight:700;text-align:center;">'+savingPct+'% أعلى</td>'):'<td style="text-align:center;">0%</td>';
-    curRow='<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendor+' (العقد الحالي)</td><td style="text-align:center;">'+curDuration+'</td><td style="text-align:right;">'+fmt(curContract)+' ر.س</td><td style="text-align:right;">'+fmt(minAnn)+' ر.س</td>'+diffCell+pctCell+'</tr>';
+    curRow='<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendorLabel+'</td><td style="text-align:center;">'+curDuration+'</td><td style="text-align:right;">'+fmt(curContract)+' ر.س</td><td style="text-align:right;">'+fmt(minAnn)+' ر.س</td>'+diffCell+pctCell+'</tr>';
   }
   var compRows=sorted.map(function(t,i){
     var isLowest=(i===0);
@@ -11758,15 +11765,17 @@ function cmpPDF(){
   html+='</style></head><body>';
   if(BG_CMP) html+='<img src="'+BG_CMP+'" class="bg-img">';
   html+='<div class="pdf-content">';
-  html+='<h1>'+title+'</h1><p>'+date+'</p>';
+  html+='<h1>'+title+'</h1><p>'+date+' — جميع المبالغ في المقارنة: '+vatLbl+'</p>';
   if(curContract>0){
     html+='<h2>مقارنة العقد الحالي بأقل عرض سعر مطروح</h2>';
-    html+='<table><thead><tr><th>الشركة الحالية</th><th>مدة العقد</th><th>قيمة العقد الحالي السنوي</th><th>أقل عرض سعر مطروح</th><th>الفرق</th><th>نسبة الفرق</th></tr></thead><tbody>'+curRow+'</tbody></table>';
+    html+='<table><thead><tr><th>الشركة الحالية</th><th>مدة العقد</th><th>قيمة العقد الحالي السنوي ('+vatLbl+')</th><th>أقل عرض سعر مطروح ('+vatLbl+')</th><th>الفرق</th><th>نسبة الفرق</th></tr></thead><tbody>'+curRow+'</tbody></table>';
   }
   html+='<h2>تفاصيل العروض المقدمة</h2>';
+  var curOfferRow1=curContract>0?'<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendorLabel+'</td><td style="text-align:right;">'+fmt(curContract)+' ر.س</td><td style="text-align:center;">—</td><td style="text-align:center;">—</td></tr>':'';
+  var curOfferRow2=curContract>0?'<tr style="background:#f5f5f5;font-weight:700;"><td>'+curVendorLabel+'</td><td style="text-align:center;">'+curDuration+'</td><td style="text-align:right;">'+fmt(curContract)+' ر.س</td><td style="text-align:center;">—</td><td style="text-align:center;">—</td></tr>':'';
   html+=isOneTimeStudy
-    ?'<table><thead><tr><th>الشركة</th><th>الإجمالي</th><th>الفرق عن السعر الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>'
-    :'<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي (حسب مدة العقد)</th><th>الفرق عن العقد الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+compRows+'</tbody></table>';
+    ?'<table><thead><tr><th>الشركة</th><th>الإجمالي ('+vatLbl+')</th><th>الفرق عن السعر الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+curOfferRow1+compRows+'</tbody></table>'
+    :'<table><thead><tr><th>الشركة</th><th>مدة العقد</th><th>الإجمالي (حسب مدة العقد) — '+vatLbl+'</th><th>الفرق عن العقد الحالي</th><th>نسبة الفرق عن الحالي</th></tr></thead><tbody>'+curOfferRow2+compRows+'</tbody></table>';
   html+='<h2>تفاصيل الأسعار</h2>'+detailSections;
   html+='<\/div><script>'
     +'window.onload=function(){'
