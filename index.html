@@ -4842,7 +4842,7 @@ function renderCmpCompanies(){
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddRow('+co.id+')">+ إضافة صف</button>';
     html+='<span style="font-size:12px;font-weight:700;">'+(payType==='monthly'?'الشهري: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b> | السنوي: <b style="color:#244062;">'+annual.toLocaleString('ar-SA')+' ر.س</b>':'الإجمالي: <b style="color:#244062;">'+monthly.toLocaleString('ar-SA')+' ر.س</b>')+'</span>';
-    html+='</div><div style="font-weight:700;color:#244062;margin-bottom:8px;">بنود العقد</div>';
+    html+='</div><div style="font-weight:700;color:#244062;margin-bottom:8px;">أبرز الملاحظات</div>';
     html+='<div>'+termsHTML+'</div>';
     html+='<button class="btn btn-gray btn-sm" onclick="cmpAddTerm('+co.id+')" style="margin-top:4px;">+ إضافة بند</button>';
     html+='</div></div>';
@@ -5343,7 +5343,7 @@ function cmpExcelFromData(title,date,companies,currentContract,currentVendor){
 
     // بنود العقد
     if(t.terms&&t.terms.length&&t.terms[0]){
-      sc('A'+(curRow+1),'بنود العقد',sColHdr(BLUE));
+      sc('A'+(curRow+1),'أبرز الملاحظات',sColHdr(BLUE));
       merge(curRow,0,curRow,6); curRow++;
       t.terms.forEach(function(tm,ti){
         if(tm){
@@ -11767,7 +11767,7 @@ function cmpPDF(){
       ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي (شامل الضريبة)</th>'
       :'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الضريبة</th><th>مبلغ VAT</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th>';
     var colspanNum=isOneTimeStudy?7:8;
-    return '<h3 style="margin:18px 0 6px;font-size:15px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(!isOneTimeStudy&&t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr>'+theadCols+'</tr></thead><tbody>'+drows+totalsRow+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="'+colspanNum+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h3 style="margin:18px 0 6px;font-size:15px;border-bottom:2px solid #000;padding-bottom:4px;color:#000;">'+(ci+1)+'. '+t.name+(!isOneTimeStudy&&t.duration&&t.duration!=='—'?' — مدة العقد: '+t.duration:'')+'</h3><table><thead><tr>'+theadCols+'</tr></thead><tbody>'+drows+totalsRow+'</tbody></table>'+(termsRows?'<table style="margin-top:6px;"><thead><tr><th colspan="'+colspanNum+'">أبرز الملاحظات</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG_CMP=FORM_BG||'';
   var html='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+title+'</title><style>';
@@ -11924,7 +11924,7 @@ function cmpWord(){
     var theadCols2=isOneTimeStudy
       ?'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي (شامل الضريبة)</th>'
       :'<th>الفئة</th><th>الوصف</th><th>العدد</th><th>القيمة الإفرادية</th><th>الإجمالي الشهري (شامل الضريبة)</th><th>'+periodLabel+'</th>';
-    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr>'+theadCols2+'</tr></thead><tbody>'+drows+totalsRow2+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="'+colspanNum2+'">بنود العقد</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
+    return '<h2>'+(ci+1)+'. '+t.name+'</h2><table><thead><tr>'+theadCols2+'</tr></thead><tbody>'+drows+totalsRow2+'</tbody></table>'+(termsRows?'<table><thead><tr><th colspan="'+colspanNum2+'">أبرز الملاحظات</th></tr></thead><tbody>'+termsRows+'</tbody></table>':'');
   }).join('');
   var BG=FORM_BG||'';
   var CSS='@page{size:A4;margin:0;}body{font-family:Arial,sans-serif;font-size:10px;color:#000;direction:rtl;}'
