@@ -457,7 +457,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="section-title">التواقيع</div>
       <div class="form-grid">
         <div class="field"><label>Prepared By — مسؤول المشتريات</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-prep" style="width:auto;"> هل تريد إظهار أعدت بواسطة مسؤول المشتريات؟</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
-        <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-vendor" style="width:auto;"> هل تريد إظهار اسم المورد بالتوقيع؟</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"></div>
+        <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-vendor" style="width:auto;"> هل تريد إظهار اسم المورد بالتوقيع؟</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"><label style="font-size:12px;margin-top:6px;display:block;">صورة ختم وتوقيع المورد</label><input type="file" accept="image/*" onchange="poLoadVendorImg(this)"><div id="po-vendor-img-state" style="font-size:12px;color:#555;"></div></div>
         <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-cfo" style="width:auto;"> اعتماد المدير المالي (إظهار تم مراجعته من قبل)</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
@@ -3349,6 +3349,8 @@ async function poToggleCustomPayment(val){
   if(wrap) wrap.style.display=(val==='custom')?'block':'none';
   poUpdateVendorSig();
 }
+var poVendorImg='';
+function poLoadVendorImg(inp){var f=inp&&inp.files&&inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var w=Math.min(400,im.width);var h=Math.round(im.height*w/im.width);var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);poVendorImg=c.toDataURL('image/png');var st=document.getElementById('po-vendor-img-state');if(st)st.textContent='تم إرفاق الصورة ✓';};im.src=r.result;};r.readAsDataURL(f);}
 // الدفع المقدم أو المتقطع (دفعات/أقساط) => يلزم توقيع المورد. الدفع الآجل أو عند الاستلام => بدون توقيع المورد
 function poNeedsVendorSig(payment){
   return /مقدم|متقطع|دفعات|دفعة|أقساط|اقساط|قسط/.test(String(payment||''));
@@ -3383,7 +3385,7 @@ function poGetTerms(){
   var showVendor=poNeedsVendorSig(payment)&&!!document.getElementById('po-show-vendor')?.checked;
   var showPrep=!!document.getElementById('po-show-prep')?.checked;
   var showCfo=!!document.getElementById('po-show-cfo')?.checked;
-  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, showVendor:showVendor, showPrep:showPrep, showCfo:showCfo};
+  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, sigVendorImg:(showVendor?poVendorImg:''), showVendor:showVendor, showPrep:showPrep, showCfo:showCfo};
 }
 
 function poSetTerms(terms){
@@ -3432,6 +3434,7 @@ function poSetTerms(terms){
   }
   var sv=document.getElementById('po-sig-vendor');if(sv)sv.value=terms.sigVendor||'';
   var sh=document.getElementById('po-show-vendor');if(sh)sh.checked=(terms.showVendor===undefined)?true:!!terms.showVendor;
+  poVendorImg=terms.sigVendorImg||'';var vst=document.getElementById('po-vendor-img-state');if(vst)vst.textContent=poVendorImg?'تم إرفاق الصورة ✓':'';
   var sp=document.getElementById('po-show-prep');if(sp)sp.checked=(terms.showPrep===undefined)?true:!!terms.showPrep;
   var sc=document.getElementById('po-show-cfo');if(sc)sc.checked=(terms.showCfo===undefined)?true:!!terms.showCfo;
   poUpdateVendorSig();
@@ -3524,6 +3527,7 @@ function poResetEdit(){
   var svr=document.getElementById('po-sig-vendor');if(svr)svr.value='';
   var shr=document.getElementById('po-show-vendor');if(shr)shr.checked=false;
   ['po-show-prep','po-show-cfo'].forEach(function(x){var e=document.getElementById(x);if(e)e.checked=false;});
+  poVendorImg='';var vst0=document.getElementById('po-vendor-img-state');if(vst0)vst0.textContent='';
   poUpdateVendorSig();
   var tbody=document.getElementById('po-tbody');
   tbody.innerHTML='<tr><td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
@@ -3869,7 +3873,8 @@ table{border-collapse:collapse;width:100%;}
     </div>`}
     ${(poNeedsVendorSig(d.terms&&d.terms.payment)&&(d.terms&&d.terms.showVendor!==false))?`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
-      <div style="font-size:11px;color:#555;margin-bottom:45px;">${d.company||''}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:${(d.terms&&d.terms.sigVendorImg)?'4':'45'}px;">${d.company||''}</div>
+      ${(d.terms&&d.terms.sigVendorImg)?`<div style="height:44px;margin-bottom:4px;"><img src="${d.terms.sigVendorImg}" style="max-height:44px;max-width:100%;object-fit:contain;"></div>`:''}
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${(d.terms&&d.terms.sigVendor)||'&nbsp;'}</div>
     </div>`:''}
     ${(d.terms&&d.terms.showCfo===false)?'':`<div style="flex:1;">
