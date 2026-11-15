@@ -457,7 +457,7 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       <div class="section-title">التواقيع</div>
       <div class="form-grid">
         <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
-        <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"></div>
+        <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-vendor" style="width:auto;"> هل تريد إظهار اسم المورد بالتوقيع؟</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"></div>
         <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
@@ -3380,7 +3380,8 @@ function poGetTerms(){
   var vr=parseFloat(document.getElementById('po-vat-rate')?.value);
   // نسبة الضريبة وتوقيع المورد يُحفظان داخل حقل terms الموجود أصلًا (بدون إضافة أعمدة جديدة بقاعدة البيانات)
   var sigVendor=poNeedsVendorSig(payment)?(document.getElementById('po-sig-vendor')?.value||'').trim():'';
-  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor};
+  var showVendor=poNeedsVendorSig(payment)&&!!document.getElementById('po-show-vendor')?.checked;
+  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, showVendor:showVendor};
 }
 
 function poSetTerms(terms){
@@ -3428,6 +3429,7 @@ function poSetTerms(terms){
     }
   }
   var sv=document.getElementById('po-sig-vendor');if(sv)sv.value=terms.sigVendor||'';
+  var sh=document.getElementById('po-show-vendor');if(sh)sh.checked=(terms.showVendor===undefined)?true:!!terms.showVendor;
   poUpdateVendorSig();
 }
 
@@ -3516,6 +3518,7 @@ function poResetEdit(){
   document.getElementById('po-payment-terms').value='فور الاستلام';
   document.getElementById('po-payment-custom-wrap').style.display='none';
   var svr=document.getElementById('po-sig-vendor');if(svr)svr.value='';
+  var shr=document.getElementById('po-show-vendor');if(shr)shr.checked=false;
   poUpdateVendorSig();
   var tbody=document.getElementById('po-tbody');
   tbody.innerHTML='<tr><td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
@@ -3859,7 +3862,7 @@ table{border-collapse:collapse;width:100%;}
         ${d.sig1||'أ.محمد ابراهيم الجمعان'}
       </div>
     </div>
-    ${poNeedsVendorSig(d.terms&&d.terms.payment)?`<div style="flex:1;">
+    ${(poNeedsVendorSig(d.terms&&d.terms.payment)&&(d.terms&&d.terms.showVendor!==false))?`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
       <div style="font-size:11px;color:#555;margin-bottom:45px;">${d.company||''}</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${(d.terms&&d.terms.sigVendor)||'&nbsp;'}</div>
