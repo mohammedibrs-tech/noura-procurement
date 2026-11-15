@@ -456,9 +456,9 @@ h3 .f2-editable-label{display:inline-block;width:auto;min-width:180px;font-size:
       </div>
       <div class="section-title">التواقيع</div>
       <div class="form-grid">
-        <div class="field"><label>Prepared By — مسؤول المشتريات</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
+        <div class="field"><label>Prepared By — مسؤول المشتريات</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-prep" style="width:auto;"> هل تريد إظهار أعدت بواسطة مسؤول المشتريات؟</label><input id="po-sig1" value="أ.محمد ابراهيم الجمعان" placeholder="أ.محمد ابراهيم الجمعان"></div>
         <div class="field" id="po-sig-vendor-wrap" style="display:none;"><label id="po-sig-vendor-label">توقيع المورد</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-vendor" style="width:auto;"> هل تريد إظهار اسم المورد بالتوقيع؟</label><input id="po-sig-vendor" placeholder="اسم المفوّض بالتوقيع من المورد (اختياري)"></div>
-        <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
+        <div class="field"><label>Reviewed By — مدير الإدارة المالية</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;"><input type="checkbox" id="po-show-cfo" style="width:auto;"> اعتماد المدير المالي (إظهار تم مراجعته من قبل)</label><input id="po-sig2" value="أ.عمرو يحيى جاد" placeholder="أ.عمرو يحيى جاد"></div>
         <div class="field"><label>Approved By — الرئيس التنفيذي</label><input id="po-sig3" value="أ.أحمد بن محمد المحيسن" placeholder="أ.أحمد بن محمد المحيسن"></div>
       </div>
       <div class="section-title">البنود</div>
@@ -3381,7 +3381,9 @@ function poGetTerms(){
   // نسبة الضريبة وتوقيع المورد يُحفظان داخل حقل terms الموجود أصلًا (بدون إضافة أعمدة جديدة بقاعدة البيانات)
   var sigVendor=poNeedsVendorSig(payment)?(document.getElementById('po-sig-vendor')?.value||'').trim():'';
   var showVendor=poNeedsVendorSig(payment)&&!!document.getElementById('po-show-vendor')?.checked;
-  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, showVendor:showVendor};
+  var showPrep=!!document.getElementById('po-show-prep')?.checked;
+  var showCfo=!!document.getElementById('po-show-cfo')?.checked;
+  return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, showVendor:showVendor, showPrep:showPrep, showCfo:showCfo};
 }
 
 function poSetTerms(terms){
@@ -3430,6 +3432,8 @@ function poSetTerms(terms){
   }
   var sv=document.getElementById('po-sig-vendor');if(sv)sv.value=terms.sigVendor||'';
   var sh=document.getElementById('po-show-vendor');if(sh)sh.checked=(terms.showVendor===undefined)?true:!!terms.showVendor;
+  var sp=document.getElementById('po-show-prep');if(sp)sp.checked=(terms.showPrep===undefined)?true:!!terms.showPrep;
+  var sc=document.getElementById('po-show-cfo');if(sc)sc.checked=(terms.showCfo===undefined)?true:!!terms.showCfo;
   poUpdateVendorSig();
 }
 
@@ -3519,6 +3523,7 @@ function poResetEdit(){
   document.getElementById('po-payment-custom-wrap').style.display='none';
   var svr=document.getElementById('po-sig-vendor');if(svr)svr.value='';
   var shr=document.getElementById('po-show-vendor');if(shr)shr.checked=false;
+  ['po-show-prep','po-show-cfo'].forEach(function(x){var e=document.getElementById(x);if(e)e.checked=false;});
   poUpdateVendorSig();
   var tbody=document.getElementById('po-tbody');
   tbody.innerHTML='<tr><td>1</td><td><input class="po-item" placeholder="الصنف"></td><td><input class="po-desc" placeholder="الوصف"></td><td><input class="po-qty" type="number" value="1" oninput="poCalcRow(this)" style="width:60px;"></td><td><input class="po-uom" placeholder="جهاز" style="width:60px;"></td><td><input class="po-price" type="number" value="0" oninput="poCalcRow(this)" style="width:80px;"></td><td class="po-total">0</td><td><input class="po-notes" placeholder=""></td><td><button onclick="poDelRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;">×</button></td></tr>';
@@ -3854,24 +3859,24 @@ table{border-collapse:collapse;width:100%;}
     <tr><td colspan="3" class="blue" style="text-align:center;">Approvals / الاعتمادات</td></tr>
   </table>
   <div style="display:flex;justify-content:space-between;gap:14px;text-align:center;margin-top:6px;">
-    <div style="flex:1;">
+    ${(d.terms&&d.terms.showPrep===false)?'':`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Prepared By / أعدت بواسطة</div>
       <div style="font-size:11px;color:#555;margin-bottom:45px;">مسؤول المشتريات</div>
       <div style="position:relative;border-top:1px solid #000;padding-top:5px;font-size:12px;">
         ${(!d.sig1||d.sig1==='أ.محمد ابراهيم الجمعان')?`<img src="${MAJ_SIG}" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%) rotate(-12deg);width:72px;object-fit:contain;pointer-events:none;z-index:5;opacity:0.92;">`:''}
         ${d.sig1||'أ.محمد ابراهيم الجمعان'}
       </div>
-    </div>
+    </div>`}
     ${(poNeedsVendorSig(d.terms&&d.terms.payment)&&(d.terms&&d.terms.showVendor!==false))?`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
       <div style="font-size:11px;color:#555;margin-bottom:45px;">${d.company||''}</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${(d.terms&&d.terms.sigVendor)||'&nbsp;'}</div>
     </div>`:''}
-    <div style="flex:1;">
+    ${(d.terms&&d.terms.showCfo===false)?'':`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Reviewed By / تم مراجعته من قبل</div>
       <div style="font-size:11px;color:#555;margin-bottom:45px;">مدير الإدارة المالية</div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig2||'أ.عمرو يحيى جاد'}</div>
-    </div>
+    </div>`}
     <div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
       <div style="font-size:11px;color:#555;margin-bottom:45px;">الرئيس التنفيذي</div>
