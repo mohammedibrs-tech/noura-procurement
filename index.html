@@ -3870,7 +3870,7 @@ table{border-collapse:collapse;width:100%;}
     ${(poNeedsVendorSig(d.terms&&d.terms.payment)&&(d.terms&&d.terms.showVendor!==false))?`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
       <div style="font-size:11px;color:#555;">${d.company||''}</div>
-      <div style="height:45px;display:flex;justify-content:space-around;align-items:flex-end;font-size:11px;color:#555;"><span>الختم</span><span>التوقيع</span></div>
+      <div style="height:45px;display:flex;justify-content:space-around;align-items:flex-end;font-size:11px;color:#555;"><span>الختم</span><span>التوقيع</span><span>التاريخ</span></div>
       <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${(d.terms&&d.terms.sigVendor)||'&nbsp;'}</div>
     </div>`:''}
     ${(d.terms&&d.terms.showCfo===false)?'':`<div style="flex:1;">
@@ -3880,8 +3880,9 @@ table{border-collapse:collapse;width:100%;}
     </div>`}
     <div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Approved By / تم اعتماده من قبل</div>
-      <div style="font-size:11px;color:#555;margin-bottom:45px;">الرئيس التنفيذي</div>
-      <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
+      <div style="font-size:11px;color:#555;">الرئيس التنفيذي</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:30px;">${d.sig3||'أ.أحمد بن محمد المحيسن'}</div>
+      <div style="border-top:1px solid #000;padding-top:5px;font-size:12px;">&nbsp;</div>
     </div>
   </div>
 
