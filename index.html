@@ -3356,7 +3356,7 @@ function poNeedsVendorSig(payment){
 function poUpdateVendorSig(){
   var wrap=document.getElementById('po-sig-vendor-wrap');if(!wrap)return;
   var need=poNeedsVendorSig(poGetTerms().payment);
-  wrap.style.display=need?'block':'none';
+  wrap.style.display='block';
   var lbl=document.getElementById('po-sig-vendor-label');
   var co=(document.getElementById('po-co')?.value||'').trim();
   if(lbl) lbl.textContent='توقيع المورد'+(co?' — '+co:'');
@@ -3379,8 +3379,8 @@ function poGetTerms(){
 
   var vr=parseFloat(document.getElementById('po-vat-rate')?.value);
   // نسبة الضريبة وتوقيع المورد يُحفظان داخل حقل terms الموجود أصلًا (بدون إضافة أعمدة جديدة بقاعدة البيانات)
-  var sigVendor=poNeedsVendorSig(payment)?(document.getElementById('po-sig-vendor')?.value||'').trim():'';
-  var showVendor=poNeedsVendorSig(payment)&&!!document.getElementById('po-show-vendor')?.checked;
+  var sigVendor=(document.getElementById('po-sig-vendor')?.value||'').trim();
+  var showVendor=!!document.getElementById('po-show-vendor')?.checked;
   var showPrep=!!document.getElementById('po-show-prep')?.checked;
   var showCfo=!!document.getElementById('po-show-cfo')?.checked;
   return {delivery:delivery, warranty:warranty, payment:payment, vatRate:(isNaN(vr)?0.15:vr), sigVendor:sigVendor, showVendor:showVendor, showPrep:showPrep, showCfo:showCfo};
@@ -3431,7 +3431,7 @@ function poSetTerms(terms){
     }
   }
   var sv=document.getElementById('po-sig-vendor');if(sv)sv.value=terms.sigVendor||'';
-  var sh=document.getElementById('po-show-vendor');if(sh)sh.checked=(terms.showVendor===undefined)?true:!!terms.showVendor;
+  var sh=document.getElementById('po-show-vendor');if(sh)sh.checked=(terms.showVendor===undefined)?poNeedsVendorSig(terms.payment):!!terms.showVendor;
   var sp=document.getElementById('po-show-prep');if(sp)sp.checked=(terms.showPrep===undefined)?true:!!terms.showPrep;
   var sc=document.getElementById('po-show-cfo');if(sc)sc.checked=(terms.showCfo===undefined)?true:!!terms.showCfo;
   poUpdateVendorSig();
@@ -3867,7 +3867,7 @@ table{border-collapse:collapse;width:100%;}
         ${d.sig1||'أ.محمد ابراهيم الجمعان'}
       </div>
     </div>`}
-    ${(poNeedsVendorSig(d.terms&&d.terms.payment)&&(d.terms&&d.terms.showVendor!==false))?`<div style="flex:1;">
+    ${((d.terms&&d.terms.showVendor===undefined)?poNeedsVendorSig(d.terms&&d.terms.payment):!!(d.terms&&d.terms.showVendor))?`<div style="flex:1;">
       <div style="font-size:12px;font-weight:700;white-space:nowrap;">Vendor / المورد</div>
       <div style="font-size:11px;color:#555;">${d.company||''}</div>
       <div style="height:45px;display:flex;justify-content:space-around;align-items:flex-end;font-size:11px;color:#555;"><span>الختم</span><span>التوقيع</span><span>التاريخ</span></div>
